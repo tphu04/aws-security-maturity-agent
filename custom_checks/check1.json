@@ -1,0 +1,6 @@
+[
+    "s3_account_level_public_access_blocks",
+    "s3_bucket_acl_prohibited",
+    "s3_bucket_cross_account_access",
+    "s3_bucket_cross_region_replication"
+]
