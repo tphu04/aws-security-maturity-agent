@@ -25,6 +25,13 @@ class BaseAgent:
             params = {
                 "model": self.model_name,
                 "messages": messages,
+                "temperature": 0,  # 🔒 DETERMINISTIC
+                "top_p": 0,  # 🔒 DETERMINISTIC
+                "presence_penalty": 0,  # 🔒 DETERMINISTIC
+                "frequency_penalty": 0,  # 🔒 DETERMINISTIC
+                # If model supports seed (OpenAI compliant)
+                "seed": 1,
+                # Tools
                 "tools": tools,
                 "tool_choice": tool_choice,
             }

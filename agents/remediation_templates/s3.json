@@ -1,0 +1,371 @@
+{
+    "s3_public_access_block": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_public_access_block",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "PublicAccessBlockConfiguration": {
+                        "BlockPublicAcls": true,
+                        "IgnorePublicAcls": true,
+                        "BlockPublicPolicy": true,
+                        "RestrictPublicBuckets": true
+                    }
+                }
+            }
+        ]
+    },
+    "s3_force_private_acl": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_acl",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "ACL": "private"
+                }
+            }
+        ]
+    },
+    "s3_remove_public_policy": {
+        "required_params": [
+            "resource_id",
+            "region",
+            "new_policy"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "get_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}"
+                }
+            },
+            {
+                "service": "s3",
+                "method": "put_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "Policy": "{{new_policy}}"
+                }
+            }
+        ]
+    },
+    "s3_enable_versioning": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_versioning",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "VersioningConfiguration": {
+                        "Status": "Enabled"
+                    }
+                }
+            }
+        ]
+    },
+    "s3_enable_mfa_delete": {
+        "required_params": [
+            "resource_id",
+            "region",
+            "account_id",
+            "mfa_serial",
+            "mfa_token"
+        ],
+        "actions": [
+            {
+                "service": "manual",
+                "method": "console_only",
+                "params_template": {
+                    "info": "AWS does not support enabling MFA delete via SDK."
+                }
+            }
+        ]
+    },
+    "s3_enable_kms_encryption": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "optional_params": [
+            "kms_key_id"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_encryption",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "ServerSideEncryptionConfiguration": {
+                        "Rules": [
+                            {
+                                "ApplyServerSideEncryptionByDefault": {
+                                    "SSEAlgorithm": "aws:kms",
+                                    "KMSMasterKeyID": "{{ kms_key_id | default('aws/s3') }}"
+                                },
+                                "BucketKeyEnabled": true
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "s3_enable_aes256_encryption": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_encryption",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "ServerSideEncryptionConfiguration": {
+                        "Rules": [
+                            {
+                                "ApplyServerSideEncryptionByDefault": {
+                                    "SSEAlgorithm": "AES256"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "s3_secure_transport": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "Policy": "{ \"Version\":\"2012-10-17\", \"Statement\":[{ \"Sid\":\"EnforceSSL\", \"Effect\":\"Deny\", \"Principal\":\"*\", \"Action\":\"s3:*\", \"Resource\":[\"arn:aws:s3:::{{resource_id}}\",\"arn:aws:s3:::{{resource_id}}/*\"], \"Condition\":{\"Bool\":{\"aws:SecureTransport\":\"false\"}} }] }"
+                }
+            }
+        ]
+    },
+    "s3_enable_access_logging": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "optional_params": [
+            "target_bucket"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_logging",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "BucketLoggingStatus": {
+                        "LoggingEnabled": {
+                            "TargetBucket": "{{ target_bucket | default(resource_id ~ '-logs') }}",
+                            "TargetPrefix": "logs/"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "s3_enable_intelligent_tiering": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_lifecycle_configuration",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "LifecycleConfiguration": {
+                        "Rules": [
+                            {
+                                "ID": "IntelligentTiering",
+                                "Status": "Enabled",
+                                "Filter": {
+                                    "Prefix": ""
+                                },
+                                "Transitions": [
+                                    {
+                                        "Days": 0,
+                                        "StorageClass": "INTELLIGENT_TIERING"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "s3_enable_object_lock": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_versioning",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "VersioningConfiguration": {
+                        "Status": "Enabled"
+                    }
+                }
+            },
+            {
+                "service": "s3",
+                "method": "put_object_lock_configuration",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "ObjectLockConfiguration": {
+                        "ObjectLockEnabled": "Enabled",
+                        "Rule": {
+                            "DefaultRetention": {
+                                "Mode": "GOVERNANCE",
+                                "Days": 30
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "s3_enable_lifecycle_7day_abort": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_lifecycle_configuration",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "LifecycleConfiguration": {
+                        "Rules": [
+                            {
+                                "ID": "AbortIncomplete",
+                                "Status": "Enabled",
+                                "Filter": {
+                                    "Prefix": ""
+                                },
+                                "AbortIncompleteMultipartUpload": {
+                                    "DaysAfterInitiation": 7
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "s3_restrict_public_policy_actions": {
+        "required_params": [
+            "resource_id",
+            "region",
+            "new_policy"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "get_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}"
+                }
+            },
+            {
+                "service": "s3",
+                "method": "put_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "Policy": "{{new_policy}}"
+                }
+            }
+        ]
+    },
+    "s3_remove_cross_account_principals": {
+        "required_params": [
+            "resource_id",
+            "region",
+            "new_policy"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "get_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}"
+                }
+            },
+            {
+                "service": "s3",
+                "method": "put_bucket_policy",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "Policy": "{{new_policy}}"
+                }
+            }
+        ]
+    },
+    "s3_disable_website_hosting": {
+        "required_params": [
+            "resource_id",
+            "region"
+        ],
+        "actions": [
+            {
+                "service": "s3",
+                "method": "put_bucket_website",
+                "params_template": {
+                    "Bucket": "{{resource_id}}",
+                    "WebsiteConfiguration": {}
+                }
+            }
+        ]
+    },
+    "s3_block_acl": {
+        "required_params": [
+            "resource_id",
+            "region",
+            "account_id"
+        ],
+        "actions": [
+            {
+                "service": "s3control",
+                "method": "put_bucket_acl_configuration",
+                "params_template": {
+                    "AccountId": "{{account_id}}",
+                    "Bucket": "{{resource_id}}",
+                    "AclConfiguration": {
+                        "ObjectOwnership": "BucketOwnerEnforced"
+                    }
+                }
+            }
+        ]
+    }
+}

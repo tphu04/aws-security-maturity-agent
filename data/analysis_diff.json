@@ -1,0 +1,116 @@
+[
+  {
+    "finding_uid": "prowler-aws-s3_account_level_public_access_blocks-065209282642-us-east-1-065209282642|065209282642",
+    "before": "FAIL",
+    "after": "FAIL",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_acl_prohibited-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_cross_account_access-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_cross_region_replication-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "FAIL",
+    "after": "FAIL",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_default_encryption-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_event_notifications_enabled-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "FAIL",
+    "after": "FAIL",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_kms_encryption-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_level_public_access_block-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_lifecycle_enabled-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_no_mfa_delete-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "FAIL",
+    "after": "FAIL",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_object_lock-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "FAIL",
+    "after": "FAIL",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_object_versioning-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_policy_public_write_access-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_public_access-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_public_list_acl-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_public_write_acl-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_secure_transport_policy-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_server_access_logging_enabled-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "FAIL",
+    "after": "FAIL",
+    "change": "Unchanged"
+  },
+  {
+    "finding_uid": "prowler-aws-s3_bucket_shadow_resource_vulnerability-065209282642-us-east-1-prowler-test-public-bucket|prowler-test-public-bucket",
+    "before": "PASS",
+    "after": "PASS",
+    "change": "Unchanged"
+  }
+]

@@ -10,59 +10,27 @@ from agents.template_renderer import render_template
 
 class RemediateAgent(BaseAgent):
     """
-    RemediateAgent v11
+    RemediateAgent v12
     ------------------
     Tối ưu cho pipeline:
         RiskEvaluationAgent v2 (clean + meta)
         -> AssessmentAgent v3 (smm_assessment)
-        -> RemediateAgent v11
+        -> RemediateAgent v12
 
-    Features:
-    1. Rule-Based Matching ưu tiên issue_hint (prowler_check_id rút gọn) + issue_type.
-    2. Không phụ thuộc vào ASFF thô (description, resources...).
-    3. Dùng service_group đã chuẩn hóa từ AssessmentAgent v3.
-    4. Lọc tool bằng anti_tags dựa trên short_description + impact.
-    5. LLM chỉ fallback khi rule-match + filter không resolve được.
-    6. Strict Parameter Checking (bỏ tool nếu thiếu params bắt buộc).
+    Thay đổi chính so với v11:
+    - KHÔNG dùng LLM để chọn tool nữa.
+    - Tool selection hoàn toàn rule-based (deterministic).
+    - Một số issue non-automated (ObjectLock, MFA Delete, Replication) luôn require manual remediation.
+    - Nếu không có rule-match => không tạo remediation task tự động (manual review).
     """
 
-    # =========================================================================
-    # SYSTEM PROMPT (LLM fallback chọn tool từ danh sách candidate)
-    # =========================================================================
+    # Vẫn giữ prompt nếu sau này dùng LLM ở vai trò advisor (không dùng để chọn tool)
     SYSTEM_PROMPT = """
 ### Role
-Bạn là **Remediation Router API**.
-Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` phù hợp nhất.
-
-### Input Data
-- Service Group: {service_group}
-- Issue Type: {issue_type}
-- Issue Hint (Check ID): {issue_hint}
-- Severity: {severity}
-- Risk Score: {risk_score}
-- Short Description: "{short_description}"
-- Assessment Impact: "{impact}"
-
-### Tool Registry (Candidates)
-{registry_desc}
-
-### Instruction
-1. Ưu tiên tool có ID/KEYWORDS liên quan trực tiếp tới Issue Type / Issue Hint.
-2. Không chọn tool nếu `REQ_PARAMS` chứa tham số mà input không thể suy ra (vd: new_policy, json_document, mfa_token...).
-3. Sử dụng ANTI_TAGS để loại bỏ tool sai context.
-4. Nếu không chắc chắn hoặc không có tool nào thực sự khớp chức năng (ví dụ: lỗi MFA nhưng chỉ có tool Public Block), HÃY TRẢ VỀ "tool_id": null.
-
-
-### Output Format (JSON)
-{{
-    "analysis": "Giải thích ngắn gọn (Match theo ID / Keywords / Severity)",
-    "tool_id": "<tool_id_hoặc_null>"
-}}
+Bạn là **Remediation Advisor API**.
+Nhiệm vụ: Phân tích Finding và mô tả remediation plan, KHÔNG lựa chọn tool hay thực thi hành động.
 """
 
-    # =========================================================================
-    # CATALOG SERVICE LIST (mở rộng nhiều dịch vụ)
-    # =========================================================================
     SERVICE_LIST = ["s3", "iam", "ec2"]
 
     SERVICE_ALIAS = {
@@ -81,9 +49,14 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
         "AWS EC2": "EC2",
     }
 
-    # ==========================================================
+    # Những issue không muốn/không thể remediate tự động
+    NON_AUTOMATED_ISSUES = {
+        "MissingObjectLock",  # Không bật được sau khi bucket tạo
+        "MissingMFADelete",  # MFA Delete cũng yêu cầu thiết kế lại
+        "MissingCrossRegionReplication",  # Replication setup phức tạp, không auto
+    }
+
     # RULE MATCH TABLE (issue_hint / issue_type / finding pattern → tool list)
-    # ==========================================================
     RULE_MATCH_TABLE = {
         # --- PUBLIC ACCESS / POLICY ---
         "s3_bucket_public_access_block": ["s3_public_access_block"],
@@ -107,7 +80,7 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
         # --- VERSIONING & LOCK ---
         "s3_bucket_versioning_enabled": ["s3_enable_versioning"],
         "MissingVersioning": ["s3_enable_versioning"],
-        "MissingObjectLock": ["s3_enable_versioning"],  # cần versioning trước khi lock
+        # MissingObjectLock: non-automated, chỉ bật versioning chưa đủ fix nên KHÔNG auto-map
         # --- LOGGING ---
         "s3_bucket_server_access_logging_enabled": ["s3_enable_access_logging"],
         "s3_bucket_logging_enabled": ["s3_enable_access_logging"],
@@ -119,7 +92,8 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
         # --- NOTIFICATION ---
         "MissingEventNotifications": ["s3_enable_event_notifications"],
         # --- REPLICATION ---
-        "MissingCrossRegionReplication": ["s3_enable_replication"],
+        # "MissingCrossRegionReplication": ["s3_enable_replication"],
+        # -> đã đưa vào NON_AUTOMATED_ISSUES nên không auto
         # TODO: Thêm rule cho IAM, EC2...
     }
 
@@ -142,68 +116,75 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
     def recommend_fixes(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Input: danh sách findings đã qua RiskAgent v2 + AssessmentAgent v3
-        finding structure (ví dụ):
+        Output: chỉ gồm các task có thể remediate tự động (rule-based, đủ params).
+
+        Mỗi task:
         {
-            "finding_id": "...",
-            "service_group": "S3",
-            "issue_hint": "s3_bucket_logging_enabled",
-            "check_title": "...",
-            "short_description": "...",
-            "resource_id": "...",
-            "region": "us-east-1",
-            "severity": "High",
-            "risk_score": 7,
-            "smm_assessment": {
-                "issue_type": "MissingLogging",
-                "service_group": "S3",
-                "maturity_level": 1,
-                "impact": "...",
-                "remediation_intent": "..."
-            },
-            "meta": {...}
+            "tool_id": "s3_enable_versioning",
+            "params": { ... }
         }
+
+        Những issue:
+        - Non-automated (NON_AUTOMATED_ISSUES)
+        - Không có rule-match
+        - Thiếu params bắt buộc
+        => Sẽ được log là "manual remediation" và KHÔNG sinh task tự động.
         """
-        tasks = []
+        tasks: List[Dict[str, Any]] = []
 
         for f in findings:
             assessment = f.get("smm_assessment") or {}
 
-            # Định danh quan trọng
             issue_type = assessment.get("issue_type")
             service_group = assessment.get("service_group") or f.get("service_group")
             issue_hint = f.get("issue_hint", "")
             finding_id = f.get("finding_id") or f.get("id") or ""
             short_description = f.get("short_description", "")
-            impact = assessment.get("impact", "")
             severity = f.get("severity", "N/A")
             risk_score = f.get("risk_score", -1)
 
             if not service_group:
-                # Nếu không xác định được service thì bỏ qua
+                print(
+                    f"[RemediateAgent] ℹ️ Finding {finding_id}: missing service_group → skip."
+                )
+                continue
+
+            # ---- 0. NON-AUTOMATED ISSUES: chỉ manual, không auto-fix ----
+            if issue_type in self.NON_AUTOMATED_ISSUES:
+                print(
+                    f"[RemediateAgent] ℹ️ {finding_id} ({issue_type}) thuộc NON_AUTOMATED_ISSUES "
+                    f"→ yêu cầu manual remediation (không auto-fix)."
+                )
                 continue
 
             # --- Normalize Service Group ---
             service_raw = service_group
             if isinstance(service_raw, list):
-                # Lấy phần tử đầu hoặc ưu tiên S3
+                # Ưu tiên S3, nếu không có thì lấy phần tử đầu
                 if len(service_raw) > 0:
                     service_raw = next(
                         (x for x in service_raw if str(x).lower() == "s3"),
                         service_raw[0],
                     )
                 else:
-                    continue  # list rỗng
+                    print(
+                        f"[RemediateAgent] ℹ️ Finding {finding_id}: empty service_group list → skip."
+                    )
+                    continue
 
             service_raw = str(service_raw)
             service_norm = self.SERVICE_ALIAS.get(service_raw, service_raw.upper())
             tool_catalog = self.catalog.get(service_norm, {})
 
             if not tool_catalog:
-                # Không có template/tool cho service này
+                print(
+                    f"[RemediateAgent] ℹ️ Finding {finding_id}: "
+                    f"no tool catalog for service_group={service_norm} → skip (manual)."
+                )
                 continue
 
             # ======================================================
-            # STEP 1. RULE-BASED MATCH (Hard Code Priority)
+            # STEP 1. RULE-BASED MATCH (ONLY)
             # ======================================================
             rule_tool = self._rule_match(
                 issue_hint=issue_hint,
@@ -212,40 +193,31 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
                 title=f.get("check_title"),
                 tool_catalog=tool_catalog,
             )
-            if rule_tool:
+
+            if not rule_tool:
                 print(
-                    f"[RULE-MATCH] '{issue_hint or issue_type or finding_id}' → {rule_tool}"
+                    f"[RemediateAgent] ℹ️ Finding {finding_id}: "
+                    f"no rule-based remediation found for issue_type='{issue_type}', "
+                    f"issue_hint='{issue_hint}' → manual remediation required."
                 )
-                built = self._build_task(f, assessment, tool_catalog, rule_tool)
-                if built:
-                    tasks.append(built)
-                # Match cứng rồi thì không cần LLM nữa
                 continue
 
-            # ======================================================
-            # STEP 2. FILTERING (Python Logic on issue + short_description)
-            # ======================================================
-            candidate_tools = self._filter_tools(
-                finding=f,
-                assessment=assessment,
-                full_catalog=tool_catalog,
-            )
-            if not candidate_tools:
-                continue
-
-            # ======================================================
-            # STEP 3. LLM SELECTION (Fallback)
-            # ======================================================
-            tool_id = self._llm_select_tool(
-                finding=f,
-                assessment=assessment,
-                tool_catalog=candidate_tools,
+            print(
+                f"[RULE-MATCH] Finding {finding_id}: "
+                f"'{issue_hint or issue_type or finding_id}' → {rule_tool}"
             )
 
-            if tool_id:
-                built = self._build_task(f, assessment, tool_catalog, tool_id)
-                if built:
-                    tasks.append(built)
+            # ======================================================
+            # STEP 2. PARAM CHECK + BUILD TASK
+            # ======================================================
+            built = self._build_task(f, assessment, tool_catalog, rule_tool)
+            if built:
+                tasks.append(built)
+            else:
+                print(
+                    f"[RemediateAgent] ℹ️ Finding {finding_id}: "
+                    f"cannot auto-build task for tool {rule_tool} (missing params) → manual remediation."
+                )
 
         return tasks
 
@@ -268,13 +240,13 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
         3. Substring match (issue_hint / finding_id / title) trong RULE_MATCH_TABLE key.
         4. Chỉ trả về tool nếu tool_id tồn tại trong tool_catalog.
         """
-        title = (title or "").lower()
-        hint = (issue_hint or "").lower()
-        f_id = (finding_id or "").lower()
-        itype = (issue_type or "").lower()
+        title_l = (title or "").lower()
+        hint_l = (issue_hint or "").lower()
+        f_id_l = (finding_id or "").lower()
+        itype_l = (issue_type or "").lower()
 
         # 1. Exact match trên issue_hint
-        if hint and issue_hint in self.RULE_MATCH_TABLE:
+        if issue_hint and issue_hint in self.RULE_MATCH_TABLE:
             for tid in self.RULE_MATCH_TABLE[issue_hint]:
                 if tid in tool_catalog:
                     return tid
@@ -285,16 +257,16 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
                 if tid in tool_catalog:
                     return tid
 
-        # 3. Substring match trên tất cả key RULE_MATCH_TABLE
+        # 3. Substring match trên tất cả key RULE_MATCH_TABLE (ưu tiên key dài hơn)
         sorted_keys = sorted(self.RULE_MATCH_TABLE.keys(), key=len, reverse=True)
 
         for key in sorted_keys:
             key_l = key.lower()
             if (
-                key_l in issue_hint
-                or key_l in f_id
-                or key_l in title
-                or key_l in issue_type
+                key_l in hint_l
+                or key_l in f_id_l
+                or key_l in title_l
+                or key_l in itype_l
             ):
                 tools = self.RULE_MATCH_TABLE[key]
                 for tid in tools:
@@ -303,27 +275,26 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
 
         return None
 
-    def _filter_tools(self, finding, assessment, full_catalog):
-        """
-        Lọc sơ bộ các tool dựa trên issue_type, short_description, impact và ANTI_TAGS.
-        Input đã clean nên KHÔNG dùng description dài nữa.
-        """
-        issue = (assessment.get("issue_type") or "").lower()
-        short_desc = (finding.get("short_description") or "").lower()
-        impact = (assessment.get("impact") or "").lower()
-        finding_id = str(finding.get("finding_id", "")).lower()
+    # def _filter_tools(self, finding, assessment, full_catalog):
+    #     """
+    #     (Hiện tại không dùng trong flow chính nữa, giữ lại nếu sau này cần filter
+    #     trước khi hiển thị candidate cho user hoặc LLM advisor.)
+    #     """
+    #     issue = (assessment.get("issue_type") or "").lower()
+    #     short_desc = (finding.get("short_description") or "").lower()
+    #     impact = (assessment.get("impact") or "").lower()
+    #     finding_id = str(finding.get("finding_id", "")).lower()
 
-        search_text = f"{issue} {short_desc} {impact} {finding_id}"
+    #     search_text = f"{issue} {short_desc} {impact} {finding_id}"
 
-        filtered_catalog = {}
-        for tid, meta in full_catalog.items():
-            anti_tags = [t.lower() for t in meta.get("anti_tags", [])]
-            if any(t in search_text for t in anti_tags):
-                # Loại bỏ tool sai context
-                continue
-            filtered_catalog[tid] = meta
+    #     filtered_catalog = {}
+    #     for tid, meta in full_catalog.items():
+    #         anti_tags = [t.lower() for t in meta.get("anti_tags", [])]
+    #         if any(t in search_text for t in anti_tags):
+    #             continue
+    #         filtered_catalog[tid] = meta
 
-        return filtered_catalog if filtered_catalog else full_catalog
+    #     return filtered_catalog if filtered_catalog else full_catalog
 
     def build_action_package(self, tool_id: str, params: Dict[str, Any]):
         """
@@ -361,84 +332,6 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
             "steps": steps,
         }
 
-    def _llm_select_tool(self, finding, assessment, tool_catalog):
-        """
-        Gọi LLM để chọn tool từ danh sách candidates đã lọc.
-        LLM chỉ là Fallback khi Rule-Based + Filter chưa resolve.
-        """
-        registry_lines = []
-        for tid, meta in tool_catalog.items():
-            desc = meta.get("description", "")
-            tags = ", ".join(meta.get("tags", []))
-            anti_tags = ", ".join(meta.get("anti_tags", []))
-            req_params = meta.get("required_params", [])
-            req_params_str = ", ".join(req_params)
-
-            registry_lines.append(
-                f"- ID: {tid}\n"
-                f"  DESC: {desc}\n"
-                f"  KEYWORDS: {tags}\n"
-                f"  ANTI_TAGS: {anti_tags}\n"
-                f"  REQ_PARAMS: {req_params_str}"
-            )
-
-        registry_desc = "\n".join(registry_lines)
-
-        issue_type = assessment.get("issue_type", "Unknown")
-        issue_hint = finding.get("issue_hint", "")
-        finding_id = finding.get("finding_id", "Unknown")
-        short_description = finding.get("short_description", "")
-        impact = assessment.get("impact", "")
-        severity = finding.get("severity", "N/A")
-        risk_score = finding.get("risk_score", -1)
-
-        try:
-            prompt = self.SYSTEM_PROMPT.format(
-                service_group=assessment.get(
-                    "service_group", finding.get("service_group", "AWS")
-                ),
-                issue_type=issue_type,
-                issue_hint=issue_hint,
-                severity=severity,
-                risk_score=risk_score,
-                short_description=short_description,
-                impact=impact,
-                registry_desc=registry_desc,
-            )
-        except Exception as e:
-            print(f"[RemediateAgent] ❌ Prompt Error: {e}")
-            return None
-
-        messages = [
-            {"role": "system", "content": prompt},
-            {
-                "role": "user",
-                "content": "Analyze the candidates and return a valid tool_id if any.",
-            },
-        ]
-
-        try:
-            resp = self.call_llm(messages, response_format={"type": "json_object"})
-            content_str = (
-                resp.content
-                if isinstance(resp.content, str)
-                else json.dumps(resp.content)
-            )
-            obj = self._clean_llm_json(content_str)
-
-            tool_id = obj.get("tool_id")
-
-            if tool_id and tool_id in tool_catalog:
-                print(f"[LLM Match] {finding_id} -> {tool_id}")
-                return tool_id
-            elif tool_id:
-                print(f"[RemediateAgent] ⚠️ Hallucinated ID (ignored): {tool_id}")
-
-        except Exception as e:
-            print(f"[RemediateAgent] LLM Error: {e}")
-
-        return None
-
     def _build_task(self, finding, assessment, tool_catalog, tool_id):
         """
         Điền tham số và tạo remediation task object:
@@ -465,8 +358,8 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
         - meta: original_* nếu có
         - alias map
         """
-        params = {}
-        missing = []
+        params: Dict[str, Any] = {}
+        missing: List[str] = []
 
         ALIAS_MAP = {
             "Bucket": ["resource_id", "bucket_name", "name"],
@@ -478,7 +371,6 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
         # Gộp context: finding + assessment + meta (flatten)
         search_context = {**finding, **assessment}
         meta = finding.get("meta") or {}
-        # Flatten meta 1 layer (cẩn thận override nếu trùng key)
         for k, v in meta.items():
             if k not in search_context:
                 search_context[k] = v
@@ -512,16 +404,17 @@ Nhiệm vụ: Map `Finding` đã được chuẩn hóa vào `Tool Definition` ph
 
         return params, missing
 
-    def _clean_llm_json(self, content: str) -> Dict[str, Any]:
-        """
-        Làm sạch JSON LLM trả về (loại bỏ ```json ... ``` nếu có).
-        """
-        content = content.strip()
-        if content.startswith("```"):
-            match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", content)
-            if match:
-                content = match.group(1)
-        try:
-            return json.loads(content)
-        except Exception:
-            return {}
+    # def _clean_llm_json(self, content: str) -> Dict[str, Any]:
+    #     """
+    #     (Giữ lại phòng khi sau này cần dùng LLM ở vai trò advisor.
+    #     Hiện tại không dùng để chọn tool.)
+    #     """
+    #     content = content.strip()
+    #     if content.startswith("```"):
+    #         match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", content)
+    #         if match:
+    #             content = match.group(1)
+    #     try:
+    #         return json.loads(content)
+    #     except Exception:
+    #         return {}

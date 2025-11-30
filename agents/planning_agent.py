@@ -109,7 +109,7 @@ Vai trò của bạn là phân tích `User Request` và trả về MỘT ĐỐI 
 
 ### Output
 {{
-    "groups_to_scan": ["<service_code_1>", "<service_code_2>", ...],
+    "groups_to_scan": ["<service_code_1>", ...],
     "files_to_scan": ["<file_name_1>", ...]
 }}
 

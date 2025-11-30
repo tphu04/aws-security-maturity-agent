@@ -1,0 +1,6 @@
+{
+  "groups_to_scan": [
+    "s3"
+  ],
+  "files_to_scan": []
+}
