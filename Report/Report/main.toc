@@ -1,0 +1,60 @@
+\contentsline {chapter}{Declaration}{i}{chapter*.3}%
+\contentsline {chapter}{Acknowledgements}{ii}{chapter*.4}%
+\contentsline {chapter}{Abstract}{iii}{chapter*.5}%
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Motivations}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Objectives}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Scope}{3}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Challenges}{3}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Structure of the report}{4}{section.1.5}%
+\contentsline {chapter}{\numberline {2}Preliminaries}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Mô hình Ngôn ngữ Lớn và Nhỏ (LLMs \& SLMs)}{5}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Sự chuyển dịch từ LLMs sang SLMs}{5}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Mô hình Ngôn ngữ Nhỏ (SLM): Meta Llama 3.2}{6}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}Lượng tử hóa}{7}{subsection.2.1.3}%
+\contentsline {subsubsection}{\numberline {2.1.3.1}Định dạng GGUF và K-Quants}{7}{subsubsection.2.1.3.1}%
+\contentsline {subsection}{\numberline {2.1.4}Nền tảng Ollama và Kiến trúc suy luận cục bộ}{8}{subsection.2.1.4}%
+\contentsline {subsection}{\numberline {2.1.5}Kỹ thuật Prompt Engineering và Fine-tuning}{8}{subsection.2.1.5}%
+\contentsline {section}{\numberline {2.2}Framework LangChain}{8}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Vai trò trong Kiến trúc Hệ thống}{8}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}LangChain Expression Language (LCEL)}{9}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Tích hợp Công cụ (Tool Integration)}{9}{subsection.2.2.3}%
+\contentsline {section}{\numberline {2.3}Framework LangGraph}{9}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Kiến trúc Đồ thị Trạng thái (StateGraph Architecture)}{9}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Cơ chế Quản lý Trạng thái (State Management)}{10}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}Điều hướng Luồng và Vòng lặp (Control Flow \& Cycles)}{10}{subsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.3.4}Cấu trúc của một Tác nhân (Agent Structure)}{10}{subsection.2.3.4}%
+\contentsline {subsection}{\numberline {2.3.5}Các Tác nhân Chính (Core Agents)}{11}{subsection.2.3.5}%
+\contentsline {subsection}{\numberline {2.3.6}Luồng hoạt động (Workflow & State Management)}{11}{subsection.2.3.6}%
+\contentsline {subsection}{\numberline {2.3.7}Cơ chế Phản hồi và Suy luận (Reasoning Loop)}{12}{subsection.2.3.7}%
+\contentsline {chapter}{\numberline {3}Related works and tools}{13}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Công cụ Đánh giá Tư thế Bảo mật Đám mây (CSPM)}{13}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Prowler}{13}{subsection.3.1.1}%
+\contentsline {section}{\numberline {3.2}Hạ tầng Suy luận Mô hình Ngôn ngữ Cục bộ}{13}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Ollama và Llama 3.2}{13}{subsection.3.2.1}%
+\contentsline {section}{\numberline {3.3}Quản lý Dữ liệu và Bộ nhớ (Data Serialization)}{14}{section.3.3}%
+\contentsline {section}{\numberline {3.4}AWS SDK cho Tự động hóa (Boto3)}{14}{section.3.4}%
+\contentsline {chapter}{\numberline {4}Approach}{15}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Kiến trúc Điều phối Trung tâm (Graph-based Orchestration)}{15}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Quản lý Trạng thái (Shared State Management)}{15}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Sơ đồ Luồng xử lý (Workflow Pipeline)}{15}{subsection.4.1.2}%
+\contentsline {section}{\numberline {4.2}Cơ chế Hoạt động của các Tác nhân Chuyên biệt}{16}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Scanner Agent: Dynamic Tool Binding}{16}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Risk Evaluation Agent: JSON Mode \& Scoring Rubric}{16}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Remediate Agent: Semantic Tool Selection}{16}{subsection.4.2.3}%
+\contentsline {section}{\numberline {4.3}Quản lý Dữ liệu và Tính Bền vững (Data Persistence)}{17}{section.4.3}%
+\contentsline {chapter}{\numberline {5}Initial Implementation}{18}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Data Structure Design (Thiết kế Cấu trúc Dữ liệu)}{18}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Agent State Schema}{18}{subsection.5.1.1}%
+\contentsline {section}{\numberline {5.2}Data Preparation \& Tooling (Chuẩn bị Công cụ)}{19}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Data Preprocessing (Tiền xử lý Dữ liệu Quét)}{19}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Orchestrator Setup (Thiết lập Bộ điều phối)}{20}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Node \& Edge Definition}{20}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}File-based Persistence}{20}{subsection.5.4.2}%
+\contentsline {section}{\numberline {5.5}Local LLMs Setup (Cấu hình Mô hình Ngôn ngữ)}{20}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Model Selection & Configuration}{20}{subsection.5.5.1}%
+\contentsline {subsection}{\numberline {5.5.2}Integration with Agents}{20}{subsection.5.5.2}%
+\contentsline {chapter}{\numberline {6}Future Plan}{21}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Overview}{21}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Current tasks: Early December 2025}{21}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Upcoming tasks: January 2026 and Beyond}{21}{section.6.3}%

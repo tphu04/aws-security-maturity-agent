@@ -1,0 +1,117 @@
+\chapter{Future Plan}
+
+\section{Overview}
+Tính đến tháng 12 năm 2025, các nhiệm vụ nghiên cứu cơ sở và triển khai lõi hệ thống (Core Implementation) đã hoàn tất. Giai đoạn tiếp theo sẽ tập trung vào việc nâng cao khả năng suy luận bằng RAG, mở rộng bộ công cụ sửa lỗi và tối ưu hóa trải nghiệm người dùng.
+
+\begin{figure}[tbp]
+    \hspace*{-2cm} 
+    \begin{ganttchart}[
+        y unit title=0.4cm,
+        y unit chart=0.6cm,
+        x unit=0.6cm,
+        vgrid,
+        hgrid,
+        title label anchor/.style={below=-1.6ex},
+        title left shift=.05,
+        title right shift=-.05,
+        title height=1,
+        progress label text={},
+        bar height=0.6,
+        group right shift=0,
+        group top shift=.6,
+        group height=.3
+    ]{1}{16}
+    
+    % Year and Month Titles
+    \gantttitle{2024}{8}
+    \gantttitle{2025}{8} \\
+    \gantttitle{Sep}{2}
+    \gantttitle{Oct}{2}
+    \gantttitle{Nov}{2}
+    \gantttitle{Dec}{2}
+    \gantttitle{Jan}{2}
+    \gantttitle{Feb}{2}
+    \gantttitle{Mar}{2}
+    \gantttitle{Apr}{2} \\
+    
+    % Phase 1: Foundation
+    \ganttgroup[/pgfgantt/group/.style={},inline=false]{Foundation \& Research}{1}{6} \\
+    \ganttbar[bar/.append style={fill={dkgreen}}]{Problem Definition \& AWS Security Study}{1}{4} \\
+    \ganttbar[bar/.append style={fill={dkgreen}}]{Multi-Agent Architecture Design}{3}{6} \\
+    
+    % Phase 2: Core Implementation (Current)
+    \ganttgroup[/pgfgantt/group/.style={},inline=false]{Core Implementation}{5}{8} \\
+    \ganttbar[bar/.append style={fill=cyan}]{Developing Scanner \& Remediation Agents}{5}{8} \\
+    \ganttbar[bar/.append style={fill=cyan}]{Graph Orchestrator \& State Management}{5}{8} \\
+    \ganttbar[bar/.append style={fill=cyan}]{Initial Testing with Prowler}{7}{8} \\
+    
+    % Phase 3: Advanced Features (Future)
+    \ganttgroup[/pgfgantt/group/.style={},inline=false]{Advanced Features (RAG \& Tools)}{9}{14} \\
+    \ganttbar[bar/.append style={fill={codepurple}}]{Building Knowledge Base (Vector DB)}{9}{10} \\
+    \ganttbar[bar/.append style={fill={codepurple}}]{Integrating RAG for Assessment Agent}{9}{10} \\
+    \ganttbar[bar/.append style={fill={codepurple}}]{Expanding Toolset (IAM, EC2, RDS)}{11}{12} \\
+    \ganttbar[bar/.append style={fill={codepurple}}]{Self-Correction Loop Optimization}{11}{12} \\
+    \ganttbar[bar/.append style={fill={codepurple}}]{Developing Dashboard/UI}{13}{14} \\
+    \ganttbar[bar/.append style={fill={codepurple}}]{Final Evaluation \& Stress Testing}{13}{14} \\
+    
+    % Phase 4: Final Report
+    \ganttgroup[/pgfgantt/group/.style={},inline=false]{Final Report}{11}{16} \\
+    \ganttbar[bar/.append style={fill=red}]{Writing final report \& Defense Prep}{13}{16} \\
+    
+    \end{ganttchart}
+    \vspace{2mm}
+    \caption{Project Timeline and Future Plan}
+    \label{fig:future_gantt}
+\end{figure}
+
+\section{Current tasks: Early December 2025}
+
+Hiện tại, chúng em đang hoàn tất giai đoạn Initial Implementation. Các công việc chính bao gồm:
+\begin{itemize}
+    \item Ổn định hóa luồng hoạt động của \textit{Graph Orchestrator}.
+    \item Kiểm tra khả năng gọi tool động (Dynamic Tool Binding) của \textit{Scanner Agent} và \textit{Remediate Agent} với mô hình Llama 3.2.
+    \item Thu thập dữ liệu log ban đầu để chuẩn bị cho việc xây dựng kịch bản kiểm thử.
+\end{itemize}
+
+\section{Upcoming tasks: January 2026 and Beyond}
+
+Dựa trên kết quả hiện tại, lộ trình phát triển chi tiết cho học kỳ tới như sau:
+
+\begin{enumerate}
+    \item \textbf{Building Knowledge Base \& RAG Integration (January 2025):}
+    \begin{itemize}
+        \item Xây dựng cơ sở dữ liệu Vector (sử dụng ChromaDB hoặc Milvus) chứa các tiêu chuẩn bảo mật (CIS Benchmarks, AWS Well-Architected).
+        \item Tích hợp cơ chế truy xuất (Retrieval) vào \textit{Assessment Agent} để giảm thiểu ảo giác và tăng tính chính xác khi giải thích lỗi.
+    \end{itemize}
+
+    \item \textbf{Expanding Remediation Toolset (February 2025):}
+    \begin{itemize}
+        \item Mở rộng thư viện công cụ (\texttt{agent\_tools.py}) ra ngoài phạm vi S3.
+        \item Phát triển các modules khắc phục cho IAM (xoá user không hoạt động, enforce MFA) và EC2 (đóng Security Group port 22/3389).
+        \item Kiểm thử tính an toàn của các tool mới trong môi trường Sandbox.
+    \end{itemize}
+
+    \item \textbf{Self-Correction \& System Optimization (February 2025):}
+    \begin{itemize}
+        \item Tối ưu hóa logic tự sửa lỗi (Self-Correction Loop) để giảm số bước thực thi.
+        \item Tinh chỉnh System Prompt cho Llama 3.2 để cải thiện tốc độ phản hồi và định dạng JSON đầu ra.
+    \end{itemize}
+
+    \item \textbf{Developing User Interface (March 2025):}
+    \begin{itemize}
+        \item Xây dựng giao diện người dùng (Web Dashboard hoặc Streamlit) để trực quan hóa biểu đồ trạng thái (State Graph) và báo cáo bảo mật.
+        \item Tích hợp tính năng "Human-in-the-loop" trực quan trên giao diện thay vì CLI.
+    \end{itemize}
+
+    \item \textbf{Final Evaluation \& Deployment (March - April 2025):}
+    \begin{itemize}
+        \item Thực hiện đánh giá toàn diện dựa trên các chỉ số đã đề ra (Tool Selection Accuracy, Remediation Success Rate).
+        \item Đóng gói ứng dụng (Dockerize) để sẵn sàng triển khai thực tế.
+    \end{itemize}
+
+    \item \textbf{Writing Final Report (April 2025):}
+    \begin{itemize}
+        \item Tổng hợp kết quả nghiên cứu, so sánh hiệu năng trước và sau khi tích hợp RAG.
+        \item Hoàn thiện báo cáo khóa luận và chuẩn bị slide bảo vệ.
+    \end{itemize}
+\end{enumerate}
