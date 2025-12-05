@@ -1,64 +1,68 @@
+# agents/monitoring_agent.py
 import json
 import time
-# from .base_agent import BaseAgent # <-- KHÔNG KẾ THỪA
+from typing import List, Dict, Any
 from agent_tools import AVAILABLE_FUNCTIONS
 
-class MonitoringAgent: # <-- BỎ (BaseAgent)
-    """
-    Agent này nhận một danh sách các job ID và theo dõi chúng.
-    Nó KHÔNG gọi AI.
-    Nó chỉ chạy vòng lặp, gọi tool 'check_job_status' cho đến khi
-    tất cả các job hoàn thành, và trả về một DANH SÁCH các kết quả JSON thô.
-    """
-    
-    # (SYSTEM_PROMPT và summarize_results ĐÃ BỊ XÓA)
-    
-    def __init__(self): # <-- BỎ model_name, api_key, base_url
-        self.check_status_tool = AVAILABLE_FUNCTIONS["check_job_status"]
 
-    def run(self, job_ids: list) -> list: # <-- Trả về LIST
-        """
-        Chạy agent và trả về một danh sách kết quả JSON thô.
-        """
+class MonitoringAgent:
+    def __init__(self, poll_interval=15):
+        self.check_status_tool = AVAILABLE_FUNCTIONS["check_job_status"]
+        self.poll_interval = poll_interval
+
+    def run(self, job_ids: list) -> List[Dict[str, Any]]:
         print(f"--------------------------------------------------")
-        print(f"[MonitoringAgent] 🤖 Bắt đầu giám sát {len(job_ids)} job(s): {job_ids}")
+        print(f"[MonitoringAgent] 🤖 Bắt đầu giám sát {len(job_ids)} job(s)")
+
         active_jobs = set(job_ids)
-        completed_job_results = []
-        
+        all_findings = []  # List phẳng chứa findings
+
         while active_jobs:
             jobs_to_remove = set()
-            print(f"[MonitoringAgent] ⚙️ Mã điều phối: Đang kiểm tra {len(active_jobs)} job(s) còn lại...")
-            
-            for job_id in active_jobs:
-                status_response_str = self.check_status_tool(job_id=job_id)
-                print(f"   <- API trả về (job {job_id}): {status_response_str[:200]}...")
-                
-                try:
-                    status_data = json.loads(status_response_str)
-                    job_status = status_data.get("status")
 
-                    if job_status in ["completed", "failed"]:
-                        print(f"   -> ✅ Job {job_id} đã kết thúc với trạng thái '{job_status}'.")
-                        completed_job_results.append(status_data)
-                        jobs_to_remove.add(job_id)
-                    elif job_status in ["running", "pending"]:
-                        print(f"   -> ⏳ Job {job_id} vẫn đang '{job_status}'...")
+            for job_id in active_jobs:
+                try:
+                    response_raw = self.check_status_tool.invoke({"job_id": job_id})
+
+                    # 1. Parse JSON String nếu cần
+                    if isinstance(response_raw, str):
+                        tool_output = json.loads(response_raw)
                     else:
-                        print(f"   -> ❓ Job {job_id} có trạng thái lạ: {status_data}")
-                        completed_job_results.append(status_data)
+                        tool_output = response_raw
+
+                    # --- ĐOẠN SỬA QUAN TRỌNG ---
+                    # Tool trả về: {"success": True, "data": {...API RESPONSE...}}
+                    # Nên ta cần lấy API Response từ key "data"
+                    api_response = tool_output.get("data", tool_output)
+
+                    job_status = api_response.get("status")
+                    # ---------------------------
+
+                    if job_status == "completed":
+                        print(f"   -> ✅ Job {job_id} hoàn tất.")
+
+                        # Lấy result từ api_response (không phải từ tool_output gốc)
+                        job_result = api_response.get("result", [])
+
+                        # FLATTEN: Luôn add vào list chung
+                        if isinstance(job_result, list):
+                            all_findings.extend(job_result)
+                        elif job_result:
+                            all_findings.append(job_result)
+
                         jobs_to_remove.add(job_id)
-                except json.JSONDecodeError:
-                    print(f"   -> ❌ Lỗi: Phản hồi từ job {job_id} không phải JSON.")
-                    completed_job_results.append({"status": "failed", "error": "Invalid JSON response from tool", "job_id": job_id})
-                    jobs_to_remove.add(job_id)
-            
+
+                    elif job_status == "failed":
+                        print(f"   -> ❌ Job {job_id} thất bại.")
+                        jobs_to_remove.add(job_id)
+
+                except Exception as e:
+                    print(f"   -> ❌ Lỗi check job {job_id}: {e}")
+
             active_jobs -= jobs_to_remove
-            
+
             if active_jobs:
-                print(f"[MonitoringAgent] ⏳ Sẽ kiểm tra lại sau 15 giây...")
-                time.sleep(15)
-        
-        print(f"[MonitoringAgent] 🤖 Tất cả các job đã hoàn thành.")
-        
-        # Trả về dữ liệu thô
-        return completed_job_results
+                time.sleep(self.poll_interval)
+
+        print(f"[MonitoringAgent] 🏁 Thu thập tổng cộng {len(all_findings)} findings.")
+        return all_findings

@@ -1,117 +1,137 @@
-import json
-import datetime
 import re
-
+import datetime
+from typing import Dict, Any, List
 
 # ============================================================
-# 1) HỖ TRỢ TÁCH RESOURCE TỪ MESSAGE (fallback)
+# 1) HỖ TRỢ TÁCH RESOURCE TỪ MESSAGE (Fallback)
 # ============================================================
 
 
 def extract_resource_from_message(msg: str) -> str:
     if not msg:
         return "unknown"
-
-    # 12-digit AWS Account
     acc = re.search(r"\b\d{12}\b", msg)
     if acc:
         return acc.group(0)
-
-    # bucket name
     bucket = re.search(r"\b([a-z0-9\.\-]{3,63})\b", msg)
     if bucket:
         return bucket.group(1)
-
     return "unknown"
 
 
 # ============================================================
-# 2) CHUẨN HOÁ 1 FINDING DUY NHẤT
+# 2) CHUẨN HOÁ 1 FINDING
 # ============================================================
 
 
-def normalize_finding(raw: dict) -> dict:
+def normalize_finding(raw: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Chuẩn hóa dữ liệu từ Prowler OCSF output thành format thống nhất.
+    Chuẩn hóa dữ liệu Prowler OCSF.
     """
+    metadata = raw.get("metadata", {})
+    finding_info = raw.get("finding_info", {})
+    resources = raw.get("resources", [{}])
+    resource_obj = resources[0] if resources else {}
+    cloud = raw.get("cloud", {})
 
-    # ---------- A. FINDING ID ----------
-    # Example:
-    #   prowler-aws-s3_account_level_public_access_blocks-065209282642-us-east-1-065209282642
-    finding_id = raw.get("finding_info", {}).get("uid", "")
-    if not finding_id:
-        # fallback
-        finding_id = raw.get("metadata", {}).get("event_code", "unknown_finding")
+    # --- 1. CORE IDENTITY ---
+    event_code = metadata.get("event_code", "")
+    finding_id = finding_info.get("uid", event_code)
 
-    # ---------- B. EVENT CODE ----------
-    # Example: s3_account_level_public_access_blocks
-    event_code = raw.get("metadata", {}).get("event_code", "")
+    # --- 2. AWS CONTEXT ---
+    account_id = cloud.get("account", {}).get("uid", "")
+    region = cloud.get("region") or raw.get("region") or "global"
 
-    # ---------- C. SERVICE ----------
-    # CHUẨN NHẤT: resources[0].group.name
+    # --- 3. RESOURCE DETAILS ---
     service = "unknown"
     try:
-        service = raw["resources"][0]["group"]["name"]  # ex: "s3"
+        service = resource_obj.get("group", {}).get("name")
+        if not service and event_code:
+            service = event_code.split("_")[0]
     except:
-        if event_code:
-            service = event_code.split("_")[0]  # fallback từ event_code
+        pass
 
-    # ---------- D. RESOURCE ----------
-    # CHUẨN NHẤT: resources[0].name
-    resource = "unknown"
-    try:
-        resource = raw["resources"][0]["name"]
-    except:
-        resource = extract_resource_from_message(raw.get("message", ""))
+    # [FIX] Ưu tiên lấy 'name' (ngắn gọn) trước, nếu không có mới lấy 'uid' (ARN)
+    resource_id = resource_obj.get("name") or resource_obj.get("uid")
+    if not resource_id:
+        resource_id = extract_resource_from_message(raw.get("message", ""))
 
-    # ---------- E. REGION ----------
-    # Đúng nhất: raw["cloud"]["region"]
-    region = raw.get("cloud", {}).get("region") or raw.get("region") or "unknown"
+    # --- 4. STATUS & RISK ---
+    status = raw.get("status_code", "FAIL")
+    severity = raw.get("severity", "medium").lower()
 
-    # ---------- F. STATUS / SEVERITY ----------
-    status = raw.get("status_code", "")  # PASS / FAIL
-    severity = raw.get("severity", "Unknown")
+    # --- 5. DESCRIPTION & REMEDIATION ---
+    description = finding_info.get("desc") or raw.get("message", "")
 
-    # ---------- G. UID ĐỘC NHẤT ----------
-    finding_uid = f"{finding_id}|{resource}"
+    remediation_rec = raw.get("remediation", {})
+    remediation_text = remediation_rec.get("desc", "")
 
-    # ---------- H. Kết quả cuối ----------
+    # [FIX] Logic tìm URL thông minh hơn cho Prowler v5+
+    remediation_url = remediation_rec.get("url", "")
+
+    # Nếu không có key 'url', quét trong mảng 'references'
+    if not remediation_url:
+        references = remediation_rec.get("references", [])
+        for ref in references:
+            if isinstance(ref, str) and ref.startswith("http"):
+                remediation_url = ref
+                break
+
+    # Nếu vẫn không có, tìm trong unmapped (cho các version cũ hơn hoặc custom check)
+    if not remediation_url:
+        remediation_url = raw.get("unmapped", {}).get("related_url", "")
+
+    # --- 6. UID ĐỘC NHẤT ---
+    finding_uid = f"{account_id}|{region}|{finding_id}|{resource_id}"
+
     return {
         "finding_uid": finding_uid,
         "finding_id": finding_id,
         "event_code": event_code,
         "service": service,
-        "resource": resource,
+        "resource_id": resource_id,
+        "account_id": account_id,
         "region": region,
         "severity": severity,
         "status": status,
-        "raw": raw,
+        "description": description,
+        "remediation_text": remediation_text,
+        "remediation_url": remediation_url,
     }
 
 
 # ============================================================
-# 3) CHUẨN HOÁ DANH SÁCH FINDINGS (DÙNG CHUNG CHO BEFORE/AFTER)
+# 3) CHUẨN HOÁ DANH SÁCH
 # ============================================================
 
 
-def normalize_results(structured_report_data: list) -> dict:
+def normalize_results(flat_findings_list: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Input: structured_report_data từ MonitoringAgent
-    Output chuẩn: pre_scan.json hoặc post_scan.json
+    Input: Danh sách phẳng (List[Dict]) từ MonitoringAgent
+    Output: Dictionary chứa metadata và danh sách findings đã chuẩn hóa.
     """
-
     normalized_findings = []
 
-    for job in structured_report_data:
-        findings_list = job.get("result", [])
-        for raw in findings_list:
-            normalized_findings.append(normalize_finding(raw))
+    # Bảo vệ: Đảm bảo input là list
+    if not isinstance(flat_findings_list, list):
+        flat_findings_list = []
 
-    # Metadata cho toàn bộ scan
+    # Loop trực tiếp qua list phẳng
+    for raw in flat_findings_list:
+        # Giả sử hàm normalize_finding đã được define ở trên (như code cũ)
+        # Tôi lược bỏ để ngắn gọn, hãy giữ lại hàm normalize_finding cũ
+        try:
+            # Gọi hàm normalize đơn lẻ
+            normalized = normalize_finding(raw)
+            normalized_findings.append(normalized)
+        except Exception:
+            continue
+
+    # Trả về cấu trúc có Metadata (Dùng để lưu file JSON đẹp)
     return {
         "metadata": {
             "scan_time": datetime.datetime.utcnow().isoformat() + "Z",
             "total_findings": len(normalized_findings),
         },
-        "findings": normalized_findings,
+        "findings": normalized_findings,  # Key này chứa List chuẩn
     }

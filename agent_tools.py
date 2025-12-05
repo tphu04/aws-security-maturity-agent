@@ -1,45 +1,66 @@
 import requests
 import json
 import os
-import boto3  # <-- MỚI: Thư viện AWS SDK cho Python
-import botocore  # <-- MỚI: Để bắt lỗi của Boto3
+import boto3
+import botocore
+from typing import Optional, List, Dict, Any
+import time
+from botocore.exceptions import ClientError
 
-# -------------------------------------------------------------------
-# ĐỊNH NGHĨA CÁC HÀM TOOL (GỌI API)
-# -------------------------------------------------------------------
+# --- IMPORTS CHO LANGCHAIN & PYDANTIC V2 ---
+from langchain_core.tools import tool
+from pydantic import BaseModel, Field
 
 API_SERVER_URL = "http://127.0.0.1:8000"
 
+# ==========================================================
+# 1. ĐỊNH NGHĨA INPUT SCHEMA (FIX LỖI SERIALIZATION)
+# ==========================================================
 
+
+class ScanGroupInput(BaseModel):
+    group: str = Field(
+        ..., description="Tên service AWS cần quét (ví dụ: 's3', 'iam', 'ec2')."
+    )
+
+
+class ScanFileInput(BaseModel):
+    filename: str = Field(
+        ..., description="Tên file JSON cấu hình nằm trong thư mục custom_checks."
+    )
+
+
+class JobStatusInput(BaseModel):
+    job_id: str = Field(..., description="ID của job cần kiểm tra trạng thái.")
+
+
+# ==========================================================
+# 2. CÁC SCANNER TOOLS (Sử dụng args_schema)
+# ==========================================================
+
+
+@tool(args_schema=ScanGroupInput)
 def start_scan_by_group(group: str):
     """
-    [TOOL] Bắt đầu một công việc quét tài khoản AWS theo TÊN SERVICE (group).
-    Ví dụ: 's3', 'iam', 'ec2'.
+    [TOOL] Bắt đầu một công việc quét tài khoản AWS theo TÊN SERVICE.
     """
     print(f"[Tool Call] ⚡️ Đang gọi API: /scan/check?group={group}")
     try:
         response = requests.get(f"{API_SERVER_URL}/scan/check", params={"group": group})
         response.raise_for_status()
-        return response.text
-    except requests.exceptions.ConnectionError:
-        return json.dumps(
-            {
-                "error": "Không thể kết nối đến API server. Bạn đã chạy 'uvicorn api_server:app' chưa?"
-            }
-        )
-    except requests.exceptions.RequestException as e:
-        return json.dumps(
-            {
-                "error": f"Lỗi API: {str(e)}",
-                "details": e.response.text if e.response else "N/A",
-            }
-        )
+        return {
+            "success": True,
+            "data": response.json(),
+            "status_code": response.status_code,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
+@tool(args_schema=ScanFileInput)
 def start_scan_by_file(filename: str):
     """
-    [TOOL] Bắt đầu một công việc quét tài khoản AWS theo TÊN FILE JSON tùy chỉnh.
-    File JSON này phải tồn tại trong thư mục 'custom_checks' trên server.
+    [TOOL] Bắt đầu quét tài khoản AWS theo TÊN FILE JSON tùy chỉnh.
     """
     print(f"[Tool Call] ⚡️ Đang gọi API: /scan/custom?filename={filename}")
     try:
@@ -47,21 +68,19 @@ def start_scan_by_file(filename: str):
             f"{API_SERVER_URL}/scan/custom", params={"filename": filename}
         )
         response.raise_for_status()
-        return response.text
-    except requests.exceptions.ConnectionError:
-        return json.dumps({"error": "Không thể kết nối đến API server."})
-    except requests.exceptions.RequestException as e:
-        return json.dumps(
-            {
-                "error": f"Lỗi API: {str(e)}",
-                "details": e.response.text if e.response else "N/A",
-            }
-        )
+        return {
+            "success": True,
+            "data": response.json(),
+            "status_code": response.status_code,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
+@tool(args_schema=JobStatusInput)
 def check_job_status(job_id: str):
     """
-    [TOOL] Kiểm tra trạng thái của một công việc (job) quét AWS đã được bắt đầu.
+    [TOOL] Kiểm tra trạng thái của một công việc (job) đang chạy.
     """
     print(f"[Tool Call] ⚡️ Đang gọi API: /job/status?job_id={job_id}")
     try:
@@ -69,32 +88,36 @@ def check_job_status(job_id: str):
             f"{API_SERVER_URL}/job/status", params={"job_id": job_id}
         )
         response.raise_for_status()
-        return response.text
-    except requests.exceptions.ConnectionError:
-        return json.dumps({"error": "Không thể kết nối đến API server."})
-    except requests.exceptions.RequestException as e:
-        return json.dumps(
-            {
-                "error": f"Lỗi API: {str(e)}",
-                "details": e.response.text if e.response else "N/A",
-            }
-        )
+        return {"success": True, "data": response.json()}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
-def remediate_s3_public_access(bucket_name: str, finding_id: str):
+# ==========================================================
+# 3. CÁC REMEDIATION TOOLS (S3)
+# ==========================================================
+
+
+@tool
+def s3_block_account_public_access(
+    account_id: str, region: str = "us-east-1"
+) -> Dict[str, Any]:
     """
-    [TOOL] (BOTO3) Sửa lỗi S3 bucket đang public bằng cách bật 'Block all public access'.
+    Mục đích: Bật Block Public Access ở cấp tài khoản.
+    Dùng khi: Finding yêu cầu chặn truy cập public cho toàn account.
+    Tự động: Bật tất cả 4 chính sách public access.
+    Giới hạn: Không sửa policy từng bucket; không liên quan tới ACL findings.
     """
-    print(f"[RemediateTool] ⚡️ ĐANG SỬA LỖI (Finding: {finding_id}):")
-    print(f"   -> Tác vụ: Bật Block Public Access cho bucket '{bucket_name}'...")
+    print(
+        f"[Tool] 🛠️ Đang thực thi S3 Block Public Access cho Account ID: {account_id}..."
+    )
+
+    # Sử dụng s3control cho các thao tác cấp Account
+    client = boto3.client("s3control", region_name=region)
 
     try:
-        # Khởi tạo client S3
-        s3_client = boto3.client("s3")
-
-        # Gọi API của AWS
-        s3_client.put_public_access_block(
-            Bucket=bucket_name,
+        response = client.put_public_access_block(
+            AccountId=account_id,
             PublicAccessBlockConfiguration={
                 "BlockPublicAcls": True,
                 "IgnorePublicAcls": True,
@@ -103,138 +126,373 @@ def remediate_s3_public_access(bucket_name: str, finding_id: str):
             },
         )
 
-        print(f"   -> ✅ THÀNH CÔNG: Đã chặn public access cho {bucket_name}.")
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": "Block Public Access",
-            }
-        )
+        return {
+            "success": True,
+            "status": "enabled",
+            "account_id": account_id,
+            "details": "Account-level Block Public Access has been enabled.",
+            "request_id": response.get("ResponseMetadata", {}).get("RequestId"),
+        }
 
-    except botocore.exceptions.ClientError as e:
-        error_code = e.response.get("Error", {}).get("Code")
-        if error_code == "AccessDenied":
-            print(
-                f"   -> ❌ LỖI: Access Denied. User của bạn thiếu quyền 's3:PutPublicAccessBlock'."
-            )
-            return json.dumps(
-                {
-                    "status": "failed",
-                    "bucket": bucket_name,
-                    "error": f"Access Denied (Thiếu quyền s3:PutPublicAccessBlock?): {e}",
-                }
-            )
-        else:
-            print(f"   -> ❌ LỖI: {e}")
-            return json.dumps(
-                {"status": "failed", "bucket": bucket_name, "error": str(e)}
-            )
     except Exception as e:
-        print(f"   -> ❌ LỖI CHUNG: {e}")
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        return {"success": False, "error": str(e), "account_id": account_id}
 
 
-def remediate_s3_bucket_versioning(bucket_name: str, finding_id: str):
+@tool
+def s3_prepare_replication(
+    resource_id: str, bucket_name: str = None, region: str = "us-east-1"
+):
     """
-    [TOOL] (BOTO3) Bật tính năng Versioning cho S3 Bucket.
-    Lệnh tương đương AWS CLI:
-    aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled
+    Mục đích: Kiểm tra điều kiện để bật Cross-Region Replication (CRR).
+    Dùng khi: Finding thiếu CRR hoặc chưa có replication rule.
+    Tự động: Chỉ kiểm tra versioning và trạng thái replication.
+    Giới hạn: Không tạo IAM Role, bucket đích hoặc replication rule.
+    Lưu ý: Luôn yêu cầu thao tác thủ công để hoàn tất CRR.
     """
-    print(f"[RemediateTool] ⚡️ ĐANG SỬA LỖI (Finding: {finding_id}):")
-    print(
-        f"   -> Tác vụ: Bật Versioning (Status=Enabled) cho bucket '{bucket_name}'..."
-    )
+
+    bucket = bucket_name or resource_id
+    s3 = boto3.client("s3", region_name=region)
+
+    result = {
+        "success": False,
+        "status": "manual_required",
+        "manual_required": True,
+        "resource": bucket,
+        "performed_actions": [],
+        "remaining_actions": [],
+        "verification": {"before": {}, "after": {}, "passed": False},
+    }
 
     try:
-        s3_client = boto3.client("s3")
+        # BEFORE snapshot
+        before = {}
 
-        # Gọi API put_bucket_versioning
-        s3_client.put_bucket_versioning(
-            Bucket=bucket_name, VersioningConfiguration={"Status": "Enabled"}
-        )
+        # Check Versioning
+        try:
+            ver = s3.get_bucket_versioning(Bucket=bucket).get("Status", "Disabled")
+        except ClientError:
+            result["reason"] = "Bucket not found during replication check."
+            json.dump(result)
 
-        print(f"   -> ✅ THÀNH CÔNG: Đã bật Versioning cho {bucket_name}.")
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": "Enable Bucket Versioning",
-            }
-        )
+        before["versioning"] = ver
+        if ver != "Enabled":
+            result["remaining_actions"].append("Enable bucket versioning")
 
-    except botocore.exceptions.ClientError as e:
-        error_code = e.response.get("Error", {}).get("Code")
-        if error_code == "AccessDenied":
-            return json.dumps(
-                {
-                    "status": "failed",
-                    "bucket": bucket_name,
-                    "error": "Access Denied (Thiếu quyền s3:PutBucketVersioning)",
-                }
-            )
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        # Check Replication Rule
+        try:
+            s3.get_bucket_replication(Bucket=bucket)
+            before["replication"] = "Exists"
+        except:
+            before["replication"] = "NotConfigured"
+            result["remaining_actions"].append("Create replication configuration")
+
+        # AFTER snapshot (unchanged)
+        result["verification"]["before"] = before
+        result["verification"]["after"] = before
+        result["reason"] = "CRR setup cannot be performed automatically in safe mode."
+
+        return json.dumps(result)
+
     except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        result["status"] = "failed"
+        result["reason"] = str(e)
+        return json.dumps(result)
 
 
-def remediate_iam_user_mfa(user_name: str, finding_id: str):
+@tool
+def s3_enable_mfa_delete(resource_id: str, region: str = "us-east-1"):
     """
-    [TOOL] (BOTO3) Sửa lỗi user IAM không có MFA bằng cách gắn một policy
-    bắt buộc MFA (Deny-All-Unless-MFA).
-    CẢNH BÁO: Điều này có thể khóa user ra ngoài nếu họ không có MFA!
+    Mục đích: Bật versioning để chuẩn bị cho MFA Delete.
+    Dùng khi: Finding thiếu MFA Delete.
+    Tự động: Bật versioning.
+    Giới hạn: Không thể bật MFA Delete (yêu cầu Root + MFA token).
+    Lưu ý: Trả về manual-required cho bước bật MFA Delete.
     """
-    print(f"[RemediateTool] ⚡️ ĐANG SỬA LỖI (Finding: {finding_id}):")
-    print(f"   -> Tác vụ: Gắn policy bắt buộc MFA cho user '{user_name}'...")
 
+    client = boto3.client("s3", region_name=region)
 
-def remediate_s3_public_access(bucket_name: str, finding_id: str):
-    """
-    Bật tính năng 'Block Public Access' (chặn truy cập công khai) cho Bucket.
-    """
-    print(
-        f"[RemediateTool] ⚡️ SỬA LỖI (Finding: {finding_id}) -> Block Public Access: {bucket_name}"
-    )
+    result = {
+        "success": False,
+        "status": "manual_required",
+        "manual_required": True,
+        "resource": resource_id,
+        "performed_actions": [],
+        "remaining_actions": ["Enable MFA Delete using AWS CLI with Root MFA token"],
+        "reason": "AWS does not allow enabling MFA Delete programmatically.",
+        "verification": {"before": {}, "after": {}, "passed": False},
+    }
+
     try:
-        s3_client = boto3.client("s3")
+        # BEFORE
+        before = client.get_bucket_versioning(Bucket=resource_id)
+        result["verification"]["before"] = before
 
-        s3_client.put_public_access_block(
-            Bucket=bucket_name,
-            PublicAccessBlockConfiguration={
-                "BlockPublicAcls": True,
-                "IgnorePublicAcls": True,
-                "BlockPublicPolicy": True,
-                "RestrictPublicBuckets": True,
+        # PARTIAL ACTION
+        client.put_bucket_versioning(
+            Bucket=resource_id, VersioningConfiguration={"Status": "Enabled"}
+        )
+        result["performed_actions"].append("Enabled Versioning")
+
+        # AFTER
+        after = client.get_bucket_versioning(Bucket=resource_id)
+        result["verification"]["after"] = after
+
+        return json.dumps(result)
+
+    except Exception as e:
+        result["status"] = "failed"
+        result["reason"] = str(e)
+        return json.dumps(result)
+
+
+@tool
+def s3_enable_object_lock(resource_id: str, region: str = "us-east-1"):
+    """
+    Mục đích: Kiểm tra và hướng dẫn bật Object Lock.
+    Dùng khi: Finding yêu cầu Object Lock.
+    Tự động: Không thể bật Object Lock trên bucket đã tồn tại.
+    Giới hạn: Chỉ có thể enable lúc tạo bucket mới.
+    Lưu ý: Luôn trả về manual-required.
+    """
+
+    return {
+        "success": False,
+        "status": "manual_required",
+        "manual_required": True,
+        "resource": resource_id,
+        "performed_actions": [],
+        "remaining_actions": [
+            "Recreate bucket with ObjectLockEnabled=True OR contact AWS Support"
+        ],
+        "reason": "Object Lock cannot be enabled on existing buckets.",
+        "verification": {"before": {}, "after": {}, "passed": False},
+    }
+
+
+@tool
+def s3_enable_access_logging(
+    resource_id: str,
+    region: str = "us-east-1",
+    target_bucket: Optional[str] = None,
+    account_id: str = None,
+) -> Dict[str, Any]:
+    """
+    Mục đích: Bật Access Logging cho bucket.
+    Dùng khi: Bucket thiếu server access logging.
+    Tự động: Tạo bucket log (nếu cần), cấu hình policy và logging.
+    Giới hạn: Không xóa log bucket; tạo bucket mới có thể bị hạn chế trong safe-mode.
+    """
+    s3 = boto3.client("s3", region_name=region)
+
+    try:
+        # 1. XÁC ĐỊNH BUCKET ĐÍCH
+        if not target_bucket:
+            if account_id:
+                target_bucket = f"logs-{account_id}-{region}"
+            else:
+                target_bucket = f"{resource_id}-logs"
+
+        # 2. TẠO BUCKET LOG (NẾU CHƯA CÓ)
+        try:
+            s3.head_bucket(Bucket=target_bucket)
+        except Exception:
+            print(f"[Tool] 🛠️ Creating log bucket: {target_bucket}...")
+            if region == "us-east-1":
+                s3.create_bucket(Bucket=target_bucket)
+            else:
+                s3.create_bucket(
+                    Bucket=target_bucket,
+                    CreateBucketConfiguration={"LocationConstraint": region},
+                )
+
+            # Chặn Public Access (Luôn luôn cần thiết)
+            s3.put_public_access_block(
+                Bucket=target_bucket,
+                PublicAccessBlockConfiguration={
+                    "BlockPublicAcls": True,
+                    "IgnorePublicAcls": True,
+                    "BlockPublicPolicy": True,
+                    "RestrictPublicBuckets": True,
+                },
+            )
+
+        # 3. CẤP QUYỀN GHI LOG BẰNG BUCKET POLICY (THAY VÌ ACL)
+        # Đây là cách fix lỗi "The bucket does not allow ACLs"
+        # Policy này cho phép dịch vụ logging của AWS ghi vào bucket này
+
+        # Lấy Account ID hiện tại nếu chưa có (để lock policy chặt hơn)
+        if not account_id:
+            try:
+                account_id = boto3.client("sts").get_caller_identity()["Account"]
+            except:
+                pass
+
+        policy_statement = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "S3ServerAccessLogsPolicy",
+                    "Effect": "Allow",
+                    "Principal": {"Service": "logging.s3.amazonaws.com"},
+                    "Action": "s3:PutObject",
+                    "Resource": f"arn:aws:s3:::{target_bucket}/*",
+                    "Condition": (
+                        {"StringEquals": {"aws:SourceAccount": account_id}}
+                        if account_id
+                        else {}
+                    ),
+                }
+            ],
+        }
+
+        # Merge policy nếu bucket đã có policy cũ (Logic đơn giản hóa: Ghi đè hoặc thêm mới)
+        # Ở đây ta dùng put_bucket_policy an toàn
+        print(f"[Tool] 🛠️ Applying Bucket Policy for LogDelivery...")
+        s3.put_bucket_policy(Bucket=target_bucket, Policy=json.dumps(policy_statement))
+
+        # 4. BẬT LOGGING TRÊN BUCKET NGUỒN
+        logging_config = {
+            "LoggingEnabled": {
+                "TargetBucket": target_bucket,
+                "TargetPrefix": f"logs/{resource_id}/",
+            }
+        }
+        s3.put_bucket_logging(Bucket=resource_id, BucketLoggingStatus=logging_config)
+
+        return {
+            "success": True,
+            "status": "enabled",
+            "message": f"Enabled logging to '{target_bucket}' using Bucket Policy.",
+            "resource": resource_id,
+            "target_bucket": target_bucket,
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "status": "failed",
+            "error": str(e),
+            "resource": resource_id,
+        }
+
+
+@tool
+def s3_enable_event_notifications(resource_id: str, region: str = "us-east-1") -> str:
+    """
+    Mục đích: Bật sự kiện ObjectCreated/ObjectRemoved gửi SNS.
+    Dùng khi: Finding yêu cầu bucket phải có event notifications.
+    Tự động: Tạo SNS topic và cấu hình notification.
+    Giới hạn: Có thể tạo resource mới (SNS), cần xác nhận trước khi chạy.
+    """
+    print(f"[Tool] 🛠️ Đang bật Event Notification cho: {resource_id}...")
+    s3 = boto3.client("s3", region_name=region)
+    sns = boto3.client("sns", region_name=region)
+
+    topic_name = "S3-Security-Notifications"
+
+    try:
+        # 1. Tạo SNS Topic
+        topic_resp = sns.create_topic(Name=topic_name)
+        topic_arn = topic_resp["TopicArn"]
+
+        # 2. Cấp quyền cho S3 bắn tin vào SNS (Access Policy)
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"Service": "s3.amazonaws.com"},
+                    "Action": "SNS:Publish",
+                    "Resource": topic_arn,
+                    "Condition": {
+                        "ArnLike": {"aws:SourceArn": f"arn:aws:s3:::{resource_id}"}
+                    },
+                }
+            ],
+        }
+        sns.set_topic_attributes(
+            TopicArn=topic_arn,
+            AttributeName="Policy",
+            AttributeValue=json.dumps(policy),
+        )
+
+        # 3. Config S3 Notification
+        s3.put_bucket_notification_configuration(
+            Bucket=resource_id,
+            NotificationConfiguration={
+                "TopicConfigurations": [
+                    {
+                        "Id": "SecurityAlerts",
+                        "TopicArn": topic_arn,
+                        "Events": ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"],
+                    }
+                ]
             },
         )
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": "Enabled Block Public Access",
-            }
-        )
-    except botocore.exceptions.ClientError as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        return {
+            "success": True,
+            "status": "enabled",
+            "action": f"Enabled Notifications -> SNS: {topic_name}",
+            "resource": resource_id,
+        }
     except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        return {"success": False, "error": str(e)}
 
 
-def remediate_s3_kms_encryption(bucket_name: str, finding_id: str):
+@tool
+def s3_force_private_acl(resource_id: str, region: str = "us-east-1") -> str:
     """
-    [TOOL] Bật mã hóa Server-Side bằng KMS (SSE-KMS) cho Bucket.
-    Sử dụng AWS Managed Key (aws/s3) nếu không chỉ định key riêng.
-    Mapping: s3_bucket_kms_encryption (Severity: Low)
-    Ref: aws put-bucket-encryption [cite: 22]
+    Mục đích: Reset ACL bucket về private.
+    Dùng khi: Finding phát hiện ACL public.
+    Tự động: Set ACL = private.
+    Giới hạn: Không chuyển sang BucketOwnerEnforced.
+
     """
-    print(
-        f"[RemediateTool] ⚡️ SỬA LỖI (Finding: {finding_id}) -> Enable SSE-KMS: {bucket_name}"
-    )
     try:
-        s3_client = boto3.client("s3")
+        client = boto3.client("s3", region_name=region)
+        client.put_bucket_acl(Bucket=resource_id, ACL="private")
+        return {"success": True, "status": "enabled", "resource": resource_id}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
-        # Cấu hình mã hóa sử dụng thuật toán aws:kms
-        # Mặc định sẽ dùng AWS Managed Key cho S3 nếu không cung cấp KMSMasterKeyID cụ thể
+
+@tool
+def s3_enable_versioning(resource_id: str, region: str = "us-east-1") -> str:
+    """
+    Mục đích: Bật Versioning cho bucket.
+    Dùng khi: Bucket thiếu versioning (CRR prerequisite, MFA Delete prerequisite).
+    Tự động: Enable versioning.
+    Giới hạn: Không bật MFA Delete.
+
+    """
+    try:
+        client = boto3.client("s3", region_name=region)
+        client.put_bucket_versioning(
+            Bucket=resource_id, VersioningConfiguration={"Status": "Enabled"}
+        )
+        return {
+            "success": True,
+            "status": "enabled",
+            "action": "Enable Versioning",
+            "resource": resource_id,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e), "resource": resource_id}
+
+
+@tool
+def s3_enable_kms_encryption(
+    resource_id: str, region: str = "us-east-1", kms_key_id: Optional[str] = None
+) -> str:
+    """
+    Mục đích: Bật mã hóa SSE-KMS.
+    Dùng khi: Bucket không có default encryption.
+    Tự động: Thêm rule SSE-KMS.
+    Giới hạn: Ghi đè cấu hình encryption cũ; không tạo KMS Key mới.
+
+    """
+    try:
+        client = boto3.client("s3", region_name=region)
         encryption_config = {
             "Rules": [
                 {
@@ -243,743 +501,263 @@ def remediate_s3_kms_encryption(bucket_name: str, finding_id: str):
                 }
             ]
         }
+        if kms_key_id:
+            encryption_config["Rules"][0]["ApplyServerSideEncryptionByDefault"][
+                "KMSMasterKeyID"
+            ] = kms_key_id
 
-        s3_client.put_bucket_encryption(
-            Bucket=bucket_name, ServerSideEncryptionConfiguration=encryption_config
+        client.put_bucket_encryption(
+            Bucket=resource_id, ServerSideEncryptionConfiguration=encryption_config
         )
-
-        print(f"   -> ✅ THÀNH CÔNG: Đã bật SSE-KMS cho {bucket_name}.")
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": "Enabled SSE-KMS Encryption",
-            }
-        )
-
-    except botocore.exceptions.ClientError as e:
-        error_code = e.response.get("Error", {}).get("Code")
-        if error_code == "AccessDenied":
-            return json.dumps(
-                {
-                    "status": "failed",
-                    "bucket": bucket_name,
-                    "error": "Access Denied (Thiếu quyền s3:PutEncryptionConfiguration)",
-                }
-            )
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
-    except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
-    # Đây là policy JSON (dạng string)
-    MFA_POLICY_DOCUMENT = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "AllowAllActionsWithMFA",
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*",
-                    "Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}},
-                },
-                {
-                    "Sid": "DenyAllActionsWithoutMFA",
-                    "Effect": "Deny",
-                    "Action": "*",
-                    "Resource": "*",
-                    "Condition": {
-                        "BoolIfExists": {"aws:MultiFactorAuthPresent": "false"}
-                    },
-                },
-            ],
+        return {
+            "success": True,
+            "status": "enabled",
+            "action": "Enable KMS Encryption",
+            "resource": resource_id,
         }
-    )
-
-    # Tên policy sẽ gắn vào user
-    policy_name = f"Auto-Remediate-Force-MFA-{user_name}"
-
-    try:
-        iam_client = boto3.client("iam")
-
-        # Gắn policy INLINE vào user
-        iam_client.put_user_policy(
-            UserName=user_name,
-            PolicyName=policy_name,
-            PolicyDocument=MFA_POLICY_DOCUMENT,
-        )
-
-        print(
-            f"   -> ✅ THÀNH CÔNG: Đã gắn policy '{policy_name}' cho user {user_name}."
-        )
-        return json.dumps(
-            {
-                "status": "success",
-                "user": user_name,
-                "action": f"Attached inline policy {policy_name}",
-            }
-        )
-
-    except botocore.exceptions.ClientError as e:
-        error_code = e.response.get("Error", {}).get("Code")
-        if error_code == "AccessDenied":
-            print(
-                f"   -> ❌ LỖI: Access Denied. User của bạn thiếu quyền 'iam:PutUserPolicy'."
-            )
-            return json.dumps(
-                {
-                    "status": "failed",
-                    "user": user_name,
-                    "error": f"Access Denied (Thiếu quyền iam:PutUserPolicy?): {e}",
-                }
-            )
-        elif error_code == "EntityAlreadyExists":
-            print(
-                f"   -> ⚠️ BỎ QUA: Policy '{policy_name}' đã tồn tại cho user {user_name}."
-            )
-            return json.dumps(
-                {
-                    "status": "skipped",
-                    "user": user_name,
-                    "message": "Policy already exists.",
-                }
-            )
-        else:
-            print(f"   -> ❌ LỖI: {e}")
-            return json.dumps({"status": "failed", "user": user_name, "error": str(e)})
     except Exception as e:
-        print(f"   -> ❌ LỖI CHUNG: {e}")
-        return json.dumps({"status": "failed", "user": user_name, "error": str(e)})
+        return {"success": False, "error": str(e), "resource": resource_id}
 
 
-# Ánh xạ tên (string) tới hàm (function)
-def remediate_s3_secure_transport(bucket_name: str, finding_id: str):
+@tool
+def s3_secure_transport(resource_id: str, region: str = "us-east-1") -> str:
     """
-    Thêm Bucket Policy bắt buộc sử dụng HTTPS (TLS).
-    Policy này sẽ DENY mọi request có 'aws:SecureTransport': 'false'.
+    Mục đích: Bắt buộc truy cập HTTPS bằng bucket policy.
+    Dùng khi: Finding yêu cầu SecureTransport = true.
+    Tự động: Ghi đè bucket policy với rule EnforceSSL.
+    Giới hạn: không merge policy cũ → có thể override policy hiện tại.
+
     """
-    print(
-        f"[RemediateTool] ⚡️ SỬA LỖI (Finding: {finding_id}) -> Enforce SSL (Secure Transport): {bucket_name}"
-    )
     try:
-        s3_client = boto3.client("s3")
-
-        # Policy bắt buộc HTTPS
+        client = boto3.client("s3", region_name=region)
         policy = {
             "Version": "2012-10-17",
             "Statement": [
                 {
-                    "Sid": "AllowSSLRequestsOnly",
+                    "Sid": "EnforceSSL",
                     "Effect": "Deny",
                     "Principal": "*",
                     "Action": "s3:*",
                     "Resource": [
-                        f"arn:aws:s3:::{bucket_name}",
-                        f"arn:aws:s3:::{bucket_name}/*",
+                        f"arn:aws:s3:::{resource_id}",
+                        f"arn:aws:s3:::{resource_id}/*",
                     ],
                     "Condition": {"Bool": {"aws:SecureTransport": "false"}},
                 }
             ],
         }
-
-        # Lưu ý: Lệnh này sẽ GHI ĐÈ policy hiện tại.
-        # Trong môi trường Prod thực tế, cần logic merge policy phức tạp hơn.
-        s3_client.put_bucket_policy(Bucket=bucket_name, Policy=json.dumps(policy))
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": "Applied SecureTransport Policy",
-            }
-        )
-    except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
-
-
-def remediate_s3_lifecycle(bucket_name: str, finding_id: str):
-    """
-    Thiết lập vòng đời cơ bản: Hủy upload chưa hoàn thành sau 7 ngày (giúp tiết kiệm chi phí và pass rule).
-    """
-    print(
-        f"[RemediateTool] ⚡️ SỬA LỖI (Finding: {finding_id}) -> Enable Lifecycle: {bucket_name}"
-    )
-    try:
-        s3_client = boto3.client("s3")
-
-        lifecycle_config = {
-            "Rules": [
-                {
-                    "ID": "AbortIncompleteMultipartUploads",
-                    "Status": "Enabled",
-                    "Filter": {"Prefix": ""},  # Áp dụng cho toàn bộ bucket
-                    "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 7},
-                }
-            ]
+        client.put_bucket_policy(Bucket=resource_id, Policy=json.dumps(policy))
+        return {
+            "success": True,
+            "status": "enabled",
+            "action": "Enforce SSL Policy",
+            "resource": resource_id,
         }
+    except Exception as e:
+        return {"success": False, "error": str(e), "resource": resource_id}
 
-        s3_client.put_bucket_lifecycle_configuration(
-            Bucket=bucket_name, LifecycleConfiguration=lifecycle_config
-        )
-        return json.dumps(
+
+@tool
+def s3_enable_lifecycle_configuration(
+    resource_id: str, bucket_name: str = None, region: str = "us-east-1"
+) -> dict:
+    """
+    Mục đích: Thêm lifecycle rule cơ bản để pass kiểm tra.
+    Dùng khi: Bucket thiếu lifecycle configuration.
+    Tự động: Tạo rule abort multipart upload sau 7 ngày.
+    Giới hạn: Không thêm rule transition nếu không được yêu cầu.
+
+    """
+
+    # 1. Logic lấy bucket name an toàn (Chuẩn Parameter Injection)
+    # Ưu tiên bucket_name từ tham số truyền vào
+    target_bucket = bucket_name if bucket_name else resource_id
+
+    # Làm sạch nếu dính ARN
+    if target_bucket and target_bucket.startswith("arn:aws:s3:::"):
+        target_bucket = target_bucket.split(":::")[1]
+    elif target_bucket:
+        target_bucket = target_bucket.strip()
+
+    if not target_bucket:
+        return {"success": False, "error": "Could not determine bucket name"}
+
+    # 2. Cấu hình Rule (Gộp logic tối ưu)
+    # Rule này đủ để pass bài test của Prowler
+    lifecycle_config = {
+        "Rules": [
             {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": "Enabled Lifecycle (Abort Incomplete Uploads)",
+                "ID": "PruneIncompleteMultipartUploads",
+                "Status": "Enabled",
+                "Filter": {"Prefix": ""},
+                # Rule 1: Dọn rác upload lỗi sau 7 ngày
+                "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 7},
             }
-        )
-    except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
-
-
-def remediate_s3_logging(bucket_name: str, finding_id: str):
-    print(f"[Tool] ⚡️ Enable Logging (Self-logging): {bucket_name}")
-    try:
-        s3 = boto3.client("s3")
-        # Grant permission to LogDelivery group (Required)
-        uri = "http://acs.amazonaws.com/groups/s3/LogDelivery"
-        acl = s3.get_bucket_acl(Bucket=bucket_name)
-        grants = acl.get("Grants", [])
-        grants.extend(
-            [
-                {"Grantee": {"Type": "Group", "URI": uri}, "Permission": "WRITE"},
-                {"Grantee": {"Type": "Group", "URI": uri}, "Permission": "READ_ACP"},
-            ]
-        )
-        s3.put_bucket_acl(
-            Bucket=bucket_name,
-            AccessControlPolicy={"Grants": grants, "Owner": acl["Owner"]},
-        )
-        # Enable logging
-        s3.put_bucket_logging(
-            Bucket=bucket_name,
-            BucketLoggingStatus={
-                "LoggingEnabled": {"TargetBucket": bucket_name, "TargetPrefix": "logs/"}
-            },
-        )
-        return json.dumps(
-            {"status": "success", "action": "Enabled Server Access Logging"}
-        )
-    except Exception as e:
-        return json.dumps({"status": "failed", "error": str(e)})
-
-
-def remediate_s3_object_lock(bucket_name: str, finding_id: str):
-    print(f"[Tool] ⚡️ Enable Object Lock: {bucket_name}")
-    try:
-        s3 = boto3.client("s3")
-        # Bật versioning trước
-        s3.put_bucket_versioning(
-            Bucket=bucket_name, VersioningConfiguration={"Status": "Enabled"}
-        )
-        s3.put_object_lock_configuration(
-            Bucket=bucket_name,
-            ObjectLockConfiguration={
-                "ObjectLockEnabled": "Enabled",
-                "Rule": {"DefaultRetention": {"Mode": "GOVERNANCE", "Days": 30}},
-            },
-        )
-        return json.dumps({"status": "success", "action": "Enabled Object Lock"})
-    except Exception as e:
-        return json.dumps({"status": "failed", "error": str(e)})
-
-
-def remediate_s3_event_notifications(bucket_name: str, finding_id: str):
-    """
-    [TOOL] Bật Event Notifications cho Bucket.
-    Fix lỗi Region: Tự động tìm region của bucket để tạo SNS topic cùng vùng.
-    """
-    print(f"[RemediateTool] ⚡️ Enable Event Notifications: {bucket_name}...")
+            # Bạn có thể thêm Rule 2 transition ở đây nếu muốn gộp
+        ]
+    }
 
     try:
-        # 1. Xác định Region của Bucket (Bước quan trọng nhất)
-        # Dùng client mặc định để hỏi vị trí
-        s3_control = boto3.client("s3")
-        loc_resp = s3_control.get_bucket_location(Bucket=bucket_name)
-        bucket_region = loc_resp["LocationConstraint"]
-
-        # AWS quirks: Nếu là us-east-1, API trả về None -> Phải gán thủ công
-        if bucket_region is None:
-            bucket_region = "us-east-1"
-
-        print(f"   -> Bucket nằm tại region: {bucket_region}")
-
-        # 2. Khởi tạo Client S3 và SNS tại ĐÚNG REGION ĐÓ
-        s3 = boto3.client("s3", region_name=bucket_region)
-        sns = boto3.client("sns", region_name=bucket_region)
-
-        topic_name = "S3-Security-Notifications-Sink"
-
-        # 3. Tạo (hoặc lấy) SNS Topic
-        print(f"   -> Đang tạo/kiểm tra SNS Topic: {topic_name}...")
-        topic_response = sns.create_topic(Name=topic_name)
-        topic_arn = topic_response["TopicArn"]
-
-        # 4. Cấp quyền cho Bucket được phép gửi tin vào SNS Topic
-        print(f"   -> Đang cấp quyền cho S3 publish vào SNS...")
-        sns_policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "AllowS3ToPublish",
-                    "Effect": "Allow",
-                    "Principal": {"Service": "s3.amazonaws.com"},
-                    "Action": "SNS:Publish",
-                    "Resource": topic_arn,
-                    "Condition": {
-                        "ArnLike": {"aws:SourceArn": f"arn:aws:s3:::{bucket_name}"}
-                    },
-                }
-            ],
+        client = boto3.client("s3", region_name=region)
+        client.put_bucket_lifecycle_configuration(
+            Bucket=target_bucket, LifecycleConfiguration=lifecycle_config
+        )
+        return {
+            "success": True,
+            "action": "Applied Lifecycle Configuration (Abort Incomplete 7 days)",
+            "resource": target_bucket,
         }
-
-        sns.set_topic_attributes(
-            TopicArn=topic_arn,
-            AttributeName="Policy",
-            AttributeValue=json.dumps(sns_policy),
-        )
-
-        # 5. Bật Notification trên Bucket
-        print(f"   -> Đang cấu hình S3 Notification...")
-        s3.put_bucket_notification_configuration(
-            Bucket=bucket_name,
-            NotificationConfiguration={
-                "TopicConfigurations": [
-                    {
-                        "Id": "Auto-Remediate-Event-Notify",
-                        "TopicArn": topic_arn,
-                        "Events": ["s3:ObjectCreated:*"],
-                    }
-                ]
-            },
-        )
-
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "region": bucket_region,
-                "action": f"Enabled Event Notifications -> SNS: {topic_name}",
-            }
-        )
-
     except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        return {"success": False, "error": str(e), "resource": target_bucket}
 
 
-def remediate_s3_cross_account(bucket_name: str, finding_id: str):
+@tool
+def s3_remove_cross_account_principals(
+    resource_id: str, region: str = "us-east-1", account_id: Optional[str] = None
+) -> str:
     """
-    Quét Bucket Policy, tìm các Statement cho phép Principal lạ (không thuộc account hiện tại)
-    và xóa các Statement đó đi.
+    [MANUAL-ONLY] Hỗ trợ phân tích IAM Policy cho lỗi 's3_bucket_cross_account_access'.
+    Mục đích: Gợi ý gỡ quyền truy cập cross-account.
+    Dùng khi: Bucket policy cho phép tài khoản ngoài.
+    Tự động: Không chỉnh sửa policy trong safe-mode.
+    Giới hạn: Chỉ phân tích, không can thiệp.
+    Lưu ý: Cần người dùng xem xét và sửa thủ công.
     """
-    print(f"[RemediateTool] ⚡️ Remove Cross-Account Access: {bucket_name}")
-    s3 = boto3.client("s3")
-    sts = boto3.client("sts")
+    return {
+        "success": False,
+        "status": "manual_required",
+        "manual_required": True,
+        "resource": resource_id,
+        "performed_actions": [],
+        "remaining_actions": [
+            "Review and remove cross-account principals in bucket policy."
+        ],
+        "reason": "Cross-account policy cleanup must be reviewed manually.",
+        "verification": {"before": {}, "after": {}, "passed": False},
+    }
 
+
+@tool
+def s3_disable_bucket_acls(
+    resource_id: str, region: str = "us-east-1"
+) -> Dict[str, Any]:
+    """
+    [AUTO-FIX] Khắc phục lỗi 's3_bucket_acl_prohibited'
+    Mục đích: Vô hiệu hóa ACL và chuyển sang BucketOwnerEnforced.
+    Dùng khi: Finding yêu cầu "ACLs should be disabled".
+    Tự động: Put BucketOwnershipControls.
+    Giới hạn: Không sửa bucket policy liên quan tới public access.
+    """
+    client = boto3.client("s3", region_name=region)
     try:
-        current_account = sts.get_caller_identity()["Account"]
-
-        # Lấy Policy hiện tại
+        # Check current state
         try:
-            policy_resp = s3.get_bucket_policy(Bucket=bucket_name)
-            policy_json = json.loads(policy_resp["Policy"])
-        except botocore.exceptions.ClientError as e:
-            if "NoSuchBucketPolicy" in str(e):
-                return json.dumps(
-                    {"status": "success", "action": "No Policy found (Secure)"}
-                )
-            raise e
-
-        new_statements = []
-        modified = False
-
-        for stmt in policy_json.get("Statement", []):
-            principal = stmt.get("Principal")
-            # Logic đơn giản: Nếu Principal là AWS ARN và KHÔNG chứa account ID hiện tại -> Xóa
-            # (Lưu ý: Logic này có thể xóa nhầm quyền CloudFront/Service, cần cẩn thận ở Prod)
-            if isinstance(principal, dict) and "AWS" in principal:
-                aws_princ = principal["AWS"]
-                if isinstance(aws_princ, str):
-                    aws_princ = [aws_princ]
-
-                # Kiểm tra xem có ARN nào lạ không
-                has_external = any(
-                    current_account not in arn and "arn:aws:iam" in arn
-                    for arn in aws_princ
-                )
-
-                if has_external:
-                    print(f"   -> Removing Statement: {stmt.get('Sid', 'Unknown')}")
-                    modified = True
-                    continue  # Bỏ qua statement này (Xóa)
-
-            new_statements.append(stmt)
-
-        if modified:
-            if not new_statements:
-                # Nếu xóa hết thì delete luôn policy
-                s3.delete_bucket_policy(Bucket=bucket_name)
-                return json.dumps(
-                    {
-                        "status": "success",
-                        "action": "Deleted Bucket Policy (All external)",
-                    }
-                )
-            else:
-                policy_json["Statement"] = new_statements
-                s3.put_bucket_policy(Bucket=bucket_name, Policy=json.dumps(policy_json))
-                return json.dumps(
-                    {"status": "success", "action": "Removed External Principals"}
-                )
-        else:
-            return json.dumps(
-                {"status": "skipped", "reason": "No cross-account permissions found"}
-            )
-
-    except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
-
-
-def remediate_s3_mfa_delete(bucket_name: str, finding_id: str):
-    """
-    Cố gắng bật MFA Delete.
-    Lưu ý: Việc này yêu cầu Root Account MFA Device Serial + Code.
-    Tool này sẽ thử bật nhưng 99% sẽ fail nếu chạy bằng IAM User thường.
-    Tuy nhiên, nó giúp Agent không bị crash vì thiếu tool.
-    """
-    print(f"[RemediateTool] ⚡️ Enable MFA Delete: {bucket_name}")
-    try:
-        # Đây là lệnh chuẩn, nhưng sẽ thiếu MFA param
-        boto3.client("s3").put_bucket_versioning(
-            Bucket=bucket_name,
-            VersioningConfiguration={"Status": "Enabled", "MFADelete": "Enabled"},
-            # Cần tham số MFA='serial code' ở đây mới chạy được
-        )
-        return json.dumps({"status": "success", "action": "Enabled MFA Delete"})
-    except Exception as e:
-        # Trả về lỗi nhưng format đẹp để Agent hiểu là cần làm thủ công
-        return json.dumps(
-            {
-                "status": "manual_required",
-                "bucket": bucket_name,
-                "message": "MFA Delete requires Root MFA Hardware. Please run CLI manually: aws s3api put-bucket-versioning ... --mfa 'serial code'",
-            }
-        )
-
-
-def remediate_s3_replication(bucket_name: str, finding_id: str):
-    """
-    [TOOL CAO CẤP] Tự động thiết lập Cross-Region Replication (CRR).
-    1. Tạo bucket backup tại us-west-2 (nếu bucket chính ở us-east-1).
-    2. Tạo IAM Role cho phép S3 replicate.
-    3. Bật rule replication.
-    """
-    print(
-        f"[RemediateTool] ⚡️ HIGH RISK FIX: Thiết lập Replication cho {bucket_name}..."
-    )
-
-    s3 = boto3.client("s3")
-    iam = boto3.client("iam")
-    sts = boto3.client("sts")
-
-    try:
-        # 1. Xác định Region nguồn và đích
-        loc_resp = s3.get_bucket_location(Bucket=bucket_name)
-        source_region = loc_resp["LocationConstraint"] or "us-east-1"
-
-        # Chọn region đích khác nguồn (đơn giản hóa cho demo)
-        dest_region = "us-west-2" if source_region == "us-east-1" else "us-east-1"
-        dest_bucket_name = f"{bucket_name}-backup-{dest_region}"
-
-        account_id = sts.get_caller_identity()["Account"]
-
-        # 2. Tạo Bucket Đích (Destination Bucket)
-        print(
-            f"   -> Đang tạo/kiểm tra bucket backup: {dest_bucket_name} tại {dest_region}..."
-        )
-        try:
-            if dest_region == "us-east-1":
-                s3.create_bucket(Bucket=dest_bucket_name)
-            else:
-                s3.create_bucket(
-                    Bucket=dest_bucket_name,
-                    CreateBucketConfiguration={"LocationConstraint": dest_region},
-                )
-        except botocore.exceptions.ClientError as e:
-            if "BucketAlreadyOwnedByYou" not in str(e):
-                raise e  # Nếu lỗi không phải do đã tồn tại thì báo lỗi thật
-
-        # 3. Bật Versioning cho cả 2 bucket (Yêu cầu bắt buộc của CRR)
-        print("   -> Đang bật Versioning cho cả 2 bucket...")
-        s3.put_bucket_versioning(
-            Bucket=bucket_name, VersioningConfiguration={"Status": "Enabled"}
-        )
-        s3.put_bucket_versioning(
-            Bucket=dest_bucket_name, VersioningConfiguration={"Status": "Enabled"}
-        )
-
-        # 4. Tạo IAM Role cho Replication
-        role_name = f"S3-Replication-Role-{bucket_name}"[:64]  # Giới hạn 64 ký tự
-        print(f"   -> Đang cấu hình IAM Role: {role_name}...")
-
-        trust_policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {"Service": "s3.amazonaws.com"},
-                    "Action": "sts:AssumeRole",
+            resp = client.get_bucket_ownership_controls(Bucket=resource_id)
+            current = resp["OwnershipControls"]["Rules"][0].get("ObjectOwnership")
+            if current == "BucketOwnerEnforced":
+                return {
+                    "success": True,
+                    "status": "skipped",
+                    "message": "ACLs already disabled.",
+                    "bucket": resource_id,
                 }
-            ],
-        }
+        except Exception:
+            pass  # Chưa cấu hình thì cứ chạy tiếp
 
+        # STEP 1: Cố gắng reset ACL về private trước (Fix lỗi InvalidBucketAcl)
+        # Lưu ý: Lệnh này có thể fail nếu Ownership đã là Enforced, nên ta bọc try/except
         try:
-            iam.create_role(
-                RoleName=role_name, AssumeRolePolicyDocument=json.dumps(trust_policy)
-            )
-        except botocore.exceptions.ClientError as e:
-            if "EntityAlreadyExists" not in str(e):
-                raise e
+            client.put_bucket_acl(Bucket=resource_id, ACL="private")
+        except Exception:
+            pass
 
-        # Gắn quyền cho Role
-        permission_policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": ["s3:GetReplicationConfiguration", "s3:ListBucket"],
-                    "Resource": [f"arn:aws:s3:::{bucket_name}"],
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "s3:GetObjectVersionForReplication",
-                        "s3:GetObjectVersionAcl",
-                        "s3:GetObjectVersionTagging",
-                    ],
-                    "Resource": [f"arn:aws:s3:::{bucket_name}/*"],
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "s3:ReplicateObject",
-                        "s3:ReplicateDelete",
-                        "s3:ReplicateTags",
-                    ],
-                    "Resource": [f"arn:aws:s3:::{dest_bucket_name}/*"],
-                },
-            ],
+        # STEP 2: Apply BucketOwnerEnforced
+        client.put_bucket_ownership_controls(
+            Bucket=resource_id,
+            OwnershipControls={"Rules": [{"ObjectOwnership": "BucketOwnerEnforced"}]},
+        )
+
+        return {
+            "success": True,
+            "status": "remediated",
+            "message": "Bucket ACLs disabled (BucketOwnerEnforced).",
+            "bucket": resource_id,
         }
-        iam.put_role_policy(
-            RoleName=role_name,
-            PolicyName="ReplicationPolicy",
-            PolicyDocument=json.dumps(permission_policy),
-        )
-
-        # Đợi một chút để IAM Role lan truyền (propagation)
-        import time
-
-        time.sleep(5)
-
-        role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
-
-        # 5. Kích hoạt Replication Config trên Bucket nguồn
-        print("   -> Đang kích hoạt luật Replication...")
-        replication_config = {
-            "Role": role_arn,
-            "Rules": [
-                {
-                    "ID": "Auto-Remediated-Rule",
-                    "Status": "Enabled",
-                    "Priority": 1,
-                    "DeleteMarkerReplication": {"Status": "Disabled"},
-                    "Filter": {"Prefix": ""},  # Replicate All
-                    "Destination": {
-                        "Bucket": f"arn:aws:s3:::{dest_bucket_name}",
-                        "StorageClass": "STANDARD_IA",  # Tiết kiệm chi phí cho backup
-                    },
-                }
-            ],
-        }
-        s3.put_bucket_replication(
-            Bucket=bucket_name, ReplicationConfiguration=replication_config
-        )
-
-        return json.dumps(
-            {
-                "status": "success",
-                "bucket": bucket_name,
-                "action": f"Enabled Replication to {dest_bucket_name}",
-                "details": "Created backup bucket and IAM role successfully.",
-            }
-        )
 
     except Exception as e:
-        return json.dumps({"status": "failed", "bucket": bucket_name, "error": str(e)})
+        return {"success": False, "error": str(e), "bucket": resource_id}
 
 
+@tool
+def s3_enable_intelligent_tiering(resource_id: str, region: str = "us-east-1") -> str:
+    """
+    Mục đích: Gợi ý cấu hình Intelligent-Tiering.
+    Dùng khi: Finding liên quan tối ưu chi phí lưu trữ.
+    Tự động: Không áp dụng lifecycle rule.
+    Giới hạn: Chỉ mô tả đề xuất, không thực thi.
+    Lưu ý: Yêu cầu cấu hình thủ công nếu muốn bật.
+    """
+    return {
+        "success": False,
+        "status": "manual_required",
+        "manual_required": True,
+        "resource": resource_id,
+        "performed_actions": [],
+        "remaining_actions": [
+            "Manually configure Intelligent-Tiering storage class transitions."
+        ],
+        "reason": "Tool does not auto-create intelligent-tiering rules.",
+        "verification": {"before": {}, "after": {}, "passed": False},
+    }
+
+
+# ==========================================================
+# 4. EXPORT CẤU HÌNH TOOL (PHẦN QUAN TRỌNG BẠN ĐANG THIẾU)
+# ==========================================================
+
+# ⚠️ ĐÂY LÀ BIẾN MÀ SCANNER AGENT ĐANG TÌM KIẾM
 AVAILABLE_FUNCTIONS = {
-    # --- Nhóm Scan & Check ---
     "start_scan_by_group": start_scan_by_group,
     "start_scan_by_file": start_scan_by_file,
     "check_job_status": check_job_status,
-    # --- Nhóm Sửa Lỗi (Chính chủ) ---
-    "remediate_s3_public_access": remediate_s3_public_access,
-    "remediate_s3_bucket_versioning": remediate_s3_bucket_versioning,
-    "remediate_s3_kms_encryption": remediate_s3_kms_encryption,
-    "remediate_iam_user_mfa": remediate_iam_user_mfa,
-    "remediate_s3_secure_transport": remediate_s3_secure_transport,  # <--- Mới
-    "remediate_s3_lifecycle": remediate_s3_lifecycle,  # <--- Mới
-    "remediate_s3_replication": remediate_s3_replication,
-    "remediate_s3_bucket_event_notifications_enabled": remediate_s3_event_notifications,  # Log của bạn gọi tên này
-    "remediate_s3_bucket_cross_region_replication": remediate_s3_replication,
-    "remediate_s3_cross_account": remediate_s3_cross_account,
-    "remediate_s3_mfa_delete": remediate_s3_mfa_delete,
-    # --- [MỚI] Nhóm Bí danh (Alias) - Bắt các tên AI hay tự chế ---
-    # Nếu AI chế ra tên dài ngoằng, ta trỏ nó về hàm đúng
-    "remediate_s3_bucket_object_versioning": remediate_s3_bucket_versioning,
-    "remediate_s3_bucket_level_public_access_block": remediate_s3_public_access,
-    "remediate_s3_bucket_public_access": remediate_s3_public_access,
-    "remediate_s3_bucket_secure_transport_policy": remediate_s3_secure_transport,  # AI hay thêm chữ _policy
-    "remediate_s3_bucket_lifecycle_enabled": remediate_s3_lifecycle,
-    "remediate_s3_bucket_kms_encryption": remediate_s3_kms_encryption,
-    "remediate_s3_bucket_secure_transport_policy": remediate_s3_secure_transport,
-    "remediate_s3_bucket_lifecycle_enabled": remediate_s3_lifecycle,
-    "remediate_s3_bucket_server_access_logging_enabled": remediate_s3_logging,
-    "remediate_s3_bucket_cross_account_access": remediate_s3_cross_account,  # Log của bạn gọi tên này
-    "remediate_s3_bucket_object_lock": remediate_s3_object_lock,
-    "remediate_s3_event_notifications": remediate_s3_event_notifications,
-    "remediate_s3_bucket_no_mfa_delete": remediate_s3_mfa_delete,  # Log của bạn gọi tên này
-    "remediate_s3_server_access_logging_enabled": remediate_s3_logging,  # Log của bạn gọi tên này (bỏ chữ bucket)
+    "remediate_s3_public_access": s3_block_account_public_access,
+    "remediate_s3_bucket_versioning": s3_enable_versioning,
+    "remediate_s3_kms_encryption": s3_enable_kms_encryption,
+    "remediate_s3_secure_transport": s3_secure_transport,
+    "remediate_s3_bucket_lifecycle_enabled": s3_enable_lifecycle_configuration,
+    "remediate_s3_bucket_cross_account_access": s3_remove_cross_account_principals,
+    "remediate_s3_bucket_acl_prohibited": s3_disable_bucket_acls,
+    "prepare_s3_bucket_replication": s3_prepare_replication,
+    "remediate_s3_bucket_mfa_delete": s3_enable_mfa_delete,
+    "remediate_s3_bucket_object_lock": s3_enable_object_lock,
+    "remediate_s3_bucket_logging": s3_enable_access_logging,
+    "remediate_s3_bucket_event_notifications": s3_enable_event_notifications,
 }
-# -------------------------------------------------------------------
-# "THỰC ĐƠN" TOOL CHO TỪNG AGENT
-# -------------------------------------------------------------------
 
-# Tool cho Agent Điều phối (chỉ được phép "bắt đầu" job)
-DISPATCH_AGENT_TOOLS = None
-SCANNER_AGENT_TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "start_scan_by_group",  # Quay lại tên cũ
-            "description": "Bắt đầu quét AWS theo MỘT tên service (group).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "group": {
-                        "type": "string",
-                        "description": "Một service, ví dụ: 's3'",
-                    }
-                },
-                "required": ["group"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "start_scan_by_file",
-            # ... (giữ nguyên)
-        },
-    },
-]
-# Tool cho Agent Giám sát (chỉ được phép "kiểm tra" job)
-# (Mặc dù agent này sẽ gọi thẳng, chúng ta vẫn định nghĩa nó)
-MONITORING_AGENT_TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "check_job_status",
-            "description": "Kiểm tra trạng thái của một job đang chạy bằng 'job_id' của nó.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "job_id": {
-                        "type": "string",
-                        "description": "Mã ID của job được trả về từ các hàm 'start_scan'.",
-                    }
-                },
-                "required": ["job_id"],
-            },
-        },
-    },
-]
-REMEDIATE_AGENT_TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "remediate_s3_public_access",
-            "description": "Sửa lỗi S3 bucket đang public bằng cách bật 'Block all public access'.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "bucket_name": {
-                        "type": "string",
-                        "description": "Tên S3 bucket cần sửa.",
-                    },
-                    "finding_id": {
-                        "type": "string",
-                        "description": "Mã finding liên quan.",
-                    },
-                },
-                "required": ["bucket_name", "finding_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "remediate_iam_user_mfa",
-            "description": "Gắn một policy vào user IAM để bắt buộc họ dùng MFA.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_name": {
-                        "type": "string",
-                        "description": "Tên user IAM cần sửa.",
-                    },
-                    "finding_id": {
-                        "type": "string",
-                        "description": "Mã finding liên quan.",
-                    },
-                },
-                "required": ["user_name", "finding_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "remediate_s3_kms_encryption",
-            "description": "Bật mã hóa KMS cho S3 Bucket.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "bucket_name": {"type": "string"},
-                    "finding_id": {"type": "string"},
-                },
-                "required": ["bucket_name", "finding_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {  # <--- TOOL MỚI ĐƯỢC THÊM VÀO ĐÂY
-            "name": "remediate_s3_bucket_versioning",
-            "description": "Bật tính năng Versioning cho S3 Bucket (dành cho các finding Low/Info về backup/recovery).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "bucket_name": {
-                        "type": "string",
-                        "description": "Tên S3 bucket cần bật versioning.",
-                    },
-                    "finding_id": {
-                        "type": "string",
-                        "description": "Mã finding liên quan.",
-                    },
-                },
-                "required": ["bucket_name", "finding_id"],
-            },
-        },
-    },
+
+# Danh sách tool cho ScannerAgent
+SCANNER_AGENT_TOOLS = [start_scan_by_group, start_scan_by_file, check_job_status]
+
+# Danh sách tất cả tool cho RemediateAgent
+ALL_TOOLS = [
+    # --- Scanner Tools ---
+    start_scan_by_group,
+    start_scan_by_file,
+    check_job_status,
+    # --- S3 Remediation Tools ---
+    s3_block_account_public_access,
+    s3_enable_versioning,
+    s3_enable_kms_encryption,
+    s3_secure_transport,
+    s3_enable_lifecycle_configuration,
+    s3_remove_cross_account_principals,
+    s3_disable_bucket_acls,
+    s3_prepare_replication,
+    s3_enable_mfa_delete,
+    s3_enable_object_lock,
+    s3_enable_access_logging,
+    s3_enable_event_notifications,
+    # Tools ít dùng nhưng vẫn cần expose
+    s3_force_private_acl,
+    s3_enable_intelligent_tiering,
 ]

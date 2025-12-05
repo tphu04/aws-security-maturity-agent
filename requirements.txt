@@ -4,3 +4,7 @@ ollama
 requests
 python-dotenv
 pydantic
+langchain 
+langchain-core 
+langchain-ollama 
+langgraph

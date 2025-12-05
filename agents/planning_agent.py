@@ -1,10 +1,13 @@
-import json
 import re
+from typing import List, Dict, Any, Optional
+from langchain_ollama import ChatOllama
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from pydantic import BaseModel, Field
 from .base_agent import BaseAgent
 
-# (Không cần import tool)
 
-# --- (SỬA) DANH SÁCH NÀY DÙNG ĐỂ KIỂM TRA (VALIDATE) SAU KHI AI TRẢ VỀ ---
+# --- 1. WHITELIST ---
 ALLOWED_GROUPS_LIST = [
     "accessanalyzer",
     "account",
@@ -91,174 +94,152 @@ ALLOWED_GROUPS_LIST = [
 ]
 
 
+# --- 2. OUTPUT SCHEMA ---
+class AssessmentPlanOutput(BaseModel):
+    target_services: List[str] = Field(
+        description="List of AWS services to scan (e.g. ['s3', 'iam'])"
+    )
+    reasoning: str = Field(description="Explanation of why these services were chosen")
+
+
 class PlanningAgent(BaseAgent):
 
-    # --- (SỬA) SYSTEM PROMPT MỚI THEO CẤU TRÚC CỦA BẠN ---
-    SYSTEM_PROMPT = f"""
-### Role
-Bạn là một API JSON. Bạn KHÔNG phải là trợ lý. 
-Vai trò của bạn là phân tích `User Request` và trả về MỘT ĐỐI TƯỢNG JSON duy nhất.
+    SYSTEM_PROMPT = """### Role
+Bạn là một **AWS Security Architect**. 
+Nhiệm vụ: Chuyển đổi yêu cầu người dùng thành danh sách các AWS Services cần quét (Prowler groups).
 
-### Instruction
-1. Đọc `User Request`.
-2. Sử dụng `Bảng ánh xạ` để tìm các `Service Code` (mã dịch vụ) tương ứng.
-3. Nếu người dùng hỏi chung chung (ví dụ: "kiểm tra bảo mật"), hãy trả về `["iam", "s3", "ec2", "vpc"]`.
-4. Trả về đối tượng JSON theo định dạng trong `Output`.
-5. KHÔNG GIẢI THÍCH. KHÔNG TRÒ CHUYỆN. KHÔNG SỬ DỤNG ```json.
-6. Câu trả lời của bạn PHẢI BẮT ĐẦU bằng `{{` và KẾT THÚC bằng `}}`.
+### Quy trình tư duy:
+1. **Phân tích từ khóa**:
+   - "Bucket", "file" -> s3
+   - "Máy ảo", "Server", "Compute" -> ec2
+   - "Mạng", "IP", "Firewall" -> vpc
+   - "User", "Admin", "Access Key" -> iam
+   - "Database" -> rds, dynamodb
 
-### Output
-{{
-    "groups_to_scan": ["<service_code_1>", ...],
-    "files_to_scan": ["<file_name_1>", ...]
-}}
+2. **Xác định phụ thuộc**:
+   - ec2 thường đi kèm vpc, ebs.
+   - s3 thường đi kèm kms (mã hóa).
+   - "Toàn bộ" -> iam, s3, ec2, vpc, cloudtrail, securityhub.
 
-### Bảng ánh xạ
-| Thuật ngữ người dùng (Keywords) | Service Code (Output) |
-| :--- | :--- |
-| "phân quyền", "người dùng", "truy cập trái phép", "mfa", "access key", "root" | "iam" |
-| "tệp", "lưu trữ", "bucket", "truy cập internet", "public access" | "s3" |
-| "máy ảo", "instance", "cổng", "ssh", "rdp" | "ec2" |
-| "log", "giám sát", "lịch sử api" | "cloudtrail" |
-| "mạng", "subnet", "acl", "tường lửa" | "vpc" |
+### Output Format (JSON Only)
+Trả về JSON đúng chuẩn với key `target_services` và `reasoning`.
+
+{{{{
+    "target_services": ["s3"],
+    "reasoning": "Người dùng muốn kiểm tra lưu trữ, nên chọn S3 và KMS."
+    
+}}}}
 """
 
     def __init__(self, model_name: str, api_key: str, base_url: str):
-        super().__init__(model_name, api_key, base_url)
-        self.tools_menu = None
-        self.available_tools = {}
-
-    def _extract_json_from_text(self, text: str) -> str:
-        """
-        Helper function to extract JSON from messy AI text.
-        (SỬA) Tìm khối JSON cuối cùng (vì AI hay giải thích trước).
-        """
-        # 1. Tìm ưu tiên khối ```json ... ``` (lấy cái cuối cùng)
-        matches = re.findall(r"```json\s*([\s\S]*?)\s*```", text)
-        if matches:
-            print("[PlanningAgent] ℹ️ (Đã trích xuất JSON từ khối ```json)")
-            return matches[-1].strip()  # Lấy cái cuối
-
-        # 2. Nếu không, tìm khối { ... } cuối cùng
-        # Tìm kiếm tất cả các khối JSON object { ... }
-        matches = re.findall(r"(\{[\s\S]*?\})", text)
-        if matches:
-            # Lặp ngược lại để tìm khối JSON đầu tiên hợp lệ (thường là cái cuối)
-            for match in reversed(matches):
-                try:
-                    # Kiểm tra xem đây có phải là Kế hoạch (Plan) không
-                    parsed_json = json.loads(match)
-                    if (
-                        "groups_to_scan" in parsed_json
-                        or "files_to_scan" in parsed_json
-                        or "groupsToScan" in parsed_json
-                        or "groupsto(scan" in parsed_json
-                    ):
-                        print(
-                            "[PlanningAgent] ℹ️ (Đã trích xuất JSON từ khối { ... } cuối cùng)"
-                        )
-                        return match.strip()  # Trả về Kế hoạch
-                except json.JSONDecodeError:
-                    continue  # Bỏ qua nếu không phải JSON
-
-        print("[PlanningAgent] ⚠️ (Không tìm thấy khối JSON hợp lệ)")
-        return text
-
-    def run(self, user_prompt: str) -> dict:
-        """
-        Chạy agent và trả về một dictionary kế hoạch.
-        """
-        print(f"--------------------------------------------------")
-        print(f"[PlanningAgent] 🤖 Đang phân tích yêu cầu: '{user_prompt}'")
-        messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ]
-
-        response_message = self.call_llm(messages)
-
-        if not response_message or not response_message.content:
-            print("[PlanningAgent] ❌ AI không trả về kế hoạch.")
-            return {"groups_to_scan": [], "files_to_scan": []}
-
-        print(
-            f"[PlanningAgent] 🤖 AI trả về kế hoạch (thô): {response_message.content}"
+        self.llm = ChatOllama(
+            model=model_name,
+            base_url=base_url,
+            temperature=0,
+            # format="json",
         )
 
-        cleaned_json_string = self._extract_json_from_text(response_message.content)
+    def _validate_and_clean(self, raw_services: List[str]) -> List[str]:
+        """Lọc bỏ các service không tồn tại trong Prowler"""
+        valid_groups = []
+        for group in raw_services:
+            g_clean = str(group).lower().strip()
+            if g_clean in ALLOWED_GROUPS_LIST:
+                valid_groups.append(g_clean)
+            else:
+                print(f"   [PlanningAgent] ⚠️ Removing invalid service: '{g_clean}'")
+        return list(set(valid_groups))
+
+    def _heuristic_fallback(self, user_prompt: str) -> List[str]:
+        """Logic Fallback thông minh dựa trên từ khóa"""
+        print("   [PlanningAgent] ⚠️ AI returned empty plan. Using Keyword Fallback.")
+        prompt_lower = user_prompt.lower()
+
+        keyword_map = {
+            "s3": ["s3"],
+            "bucket": ["s3"],
+            "file": ["s3"],
+            "storage": ["s3"],
+            "ec2": ["ec2", "vpc"],
+            "vm": ["ec2"],
+            "server": ["ec2"],
+            "compute": ["ec2"],
+            "network": ["vpc"],
+            "vpc": ["vpc"],
+            "ip": ["vpc"],
+            "iam": ["iam"],
+            "user": ["iam"],
+            "permission": ["iam"],
+            "access": ["iam"],
+            "db": ["rds"],
+            "rds": ["rds"],
+            "monitor": ["cloudtrail", "cloudwatch", "config"],
+            "all": ["iam", "s3", "ec2", "vpc", "cloudtrail"],
+        }
+
+        fallback_set = set()
+        for key, services in keyword_map.items():
+            if key in prompt_lower:
+                fallback_set.update(services)
+
+        return list(fallback_set)
+
+    def run(self, user_request: str) -> Dict[str, Any]:
+        print(f"   [PlanningAgent] 🧠 Thinking about: '{user_request}'")
+
+        parser = JsonOutputParser(pydantic_object=AssessmentPlanOutput)
+        partial_list = ", ".join(ALLOWED_GROUPS_LIST[:20])
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    self.SYSTEM_PROMPT,
+                ),
+                ("user", "{request}\n\n{format_instructions}"),
+            ]
+        )
+
+        chain = prompt | self.llm | parser
 
         try:
-            plan_raw = json.loads(cleaned_json_string)
-
-            # --- (Logic Tự Sửa Lỗi và Chuẩn hóa Key) ---
-            plan_fixed = {"groups_to_scan": [], "files_to_scan": []}
-
-            def get_fixed_value(raw_data, keys):
-                for key in keys:
-                    if key in raw_data:
-                        return raw_data[key]
-                return []
-
-            plan_fixed["groups_to_scan"] = get_fixed_value(
-                plan_raw, ["groups_to_scan", "groupsToScan", "groupsto(scan"]
-            )
-            plan_fixed["files_to_scan"] = get_fixed_value(
-                plan_raw, ["files_to_scan", "filesToScan", "filesto(scan"]
+            result = chain.invoke(
+                {
+                    "request": user_request,
+                    "format_instructions": parser.get_format_instructions(),
+                }
             )
 
-            # --- (MỚI) KIỂM TRA (VALIDATE) KẾ HOẠCH ---
-            validated_groups = []
-            for group in plan_fixed["groups_to_scan"]:
-                if group in ALLOWED_GROUPS_LIST:
-                    validated_groups.append(group)
-                else:
-                    print(
-                        f"[PlanningAgent] ⚠️ Cảnh báo: AI đã đề xuất group không hợp lệ '{group}' (đã loại bỏ)."
-                    )
+            raw_services = result.get("target_services", [])
+            reasoning = result.get("reasoning", "No reasoning provided.")
 
-            plan_fixed["groups_to_scan"] = validated_groups
+            # 1. Validation
+            valid_services = self._validate_and_clean(raw_services)
 
-            # (Fallback nếu AI trả về plan rỗng nhưng user có hỏi)
-            if not plan_fixed["groups_to_scan"] and not plan_fixed["files_to_scan"]:
-                lowercased_prompt = user_prompt.lower()
-                if any(
-                    keyword in lowercased_prompt
-                    for keyword in [
-                        "bảo mật",
-                        "an ninh",
-                        "kiểm tra",
-                        "phân quyền",
-                        "tệp",
-                    ]
-                ):
-                    print(
-                        "[PlanningAgent] ⚠️ Cảnh báo: AI trả về plan rỗng, đang thử Fallback."
-                    )
-                    # Fallback: Tự ánh xạ
-                    fallback_groups = []
-                    if (
-                        "iam" in lowercased_prompt
-                        or "phân quyền" in lowercased_prompt
-                        or "người dùng" in lowercased_prompt
-                    ):
-                        fallback_groups.append("iam")
-                    if (
-                        "s3" in lowercased_prompt
-                        or "tệp" in lowercased_prompt
-                        or "bucket" in lowercased_prompt
-                    ):
-                        fallback_groups.append("s3")
+            # 2. Fallback (Keyword Matching)
+            if not valid_services:
+                valid_services = self._heuristic_fallback(user_request)
+                if valid_services:
+                    reasoning += " (Auto-detected via keywords)"
 
-                    if fallback_groups:
-                        print(
-                            f"[PlanningAgent] ℹ️ (Fallback) Tự động thêm: {fallback_groups}"
-                        )
-                        plan_fixed["groups_to_scan"] = fallback_groups
+            # 3. Final Check
+            if not valid_services:
+                error_msg = (
+                    f"❌ KHÔNG THỂ XÁC ĐỊNH DỊCH VỤ: Yêu cầu '{user_request}' "
+                    "không chứa từ khóa AWS service hợp lệ nào. Hệ thống dừng lại."
+                )
+                print(f"   [PlanningAgent] {error_msg}")
+                # Raise lỗi để crash graph ngay lập tức
+                raise ValueError(error_msg)
 
-            return plan_fixed
+            return {"target_services": valid_services, "reasoning": reasoning}
 
-        except json.JSONDecodeError:
-            print(
-                f"[PlanningAgent] ❌ Lỗi: Kế hoạch trả về không phải JSON (ngay cả sau khi dọn dẹp). Output thô: {cleaned_json_string}"
-            )
-            return {"groups_to_scan": [], "files_to_scan": []}  # Fallback
+        except Exception as e:
+            # Nếu là lỗi ValueError do ta chủ động raise ở trên -> Ném tiếp ra ngoài
+            print("LLM RAW OUTPUT:", e)
+            if isinstance(e, ValueError):
+                raise e
+
+            # Nếu là lỗi hệ thống khác (Parsing lỗi, LLM down...) -> Cũng dừng luôn
+            print(f"   [PlanningAgent] ❌ System Error: {e}")
+            raise RuntimeError(f"Lỗi hệ thống trong quá trình Planning: {e}")
