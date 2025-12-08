@@ -270,7 +270,8 @@ def report_node(state: PDCAState):
 
     diff = state.get("verification_results", {})  # List[Dict]
 
-    # Khởi tạo Agent với output_path (đã được hỗ trợ trong __init__)
+    pre_scan = json.load(open("data/pre_scan.json", "r", encoding="utf-8"))
+
     agent = ReportAgent(
         OLLAMA_MODEL,
         OLLAMA_API_KEY,
@@ -285,7 +286,7 @@ def report_node(state: PDCAState):
     }
 
     # Gọi hàm run (thay vì generate)
-    path = agent.run(diff, meta)
+    path = agent.run(pre_scan, diff, meta)
 
     return {"final_report": path}
 
