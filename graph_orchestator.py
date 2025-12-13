@@ -50,41 +50,46 @@ def planning_node(state: PDCAState):
     agent = PlanningAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
     raw_plan = agent.run(state["user_request"])
 
-    target_services = raw_plan.get("target_services", [])
+    target_services = raw_plan.get("groups_to_scan", [])
+    checks_to_scan = raw_plan.get("checks_to_scan", [])
 
-    if not target_services:
+    if not target_services and not checks_to_scan:
         print(
             "\n❌ [STOP] LỖI PLANNING: Không tìm thấy service AWS nào trong yêu cầu của bạn."
         )
-        print(
-            "   -> Gợi ý: Hãy nhập rõ ràng hơn (VD: 'Scan S3', 'Kiểm tra IAM', 'Full scan')."
-        )
-
-        # Raise Exception để Main Loop bắt được và dừng chương trình ngay lập tức
         raise ValueError("Planning Failed: No target services identified.")
 
     return {
         "assessment_plan": {
             "target_services": target_services,
-            "reasoning": raw_plan.get("reasoning", "User request based"),
+            "checks_to_scan": checks_to_scan,
+            "reasoning": raw_plan.get("reasoning", ""),
         }
     }
 
 
 def scanning_node(state: PDCAState):
-    """Bước 1: Kích hoạt Scan song song"""
+    """Bước 1: Kích hoạt Scan"""
     target_services = state["assessment_plan"].get("target_services", [])
+    checks_to_scan = state["assessment_plan"].get("checks_to_scan", [])
 
-    print(f"\n🟢 [Node: Scanning] Triggering parallel scans for: {target_services}")
+    print(f"\n🟢 [Node: Scanning] Triggering scans")
+    print(f"   - Services: {target_services}")
+    print(f"   - Checks  : {checks_to_scan}")
 
-    if not target_services:
+    if not target_services and not checks_to_scan:
         return {"scan_job_ids": []}
 
-    # Khởi tạo ScannerAgent
-    scanner = ScannerAgent(max_workers=5)
+    scanner = ScannerAgent(
+        OLLAMA_MODEL,
+        OLLAMA_API_KEY,
+        OLLAMA_BASE_URL,
+    )
 
-    # Gọi hàm run_batch để lấy list job IDs
-    job_ids = scanner.run_batch(groups=target_services)
+    job_ids = scanner.run_batch(
+        target_groups=target_services,
+        specific_checks=checks_to_scan,
+    )
 
     return {"scan_job_ids": job_ids}
 

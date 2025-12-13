@@ -740,9 +740,8 @@ AVAILABLE_FUNCTIONS = {
     "start_scan_by_group": start_scan_by_group,
     "start_scan_by_file": start_scan_by_file,
     "start_scan_by_check_ids": start_scan_by_check_ids,
-
-    
     "check_job_status": check_job_status,
+    
     "remediate_s3_public_access": s3_block_account_public_access,
     "remediate_s3_bucket_versioning": s3_enable_versioning,
     "remediate_s3_kms_encryption": s3_enable_kms_encryption,
@@ -759,7 +758,7 @@ AVAILABLE_FUNCTIONS = {
 
 
 # Danh sách tool cho ScannerAgent
-SCANNER_AGENT_TOOLS = [start_scan_by_group, start_scan_by_file, check_job_status]
+SCANNER_AGENT_TOOLS = [start_scan_by_group, start_scan_by_file, start_scan_by_check_ids, check_job_status]
 
 # Danh sách tất cả tool cho RemediateAgent
 
@@ -782,9 +781,7 @@ ALL_TOOLS = [
     start_scan_by_group,
     start_scan_by_file,
     start_scan_by_check_ids,
-
     check_job_status,
-    start_scan_by_check_ids,
     # --- S3 Remediation Tools ---
     s3_block_account_public_access,
     s3_enable_versioning,

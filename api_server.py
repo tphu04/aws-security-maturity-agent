@@ -102,8 +102,7 @@ ALLOWED_GROUPS = {
 }
 
 # (PROJECT_ROOT, JOB_OUTPUT_DIR... giữ nguyên)
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-JOB_OUTPUT_DIR = os.path.join("job_outputs")
+JOB_OUTPUT_DIR = "job_outputs"
 os.makedirs(JOB_OUTPUT_DIR, exist_ok=True)
 print(f"Thư mục output cho job: {JOB_OUTPUT_DIR}")
 
@@ -157,7 +156,6 @@ def _run_prowler_command_worker(job_id: str):
     try:
         # (Bước 3: Chạy Prowler... giữ nguyên)
         print(f"Job {job_id}: Bắt đầu chạy: {command}")
-        print(f"Job {job_id}: Chạy từ thư mục (cwd): {PROJECT_ROOT}")
         result = subprocess.run(
             shlex.split(command),
             capture_output=True,
@@ -167,7 +165,6 @@ def _run_prowler_command_worker(job_id: str):
             encoding="utf-8",
             errors="replace",
             env=env,
-            cwd=PROJECT_ROOT,
         )
 
         # --- (BƯỚC 4: SỬA LỖI LOGIC ĐỌC FILE) ---
@@ -258,7 +255,7 @@ def _run_prowler_command_worker(job_id: str):
                 print(f"Job {job_id}: Lỗi khi dọn dẹp file: {e}")
 
 
-# (Toàn bộ các endpoint /scan/check, /scan/custom, /job/status, /job/list giữ nguyên)
+# (Toàn bộ các endpoint /scan/check, /scan/specific, /scan/custom, /job/status, /job/list giữ nguyên)
 @app.get("/scan/check")
 def run_simple_scan(group: str, tasks: BackgroundTasks):
     if group not in ALLOWED_GROUPS:
@@ -282,6 +279,35 @@ def run_simple_scan(group: str, tasks: BackgroundTasks):
         "job_id": job_id,
         "message": "Scan job đã được bắt đầu.",
     }
+
+@app.get("/scan/specific")
+def run_specific_checks(check_ids: str, tasks: BackgroundTasks):
+    """
+    Quét theo danh sách check_id (phân cách bằng dấu phẩy)
+    """
+    checks_string = check_ids.replace(",", " ").strip()
+
+    job_id = f"job_{str(uuid.uuid4())[:8]}"
+    MOCK_JOB_DATABASE[job_id] = {
+        "status": "pending",
+        "job_id": job_id,
+        "command_details": f"scan checks: {checks_string}",
+        "submitted_time": time.time(),
+        "task_type": "custom_file",      # dùng logic custom_file
+        "task_value": checks_string,     # prowler --check
+        "result": None,
+        "error": None,
+    }
+
+    tasks.add_task(_run_prowler_command_worker, job_id)
+
+    print(f"Job {job_id}: Đã thêm vào hàng đợi (scan specific checks)")
+    return {
+        "status": "pending",
+        "job_id": job_id,
+        "message": "Specific checks scan started",
+    }
+
 
 
 @app.get("/scan/custom")
