@@ -1,7 +1,7 @@
 import os
 import json
 import uuid
-import time
+from datetime import datetime
 from typing import Literal, Dict, Any
 from typing import List
 from langgraph.graph import StateGraph, END, START
@@ -159,7 +159,9 @@ def operational_planning_node(state: PDCAState):
     aws_ctx = state.get("aws_context", {})
 
     # Khởi tạo Planner
-    planner = RemediationPlannerAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL, aws_context=aws_ctx)
+    planner = RemediationPlannerAgent(
+        OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL, aws_context=aws_ctx
+    )
 
     # Lấy kế hoạch (chỉ là text/json, chưa chạy)
     generated_plans = planner.plan_remediation(findings)
@@ -176,6 +178,7 @@ def operational_planning_node(state: PDCAState):
                 "description": plan.get("description", ""),
                 "priority": 1,
                 "ai_reasoning": plan.get("reasoning", ""),
+                "manual_required": plan.get("manual_required", False),
             }
         )
 
@@ -201,7 +204,7 @@ def operational_planning_node(state: PDCAState):
 
 def review_task_node(state: PDCAState):
 
-    return {}
+    return {"_hitl_pause": True}
 
 
 def route_review_next_task(state: PDCAState) -> Literal["review_task", "execution"]:
@@ -210,16 +213,19 @@ def route_review_next_task(state: PDCAState) -> Literal["review_task", "executio
     - Nếu index < tổng số task => Vẫn còn task chưa duyệt => Quay lại 'review_task'
     - Nếu index == tổng số task => Đã duyệt xong hết => Sang 'execution'
     """
-    idx = state["current_task_index"]
-    total = len(state["remediation_tasks"])
+    tasks = [t for t in state["remediation_tasks"] if not t.get("manual_required")]
 
-    if total == 0:
+    if not tasks:
+        state["current_task_index"] = 0
         return "execution"
 
-    if idx < total:
-        return "review_task"  # Tạo vòng lặp
-    else:
-        return "execution"  # Thoát vòng lặp, chạy Execution Agent
+    idx = state.get("current_task_index", 0)
+
+    if idx >= len(tasks):
+        state["current_task_index"] = 0
+        return "execution"
+
+    return "review_task"
 
 
 # ==============================================================================
@@ -228,22 +234,104 @@ def route_review_next_task(state: PDCAState) -> Literal["review_task", "executio
 
 
 def execution_node(state: PDCAState):
-    print("\n🚀 [Node: Execution] Running approved tasks...")
+    print("\n🟢 [Node: Execution] Running approved remediation tasks...")
 
-    tasks = state["remediation_tasks"]
-    decisions = state["task_execution_plan"]
+    all_tasks = state.get("remediation_tasks", [])
+    decisions = state.get("task_execution_plan", {})
+    prioritized_findings = state.get("prioritized_findings", [])
 
-    # 1. Lấy Context từ State (đã được EnvironmentNode lấy từ đầu)
-    # Đây chính là cách tận dụng EnvironmentAgent ban đầu
-    aws_ctx = state.get("aws_context", {})
+    # Map finding_id -> finding_uid (O(1))
+    fid_to_uid_map = {f["finding_id"]: f["finding_uid"] for f in prioritized_findings}
 
-    # 2. Truyền context vào ExecutionAgent
-    executor = ExecutionAgent(aws_context=aws_ctx)
+    # Tách tasks
+    manual_tasks = [t for t in all_tasks if t.get("manual_required", False)]
+    auto_tasks = [t for t in all_tasks if not t.get("manual_required", False)]
 
-    # 3. Chạy toàn bộ tasks
-    exec_logs = executor.execute_all(tasks, decisions)
+    # Map task_id -> finding_id (cho auto logs)
+    task_to_finding = {t["task_id"]: t["finding_id"] for t in all_tasks}
 
-    return {"execution_logs": exec_logs}
+    pipeline_context = []
+    execution_logs = []
+
+    # --- 1) XỬ LÝ MANUAL ---
+    for t in manual_tasks:
+        finding_uid = fid_to_uid_map.get(t["finding_id"])
+
+        # [FIX] Tạo log object chuẩn để đồng bộ
+        manual_log = {
+            "task_id": t["task_id"],
+            "tool_name": t["tool_name"],
+            "status": "manual_required",
+            "output": {
+                "status": "manual_required",
+                "message": "Requires manual steps.",
+            },
+            "error": None,
+        }
+        execution_logs.append(manual_log)
+
+        pipeline_context.append(
+            {
+                "task_id": t["task_id"],
+                "finding_uid": finding_uid,
+                "tool_name": t["tool_name"],
+                "tool_params": t["tool_params"],
+                "planner_reasoning": t.get("ai_reasoning"),
+                "manual_required": True,
+                "execution_status": "manual_required",
+                "execution_output": manual_log["output"],
+                "execution_error": None,
+            }
+        )
+
+    # --- 2) XỬ LÝ AUTO ---
+    if auto_tasks:
+        aws_ctx = state.get("aws_context", {})
+        executor = ExecutionAgent(aws_context=aws_ctx)
+
+        auto_tasks_filtered = [
+            t for t in auto_tasks if decisions.get(t["task_id"]) == "approve"
+        ]
+        auto_logs = executor.execute_all(auto_tasks_filtered, decisions)
+        execution_logs.extend(auto_logs)
+
+        task_obj_map = {t["task_id"]: t for t in auto_tasks}
+
+        for log in auto_logs:
+            task_id = log["task_id"]
+            finding_id = task_to_finding.get(task_id)
+            finding_uid = fid_to_uid_map.get(finding_id)
+            task_info = task_obj_map.get(task_id)
+
+            pipeline_context.append(
+                {
+                    "task_id": task_id,  # <--- [FIX QUAN TRỌNG] Thêm task_id
+                    "finding_uid": finding_uid,
+                    "tool_name": log["tool_name"],
+                    "tool_params": task_info["tool_params"] if task_info else {},
+                    "planner_reasoning": (
+                        task_info.get("ai_reasoning") if task_info else None
+                    ),
+                    "manual_required": False,
+                    "execution_status": (
+                        "failed"
+                        if log.get("status") == "error"
+                        else log.get("status", "not_run")
+                    ),
+                    "execution_output": log.get("output", {}),
+                    "execution_error": log.get("error", None),
+                    "execution_timing": {
+                        "started_at": log.get("started_at"),
+                        "ended_at": log.get("ended_at"),
+                        "duration": log.get("duration"),
+                    },
+                }
+            )
+
+    return {
+        "execution_logs": execution_logs,
+        "pipeline_context": pipeline_context,
+    }
 
 
 # ==============================================================================
@@ -254,23 +342,47 @@ def execution_node(state: PDCAState):
 def verification_node(state: PDCAState):
     print("\n🟢 [Node: Verification] Running post-remediation scan...")
 
+    # 1) Chạy rescan để sinh post_scan.json
     rescan = RescanAgent()
     rescan.run()
 
-    pipeline_context = _aggregate_pipeline_data(state)
+    # 2) Gom dữ liệu execution vào pipeline_context đầy đủ
+    pipeline_context = _aggregate_pipeline_data(state, state["pipeline_context"])
 
+    # 3) Tạo AnalysisAgent để tạo diff (before/after)
     analyzer = AnalysisAgent("data/pre_scan.json", "data/post_scan.json")
     diff = analyzer.run(pipeline_context=pipeline_context)
 
-    return {"verification_results": diff}
+    # 4) BỔ SUNG: build report_context từ pre/post/diff
+    report_context = analyzer.build_report_context(
+        pre_scan=json.load(open("data/pre_scan.json", "r", encoding="utf-8")),
+        post_scan=json.load(open("data/post_scan.json", "r", encoding="utf-8")),
+        diff_data=diff,
+        meta={
+            "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
+            "scan_group": state.get("assessment_plan", {}).get(
+                "target_services", ["s3"]
+            ),
+        },
+    )
+
+    # 5) Đưa vào state -> để report_node dùng
+    return {"verification_results": diff, "report_context": report_context}
 
 
 def report_node(state: PDCAState):
     print("\n🟢 [Node: Report] Generating final report...")
 
-    diff = state.get("verification_results", {})  # List[Dict]
+    # Report context đã build từ AnalysisAgent
+    report_context = state.get("report_context")
+    if not report_context:
+        raise ValueError("❌ Missing report_context in PDCA state")
 
-    pre_scan = json.load(open("data/pre_scan.json", "r", encoding="utf-8"))
+    meta = {
+        "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
+        "scan_scope": state.get("assessment_plan", {}).get("target_services", ["s3"]),
+        "date": datetime.now().strftime("%Y-%m-%d"),
+    }
 
     agent = ReportAgent(
         OLLAMA_MODEL,
@@ -279,14 +391,7 @@ def report_node(state: PDCAState):
         output_path="data/final_report.md",
     )
 
-    meta = {
-        # Đảm bảo aws_context không None, nếu lỗi thì fallback về {}
-        "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
-        "scan_group": state.get("assessment_plan", {}).get("target_services", []),
-    }
-
-    # Gọi hàm run (thay vì generate)
-    path = agent.run(pre_scan, diff, meta)
+    path = agent.run(report_context=report_context, meta=meta)
 
     return {"final_report": path}
 
@@ -365,7 +470,9 @@ def handle_task_review_interaction(app, config):
     state = snapshot.values
 
     idx = state["current_task_index"]
-    tasks = state["remediation_tasks"]
+    tasks = [
+        t for t in state["remediation_tasks"] if not t.get("manual_required", False)
+    ]
     prioritized_findings = state.get("prioritized_findings", [])
 
     # Kiểm tra an toàn
@@ -409,17 +516,11 @@ def handle_task_review_interaction(app, config):
 
     # 3. Hỏi User
     print(f"\n👉 Bạn có muốn chạy tool '{task['tool_name']}' không?")
-    choice = (
-        input("   [Y]es (Chạy) / [D]ry-run (Chạy thử) / [N]o (Bỏ qua): ")
-        .strip()
-        .lower()
-    )
+    choice = input("   [Y]es (Chạy) / [N]o (Bỏ qua): ").strip().lower()
 
     decision = "skip"
     if choice in ["y", "yes"]:
         decision = "approve"
-    elif choice in ["d", "dry"]:
-        decision = "dry"
 
     print(f"   -> Đã lưu: {decision.upper()}")
 
@@ -435,8 +536,9 @@ def handle_task_review_interaction(app, config):
         },
     )
 
+
 # ========= HELPER FUNCTIONS ========
-def _aggregate_pipeline_data(state: PDCAState) -> List[Dict]:
+def _aggregate_pipeline_data(state: PDCAState, pipeline_context: List[Dict]):
     """
     Hàm này đóng vai trò 'Data Lake':
     Nó join 3 bảng dữ liệu trong State lại với nhau:
@@ -444,56 +546,61 @@ def _aggregate_pipeline_data(state: PDCAState) -> List[Dict]:
     2. remediation_tasks (Tool Name, Params, Task ID)
     3. execution_logs (Output thực tế, Status)
     """
-    
-    # 1. Tạo Map cho Execution Logs: Task ID -> Log Output
-    # Để biết Task nào sinh ra Log nào
-    logs_map = {
-        log["task_id"]: log 
-        for log in state.get("execution_logs", [])
-    }
 
-    # 2. Tạo Map cho Remediation Tasks: Finding ID -> Task Info + Log Info
-    # Để biết Finding nào được xử lý bởi Task nào
-    tasks_map = {}
-    for task in state.get("remediation_tasks", []):
+    remediation_tasks = state.get("remediation_tasks", [])
+    execution_logs = state.get("execution_logs", [])
+    prioritized = state.get("prioritized_findings", [])
+
+    # Map Lookup
+    fid_to_uid = {f["finding_id"]: f["finding_uid"] for f in prioritized}
+    tid_to_log = {l["task_id"]: l for l in execution_logs}
+
+    # [FIX QUAN TRỌNG] Map theo task_id thay vì finding_uid
+    # Để tránh mất dữ liệu nếu 1 finding có nhiều task
+    tid_to_ctx = {c["task_id"]: c for c in pipeline_context if c.get("task_id")}
+
+    final_results_list = []
+
+    for task in remediation_tasks:
         t_id = task["task_id"]
         f_id = task["finding_id"]
-        
-        # Lấy log tương ứng với task này (nếu có)
-        exec_log = logs_map.get(t_id, {})
-        
-        tasks_map[f_id] = {
+        f_uid = fid_to_uid.get(f_id)
+
+        if not f_uid:
+            continue
+
+        # Ưu tiên lấy từ pipeline_context qua task_id
+        ctx = tid_to_ctx.get(t_id)
+        exec_log = tid_to_log.get(t_id)
+
+        if ctx:
+            final_status = ctx["execution_status"]
+            final_output = ctx["execution_output"]
+            final_error = ctx.get("execution_error")
+            manual = ctx["manual_required"]
+        else:
+            # Fallback (Phòng hờ)
+            final_status = exec_log.get("status", "not_run") if exec_log else "not_run"
+            final_output = exec_log.get("output", {}) if exec_log else {}
+            final_error = exec_log.get("error") if exec_log else None
+            manual = task.get("manual_required", False)
+
+        entry = {
+            "finding_uid": f_uid,
+            "task_id": t_id,
             "tool_name": task["tool_name"],
             "tool_params": task["tool_params"],
-            "planner_reasoning": task["ai_reasoning"], # Lý do chọn tool
-            "execution_status": exec_log.get("status", "not_run"),
-            "execution_output": exec_log.get("output", {}), # Output quan trọng để report đọc
-            "execution_error": exec_log.get("error", None)
+            "planner_reasoning": task.get("ai_reasoning"),
+            "manual_required": manual,
+            "execution_status": final_status,
+            "execution_output": final_output,
+            "execution_error": final_error,
+            "execution_timing": ctx.get("execution_timing") if ctx else None,
         }
 
-    # 3. Enrich Findings ban đầu
-    # Duyệt qua danh sách finding đã được Risk Agent chấm điểm
-    enriched_context = []
-    for finding in state.get("prioritized_findings", []):
-        f_id = finding.get("finding_id")
-        
-        # Lấy thông tin task tương ứng (nếu finding này được fix)
-        task_info = tasks_map.get(f_id, {})
-        
-        # Tạo object chứa ĐỦ MỌI THỨ
-        context_item = {
-            "finding_uid": finding.get("finding_uid"), # Key để AnalysisAgent map diff
-            "finding_id": f_id,
-            # Dữ liệu từ Risk Agent
-            "risk_score": finding.get("risk_score", 0),
-            "severity": finding.get("severity", "Medium"),
-            "reasoning": finding.get("reasoning", ""), 
-            # Dữ liệu từ Planner & Execution (Merge vào)
-            **task_info 
-        }
-        enriched_context.append(context_item)
-        
-    return enriched_context
+        final_results_list.append(entry)
+
+    return final_results_list
 
 
 # ==============================================================================
@@ -520,7 +627,11 @@ def run_interactive_session():
         print(f"   (Dùng mặc định: '{user_request_text}')")
 
     # Init state với input thực tế
-    initial_input = {"user_request": user_request_text, "cycle_iteration": 0}
+    initial_input = {
+        "user_request": user_request_text,
+        "cycle_iteration": 0,
+        "meta": {"user_input": user_request_text},
+    }
     current_input = initial_input
 
     while True:
@@ -551,8 +662,6 @@ def run_interactive_session():
             print(f"❌ Error in main loop: {e}")
             traceback.print_exc()  # In chi tiết lỗi để dễ debug
             break
-
-
 
 
 if __name__ == "__main__":

@@ -10,6 +10,16 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # Import danh sách tool (để lấy mô tả cho AI hiểu)
 from agent_tools import ALL_TOOLS
 
+# Đây là danh sách tool luôn yêu cầu sửa thủ công
+ALWAYS_MANUAL_TOOLS = {
+    "s3_enable_object_lock",
+    "s3_enable_mfa_delete",
+    "s3_prepare_replication",
+    "s3_remove_cross_account_principals",
+    "s3_enable_intelligent_tiering",
+}
+
+
 
 def build_params_from_signature(tool, finding: Dict, aws_context: Dict):
     """
@@ -33,7 +43,7 @@ def build_params_from_signature(tool, finding: Dict, aws_context: Dict):
         elif name == "account_id":
             params[name] = aws_context.get("account_id")
         else:
-            params[name] = None  # optional hoặc để tool tự xử lý
+            continue # Bỏ qua các tham số không rõ nguồn gốc
 
     return params
 
@@ -135,6 +145,8 @@ class RemediationPlannerAgent(BaseAgent):
             - Mô tả: {description}
             - Resource ID: {resource_id}
             - Region: {region}
+            
+            OUTPUT CHỈ JSON. KHÔNG GIẢI THÍCH THÊM.
             """
 
             try:
@@ -173,12 +185,15 @@ class RemediationPlannerAgent(BaseAgent):
                     aws_context=self.aws_context,
                 )
 
+                is_manual = tool_name in ALWAYS_MANUAL_TOOLS
+
                 plans.append(
                     {
                         "finding_id": finding_id,
                         "tool_id": tool_name,
                         "params": tool_params,
                         "reasoning": parsed.get("reasoning", "Không có giải thích từ AI"),
+                        "manual_required": is_manual,
                     }
                 )
 

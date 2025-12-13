@@ -1,19 +1,26 @@
 import openai
 import os
+from langchain_ollama import ChatOllama
 
 
 class BaseAgent:
     """Lớp cơ sở cho tất cả các Agent, xử lý việc khởi tạo client."""
 
     def __init__(self, model_name: str, api_key: str, base_url: str):
-        if not api_key:
-            api_key = "ollama"  # Giá trị giả, client 'openai' yêu cầu
+        # Lưu thuộc tính cho ReportAgent và các agent khác dùng ChatOllama
+        self.model = model_name
+        self.api_key = api_key or "ollama"  # Pseudo key nếu không có
+        self.base_url = base_url
 
+        # Dành cho các agent dùng OpenAI client (đã có từ kiến trúc cũ)
         self.model_name = model_name
         self.client = openai.OpenAI(
-            base_url=base_url,
-            api_key=api_key,
+            base_url=self.base_url,
+            api_key=self.api_key,
         )
+
+        # LLM dùng bởi nhiều agent (những agent gọi self.llm.invoke)
+        self.llm = ChatOllama(model=self.model, base_url=self.base_url, temperature=0)
 
     def call_llm(
         self, messages, tools=None, tool_choice="auto", response_format=None

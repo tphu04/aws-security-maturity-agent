@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "scan_time": "2025-12-05T02:57:19.438970Z",
+    "scan_time": "2025-12-13T02:34:36.167558Z",
     "total_findings": 34
   },
   "findings": [
@@ -405,7 +405,7 @@
       "account_id": "065209282642",
       "region": "us-east-1",
       "severity": "medium",
-      "status": "FAIL",
+      "status": "PASS",
       "description": "Check if S3 buckets have secure transport policy.",
       "remediation_text": "Ensure that S3 buckets have encryption in transit enabled.",
       "remediation_url": "https://docs.prowler.com/checks/aws/s3-policies/s3_15-secure-data-transport#aws-console"

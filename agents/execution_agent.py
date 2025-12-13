@@ -39,7 +39,7 @@ class ExecutionAgent:
 
         # Manual-required → thất bại
         if parsed.get("status") == "manual_required":
-            return "failed"
+            return "manual_required"
 
         # Auto-fix thành công
         if parsed.get("success") is True:
@@ -73,7 +73,7 @@ class ExecutionAgent:
         tool_params = dict(task["tool_params"])
 
         # ❌ REMOVE DRY RUN — Chỉ giữ skip hoặc approve
-        if decision == "skip":
+        if decision != "approve":
             msg = f"[SKIP] Task {task_id} skipped."
             print(f"→ Task {task_id} (SKIP)\n   {msg}")
             return self._build_log(task_id, tool_name, "skipped", msg, 0)
@@ -118,7 +118,7 @@ class ExecutionAgent:
             status = self.classify_result(parsed)
 
         except ClientError as ce:
-            status = "error"
+            status = "failed"
             err = ce.response.get("Error", {})
             error_details = {
                 "type": "ClientError",
@@ -128,11 +128,11 @@ class ExecutionAgent:
             }
 
         except BotoCoreError as be:
-            status = "error"
+            status = "failed"
             error_details = {"type": "BotoCoreError", "message": str(be)}
 
         except Exception as e:
-            status = "error"
+            status = "failed"
             error_details = {"type": "Exception", "message": str(e)}
 
         ended_at = self._timestamp()
@@ -174,6 +174,7 @@ class ExecutionAgent:
             "output": output,
             "duration": duration,
             "timestamp": self._timestamp(),
+            "error": None,
         }
 
     # ======================================================================

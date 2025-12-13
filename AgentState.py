@@ -56,8 +56,11 @@ class PDCAState(TypedDict):
     # Execution logs
     execution_logs: Annotated[List[ExecutionLog], operator.add]
 
+    pipeline_context: List[Dict]
+
     # Verification
     verification_results: Dict[str, Any]
 
+    report_context: Dict[str, Any]
     # Report
     final_report: str
