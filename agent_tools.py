@@ -32,12 +32,25 @@ class ScanFileInput(BaseModel):
 
 class JobStatusInput(BaseModel):
     job_id: str = Field(..., description="ID của job cần kiểm tra trạng thái.")
-
+class ScanChecksInput(BaseModel):
+    check_ids: str = Field(..., description="Danh sách các Prowler Check IDs, cách nhau bởi dấu phẩy (vd: 's3_block_account_public_access,iam_root_mfa_enabled').")
 
 # ==========================================================
 # 2. CÁC SCANNER TOOLS (Sử dụng args_schema)
 # ==========================================================
-
+@tool(args_schema=ScanChecksInput)
+def start_scan_by_check_ids(check_ids: str):
+    """
+    [TOOL] Quét hệ thống AWS theo các Check ID cụ thể (nhỏ hơn và nhanh hơn quét Group).
+    Dùng tool này khi người dùng chỉ định rõ vấn đề (vd: logging, mfa, encryption).
+    """
+    print(f"[Tool Call] ⚡️ Đang gọi API: /scan/specific?check_ids={check_ids}")
+    try:
+        response = requests.get(f"{API_SERVER_URL}/scan/specific", params={"check_ids": check_ids})
+        response.raise_for_status()
+        return response.json() # Trả về JSON luôn cho gọn
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 @tool(args_schema=ScanGroupInput)
 def start_scan_by_group(group: str):
@@ -48,14 +61,21 @@ def start_scan_by_group(group: str):
     try:
         response = requests.get(f"{API_SERVER_URL}/scan/check", params={"group": group})
         response.raise_for_status()
+        
+        data = response.json()
+        
+        # [QUAN TRỌNG] Đưa job_id ra ngoài để Agent dễ thấy
+        # Giả sử API trả về { "job_id": "...", "status": "..." }
+        job_id = data.get("job_id")
+        
         return {
+            "job_id": job_id,  # <-- FIX: Thêm dòng này để khớp với ScannerAgent
             "success": True,
-            "data": response.json(),
+            "data": data,
             "status_code": response.status_code,
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
-
 
 @tool(args_schema=ScanFileInput)
 def start_scan_by_file(filename: str):
@@ -719,6 +739,9 @@ def s3_enable_intelligent_tiering(resource_id: str, region: str = "us-east-1") -
 AVAILABLE_FUNCTIONS = {
     "start_scan_by_group": start_scan_by_group,
     "start_scan_by_file": start_scan_by_file,
+    "start_scan_by_check_ids": start_scan_by_check_ids,
+
+    
     "check_job_status": check_job_status,
     "remediate_s3_public_access": s3_block_account_public_access,
     "remediate_s3_bucket_versioning": s3_enable_versioning,
@@ -739,11 +762,29 @@ AVAILABLE_FUNCTIONS = {
 SCANNER_AGENT_TOOLS = [start_scan_by_group, start_scan_by_file, check_job_status]
 
 # Danh sách tất cả tool cho RemediateAgent
+
+ALLOWED_GROUPS_LIST = [
+    "accessanalyzer", "account", "acm", "apigateway", "apigatewayv2", "appstream", "appsync", "athena",
+    "autoscaling", "awslambda", "backup", "bedrock", "cloudformation", "cloudfront", "cloudtrail",
+    "cloudwatch", "codeartifact", "codebuild", "cognito", "config", "datasync", "directconnect",
+    "directoryservice", "dlm", "dms", "documentdb", "drs", "dynamodb", "ec2", "ecr", "ecs", "efs",
+    "eks", "elasticache", "elasticbeanstalk", "elb", "elbv2", "emr", "eventbridge", "firehose",
+    "fms", "fsx", "glacier", "glue", "guardduty", "iam", "inspector2", "kafka", "kinesis", "kms",
+    "lightsail", "macie", "memorydb", "mq", "neptune", "networkfirewall", "opensearch", "organizations",
+    "rds", "redshift", "resourceexplorer2", "route53", "s3", "sagemaker", "secretsmanager",
+    "securityhub", "servicecatalog", "ses", "shield", "sns", "sqs", "ssm", "ssmincidents",
+    "stepfunctions", "storagegateway", "transfer", "trustedadvisor", "vpc", "waf", "wafv2",
+    "wellarchitected", "workspaces",
+]
+# Danh sách tất cả tool cho RemediateAgent
 ALL_TOOLS = [
     # --- Scanner Tools ---
     start_scan_by_group,
     start_scan_by_file,
+    start_scan_by_check_ids,
+
     check_job_status,
+    start_scan_by_check_ids,
     # --- S3 Remediation Tools ---
     s3_block_account_public_access,
     s3_enable_versioning,
@@ -761,3 +802,4 @@ ALL_TOOLS = [
     s3_force_private_acl,
     s3_enable_intelligent_tiering,
 ]
+

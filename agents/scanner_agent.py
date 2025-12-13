@@ -1,107 +1,139 @@
 import json
-from typing import List, Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+from typing import List, Dict, Any, Optional
 
-# Import tools từ file tool registry của bạn
-from agent_tools import start_scan_by_group, start_scan_by_file
+from .base_agent import BaseAgent
+from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage, SystemMessage
 
+# Import danh sách tool từ agent_tools
+from agent_tools import SCANNER_AGENT_TOOLS
 
-class ScannerAgent:
+class ScannerAgent(BaseAgent):
     """
-    ScannerAgent chịu trách nhiệm kích hoạt Prowler Scan song song.
-    Sử dụng ThreadPoolExecutor để tối ưu tốc độ gọi API.
+    ScannerAgent (AI Version)
+    Nhiệm vụ: Nhận mô tả task (VD: "Quét check logging") -> Gọi đúng Tool.
     """
 
-    def __init__(self, max_workers: int = 5):
-        """
-        :param max_workers: Số luồng tối đa chạy đồng thời (Mặc định 5).
-        """
-        self.max_workers = max_workers
-
-    def _trigger_group_scan(self, group: str) -> Optional[str]:
-        """Hàm helper chạy trong 1 luồng riêng lẻ để gọi Tool"""
-        try:
-            print(f"   [Scanner-Thread] ⚡️ Đang kích hoạt scan cho Group: {group}")
-            # Gọi tool thông qua .invoke() (LangChain standard)
-            result_json = start_scan_by_group.invoke({"group": group})
-            return self._extract_job_id(result_json)
-        except Exception as e:
-            print(f"   [Scanner-Thread] ❌ Lỗi quét group '{group}': {e}")
-            return None
-
-    def _trigger_file_scan(self, filename: str) -> Optional[str]:
-        """Hàm helper cho file scan"""
-        try:
-            print(f"   [Scanner-Thread] ⚡️ Đang kích hoạt scan cho File: {filename}")
-            result_json = start_scan_by_file.invoke({"filename": filename})
-            return self._extract_job_id(result_json)
-        except Exception as e:
-            print(f"   [Scanner-Thread] ❌ Lỗi quét file '{filename}': {e}")
-            return None
-
-    def run_batch(self, groups: List[str] = None, files: List[str] = None) -> List[str]:
-        """
-        Chạy song song việc kích hoạt scan cho danh sách groups và files.
-        Trả về danh sách Job IDs.
-        """
-        job_ids = []
-        groups = groups or []
-        files = files or []
-
-        total_tasks = len(groups) + len(files)
-        if total_tasks == 0:
-            return []
-
-        print(
-            f"[ScannerAgent] 🚀 Bắt đầu kích hoạt {total_tasks} jobs song song (Max workers: {self.max_workers})..."
+    def __init__(self, model_name, api_key, base_url):
+        # Init khớp với graph_orchestator
+        super().__init__(model_name, api_key, base_url)
+        
+        print(f"[ScannerAgent] Init LangChain với model {model_name}...")
+        self.lc_llm = ChatOllama(
+            model=model_name,
+            base_url=base_url,
+            temperature=0, 
         )
+        
+        # 1. Bind tools cho AI
+        self.llm_with_tools = self.lc_llm.bind_tools(SCANNER_AGENT_TOOLS)
+        
+        # 2. Tự động tạo map tool {name: func} để execute thủ công nếu cần
+        self.tools_map = {tool.name: tool for tool in SCANNER_AGENT_TOOLS}
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = []
+    def run_batch(self, target_groups: List[str], specific_checks: List[str]) -> List[str]:
+        """
+        Hàm được gọi bởi Orchestrator (Scanning Node).
+        Xử lý cả Service Groups và Specific Checks.
+        """
+        collected_job_ids = []
+        print(f"[ScannerAgent] 🚀 Bắt đầu Batch Scan...")
 
-            # 1. Submit Group Tasks
-            for group in groups:
-                futures.append(executor.submit(self._trigger_group_scan, group))
+        # 1. Xử lý Specific Checks (Nếu có danh sách Check ID cụ thể)
+        # VD: ['check_s3_01', 'check_iam_02']
+        if specific_checks:
+            # Gom tất cả check IDs vào 1 request để tối ưu (hoặc chia nhỏ nếu cần)
+            ids_str = ", ".join(specific_checks)
+            print(f"[ScannerAgent] -> Requesting specific checks: {ids_str}")
+            
+            # Tạo prompt thật rõ để AI chọn tool 'start_scan_by_check_ids'
+            task_desc = f"Start a security scan specifically for these check IDs: {ids_str}"
+            
+            job_id = self.run_scan(task_desc)
+            if job_id:
+                collected_job_ids.append(job_id)
 
-            # 2. Submit File Tasks (nếu có)
-            for filename in files:
-                futures.append(executor.submit(self._trigger_file_scan, filename))
-
-            # 3. Thu thập kết quả
-            for future in as_completed(futures):
-                job_id = future.result()
+        # 2. Xử lý Target Groups (Nếu có tên service)
+        # VD: ['s3', 'iam']
+        if target_groups:
+            for group in target_groups:
+                print(f"[ScannerAgent] -> Requesting scan for group: {group}")
+                
+                # Tạo prompt thật rõ để AI chọn tool 'start_scan_by_service_group'
+                task_desc = f"Start a security scan for the service group: {group}"
+                
+                job_id = self.run_scan(task_desc)
                 if job_id:
-                    print(f"   [ScannerAgent] ✅ Job Created: {job_id}")
-                    job_ids.append(job_id)
+                    collected_job_ids.append(job_id)
 
-        print(
-            f"[ScannerAgent] 🏁 Hoàn tất kích hoạt. Tổng cộng {len(job_ids)} jobs đang chạy."
-        )
-        return job_ids
+        return collected_job_ids
 
-    def _extract_job_id(self, tool_output) -> Optional[str]:
-        """Parse response từ API server để lấy job_id"""
+    def run_scan(self, task_description: str) -> Optional[str]:
+        """
+        Nhận lệnh -> AI suy nghĩ -> Gọi Tool -> Trả về Job ID
+        """
+        messages = [
+            SystemMessage(content="Bạn là trợ lý bảo mật AWS. Nhiệm vụ của bạn là gọi Tool thích hợp để quét hệ thống dựa trên yêu cầu."),
+            HumanMessage(content=task_description)
+        ]
+        
         try:
-            # 1. Parse string nếu cần
-            if isinstance(tool_output, str):
-                data = json.loads(tool_output)
+            # 1. Gọi AI
+            ai_msg = self.llm_with_tools.invoke(messages)
+            
+            # 2. Xử lý Tool Call
+            if ai_msg.tool_calls:
+                for tool_call in ai_msg.tool_calls:
+                    tool_name = tool_call["name"]
+                    tool_args = tool_call["args"]
+                    
+                    target_tool = self.tools_map.get(tool_name)
+                    
+                    if target_tool:
+                        try:
+                            print(f"[ScannerAgent] 🛠  Calling tool: {tool_name} with args: {tool_args}")
+                            # Thực thi tool
+                            tool_output = target_tool.invoke(tool_args)
+                            
+                            # Trích xuất Job ID từ output
+                            jid = self._extract_job_id(tool_output)
+                            if jid:
+                                print(f"[ScannerAgent] ✅ Job Created: {jid}")
+                                return jid
+                            else:
+                                print(f"[ScannerAgent] ⚠️ Tool executed but returned no Job ID.")
+
+                        except Exception as e:
+                            print(f"[ScannerAgent] ❌ Lỗi tool {tool_name}: {e}")
+                            return None
+                    else:
+                        print(f"[ScannerAgent] ❌ Lỗi: Tool '{tool_name}' không tồn tại trong map.")
+                        return None
             else:
-                data = tool_output
-
-            if isinstance(data, dict):
-                # --- ĐOẠN SỬA ---
-                # Kiểm tra xem dữ liệu có nằm trong key "data" không (do cấu trúc mới của agent_tools)
-                inner_data = data.get("data", data)
-
-                # Ưu tiên lấy từ inner_data (cấu trúc mới), nếu không được thì fallback về data (cấu trúc cũ)
-                job_id = (
-                    inner_data.get("job_id")
-                    or inner_data.get("id")
-                    or data.get("job_id")
-                )
-                return job_id
-                # ----------------
-
+                print(f"[ScannerAgent] ⚠️ AI không gọi tool nào cho task: '{task_description}'")
+                return None
+                
         except Exception as e:
-            print(f"   [ScannerAgent] ⚠️ Parse error: {e}")
+            print(f"[ScannerAgent] ❌ Lỗi Critical: {e}")
+            return None
+        
+        return None
+
+    def _extract_job_id(self, tool_output):
+        """Helper lấy job_id từ kết quả JSON/Dict/String"""
+        try:
+            data = tool_output
+            if isinstance(tool_output, str):
+                # Cố gắng parse JSON nếu output là string
+                try:
+                    data = json.loads(tool_output)
+                except:
+                    # Nếu không phải JSON, trả về nguyên chuỗi (giả sử tool trả về ID dạng text)
+                    return tool_output.strip()
+            
+            if isinstance(data, dict):
+                return data.get("job_id") or data.get("id") or data.get("scan_id")
+        except:
+            pass
         return None
