@@ -1,11 +1,12 @@
-# planning_agent.py - PHIÊN BẢN FIX: SMART INTENT FILTERING (LỌC NHIỄU THÔNG MINH)
 import json
 import re
 import difflib
+import time
 from typing import List, Dict, Any
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.callbacks import BaseCallbackHandler
 from .base_agent import BaseAgent
 
 try:
@@ -104,24 +105,30 @@ COMMON_STOP_WORDS = [
 # ===============================================
 # 3. PROMPT
 # ===============================================
-SEMANTIC_PLANNING_PROMPT = """Bạn là trợ lý dịch thuật kỹ thuật AWS Security.
-
-USER REQUEST: "{request}"
+SEMANTIC_PLANNING_PROMPT = """Bạn là chuyên gia phân tích yêu cầu bảo mật AWS (Translator).
 
 NHIỆM VỤ:
-1. **SỬA CHÍNH TẢ** (VD: "encrpytion" -> "encryption").
-2. **TÁCH QUERY**: Tách danh sách nếu có "và", ",", "với".
-3. **DỊCH SÁT NGHĨA**:
-   - Dịch từ khóa kỹ thuật sang tiếng Anh (encryption, public, mfa...).
-   - BỎ các từ thừa (liên quan, tới, tất cả, all, dịch vụ).
-   - Luôn kèm tên service (s3, ec2).
+1. Xác định service (s3, ec2, iam...).
+2. Trích xuất CÁC TỪ KHÓA QUAN TRỌNG mô tả tính năng hoặc lỗi từ yêu cầu của User.
+3. Dịch các từ khóa đó sang tiếng Anh chuyên ngành (VD: 'thông báo' -> 'notification', 'nhật ký' -> 'logging').
 
-Ví dụ:
-- Input: "tất cả s3 liên quan tới mã hóa"
-  -> Output: {{"search_queries": ["s3 encryption"]}}
+QUY TẮC CẤM:
+- KHÔNG được bịa ra từ khóa không có trong yêu cầu (Ví dụ: User không nói 'public' thì đừng thêm 'public').
+- KHÔNG dùng lại ví dụ mẫu nếu không khớp ngữ cảnh.
 
-- Input: "check các dịch vụ s3 public"
-  -> Output: {{"search_queries": ["s3 public"]}}
+Ví dụ 1:
+- Input: "Kiểm tra xem s3 có bị public không"
+  -> Output: {{"is_group_scan": false, "target_service": "s3", "search_queries": ["s3 public access"]}}
+
+Ví dụ 2:
+- Input: "đảm bảo bucket ghi log và có versioning"
+  -> Output: {{"is_group_scan": false, "target_service": "s3", "search_queries": ["s3 logging", "s3 versioning"]}}
+
+Ví dụ 3:
+- Input: "kiểm tra ec2 instance đang chạy"
+  -> Output: {{"is_group_scan": false, "target_service": "ec2", "search_queries": ["ec2 instance state"]}}
+
+USER REQUEST: "{request}"
 
 OUTPUT JSON:
 {{
@@ -132,15 +139,43 @@ OUTPUT JSON:
 """
 
 
+class TimerCallback(BaseCallbackHandler):
+    def __init__(self):
+        self.total_duration = 0.0
+        self.call_history = []
+        self.start_time = 0.0
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> Any:
+        self.start_time = time.perf_counter()
+
+    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
+        duration = time.perf_counter() - self.start_time
+        self.total_duration += duration
+        self.call_history.append(duration)
+
+
 class PlanningAgent(BaseAgent):
     def __init__(self, model_name: str, api_key: str, base_url: str):
+        super().__init__(model_name, api_key, base_url)
+        self.timer = TimerCallback()
+
         self.llm = ChatOllama(
             model=model_name,
             base_url=base_url,
             temperature=0,
             format="json",
+            callbacks=[self.timer],
         )
         self.knowledge_base = PROWLER_KNOWLEDGE_BASE
+
+    def get_llm_metrics(self) -> Dict[str, Any]:
+        return {
+            "total_latency": round(self.timer.total_duration, 4),
+            "call_history": [round(t, 4) for t in self.timer.call_history],
+            "call_count": len(self.timer.call_history),
+        }
 
     def _clean_json_text(self, text: str) -> Dict:
         text = text.strip()
@@ -253,6 +288,17 @@ class PlanningAgent(BaseAgent):
 
             # Lọc bỏ: Tên Service, Stop Words, Ký tự đặc biệt
             meaningful_words = []
+            
+            matched_alias = None
+            if detected_service in req_lower:
+                matched_alias = detected_service
+            else:
+                for alias, real in alias_map.items():
+                    if alias in req_lower and real == detected_service:
+                        matched_alias = alias # Ví dụ: "lưu trữ"
+                        break
+                    
+                    
             for w in words:
                 clean_w = w.strip(",.?!")
                 if clean_w == detected_service:
@@ -261,6 +307,8 @@ class PlanningAgent(BaseAgent):
                     continue  # Bỏ từ rác
                 if clean_w in alias_map:
                     continue  # Bỏ alias
+                if matched_alias and clean_w in matched_alias:
+                    continue
                 meaningful_words.append(clean_w)
 
             # 1.3 QUYẾT ĐỊNH
@@ -276,9 +324,10 @@ class PlanningAgent(BaseAgent):
                 }
             else:
                 # Vẫn còn từ (VD: "public", "encryption") -> SPECIFIC SCAN (Để Semantic Search xử lý)
-                print(
-                    f"   [PlanningAgent] Specific intent detected (Keywords: {meaningful_words}). Skipping Rule Override."
-                )
+                # print(
+                #     f"   [PlanningAgent] Specific intent detected (Keywords: {meaningful_words}). Skipping Rule Override."
+                # )
+                pass
 
         # ---------------------------------------------------------
         # 2. AI SEMANTIC PLANNING (Xử lý Specific)
@@ -340,7 +389,7 @@ class PlanningAgent(BaseAgent):
                                 }
 
             return {
-                "groups_to_scan": ["iam"],
+                "groups_to_scan": ["s3"],
                 "checks_to_scan": [],
                 "reasoning": "Fallback default",
             }

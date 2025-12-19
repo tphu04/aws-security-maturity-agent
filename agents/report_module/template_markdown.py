@@ -120,13 +120,6 @@ REPORT_TEMPLATE = r"""
 >
 > {{ f.llm_detail | trim | replace('\n', '\n> ') }}
 
-<details>
-<summary><i>Xem nhật ký thực thi chi tiết (Raw Log)</i></summary>
-
-```yaml
-{{ f.execution_log }}
-```
-</details>
 
 ---
 {% endfor %}
@@ -160,9 +153,6 @@ REPORT_TEMPLATE = r"""
 > **Vấn đề:** {{ f.description }}
 >
 > **Tài nguyên:** `{{ f.resource }}` | **Mức độ:** {{ f.severity }}
->
-> **Tại sao cần thủ công?**
-> {{ f.manual_reason }}
 >
 > {% if f.verification and f.verification.before %}
 > **Trạng thái hiện tại:**

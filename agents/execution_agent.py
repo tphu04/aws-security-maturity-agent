@@ -4,7 +4,7 @@ import time
 from typing import Any, Dict, List
 from botocore.exceptions import ClientError, BotoCoreError
 
-from agent_tools import ALL_TOOLS
+from agent_tools import REMEDIATION_TOOLS
 from .environment_agent import EnvironmentAgent
 
 
@@ -20,7 +20,7 @@ class ExecutionAgent:
 
     def __init__(self, aws_context: Dict[str, Any]):
         self.aws_context = aws_context or {}
-        self.tools_map = {tool.name: tool for tool in ALL_TOOLS}
+        self.tools_map = {tool.name: tool for tool in REMEDIATION_TOOLS}
         print(
             f"[ExecutionAgent] 🤖 Initialized with Context: Region={self.aws_context.get('region')}"
         )

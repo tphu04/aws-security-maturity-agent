@@ -1,12 +1,30 @@
 import json
 import re
+import time
 from typing import List, Dict, Any
-
+from langchain_core.callbacks import BaseCallbackHandler
 from .base_agent import BaseAgent
 
 # Import LangChain Ollama và message types
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
+
+
+class TimerCallback(BaseCallbackHandler):
+    def __init__(self):
+        self.total_duration = 0.0
+        self.call_history = []
+        self.start_time = 0.0
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> Any:
+        self.start_time = time.perf_counter()
+
+    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
+        duration = time.perf_counter() - self.start_time
+        self.total_duration += duration
+        self.call_history.append(duration)
 
 
 class RiskEvaluationAgent(BaseAgent):
@@ -53,9 +71,21 @@ class RiskEvaluationAgent(BaseAgent):
 
     def __init__(self, model_name: str, api_key: str, base_url: str):
         super().__init__(model_name, api_key, base_url)
+        self.timer = TimerCallback()
         self.llm = ChatOllama(
-            model=model_name, base_url=base_url, temperature=0, format="json"
+            model=model_name,
+            base_url=base_url,
+            temperature=0,
+            format="json",
+            callbacks=[self.timer],
         )
+
+    def get_llm_metrics(self) -> Dict[str, Any]:
+        return {
+            "total_latency": round(self.timer.total_duration, 4),
+            "call_history": [round(t, 4) for t in self.timer.call_history],
+            "call_count": len(self.timer.call_history),
+        }
 
     # ===============================================================
     # 1. UTIL: Trích JSON (Robust)

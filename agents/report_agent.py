@@ -9,9 +9,43 @@ import os
 import yaml
 import re
 import inspect
-from agent_tools import ALL_TOOLS
+import time
+from typing import Dict, Any, List
+from agent_tools import REMEDIATION_TOOLS
 from datetime import datetime
 from agents.report_module.chart_util import make_pass_fail_pie, make_severity_bar
+
+# Class Timer lưu trữ metrics
+class ReportTimer:
+    def __init__(self):
+        self.total_duration = 0.0
+        self.call_history = []
+    
+    def record(self, duration: float):
+        self.total_duration += duration
+        self.call_history.append(duration)
+
+# Proxy Class: Đứng giữa ReportAgent và LLMWriter để bấm giờ
+class LLMTimerProxy:
+    def __init__(self, target_object, timer: ReportTimer):
+        self._target = target_object
+        self._timer = timer
+
+    def __getattr__(self, name):
+        # Lấy thuộc tính/hàm từ object gốc (LLMWriter)
+        attr = getattr(self._target, name)
+        
+        # Nếu là hàm (method), bọc nó lại để đo giờ
+        if callable(attr):
+            def wrapper(*args, **kwargs):
+                start = time.perf_counter()
+                try:
+                    return attr(*args, **kwargs)
+                finally:
+                    duration = time.perf_counter() - start
+                    self._timer.record(duration)
+            return wrapper
+        return attr
 
 
 class ReportAgent:
@@ -25,16 +59,16 @@ class ReportAgent:
         output_dir=None,
         llm_config=None,
     ):
+        self.timer = ReportTimer()
 
         # LLM config fallback
         if llm_config is None:
             llm_config = {"model": model, "api_key": api_key, "base_url": base_url}
 
-        self.llm = LLMWriter(**llm_config)
-
-        # ================================
+        real_llm_writer = LLMWriter(**llm_config)
+        self.llm = LLMTimerProxy(real_llm_writer, self.timer)
+        
         #  CHUẨN HÓA OUTPUT PATH & FOLDER
-        # ================================
         self.output_path = output_path or "reports/final_report.md"
         self.output_dir = os.path.dirname(self.output_path)
 
@@ -44,6 +78,13 @@ class ReportAgent:
         self.md_path = self.output_path
         self.html_path = os.path.join(self.output_dir, "final_report.html")
         self.pdf_path = os.path.join(self.output_dir, "final_report.pdf")
+
+    def get_llm_metrics(self) -> Dict[str, Any]:
+        return {
+            "total_latency": round(self.timer.total_duration, 4),
+            "call_history": [round(t, 4) for t in self.timer.call_history],
+            "call_count": len(self.timer.call_history)
+        }
 
     # ------------------------------------------------------------
     def _normalize_table(self, table):

@@ -1,0 +1,64 @@
+{
+  "step_duration": {
+    "environment_setup": 5.0217,
+    "planning_node": 7.7494,
+    "scanning_trigger": 2.8824,
+    "monitoring_wait": 40.0742,
+    "risk_evaluation_node": 4.4376,
+    "operational_planning_node": 4.4859,
+    "execution_node": 0.0,
+    "verification_node": 32.4057,
+    "report_node": 47.8521
+  },
+  "llm_latency": {
+    "planning_agent": {
+      "total_latency": 7.7448,
+      "call_history": [
+        7.7448
+      ],
+      "call_count": 1
+    },
+    "scanner_agent": {
+      "total_latency": 2.8588,
+      "call_history": [
+        2.8588
+      ],
+      "call_count": 1
+    },
+    "risk_evaluation_agent": {
+      "total_latency": 4.4358,
+      "call_history": [
+        3.3502,
+        1.0856
+      ],
+      "call_count": 2
+    },
+    "remediation_planner_agent": {
+      "total_latency": 4.4842,
+      "call_history": [
+        3.6214,
+        0.8628
+      ],
+      "call_count": 2
+    },
+    "report_agent": {
+      "total_latency": 46.1765,
+      "call_history": [
+        7.41,
+        6.5224,
+        5.7866,
+        4.0383,
+        3.4281,
+        4.3976,
+        5.9966,
+        4.4637,
+        4.133
+      ],
+      "call_count": 9
+    }
+  },
+  "system_info": {
+    "start_time": 1766110303.6634688,
+    "total_duration": 152.71
+  }
+}

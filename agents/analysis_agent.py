@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 
 import inspect
-from agent_tools import ALL_TOOLS
+from agent_tools import REMEDIATION_TOOLS
 
 
 class AnalysisAgent:
@@ -508,13 +508,10 @@ class AnalysisAgent:
             }
 
         try:
-            from agent_tools import ALL_TOOLS
-            import inspect
-
-            tool = next((t for t in ALL_TOOLS if t.name == tool_name), None)
+            tool = next((t for t in REMEDIATION_TOOLS if t.name == tool_name), None)
             if tool is None:
                 return {
-                    "error": f"Tool '{tool_name}' not found in ALL_TOOLS."
+                    "error": f"Tool '{tool_name}' not found in REMEDIATION_TOOLS."
                 }
 
             func = getattr(tool, "func", None)
@@ -583,7 +580,7 @@ class AnalysisAgent:
             return None
 
         try:
-            tool = next((t for t in ALL_TOOLS if t.name == tool_name), None)
+            tool = next((t for t in REMEDIATION_TOOLS if t.name == tool_name), None)
             if not tool:
                 return f"Tool not found: {tool_name}"
 

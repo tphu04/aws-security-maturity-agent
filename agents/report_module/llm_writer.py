@@ -8,7 +8,7 @@ class LLMWriter:
 
     def __init__(self, model="llama3.1", api_key=None, base_url=None):
         # Dùng đúng client tương thích Ollama
-        self.llm = ChatOllama(model=model, base_url=base_url, temperature=0)
+        self.llm = ChatOllama(model=model, base_url=base_url, temperature=0.5)
 
     def _ask(self, prompt: str):
         res = self.llm.invoke(prompt)

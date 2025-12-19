@@ -32,6 +32,7 @@ class ExecutionLog(TypedDict):
 
 class PDCAState(TypedDict):
     # Input
+    performance_metrics: Dict[str, Any]
     user_request: str
     aws_context: Optional[AWSEnvironment]
     cycle_iteration: int

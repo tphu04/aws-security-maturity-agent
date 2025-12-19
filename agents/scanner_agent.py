@@ -1,13 +1,32 @@
 import json
 import logging
+import time
 from typing import List, Dict, Any, Optional
 
 from .base_agent import BaseAgent
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.callbacks import BaseCallbackHandler
 
 # Import danh sách tool từ agent_tools
 from agent_tools import SCANNER_AGENT_TOOLS
+
+
+class TimerCallback(BaseCallbackHandler):
+    def __init__(self):
+        self.total_duration = 0.0
+        self.call_history = []  # Thêm cái này
+        self.start_time = 0.0
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> Any:
+        self.start_time = time.perf_counter()
+
+    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
+        duration = time.perf_counter() - self.start_time
+        self.total_duration += duration
+        self.call_history.append(duration)
 
 
 class ScannerAgent(BaseAgent):
@@ -20,11 +39,11 @@ class ScannerAgent(BaseAgent):
         # Init khớp với graph_orchestator
         super().__init__(model_name, api_key, base_url)
 
+        self.timer = TimerCallback()
+
         print(f"[ScannerAgent] Init LangChain với model {model_name}...")
         self.lc_llm = ChatOllama(
-            model=model_name,
-            base_url=base_url,
-            temperature=0,
+            model=model_name, base_url=base_url, temperature=0, callbacks=[self.timer]
         )
 
         # 1. Bind tools cho AI
@@ -32,6 +51,13 @@ class ScannerAgent(BaseAgent):
 
         # 2. Tự động tạo map tool {name: func} để execute thủ công nếu cần
         self.tools_map = {tool.name: tool for tool in SCANNER_AGENT_TOOLS}
+
+    def get_llm_metrics(self) -> Dict[str, Any]:
+        return {
+            "total_latency": round(self.timer.total_duration, 4),
+            "call_history": [round(t, 4) for t in self.timer.call_history],
+            "call_count": len(self.timer.call_history),
+        }
 
     def run_batch(
         self, target_groups: List[str], specific_checks: List[str]
@@ -153,4 +179,3 @@ class ScannerAgent(BaseAgent):
         except Exception:
             pass
         return None
-

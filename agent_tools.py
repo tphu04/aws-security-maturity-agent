@@ -32,8 +32,14 @@ class ScanFileInput(BaseModel):
 
 class JobStatusInput(BaseModel):
     job_id: str = Field(..., description="ID của job cần kiểm tra trạng thái.")
+
+
 class ScanChecksInput(BaseModel):
-    check_ids: str = Field(..., description="Danh sách các Prowler Check IDs, cách nhau bởi dấu phẩy (vd: 's3_block_account_public_access,iam_root_mfa_enabled').")
+    check_ids: str = Field(
+        ...,
+        description="Danh sách các Prowler Check IDs, cách nhau bởi dấu phẩy (vd: 's3_block_account_public_access,iam_root_mfa_enabled').",
+    )
+
 
 # ==========================================================
 # 2. CÁC SCANNER TOOLS (Sử dụng args_schema)
@@ -46,11 +52,14 @@ def start_scan_by_check_ids(check_ids: str):
     """
     print(f"[Tool Call] ⚡️ Đang gọi API: /scan/specific?check_ids={check_ids}")
     try:
-        response = requests.get(f"{API_SERVER_URL}/scan/specific", params={"check_ids": check_ids})
+        response = requests.get(
+            f"{API_SERVER_URL}/scan/specific", params={"check_ids": check_ids}
+        )
         response.raise_for_status()
-        return response.json() # Trả về JSON luôn cho gọn
+        return response.json()  # Trả về JSON luôn cho gọn
     except Exception as e:
         return {"success": False, "error": str(e)}
+
 
 @tool(args_schema=ScanGroupInput)
 def start_scan_by_group(group: str):
@@ -61,13 +70,13 @@ def start_scan_by_group(group: str):
     try:
         response = requests.get(f"{API_SERVER_URL}/scan/check", params={"group": group})
         response.raise_for_status()
-        
+
         data = response.json()
-        
+
         # [QUAN TRỌNG] Đưa job_id ra ngoài để Agent dễ thấy
         # Giả sử API trả về { "job_id": "...", "status": "..." }
         job_id = data.get("job_id")
-        
+
         return {
             "job_id": job_id,  # <-- FIX: Thêm dòng này để khớp với ScannerAgent
             "success": True,
@@ -76,6 +85,7 @@ def start_scan_by_group(group: str):
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
 
 @tool(args_schema=ScanFileInput)
 def start_scan_by_file(filename: str):
@@ -544,37 +554,86 @@ def s3_secure_transport(resource_id: str, region: str = "us-east-1") -> str:
     """
     Mục đích: Bắt buộc truy cập HTTPS bằng bucket policy.
     Dùng khi: Finding yêu cầu SecureTransport = true.
-    Tự động: Ghi đè bucket policy với rule EnforceSSL.
-    Giới hạn: không merge policy cũ → có thể override policy hiện tại.
-
+    Cơ chế: Safe Merge (không ghi đè policy khác) + Self-Verification.
     """
+    client = boto3.client("s3", region_name=region)
+    sid_name = "EnforceSSL"
+
+    # Statement chuẩn để Force SSL
+    ssl_statement = {
+        "Sid": sid_name,
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": [
+            f"arn:aws:s3:::{resource_id}",
+            f"arn:aws:s3:::{resource_id}/*",
+        ],
+        "Condition": {"Bool": {"aws:SecureTransport": "false"}},
+    }
+
     try:
-        client = boto3.client("s3", region_name=region)
-        policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "EnforceSSL",
-                    "Effect": "Deny",
-                    "Principal": "*",
-                    "Action": "s3:*",
-                    "Resource": [
-                        f"arn:aws:s3:::{resource_id}",
-                        f"arn:aws:s3:::{resource_id}/*",
-                    ],
-                    "Condition": {"Bool": {"aws:SecureTransport": "false"}},
-                }
-            ],
-        }
+        # --- BƯỚC 1: LẤY POLICY HIỆN TẠI (SAFE LOAD) ---
+        try:
+            current_policy_raw = client.get_bucket_policy(Bucket=resource_id)
+            policy = json.loads(current_policy_raw["Policy"])
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchBucketPolicy":
+                policy = {"Version": "2012-10-17", "Statement": []}
+            elif e.response["Error"]["Code"] == "NoSuchBucket":
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error": f"Bucket '{resource_id}' not found. Check name vs ARN.",
+                    }
+                )
+            else:
+                raise e
+
+        # --- BƯỚC 2: MERGE POLICY (KHÔNG GHI ĐÈ) ---
+        statements = policy.get("Statement", [])
+        # Xóa rule cũ trùng tên (để cập nhật lại)
+        clean_statements = [s for s in statements if s.get("Sid") != sid_name]
+        # Thêm rule mới
+        clean_statements.append(ssl_statement)
+        policy["Statement"] = clean_statements
+
+        # --- BƯỚC 3: CẬP NHẬT LÊN AWS ---
         client.put_bucket_policy(Bucket=resource_id, Policy=json.dumps(policy))
-        return {
-            "success": True,
-            "status": "enabled",
-            "action": "Enforce SSL Policy",
-            "resource": resource_id,
-        }
+
+        # --- BƯỚC 4: VERIFY (KIỂM TRA LẠI NGAY LẬP TỨC) ---
+        # Chờ 2 giây để AWS đồng bộ
+        time.sleep(2)
+
+        # Tải lại policy để xác thực
+        verify_resp = client.get_bucket_policy(Bucket=resource_id)
+        verify_policy = json.loads(verify_resp["Policy"])
+
+        # Check sự tồn tại của rule EnforceSSL
+        is_fixed = any(
+            s.get("Sid") == sid_name for s in verify_policy.get("Statement", [])
+        )
+
+        if is_fixed:
+            return json.dumps(
+                {
+                    "success": True,
+                    "status": "remediated_and_verified",
+                    "message": f"Successfully enforced and VERIFIED SSL policy for {resource_id}.",
+                    "note": "Prowler/Security Hub may take time to update status to PASSED.",
+                }
+            )
+        else:
+            return json.dumps(
+                {
+                    "success": False,
+                    "status": "verification_failed",
+                    "error": "Policy update sent but verification failed. Check SCPs or Permissions.",
+                }
+            )
+
     except Exception as e:
-        return {"success": False, "error": str(e), "resource": resource_id}
+        return json.dumps({"success": False, "error": str(e)})
 
 
 @tool
@@ -741,7 +800,6 @@ AVAILABLE_FUNCTIONS = {
     "start_scan_by_file": start_scan_by_file,
     "start_scan_by_check_ids": start_scan_by_check_ids,
     "check_job_status": check_job_status,
-    
     "remediate_s3_public_access": s3_block_account_public_access,
     "remediate_s3_bucket_versioning": s3_enable_versioning,
     "remediate_s3_kms_encryption": s3_enable_kms_encryption,
@@ -756,32 +814,103 @@ AVAILABLE_FUNCTIONS = {
     "remediate_s3_bucket_event_notifications": s3_enable_event_notifications,
 }
 
-
-# Danh sách tool cho ScannerAgent
-SCANNER_AGENT_TOOLS = [start_scan_by_group, start_scan_by_file, start_scan_by_check_ids, check_job_status]
-
 # Danh sách tất cả tool cho RemediateAgent
 
 ALLOWED_GROUPS_LIST = [
-    "accessanalyzer", "account", "acm", "apigateway", "apigatewayv2", "appstream", "appsync", "athena",
-    "autoscaling", "awslambda", "backup", "bedrock", "cloudformation", "cloudfront", "cloudtrail",
-    "cloudwatch", "codeartifact", "codebuild", "cognito", "config", "datasync", "directconnect",
-    "directoryservice", "dlm", "dms", "documentdb", "drs", "dynamodb", "ec2", "ecr", "ecs", "efs",
-    "eks", "elasticache", "elasticbeanstalk", "elb", "elbv2", "emr", "eventbridge", "firehose",
-    "fms", "fsx", "glacier", "glue", "guardduty", "iam", "inspector2", "kafka", "kinesis", "kms",
-    "lightsail", "macie", "memorydb", "mq", "neptune", "networkfirewall", "opensearch", "organizations",
-    "rds", "redshift", "resourceexplorer2", "route53", "s3", "sagemaker", "secretsmanager",
-    "securityhub", "servicecatalog", "ses", "shield", "sns", "sqs", "ssm", "ssmincidents",
-    "stepfunctions", "storagegateway", "transfer", "trustedadvisor", "vpc", "waf", "wafv2",
-    "wellarchitected", "workspaces",
+    "accessanalyzer",
+    "account",
+    "acm",
+    "apigateway",
+    "apigatewayv2",
+    "appstream",
+    "appsync",
+    "athena",
+    "autoscaling",
+    "awslambda",
+    "backup",
+    "bedrock",
+    "cloudformation",
+    "cloudfront",
+    "cloudtrail",
+    "cloudwatch",
+    "codeartifact",
+    "codebuild",
+    "cognito",
+    "config",
+    "datasync",
+    "directconnect",
+    "directoryservice",
+    "dlm",
+    "dms",
+    "documentdb",
+    "drs",
+    "dynamodb",
+    "ec2",
+    "ecr",
+    "ecs",
+    "efs",
+    "eks",
+    "elasticache",
+    "elasticbeanstalk",
+    "elb",
+    "elbv2",
+    "emr",
+    "eventbridge",
+    "firehose",
+    "fms",
+    "fsx",
+    "glacier",
+    "glue",
+    "guardduty",
+    "iam",
+    "inspector2",
+    "kafka",
+    "kinesis",
+    "kms",
+    "lightsail",
+    "macie",
+    "memorydb",
+    "mq",
+    "neptune",
+    "networkfirewall",
+    "opensearch",
+    "organizations",
+    "rds",
+    "redshift",
+    "resourceexplorer2",
+    "route53",
+    "s3",
+    "sagemaker",
+    "secretsmanager",
+    "securityhub",
+    "servicecatalog",
+    "ses",
+    "shield",
+    "sns",
+    "sqs",
+    "ssm",
+    "ssmincidents",
+    "stepfunctions",
+    "storagegateway",
+    "transfer",
+    "trustedadvisor",
+    "vpc",
+    "waf",
+    "wafv2",
+    "wellarchitected",
+    "workspaces",
 ]
-# Danh sách tất cả tool cho RemediateAgent
-ALL_TOOLS = [
-    # --- Scanner Tools ---
+
+# Danh sách tool cho ScannerAgent
+SCANNER_AGENT_TOOLS = [
     start_scan_by_group,
     start_scan_by_file,
     start_scan_by_check_ids,
     check_job_status,
+]
+
+# Danh sách tất cả tool cho RemediateAgent
+REMEDIATION_TOOLS = [
     # --- S3 Remediation Tools ---
     s3_block_account_public_access,
     s3_enable_versioning,
@@ -795,8 +924,8 @@ ALL_TOOLS = [
     s3_enable_object_lock,
     s3_enable_access_logging,
     s3_enable_event_notifications,
-    # Tools ít dùng nhưng vẫn cần expose
     s3_force_private_acl,
     s3_enable_intelligent_tiering,
 ]
 
+ALL_TOOLS = SCANNER_AGENT_TOOLS + REMEDIATION_TOOLS

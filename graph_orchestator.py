@@ -1,9 +1,11 @@
 import os
 import json
 import uuid
+import time
 from datetime import datetime
-from typing import Literal, Dict, Any
-from typing import List
+from typing import Literal, Dict, List, Any
+from contextlib import contextmanager
+
 from langgraph.graph import StateGraph, END, START
 from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
@@ -33,6 +35,78 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_API_KEY = "ollama"
 
+
+# ==============================================================================
+# 0. UTILS: PERFORMANCE TRACKING & METRICS SAVER
+# ==============================================================================
+
+
+@contextmanager
+def measure_time():
+    """Đo thời gian thực thi của một block code (tính bằng giây)."""
+    start = time.perf_counter()
+    yield lambda: time.perf_counter() - start
+
+
+def update_metrics(current_metrics: Dict, category: str, key: str, value: Any):
+    """Cập nhật metrics, value có thể là float hoặc dict detail"""
+    if current_metrics is None:
+        current_metrics = {"step_duration": {}, "llm_latency": {}, "system_info": {}}
+
+    if category not in current_metrics:
+        current_metrics[category] = {}
+
+    if isinstance(value, float):
+        current_metrics[category][key] = round(value, 4)
+    else:
+        current_metrics[category][key] = value
+
+    return current_metrics
+
+
+def save_performance_metrics(
+    metrics: Dict[str, Any], path="data/performance_metrics.json"
+):
+    """Lưu metrics ra file JSON để Report Agent hoặc hệ thống khác sử dụng."""
+    try:
+        # Tính tổng thời gian hệ thống nếu có start_time
+        start_time = metrics.get("system_info", {}).get("start_time")
+        if start_time:
+            metrics["system_info"]["total_duration"] = round(
+                time.time() - start_time, 2
+            )
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=2, ensure_ascii=False)
+        print(f"\n📊 [Metrics] Đã lưu file thống kê hiệu năng tại: {path}")
+    except Exception as e:
+        print(f"⚠️ Không thể lưu file metrics: {e}")
+
+
+def save_scan_configuration(
+    plan_data: Dict[str, Any], path="data/initial_scan_config.json"
+):
+    """
+    Lưu plan từ PlanningAgent vào file JSON để RescanAgent dùng lại ở bước Verification.
+    """
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        # Chuẩn hóa format dữ liệu mà RescanAgent mong đợi
+        config_data = {
+            "groups_to_scan": plan_data.get("target_services", []),
+            "checks_to_scan": plan_data.get("checks_to_scan", []),
+            "reasoning": plan_data.get("reasoning", ""),
+        }
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(config_data, f, indent=2, ensure_ascii=False)
+        print(f"   [System] 💾 Configuration saved to {path}")
+    except Exception as e:
+        print(f"   ⚠️ Failed to save scan config: {e}")
+
+
 # ==============================================================================
 # 1. NODES CỐT LÕI (Environment, Planning, Scanning, Monitoring)
 # ==============================================================================
@@ -40,90 +114,104 @@ OLLAMA_API_KEY = "ollama"
 
 def environment_node(state: PDCAState):
     print("\n🟢 [Node: Environment] Fetch AWS context...")
-    agent = EnvironmentAgent()
-    ctx = agent.get_aws_context()
-    return {"aws_context": ctx}
+    metrics = state.get(
+        "performance_metrics",
+        {"step_duration": {}, "llm_latency": {}, "system_info": {}},
+    )
+
+    with measure_time() as timer:
+        agent = EnvironmentAgent()
+        ctx = agent.get_aws_context()
+
+    metrics = update_metrics(metrics, "step_duration", "environment_setup", timer())
+    return {"aws_context": ctx, "performance_metrics": metrics}
 
 
 def planning_node(state: PDCAState):
     print("\n🟢 [Node: Planning] Generate Assessment Plan...")
+    metrics = state.get("performance_metrics", {})
+
     agent = PlanningAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
-    raw_plan = agent.run(state["user_request"])
+
+    # [METRICS] Đo tổng thời gian Node
+    with measure_time() as timer:
+        raw_plan = agent.run(state["user_request"])
+
+    # [METRICS] Lấy thời gian Model từ bên trong Agent
+    llm_metrics = agent.get_llm_metrics()
+
+    metrics = update_metrics(metrics, "step_duration", "planning_node", timer())
+    metrics = update_metrics(metrics, "llm_latency", "planning_agent", llm_metrics)
 
     target_services = raw_plan.get("groups_to_scan", [])
     checks_to_scan = raw_plan.get("checks_to_scan", [])
 
     if not target_services and not checks_to_scan:
-        print(
-            "\n❌ [STOP] LỖI PLANNING: Không tìm thấy service AWS nào trong yêu cầu của bạn."
-        )
         raise ValueError("Planning Failed: No target services identified.")
+
+    save_scan_configuration(
+        {
+            "target_services": target_services,
+            "checks_to_scan": checks_to_scan,
+            "reasoning": raw_plan.get("reasoning", ""),
+        }
+    )
 
     return {
         "assessment_plan": {
             "target_services": target_services,
             "checks_to_scan": checks_to_scan,
             "reasoning": raw_plan.get("reasoning", ""),
-        }
+        },
+        "performance_metrics": metrics,
     }
 
 
 def scanning_node(state: PDCAState):
-    """Bước 1: Kích hoạt Scan"""
     target_services = state["assessment_plan"].get("target_services", [])
     checks_to_scan = state["assessment_plan"].get("checks_to_scan", [])
+    print(f"\n🟢 [Node: Scanning] Triggering scans: {target_services} {checks_to_scan}")
+    metrics = state.get("performance_metrics", {})
 
-    print(f"\n🟢 [Node: Scanning] Triggering scans")
-    print(f"   - Services: {target_services}")
-    print(f"   - Checks  : {checks_to_scan}")
+    scanner = ScannerAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
 
-    if not target_services and not checks_to_scan:
-        return {"scan_job_ids": []}
+    with measure_time() as timer:
+        job_ids = scanner.run_batch(
+            target_groups=target_services, specific_checks=checks_to_scan
+        )
 
-    scanner = ScannerAgent(
-        OLLAMA_MODEL,
-        OLLAMA_API_KEY,
-        OLLAMA_BASE_URL,
-    )
+    # [METRICS] Lấy thời gian LLM tích lũy
+    llm_metrics = scanner.get_llm_metrics()
 
-    job_ids = scanner.run_batch(
-        target_groups=target_services,
-        specific_checks=checks_to_scan,
-    )
+    metrics = update_metrics(metrics, "step_duration", "scanning_trigger", timer())
+    metrics = update_metrics(metrics, "llm_latency", "scanner_agent", llm_metrics)
 
-    return {"scan_job_ids": job_ids}
+    return {"scan_job_ids": job_ids, "performance_metrics": metrics}
 
 
 def monitoring_node(state: PDCAState):
-    """Bước 2: Vòng lặp theo dõi kết quả"""
     job_ids = state.get("scan_job_ids", [])
     print(f"\n🟢 [Node: Monitoring] Polling results for jobs: {job_ids}")
+    metrics = state.get("performance_metrics", {})
 
     if not job_ids:
         return {"raw_findings": []}
 
-    # 1. Thu thập dữ liệu thô (List phẳng)
-    monitor = MonitoringAgent(poll_interval=5)  # Giảm interval để test nhanh hơn
-    flat_raw_findings = monitor.run(job_ids)
+    with measure_time() as timer:
+        monitor = MonitoringAgent(poll_interval=5)
+        flat_raw_findings = monitor.run(job_ids)
+        normalized_data_package = normalize_results(flat_raw_findings)
+        try:
+            with open("data/pre_scan.json", "w", encoding="utf-8") as f:
+                json.dump(normalized_data_package, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"⚠️ Save error: {e}")
 
-    # 2. Chuẩn hóa dữ liệu (Trả về Dict {metadata, findings})
-    normalized_data_package = normalize_results(flat_raw_findings)
-
-    # 3. Side Effect: Lưu file JSON đầy đủ (có metadata) để AnalysisAgent dùng sau này
-    # AnalysisAgent thường đọc file này để so sánh
-    try:
-        with open("data/pre_scan.json", "w", encoding="utf-8") as f:
-            json.dump(normalized_data_package, f, indent=2, ensure_ascii=False)
-        print("   -> 💾 Saved data/pre_scan.json")
-    except Exception as e:
-        print(f"   -> ⚠️ Lỗi lưu file: {e}")
-
-    # 4. [QUAN TRỌNG] Cập nhật State
-    # State chỉ cần List Findings để truyền cho RiskEvaluationAgent
-    # Trích xuất key "findings" từ package đã chuẩn hóa
     clean_findings_list = normalized_data_package.get("findings", [])
 
-    return {"raw_findings": clean_findings_list}
+    metrics = update_metrics(metrics, "step_duration", "monitoring_wait", timer())
+
+    return {"raw_findings": clean_findings_list, "performance_metrics": metrics}
 
 
 # ==============================================================================
@@ -133,11 +221,25 @@ def monitoring_node(state: PDCAState):
 
 def risk_evaluation_node(state: PDCAState):
     print("\n🟢 [Node: Risk Eval] Analyzing risks...")
+    metrics = state.get("performance_metrics", {})
 
+    # Init agent
     risk_agent = RiskEvaluationAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
-    prioritized = risk_agent.run(state["raw_findings"])
 
-    return {"prioritized_findings": prioritized}
+    # 1. Đo tổng thời gian Node
+    with measure_time() as timer:
+        prioritized = risk_agent.run(state["raw_findings"])
+
+    # 2. Lấy chi tiết thời gian AI suy nghĩ
+    llm_metrics = risk_agent.get_llm_metrics()
+
+    # 3. Update Metrics
+    metrics = update_metrics(metrics, "step_duration", "risk_evaluation_node", timer())
+    metrics = update_metrics(
+        metrics, "llm_latency", "risk_evaluation_agent", llm_metrics
+    )
+
+    return {"prioritized_findings": prioritized, "performance_metrics": metrics}
 
 
 def route_after_risk(state: PDCAState) -> Literal["operational_planning", "report"]:
@@ -157,48 +259,58 @@ def route_after_risk(state: PDCAState) -> Literal["operational_planning", "repor
 
 def operational_planning_node(state: PDCAState):
     print("\n🟢 [Node: Op. Planning] Building remediation plan...")
+    metrics = state.get("performance_metrics", {})
 
-    findings = [f for f in state["prioritized_findings"] if f.get("status") == "FAIL"]
-
-    # 1. Lấy aws_context từ State (đã được EnvironmentNode nạp vào từ đầu)
     aws_ctx = state.get("aws_context", {})
-
-    # Khởi tạo Planner
     planner = RemediationPlannerAgent(
         OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL, aws_context=aws_ctx
     )
 
-    # Lấy kế hoạch (chỉ là text/json, chưa chạy)
-    generated_plans = planner.plan_remediation(findings)
+    # 1. Đo tổng thời gian Node
+    with measure_time() as timer:
+        findings = [
+            f for f in state["prioritized_findings"] if f.get("status") == "FAIL"
+        ]
+        generated_plans = planner.plan_remediation(findings)
 
-    tasks = []
+        tasks = []
 
-    for i, plan in enumerate(generated_plans, 1):
-        tasks.append(
-            {
-                "task_id": f"task_{i}",
-                "finding_id": plan["finding_id"],
-                "tool_name": plan["tool_id"],
-                "tool_params": plan["params"],
-                "description": plan.get("description", ""),
-                "priority": 1,
-                "ai_reasoning": plan.get("reasoning", ""),
-                "manual_required": plan.get("manual_required", False),
-            }
-        )
+        for i, plan in enumerate(generated_plans, 1):
+            tasks.append(
+                {
+                    "task_id": f"task_{i}",
+                    "finding_id": plan["finding_id"],
+                    "tool_name": plan["tool_id"],
+                    "tool_params": plan["params"],
+                    "description": plan.get("description", ""),
+                    "priority": 1,
+                    "ai_reasoning": plan.get("reasoning", ""),
+                    "manual_required": plan.get("manual_required", False),
+                }
+            )
+
+    llm_metrics = planner.get_llm_metrics()
+
+    metrics = update_metrics(
+        metrics, "step_duration", "operational_planning_node", timer()
+    )
+    metrics = update_metrics(
+        metrics, "llm_latency", "remediation_planner_agent", llm_metrics
+    )
 
     if len(tasks) == 0:
-        print("⚠ Không có remediation task nào → bỏ qua giai đoạn remediation.")
         return {
             "remediation_tasks": [],
             "task_execution_plan": {},
             "current_task_index": 0,
+            "performance_metrics": metrics,
         }
 
     return {
         "remediation_tasks": tasks,
         "task_execution_plan": {},
         "current_task_index": 0,
+        "performance_metrics": metrics,
     }
 
 
@@ -240,102 +352,109 @@ def route_review_next_task(state: PDCAState) -> Literal["review_task", "executio
 
 def execution_node(state: PDCAState):
     print("\n🟢 [Node: Execution] Running approved remediation tasks...")
+    metrics = state.get("performance_metrics", {})
 
-    all_tasks = state.get("remediation_tasks", [])
-    decisions = state.get("task_execution_plan", {})
-    prioritized_findings = state.get("prioritized_findings", [])
+    with measure_time() as timer:
+        all_tasks = state.get("remediation_tasks", [])
+        decisions = state.get("task_execution_plan", {})
+        prioritized_findings = state.get("prioritized_findings", [])
 
-    # Map finding_id -> finding_uid (O(1))
-    fid_to_uid_map = {f["finding_id"]: f["finding_uid"] for f in prioritized_findings}
-
-    # Tách tasks
-    manual_tasks = [t for t in all_tasks if t.get("manual_required", False)]
-    auto_tasks = [t for t in all_tasks if not t.get("manual_required", False)]
-
-    # Map task_id -> finding_id (cho auto logs)
-    task_to_finding = {t["task_id"]: t["finding_id"] for t in all_tasks}
-
-    pipeline_context = []
-    execution_logs = []
-
-    # --- 1) XỬ LÝ MANUAL ---
-    for t in manual_tasks:
-        finding_uid = fid_to_uid_map.get(t["finding_id"])
-
-        # [FIX] Tạo log object chuẩn để đồng bộ
-        manual_log = {
-            "task_id": t["task_id"],
-            "tool_name": t["tool_name"],
-            "status": "manual_required",
-            "output": {
-                "status": "manual_required",
-                "message": "Requires manual steps.",
-            },
-            "error": None,
+        # Map finding_id -> finding_uid (O(1))
+        fid_to_uid_map = {
+            f["finding_id"]: f["finding_uid"] for f in prioritized_findings
         }
-        execution_logs.append(manual_log)
 
-        pipeline_context.append(
-            {
+        # Tách tasks
+        manual_tasks = [t for t in all_tasks if t.get("manual_required", False)]
+        auto_tasks = [t for t in all_tasks if not t.get("manual_required", False)]
+
+        # Map task_id -> finding_id (cho auto logs)
+        task_to_finding = {t["task_id"]: t["finding_id"] for t in all_tasks}
+
+        pipeline_context = []
+        execution_logs = []
+
+        # --- 1) XỬ LÝ MANUAL ---
+        for t in manual_tasks:
+            finding_uid = fid_to_uid_map.get(t["finding_id"])
+
+            # [FIX] Tạo log object chuẩn để đồng bộ
+            manual_log = {
                 "task_id": t["task_id"],
-                "finding_uid": finding_uid,
                 "tool_name": t["tool_name"],
-                "tool_params": t["tool_params"],
-                "planner_reasoning": t.get("ai_reasoning"),
-                "manual_required": True,
-                "execution_status": "manual_required",
-                "execution_output": manual_log["output"],
-                "execution_error": None,
+                "status": "manual_required",
+                "output": {
+                    "status": "manual_required",
+                    "message": "Requires manual steps.",
+                },
+                "error": None,
             }
-        )
-
-    # --- 2) XỬ LÝ AUTO ---
-    if auto_tasks:
-        aws_ctx = state.get("aws_context", {})
-        executor = ExecutionAgent(aws_context=aws_ctx)
-
-        auto_tasks_filtered = [
-            t for t in auto_tasks if decisions.get(t["task_id"]) == "approve"
-        ]
-        auto_logs = executor.execute_all(auto_tasks_filtered, decisions)
-        execution_logs.extend(auto_logs)
-
-        task_obj_map = {t["task_id"]: t for t in auto_tasks}
-
-        for log in auto_logs:
-            task_id = log["task_id"]
-            finding_id = task_to_finding.get(task_id)
-            finding_uid = fid_to_uid_map.get(finding_id)
-            task_info = task_obj_map.get(task_id)
+            execution_logs.append(manual_log)
 
             pipeline_context.append(
                 {
-                    "task_id": task_id,  # <--- [FIX QUAN TRỌNG] Thêm task_id
+                    "task_id": t["task_id"],
                     "finding_uid": finding_uid,
-                    "tool_name": log["tool_name"],
-                    "tool_params": task_info["tool_params"] if task_info else {},
-                    "planner_reasoning": (
-                        task_info.get("ai_reasoning") if task_info else None
-                    ),
-                    "manual_required": False,
-                    "execution_status": (
-                        "failed"
-                        if log.get("status") == "error"
-                        else log.get("status", "not_run")
-                    ),
-                    "execution_output": log.get("output", {}),
-                    "execution_error": log.get("error", None),
-                    "execution_timing": {
-                        "started_at": log.get("started_at"),
-                        "ended_at": log.get("ended_at"),
-                        "duration": log.get("duration"),
-                    },
+                    "tool_name": t["tool_name"],
+                    "tool_params": t["tool_params"],
+                    "planner_reasoning": t.get("ai_reasoning"),
+                    "manual_required": True,
+                    "execution_status": "manual_required",
+                    "execution_output": manual_log["output"],
+                    "execution_error": None,
                 }
             )
 
+        # --- 2) XỬ LÝ AUTO ---
+        if auto_tasks:
+            aws_ctx = state.get("aws_context", {})
+            executor = ExecutionAgent(aws_context=aws_ctx)
+
+            auto_tasks_filtered = [
+                t for t in auto_tasks if decisions.get(t["task_id"]) == "approve"
+            ]
+            auto_logs = executor.execute_all(auto_tasks_filtered, decisions)
+            execution_logs.extend(auto_logs)
+
+            task_obj_map = {t["task_id"]: t for t in auto_tasks}
+
+            for log in auto_logs:
+                task_id = log["task_id"]
+                finding_id = task_to_finding.get(task_id)
+                finding_uid = fid_to_uid_map.get(finding_id)
+                task_info = task_obj_map.get(task_id)
+
+                pipeline_context.append(
+                    {
+                        "task_id": task_id,  # <--- [FIX QUAN TRỌNG] Thêm task_id
+                        "finding_uid": finding_uid,
+                        "tool_name": log["tool_name"],
+                        "tool_params": task_info["tool_params"] if task_info else {},
+                        "planner_reasoning": (
+                            task_info.get("ai_reasoning") if task_info else None
+                        ),
+                        "manual_required": False,
+                        "execution_status": (
+                            "failed"
+                            if log.get("status") == "error"
+                            else log.get("status", "not_run")
+                        ),
+                        "execution_output": log.get("output", {}),
+                        "execution_error": log.get("error", None),
+                        "execution_timing": {
+                            "started_at": log.get("started_at"),
+                            "ended_at": log.get("ended_at"),
+                            "duration": log.get("duration"),
+                        },
+                    }
+                )
+
+    metrics = update_metrics(metrics, "step_duration", "execution_node", timer())
+
     return {
         "execution_logs": execution_logs,
-        "pipeline_context": pipeline_context,
+        "pipeline_context": pipeline_context,  # (Nhớ gán đúng biến pipeline_context đã tạo ở trên)
+        "performance_metrics": metrics,
     }
 
 
@@ -346,37 +465,45 @@ def execution_node(state: PDCAState):
 
 def verification_node(state: PDCAState):
     print("\n🟢 [Node: Verification] Running post-remediation scan...")
+    metrics = state.get("performance_metrics", {})
 
-    # 1) Chạy rescan để sinh post_scan.json
-    rescan = RescanAgent()
-    rescan.run()
+    with measure_time() as timer:
+        # 1) Chạy rescan để sinh post_scan.json
+        rescan = RescanAgent()
+        rescan.run()
 
-    # 2) Gom dữ liệu execution vào pipeline_context đầy đủ
-    pipeline_context = _aggregate_pipeline_data(state, state["pipeline_context"])
+        # 2) Gom dữ liệu execution vào pipeline_context đầy đủ
+        pipeline_context = _aggregate_pipeline_data(state, state["pipeline_context"])
 
-    # 3) Tạo AnalysisAgent để tạo diff (before/after)
-    analyzer = AnalysisAgent("data/pre_scan.json", "data/post_scan.json")
-    diff = analyzer.run(pipeline_context=pipeline_context)
+        # 3) Tạo AnalysisAgent để tạo diff (before/after)
+        analyzer = AnalysisAgent("data/pre_scan.json", "data/post_scan.json")
+        diff = analyzer.run(pipeline_context=pipeline_context)
 
-    # 4) BỔ SUNG: build report_context từ pre/post/diff
-    report_context = analyzer.build_report_context(
-        pre_scan=json.load(open("data/pre_scan.json", "r", encoding="utf-8")),
-        post_scan=json.load(open("data/post_scan.json", "r", encoding="utf-8")),
-        diff_data=diff,
-        meta={
-            "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
-            "scan_group": state.get("assessment_plan", {}).get(
-                "target_services", ["s3"]
-            ),
-        },
-    )
+        # 4) BỔ SUNG: build report_context từ pre/post/diff
+        report_context = analyzer.build_report_context(
+            pre_scan=json.load(open("data/pre_scan.json", "r", encoding="utf-8")),
+            post_scan=json.load(open("data/post_scan.json", "r", encoding="utf-8")),
+            diff_data=diff,
+            meta={
+                "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
+                "scan_group": state.get("assessment_plan", {}).get(
+                    "target_services", ["s3"]
+                ),
+            },
+        )
 
+    metrics = update_metrics(metrics, "step_duration", "verification_node", timer())
     # 5) Đưa vào state -> để report_node dùng
-    return {"verification_results": diff, "report_context": report_context}
+    return {
+        "verification_results": diff,
+        "report_context": report_context,
+        "performance_metrics": metrics,
+    }
 
 
 def report_node(state: PDCAState):
     print("\n🟢 [Node: Report] Generating final report...")
+    metrics = state.get("performance_metrics", {})
 
     # Report context đã build từ AnalysisAgent
     report_context = state.get("report_context")
@@ -396,7 +523,15 @@ def report_node(state: PDCAState):
         output_path="data/final_report.md",
     )
 
-    path = agent.run(report_context=report_context, meta=meta)
+    with measure_time() as timer:
+        path = agent.run(report_context=report_context, meta=meta)
+
+    llm_metrics = agent.get_llm_metrics()
+
+    metrics = update_metrics(metrics, "step_duration", "report_node", timer())
+    metrics = update_metrics(metrics, "llm_latency", "report_agent", llm_metrics)
+
+    save_performance_metrics(metrics)
 
     return {"final_report": path}
 
@@ -636,6 +771,11 @@ def run_interactive_session():
         "user_request": user_request_text,
         "cycle_iteration": 0,
         "meta": {"user_input": user_request_text},
+        "performance_metrics": {
+            "step_duration": {},
+            "llm_latency": {},
+            "system_info": {"start_time": time.time()},
+        },
     }
     current_input = initial_input
 

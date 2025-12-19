@@ -1,4 +1,5 @@
 import json
+import time
 from typing import List, Dict, Any
 import inspect
 from .base_agent import BaseAgent
@@ -6,9 +7,10 @@ from .base_agent import BaseAgent
 # Import LangChain Ollama và Message Types
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.callbacks import BaseCallbackHandler
 
 # Import danh sách tool (để lấy mô tả cho AI hiểu)
-from agent_tools import ALL_TOOLS
+from agent_tools import REMEDIATION_TOOLS
 
 # Đây là danh sách tool luôn yêu cầu sửa thủ công
 ALWAYS_MANUAL_TOOLS = {
@@ -18,7 +20,6 @@ ALWAYS_MANUAL_TOOLS = {
     "s3_remove_cross_account_principals",
     "s3_enable_intelligent_tiering",
 }
-
 
 
 def build_params_from_signature(tool, finding: Dict, aws_context: Dict):
@@ -43,9 +44,26 @@ def build_params_from_signature(tool, finding: Dict, aws_context: Dict):
         elif name == "account_id":
             params[name] = aws_context.get("account_id")
         else:
-            continue # Bỏ qua các tham số không rõ nguồn gốc
+            continue  # Bỏ qua các tham số không rõ nguồn gốc
 
     return params
+
+
+class TimerCallback(BaseCallbackHandler):
+    def __init__(self):
+        self.total_duration = 0.0
+        self.call_history = []
+        self.start_time = 0.0
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> Any:
+        self.start_time = time.perf_counter()
+
+    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
+        duration = time.perf_counter() - self.start_time
+        self.total_duration += duration
+        self.call_history.append(duration)
 
 
 class RemediationPlannerAgent(BaseAgent):
@@ -88,25 +106,30 @@ class RemediationPlannerAgent(BaseAgent):
 
     def __init__(self, model_name, api_key, base_url, aws_context=None):
         super().__init__(model_name, api_key, base_url)
-
+        self.timer = TimerCallback()
         self.aws_context = aws_context or {}
 
         # Init LLM
         self.lc_llm = ChatOllama(
-            model=model_name,
-            base_url=base_url,
-            temperature=0,
+            model=model_name, base_url=base_url, temperature=0, callbacks=[self.timer]
         )
 
         # Bind tools để LLM biết schema, nhưng KHÔNG dùng để invoke trực tiếp
-        self.llm_with_tools = self.lc_llm.bind_tools(ALL_TOOLS)
+        self.llm_with_tools = self.lc_llm.bind_tools(REMEDIATION_TOOLS)
 
         # Tạo chuỗi mô tả tool để nạp vào prompt
         self.tools_desc_str = "\n".join(
-            [f"- {tool.name}: {tool.description}" for tool in ALL_TOOLS]
+            [f"- {tool.name}: {tool.description}" for tool in REMEDIATION_TOOLS]
         )
 
-        self.tools_map = {t.name: t for t in ALL_TOOLS}
+        self.tools_map = {t.name: t for t in REMEDIATION_TOOLS}
+
+    def get_llm_metrics(self) -> Dict[str, Any]:
+        return {
+            "total_latency": round(self.timer.total_duration, 4),
+            "call_history": [round(t, 4) for t in self.timer.call_history],
+            "call_count": len(self.timer.call_history),
+        }
 
     def plan_remediation(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -159,7 +182,8 @@ class RemediationPlannerAgent(BaseAgent):
 
                 parsed = {}
                 try:
-                    parsed = json.loads(response.content)
+                    clean_content = self._clean_json_text(response.content)
+                    parsed = json.loads(clean_content)
                 except:
                     print(f"[RemediateAgent] ❌ Response không phải JSON hợp lệ.")
                     continue
@@ -192,7 +216,9 @@ class RemediationPlannerAgent(BaseAgent):
                         "finding_id": finding_id,
                         "tool_id": tool_name,
                         "params": tool_params,
-                        "reasoning": parsed.get("reasoning", "Không có giải thích từ AI"),
+                        "reasoning": parsed.get(
+                            "reasoning", "Không có giải thích từ AI"
+                        ),
                         "manual_required": is_manual,
                     }
                 )
@@ -205,3 +231,13 @@ class RemediationPlannerAgent(BaseAgent):
         )
 
         return plans
+
+    def _clean_json_text(self, text: str) -> str:
+        text = text.strip()
+        # Xử lý trường hợp có markdown block ```json
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0]
+        # Xử lý trường hợp có markdown block ``` thường
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0]
+        return text.strip()
