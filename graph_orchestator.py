@@ -128,34 +128,29 @@ def environment_node(state: PDCAState):
 
 
 def planning_node(state: PDCAState):
-    print("\n🟢 [Node: Planning] Generate Assessment Plan...")
+    print("\n🟢 [Node: Planning] Generating Assessment Plan via RAG...")
     metrics = state.get("performance_metrics", {})
-
     agent = PlanningAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
 
-    # [METRICS] Đo tổng thời gian Node
     with measure_time() as timer:
+        # Agent.run giờ đây sẽ trả về ID chuẩn từ VectorDB
         raw_plan = agent.run(state["user_request"])
 
-    # [METRICS] Lấy thời gian Model từ bên trong Agent
+    # Cập nhật Metrics
     llm_metrics = agent.get_llm_metrics()
-
     metrics = update_metrics(metrics, "step_duration", "planning_node", timer())
     metrics = update_metrics(metrics, "llm_latency", "planning_agent", llm_metrics)
 
+    # Lấy dữ liệu đã được RAG lọc sạch
     target_services = raw_plan.get("groups_to_scan", [])
     checks_to_scan = raw_plan.get("checks_to_scan", [])
 
-    if not target_services and not checks_to_scan:
-        raise ValueError("Planning Failed: No target services identified.")
-
-    save_scan_configuration(
-        {
-            "target_services": target_services,
-            "checks_to_scan": checks_to_scan,
-            "reasoning": raw_plan.get("reasoning", ""),
-        }
-    )
+    # Lưu cấu hình để RescanAgent có thể dùng lại sau này
+    save_scan_configuration({
+        "target_services": target_services,
+        "checks_to_scan": checks_to_scan,
+        "reasoning": raw_plan.get("reasoning", ""),
+    })
 
     return {
         "assessment_plan": {
@@ -165,7 +160,6 @@ def planning_node(state: PDCAState):
         },
         "performance_metrics": metrics,
     }
-
 
 def scanning_node(state: PDCAState):
     target_services = state["assessment_plan"].get("target_services", [])
@@ -250,7 +244,7 @@ def route_after_risk(state: PDCAState) -> Literal["operational_planning", "repor
     else:
         print("\n✅ No FAIL → go to report.")
         return "report"
-
+    
 
 # ==============================================================================
 # 3. REMEDIATION OPERATIONAL PLANNING
