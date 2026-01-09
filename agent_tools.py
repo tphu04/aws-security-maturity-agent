@@ -50,7 +50,7 @@ def start_scan_by_check_ids(check_ids: str):
     [TOOL] Quét hệ thống AWS theo các Check ID cụ thể (nhỏ hơn và nhanh hơn quét Group).
     Dùng tool này khi người dùng chỉ định rõ vấn đề (vd: logging, mfa, encryption).
     """
-    print(f"[Tool Call] ⚡️ Đang gọi API: /scan/specific?check_ids={check_ids}")
+    print(f"[Tool Call] Đang gọi API: /scan/specific?check_ids={check_ids}")
     try:
         response = requests.get(
             f"{API_SERVER_URL}/scan/specific", params={"check_ids": check_ids}
@@ -66,7 +66,7 @@ def start_scan_by_group(group: str):
     """
     [TOOL] Bắt đầu một công việc quét tài khoản AWS theo TÊN SERVICE.
     """
-    print(f"[Tool Call] ⚡️ Đang gọi API: /scan/check?group={group}")
+    print(f"[Tool Call] Đang gọi API: /scan/check?group={group}")
     try:
         response = requests.get(f"{API_SERVER_URL}/scan/check", params={"group": group})
         response.raise_for_status()
@@ -92,7 +92,7 @@ def start_scan_by_file(filename: str):
     """
     [TOOL] Bắt đầu quét tài khoản AWS theo TÊN FILE JSON tùy chỉnh.
     """
-    print(f"[Tool Call] ⚡️ Đang gọi API: /scan/custom?filename={filename}")
+    print(f"[Tool Call] Đang gọi API: /scan/custom?filename={filename}")
     try:
         response = requests.get(
             f"{API_SERVER_URL}/scan/custom", params={"filename": filename}
@@ -112,7 +112,7 @@ def check_job_status(job_id: str):
     """
     [TOOL] Kiểm tra trạng thái của một công việc (job) đang chạy.
     """
-    print(f"[Tool Call] ⚡️ Đang gọi API: /job/status?job_id={job_id}")
+    print(f"[Tool Call] Đang gọi API: /job/status?job_id={job_id}")
     try:
         response = requests.get(
             f"{API_SERVER_URL}/job/status", params={"job_id": job_id}
@@ -139,7 +139,7 @@ def s3_block_account_public_access(
     Giới hạn: Không sửa policy từng bucket; không liên quan tới ACL findings.
     """
     print(
-        f"[Tool] 🛠️ Đang thực thi S3 Block Public Access cho Account ID: {account_id}..."
+        f"[Tool] Đang thực thi S3 Block Public Access cho Account ID: {account_id}..."
     )
 
     # Sử dụng s3control cho các thao tác cấp Account
@@ -326,7 +326,7 @@ def s3_enable_access_logging(
         try:
             s3.head_bucket(Bucket=target_bucket)
         except Exception:
-            print(f"[Tool] 🛠️ Creating log bucket: {target_bucket}...")
+            print(f"[Tool] Creating log bucket: {target_bucket}...")
             if region == "us-east-1":
                 s3.create_bucket(Bucket=target_bucket)
             else:
@@ -377,7 +377,7 @@ def s3_enable_access_logging(
 
         # Merge policy nếu bucket đã có policy cũ (Logic đơn giản hóa: Ghi đè hoặc thêm mới)
         # Ở đây ta dùng put_bucket_policy an toàn
-        print(f"[Tool] 🛠️ Applying Bucket Policy for LogDelivery...")
+        print(f"[Tool] Applying Bucket Policy for LogDelivery...")
         s3.put_bucket_policy(Bucket=target_bucket, Policy=json.dumps(policy_statement))
 
         # 4. BẬT LOGGING TRÊN BUCKET NGUỒN
@@ -414,7 +414,7 @@ def s3_enable_event_notifications(resource_id: str, region: str = "us-east-1") -
     Tự động: Tạo SNS topic và cấu hình notification.
     Giới hạn: Có thể tạo resource mới (SNS), cần xác nhận trước khi chạy.
     """
-    print(f"[Tool] 🛠️ Đang bật Event Notification cho: {resource_id}...")
+    print(f"[Tool] Đang bật Event Notification cho: {resource_id}...")
     s3 = boto3.client("s3", region_name=region)
     sns = boto3.client("sns", region_name=region)
 

@@ -41,7 +41,7 @@ class ScannerAgent(BaseAgent):
 
         self.timer = TimerCallback()
 
-        print(f"[ScannerAgent] Init LangChain với model {model_name}...")
+        print(f"[ScannerModule] Init LangChain với model {model_name}...")
         self.lc_llm = ChatOllama(
             model=model_name, base_url=base_url, temperature=0, callbacks=[self.timer]
         )
@@ -67,14 +67,14 @@ class ScannerAgent(BaseAgent):
         Xử lý cả Service Groups và Specific Checks.
         """
         collected_job_ids = []
-        print(f"[ScannerAgent] 🚀 Bắt đầu Batch Scan...")
+        print(f"[ScannerModule] Bắt đầu Batch Scan...")
 
         # 1. Xử lý Specific Checks (Nếu có danh sách Check ID cụ thể)
         # VD: ['check_s3_01', 'check_iam_02']
         if specific_checks:
             # Gom tất cả check IDs vào 1 request để tối ưu (hoặc chia nhỏ nếu cần)
             ids_str = ", ".join(specific_checks)
-            print(f"[ScannerAgent] -> Requesting specific checks: {ids_str}")
+            print(f"[ScannerModule] -> Requesting specific checks: {ids_str}")
 
             # Tạo prompt thật rõ để AI chọn tool 'start_scan_by_check_ids'
             task_desc = (
@@ -89,7 +89,7 @@ class ScannerAgent(BaseAgent):
         # VD: ['s3', 'iam']
         if target_groups:
             for group in target_groups:
-                print(f"[ScannerAgent] -> Requesting scan for group: {group}")
+                print(f"[ScannerModule] -> Requesting scan for group: {group}")
 
                 # Tạo prompt thật rõ để AI chọn tool 'start_scan_by_service_group'
                 task_desc = f"Start a security scan for the service group: {group}"
@@ -126,7 +126,7 @@ class ScannerAgent(BaseAgent):
                     if target_tool:
                         try:
                             print(
-                                f"[ScannerAgent] 🛠  Calling tool: {tool_name} with args: {tool_args}"
+                                f"[ScannerModule] Calling tool: {tool_name} with args: {tool_args}"
                             )
                             # Thực thi tool
                             tool_output = target_tool.invoke(tool_args)
@@ -134,29 +134,29 @@ class ScannerAgent(BaseAgent):
                             # Trích xuất Job ID từ output
                             jid = self._extract_job_id(tool_output)
                             if jid:
-                                print(f"[ScannerAgent] ✅ Job Created: {jid}")
+                                print(f"[ScannerModule] Job Created: {jid}")
                                 return jid
                             else:
                                 print(
-                                    f"[ScannerAgent] ⚠️ Tool executed but returned no Job ID."
+                                    f"[ScannerModule] Tool executed but returned no Job ID."
                                 )
 
                         except Exception as e:
-                            print(f"[ScannerAgent] ❌ Lỗi tool {tool_name}: {e}")
+                            print(f"[ScannerModule] ❌ Lỗi tool {tool_name}: {e}")
                             return None
                     else:
                         print(
-                            f"[ScannerAgent] ❌ Lỗi: Tool '{tool_name}' không tồn tại trong map."
+                            f"[ScannerModule] ❌ Lỗi: Tool '{tool_name}' không tồn tại trong map."
                         )
                         return None
             else:
                 print(
-                    f"[ScannerAgent] ⚠️ AI không gọi tool nào cho task: '{task_description}'"
+                    f"[ScannerModule] ⚠️ AI không gọi tool nào cho task: '{task_description}'"
                 )
                 return None
 
         except Exception as e:
-            print(f"[ScannerAgent] ❌ Lỗi Critical: {e}")
+            print(f"[ScannerModule] ❌ Lỗi Critical: {e}")
             return None
 
         return None

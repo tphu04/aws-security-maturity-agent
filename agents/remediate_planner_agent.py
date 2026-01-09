@@ -137,9 +137,7 @@ class RemediationPlannerAgent(BaseAgent):
         Output: Danh sách Remediation Plans (không thực thi)
         """
         plans = []
-        print(
-            f"[RemediationPlanner] 🧠 Đang lập kế hoạch cho {len(findings)} findings..."
-        )
+        print(f"[RemediationPlanner] Đang lập kế hoạch cho {len(findings)} findings...")
 
         for finding in findings:
             if finding.get("status") != "FAIL":
@@ -185,7 +183,7 @@ class RemediationPlannerAgent(BaseAgent):
                     clean_content = self._clean_json_text(response.content)
                     parsed = json.loads(clean_content)
                 except:
-                    print(f"[RemediateAgent] ❌ Response không phải JSON hợp lệ.")
+                    print(f"[RemediationPlanner] ❌ Response không phải JSON hợp lệ.")
                     continue
 
                 tool_name = parsed.get("tool_name")
@@ -224,10 +222,10 @@ class RemediationPlannerAgent(BaseAgent):
                 )
 
             except Exception as e:
-                print(f"[RemediateAgent] ❌ Lỗi khi suy luận tool: {e}")
+                print(f"[RemediationPlanner] ❌ Lỗi khi suy luận tool: {e}")
 
         print(
-            f"[RemediateAgent] ✅ Generated remediation plan với {len(plans)} task(s)."
+            f"[RemediationPlanner] Generated remediation plan với {len(plans)} task(s)."
         )
 
         return plans

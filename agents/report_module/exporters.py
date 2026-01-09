@@ -102,7 +102,7 @@ def export_pdf(html: str, path: str):
 
     try:
         pdfkit.from_file(tmp_html_path, path, configuration=config, options=options)
-        print(f"✅ PDF exported: {path}")
+        print(f" PDF exported: {path}")
         return path
     except Exception as e:
         print("❌ PDF EXPORT ERROR:", e)

@@ -79,9 +79,9 @@ def save_performance_metrics(
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(metrics, f, indent=2, ensure_ascii=False)
-        print(f"\n📊 [Metrics] Đã lưu file thống kê hiệu năng tại: {path}")
+        print(f"\n [Metrics] Đã lưu file thống kê hiệu năng tại: {path}")
     except Exception as e:
-        print(f"⚠️ Không thể lưu file metrics: {e}")
+        print(f" Không thể lưu file metrics: {e}")
 
 
 def save_scan_configuration(
@@ -102,9 +102,9 @@ def save_scan_configuration(
 
         with open(path, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=2, ensure_ascii=False)
-        print(f"   [System] 💾 Configuration saved to {path}")
+        print(f"   [System]  Configuration saved to {path}")
     except Exception as e:
-        print(f"   ⚠️ Failed to save scan config: {e}")
+        print(f"    Failed to save scan config: {e}")
 
 
 # ==============================================================================
@@ -113,7 +113,7 @@ def save_scan_configuration(
 
 
 def environment_node(state: PDCAState):
-    print("\n🟢 [Node: Environment] Fetch AWS context...")
+    print("\n [Node: Environment] Fetch AWS context...")
     metrics = state.get(
         "performance_metrics",
         {"step_duration": {}, "llm_latency": {}, "system_info": {}},
@@ -128,7 +128,7 @@ def environment_node(state: PDCAState):
 
 
 def planning_node(state: PDCAState):
-    print("\n🟢 [Node: Planning] Generating Assessment Plan via RAG...")
+    print("\n [Node: Planning] Generating Assessment Plan via RAG...")
     metrics = state.get("performance_metrics", {})
     agent = PlanningAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
 
@@ -164,7 +164,7 @@ def planning_node(state: PDCAState):
 def scanning_node(state: PDCAState):
     target_services = state["assessment_plan"].get("target_services", [])
     checks_to_scan = state["assessment_plan"].get("checks_to_scan", [])
-    print(f"\n🟢 [Node: Scanning] Triggering scans: {target_services} {checks_to_scan}")
+    print(f"\n [Node: Scanning] Triggering scans: {target_services} {checks_to_scan}")
     metrics = state.get("performance_metrics", {})
 
     scanner = ScannerAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
@@ -185,7 +185,7 @@ def scanning_node(state: PDCAState):
 
 def monitoring_node(state: PDCAState):
     job_ids = state.get("scan_job_ids", [])
-    print(f"\n🟢 [Node: Monitoring] Polling results for jobs: {job_ids}")
+    print(f"\n [Node: Monitoring] Polling results for jobs: {job_ids}")
     metrics = state.get("performance_metrics", {})
 
     if not job_ids:
@@ -199,7 +199,7 @@ def monitoring_node(state: PDCAState):
             with open("data/pre_scan.json", "w", encoding="utf-8") as f:
                 json.dump(normalized_data_package, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"⚠️ Save error: {e}")
+            print(f" Save error: {e}")
 
     clean_findings_list = normalized_data_package.get("findings", [])
 
@@ -214,7 +214,7 @@ def monitoring_node(state: PDCAState):
 
 
 def risk_evaluation_node(state: PDCAState):
-    print("\n🟢 [Node: Risk Eval] Analyzing risks...")
+    print("\n [Node: Risk Eval] Analyzing risks...")
     metrics = state.get("performance_metrics", {})
 
     # Init agent
@@ -239,10 +239,10 @@ def risk_evaluation_node(state: PDCAState):
 def route_after_risk(state: PDCAState) -> Literal["operational_planning", "report"]:
     fails = [f for f in state["prioritized_findings"] if f.get("status") == "FAIL"]
     if fails:
-        print(f"\n⚠️ {len(fails)} FAIL findings → go to remediation planning.")
+        print(f"\n {len(fails)} FAIL findings → go to remediation planning.")
         return "operational_planning"
     else:
-        print("\n✅ No FAIL → go to report.")
+        print("\n No FAIL → go to report.")
         return "report"
     
 
@@ -252,7 +252,7 @@ def route_after_risk(state: PDCAState) -> Literal["operational_planning", "repor
 
 
 def operational_planning_node(state: PDCAState):
-    print("\n🟢 [Node: Op. Planning] Building remediation plan...")
+    print("\n [Node: Op. Planning] Building remediation plan...")
     metrics = state.get("performance_metrics", {})
 
     aws_ctx = state.get("aws_context", {})
@@ -345,7 +345,7 @@ def route_review_next_task(state: PDCAState) -> Literal["review_task", "executio
 
 
 def execution_node(state: PDCAState):
-    print("\n🟢 [Node: Execution] Running approved remediation tasks...")
+    print("\n [Node: Execution] Running approved remediation tasks...")
     metrics = state.get("performance_metrics", {})
 
     with measure_time() as timer:
@@ -458,7 +458,7 @@ def execution_node(state: PDCAState):
 
 
 def verification_node(state: PDCAState):
-    print("\n🟢 [Node: Verification] Running post-remediation scan...")
+    print("\n [Node: Verification] Running post-remediation scan...")
     metrics = state.get("performance_metrics", {})
 
     with measure_time() as timer:
@@ -496,13 +496,13 @@ def verification_node(state: PDCAState):
 
 
 def report_node(state: PDCAState):
-    print("\n🟢 [Node: Report] Generating final report...")
+    print("\n [Node: Report] Generating final report...")
     metrics = state.get("performance_metrics", {})
 
     # Report context đã build từ AnalysisAgent
     report_context = state.get("report_context")
     if not report_context:
-        raise ValueError("❌ Missing report_context in PDCA state")
+        raise ValueError(" Missing report_context in PDCA state")
 
     meta = {
         "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
@@ -627,29 +627,29 @@ def handle_task_review_interaction(app, config):
     )
 
     print("\n" + "=" * 60)
-    print(f"🕵️  REVIEWING TASK [{idx + 1}/{len(tasks)}]")
-    print(f"🆔 Task ID    : {task['task_id']}")
+    print(f"  REVIEWING TASK [{idx + 1}/{len(tasks)}]")
+    print(f" Task ID    : {task['task_id']}")
 
     if finding:
-        print(f"🔎 Finding ID : {finding['finding_id']}")
-        print(f"🔧 Service    : {finding.get('service', 'N/A')}")
-        print(f"📍 Resource   : {finding.get('resource_id', 'N/A')}")
-        print(f"🌎 Region     : {finding.get('region', 'N/A')}")
-        print(f"⚠️ Severity   : {finding.get('severity', 'N/A')}")
-        print(f"📊 Risk Score : {finding.get('risk_score', 'N/A')}")
+        print(f" Finding ID : {finding['finding_id']}")
+        print(f" Service    : {finding.get('service', 'N/A')}")
+        print(f" Resource   : {finding.get('resource_id', 'N/A')}")
+        print(f" Region     : {finding.get('region', 'N/A')}")
+        print(f" Severity   : {finding.get('severity', 'N/A')}")
+        print(f" Risk Score : {finding.get('risk_score', 'N/A')}")
         print(
-            f"📝 Description: {finding.get('description', '')[:200]}..."
+            f" Description: {finding.get('description', '')[:200]}..."
         )  # Cắt ngắn nếu quá dài
         print("-" * 5 + " Tool Remediation Info " + "-" * 5)
 
-    print(f"🛠  Tool Name  : {tool_name}")
-    print(f"📖 Description: {description}")
-    print(f"⚙️  Params     : {task['tool_params']}")
-    print(f"🧠 AI Reasoning: {task.get('ai_reasoning', 'N/A')}")
+    print(f"  Tool Name  : {tool_name}")
+    print(f"  Description: {description}")
+    print(f"  Params     : {task['tool_params']}")
+    print(f"  AI Reasoning: {task.get('ai_reasoning', 'N/A')}")
     print("=" * 60)
 
     # 3. Hỏi User
-    print(f"\n👉 Bạn có muốn chạy tool '{task['tool_name']}' không?")
+    print(f"\n Bạn có muốn chạy tool '{task['tool_name']}' không?")
     choice = input("   [Y]es (Chạy) / [N]o (Bỏ qua): ").strip().lower()
 
     decision = "skip"
@@ -746,12 +746,12 @@ def run_interactive_session():
     config = {"configurable": {"thread_id": thread_id}}
 
     print("\n" + "=" * 50)
-    print("🚀 CHÀO MỪNG ĐẾN VỚI HỆ THỐNG PDCA SECURITY AGENT")
+    print(" CHÀO MỪNG ĐẾN VỚI HỆ THỐNG PDCA SECURITY AGENT")
     print("=" * 50)
 
     # [FIX] Cho phép User nhập yêu cầu ban đầu
     user_request_text = input(
-        "👉 Nhập yêu cầu của bạn (VD: Scan S3, Check IAM users...): "
+        " Nhập yêu cầu của bạn (VD: Scan S3, Check IAM users...): "
     ).strip()
 
     if not user_request_text:
@@ -784,7 +784,7 @@ def run_interactive_session():
 
             # Nếu graph đã chạy xong hết (không còn next node) -> BREAK
             if not snapshot.next:
-                print("\n✅ QUY TRÌNH HOÀN TẤT!")
+                print("\n QUY TRÌNH HOÀN TẤT!")
                 break
 
             # Nếu next node là "review_task", nghĩa là graph đang chờ user duyệt
@@ -798,7 +798,7 @@ def run_interactive_session():
         except Exception as e:
             import traceback
 
-            print(f"❌ Error in main loop: {e}")
+            print(f" Error in main loop: {e}")
             traceback.print_exc()  # In chi tiết lỗi để dễ debug
             break
 

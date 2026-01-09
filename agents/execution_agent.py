@@ -22,7 +22,7 @@ class ExecutionAgent:
         self.aws_context = aws_context or {}
         self.tools_map = {tool.name: tool for tool in REMEDIATION_TOOLS}
         print(
-            f"[ExecutionAgent] 🤖 Initialized with Context: Region={self.aws_context.get('region')}"
+            f"[ExecutionModule] Initialized with Context: Region={self.aws_context.get('region')}"
         )
 
     def _timestamp(self):
@@ -96,7 +96,7 @@ class ExecutionAgent:
         print(f"→ Task {task_id} (APPROVE)")
         for info in injected_info:
             print(f"   -> {info}")
-        print(f"[ExecutionAgent] Running tool: {tool_name}")
+        print(f"[ExecutionModule] Running tool: {tool_name}")
         print(f"→ Params: {tool_params}")
 
         started_at = self._timestamp()
@@ -181,7 +181,7 @@ class ExecutionAgent:
     def execute_all(self, tasks: List[Dict[str, Any]], decisions: Dict[str, str]):
         logs = []
         print("\n================ EXECUTION PHASE ================")
-        print(f"[ExecutionAgent] Processing {len(tasks)} tasks...")
+        print(f"[ExecutionModule] Processing {len(tasks)} tasks...")
         print("=================================================\n")
 
         for task in tasks:
@@ -189,5 +189,5 @@ class ExecutionAgent:
             decision = decisions.get(task_id, "skip")
             logs.append(self.execute_task(task, decision))
 
-        print("\n[ExecutionAgent] ✅ Completed execution phase.")
+        print("\n[ExecutionModule] Completed execution phase.")
         return logs

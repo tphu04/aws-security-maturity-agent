@@ -32,13 +32,13 @@ class EnvironmentAgent:
                 response = s3_client.list_buckets()
                 # Trích xuất danh sách tên bucket
                 bucket_names = [b["Name"] for b in response.get("Buckets", [])]
-                print(f"   [EnvAgent] Found {len(bucket_names)} S3 Buckets.")
+                # print(f"   [EnvAgent] Found {len(bucket_names)} S3 Buckets.")
             except ClientError as e:
                 print(f"   [EnvAgent] ⚠️ Warning: Không thể list S3 buckets (Thiếu quyền?).")
 
-            print(
-                f"   [EnvAgent] Connected to AWS Account: {identity['Account']} ({region})"
-            )
+            # print(
+            #     f"   [EnvAgent] Connected to AWS Account: {identity['Account']} ({region})"
+            # )
 
             return {
                 "account_id": identity["Account"],

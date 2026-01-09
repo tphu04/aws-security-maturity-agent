@@ -79,11 +79,11 @@ class RescanAgent:
                 if job_data and job_data.get("status") == "completed":
                     findings = job_data.get("result", [])
                     all_raw_findings.extend(findings)
-                    print(f"   ✅ Specific Scan: Hoàn tất ({len(findings)} findings).")
+                    print(f"   Specific Scan: Hoàn tất ({len(findings)} findings).")
                 else:
-                    print(f"   ❌ Specific Scan: Thất bại.")
+                    print(f"   Specific Scan: Thất bại.")
             else:
-                print(f"   ❌ Không thể khởi tạo Specific Scan.")
+                print(f"   Không thể khởi tạo Specific Scan.")
 
         # --- CASE 2: Scan theo Groups (Nếu không có specific checks hoặc muốn chạy bổ sung) ---
         elif groups:
@@ -103,11 +103,11 @@ class RescanAgent:
                     findings = job_data.get("result", [])
                     if isinstance(findings, list):
                         all_raw_findings.extend(findings)
-                        print(f"   ✅ Group '{g}': Scan hoàn tất.")
+                        print(f"   Group '{g}': Scan hoàn tất.")
                     else:
-                        print(f"   ⚠️ Group '{g}': Lỗi format dữ liệu.")
+                        print(f"   Group '{g}': Lỗi format dữ liệu.")
                 else:
-                    print(f"   ❌ Group '{g}': Scan thất bại.")
+                    print(f"   Group '{g}': Scan thất bại.")
 
         else:
             print(

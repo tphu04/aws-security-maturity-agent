@@ -12,7 +12,7 @@ class MonitoringAgent:
 
     def run(self, job_ids: list) -> List[Dict[str, Any]]:
         print(f"--------------------------------------------------")
-        print(f"[MonitoringAgent] 🤖 Bắt đầu giám sát {len(job_ids)} job(s)")
+        print(f"[MonitoringModule] Bắt đầu giám sát {len(job_ids)} job(s)")
 
         active_jobs = set(job_ids)
         all_findings = []  # List phẳng chứa findings
@@ -39,7 +39,7 @@ class MonitoringAgent:
                     # ---------------------------
 
                     if job_status == "completed":
-                        print(f"   -> ✅ Job {job_id} hoàn tất.")
+                        print(f"   -> Job {job_id} hoàn tất.")
 
                         # Lấy result từ api_response (không phải từ tool_output gốc)
                         job_result = api_response.get("result", [])
@@ -64,5 +64,5 @@ class MonitoringAgent:
             if active_jobs:
                 time.sleep(self.poll_interval)
 
-        print(f"[MonitoringAgent] 🏁 Thu thập tổng cộng {len(all_findings)} findings.")
+        print(f"[MonitoringModule] Thu thập tổng cộng {len(all_findings)} findings.")
         return all_findings

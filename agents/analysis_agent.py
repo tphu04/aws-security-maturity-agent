@@ -327,7 +327,7 @@ class AnalysisAgent:
             before = item.get("before_status")
             after = item.get("after_status")
 
-            # ✅ ƯU TIÊN MANUAL
+            # ƯU TIÊN MANUAL
             if item.get("manual_required") is True:
                 manual.append(item)
                 continue
@@ -455,14 +455,14 @@ class AnalysisAgent:
         """In log theo format chính xác của user"""
         print("")
         print("-" * 40)
-        print("📊 FINDINGS SUMMARY")
+        print(" FINDINGS SUMMARY")
         print("-" * 40)
         print(f"• Total findings (pre)  : {s['total_pre']}")
         print(f"• Total findings (post) : {s['total_post']}")
         print("")
 
         print("-" * 40)
-        print("📌 STATUS BREAKDOWN")
+        print(" STATUS BREAKDOWN")
         print("-" * 40)
         print(f"• PASS (pre)  : {s['pass_pre']}")
         print(f"• FAIL (pre)  : {s['fail_pre']}")
@@ -471,7 +471,7 @@ class AnalysisAgent:
         print("")
 
         print("-" * 40)
-        print("🛠️ REMEDIATION RESULTS")
+        print(" REMEDIATION RESULTS")
         print("-" * 40)
         print(f"• Remediate Pass      : {s['remediate_pass']}")
         print(f"• Remediate Fail      : {s['remediate_fail']}")
@@ -479,7 +479,7 @@ class AnalysisAgent:
         print("")
 
         print("-" * 40)
-        print("🔄 CHANGES AFTER REMEDIATION")
+        print(" CHANGES AFTER REMEDIATION")
         print("-" * 40)
         print(f"• Fixed (FAIL → PASS)       : {s['fixed']}")
         print(f"• New FAIL (PASS → FAIL)    : {s['new_fail']}")
@@ -488,11 +488,11 @@ class AnalysisAgent:
         print("")
 
         print("-" * 40)
-        print("📁 OUTPUT")
+        print(" OUTPUT")
         print("-" * 40)
         print(f"• Enriched diff saved to: data/analysis_diff.json")
         print("")
-        print("[AnalysisAgent] ✅ Completed.")
+        print("[AnalysisAgent] Completed.")
 
     def _load_tool_description(self, tool_name: str) -> dict:
         """

@@ -119,12 +119,12 @@ class RiskEvaluationAgent(BaseAgent):
 
         if not fail_findings:
             print(
-                "[RiskEvaluationAgent] ✅ Không có finding 'FAIL' nào. Hệ thống an toàn."
+                "[RiskEvaluationModule] Không có finding 'FAIL' nào. Hệ thống an toàn."
             )
             return []
 
         print(
-            f"[RiskEvaluationAgent] 🤖 Bắt đầu phân tích rủi ro cho {len(fail_findings)} finding(s) 'FAIL'..."
+            f"[RiskEvaluationModule] Bắt đầu phân tích rủi ro cho {len(fail_findings)} finding(s) 'FAIL'..."
         )
 
         enriched_results = []
@@ -210,6 +210,6 @@ class RiskEvaluationAgent(BaseAgent):
         )
 
         print(
-            f"[RiskEvaluationAgent] ✅ Hoàn tất. Output {len(sorted_results)} findings đã chấm điểm."
+            f"[RiskEvaluationModule] Hoàn tất. Output {len(sorted_results)} findings đã chấm điểm."
         )
         return sorted_results
