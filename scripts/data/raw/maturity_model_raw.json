@@ -1,0 +1,446 @@
+[
+  {
+    "category": "Security Governance",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Assign Security contacts",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Select the region(s) to use and block the rest",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Identify security and regulatory requirements",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Use infrastructure as code",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Cloud security training plan",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Design your secure architecture",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Tagging strategy",
+    "status": "0%"
+  },
+  {
+    "category": "Security Governance",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Sharing security work and responsibility",
+    "status": "0%"
+  },
+  {
+    "category": "Security Assurance",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Evaluate Cloud Security Posture",
+    "status": "0%"
+  },
+  {
+    "category": "Security Assurance",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Configurations monitoring",
+    "status": "0%"
+  },
+  {
+    "category": "Security Assurance",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Create your compliance reports",
+    "status": "0%"
+  },
+  {
+    "category": "Security Assurance",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Automate Evidence Gathering",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Multi-Factor Authentication",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Root Account Protection",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Identity Federation",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Cleanup unintended access",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Organizational Policies with SCPs/RCPs",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Use Temporary Credentials",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Instance Metadata Service (IMDS) v2",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Least Privilege Review",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Customer IAM: security of your customers",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "IAM Data Perimeters",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "IAM Policy Generation Pipeline",
+    "status": "0%"
+  },
+  {
+    "category": "Identity & Access Management",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Temporary elevated access",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Detect Common Threats",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Audit API calls",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Billing alarms",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Advanced Threat Detection",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Custom Threat Detection (SecLake / SIEM)",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Threat Intelligence",
+    "status": "0%"
+  },
+  {
+    "category": "Threat Detection",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Network Flows analysis",
+    "status": "0%"
+  },
+  {
+    "category": "Vulnerability Management",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Manage infrastructure vulnerabilities",
+    "status": "0%"
+  },
+  {
+    "category": "Vulnerability Management",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Manage application vulnerabilities",
+    "status": "0%"
+  },
+  {
+    "category": "Vulnerability Management",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Security Champions Program",
+    "status": "0%"
+  },
+  {
+    "category": "Vulnerability Management",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "DevSecOps: Security in the Pipeline",
+    "status": "0%"
+  },
+  {
+    "category": "Vulnerability Management",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Vulnerability Management Team",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Cleanup risky admin open ports",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Limit Network Access",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Secure EC2 Instances Management",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Network segmentation - Public/Private (VPCs)",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Multi-account management",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Image Generation Pipeline",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Anti-Malware / EDR / Runtime Protection",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Outbound Traffic Control",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Zero Trust Access",
+    "status": "0%"
+  },
+  {
+    "category": "Infrastructure Protection",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Use abstract services",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Block Public Access",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Analyze data security posture",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Data Encryption at rest",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Backups",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Discover sensitive data",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Encryption in transit",
+    "status": "0%"
+  },
+  {
+    "category": "Data Protection",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "GenAI Data Protection",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "WAF with managed rules",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Involve security teams in development",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "No secrets in your code",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Perform threat modeling",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "WAF with custom rules",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Advanced DDoS Mitigation (L7)",
+    "status": "0%"
+  },
+  {
+    "category": "Application Security",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Forming a Red Team",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Act on Critical Security Findings",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Define incident response playbooks",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Automate Critical Playbooks",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Run TableTop Exercises - Simulations",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Security Investigations - Root cause analysis",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Automate deviation correction in configurations",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Forming a Blue Team",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Advanced Security Automations",
+    "status": "0%"
+  },
+  {
+    "category": "Incident Response",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Security Orchestration & Ticketing",
+    "status": "0%"
+  },
+  {
+    "category": "Resiliency",
+    "phase": "Phase 1: Quick Wins",
+    "recommendation": "Evaluate Resiliency",
+    "status": "0%"
+  },
+  {
+    "category": "Resiliency",
+    "phase": "Phase 2: Foundational",
+    "recommendation": "Redundancy using multiple AZs",
+    "status": "0%"
+  },
+  {
+    "category": "Resiliency",
+    "phase": "Phase 3: Efficient",
+    "recommendation": "Disaster Recovery Plan",
+    "status": "0%"
+  },
+  {
+    "category": "Resiliency",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Multi-region disaster recovery automation",
+    "status": "0%"
+  },
+  {
+    "category": "Resiliency",
+    "phase": "Phase 4: Optimized",
+    "recommendation": "Forming a Chaos Engineering team",
+    "status": "0%"
+  }
+]

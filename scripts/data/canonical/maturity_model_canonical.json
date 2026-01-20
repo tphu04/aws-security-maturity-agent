@@ -1,0 +1,1186 @@
+[
+  {
+    "id": "mm_security_assign_security_contacts",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "high",
+    "content": {
+      "title": "Assign Security contacts",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Assign Security contacts làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Assign Security contacts"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_select_the_region(s)_to_use_and_block_",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "high",
+    "content": {
+      "title": "Select the region(s) to use and block the rest",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Select the region(s) to use and block the rest làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Select the region(s) to use and block the rest"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_identify_security_and_regulatory_requi",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "medium",
+    "content": {
+      "title": "Identify security and regulatory requirements",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Identify security and regulatory requirements làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Identify security and regulatory requirements"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_use_infrastructure_as_code",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "medium",
+    "content": {
+      "title": "Use infrastructure as code",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Use infrastructure as code làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Use infrastructure as code"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_cloud_security_training_plan",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "medium",
+    "content": {
+      "title": "Cloud security training plan",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Cloud security training plan làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Cloud security training plan"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_design_your_secure_architecture",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "low",
+    "content": {
+      "title": "Design your secure architecture",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Design your secure architecture làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Design your secure architecture"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_tagging_strategy",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "low",
+    "content": {
+      "title": "Tagging strategy",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Tagging strategy làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Tagging strategy"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_sharing_security_work_and_responsibili",
+    "provider": "aws",
+    "service": "security_governance",
+    "severity": "low",
+    "content": {
+      "title": "Sharing security work and responsibility",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Security Governance.",
+      "risk_explanation": "Việc không thực hiện Sharing security work and responsibility làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Sharing security work and responsibility"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Security Governance"
+    }
+  },
+  {
+    "id": "mm_security_evaluate_cloud_security_posture",
+    "provider": "aws",
+    "service": "security_assurance",
+    "severity": "high",
+    "content": {
+      "title": "Evaluate Cloud Security Posture",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Security Assurance.",
+      "risk_explanation": "Việc không thực hiện Evaluate Cloud Security Posture làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Evaluate Cloud Security Posture"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Security Assurance"
+    }
+  },
+  {
+    "id": "mm_security_configurations_monitoring",
+    "provider": "aws",
+    "service": "security_assurance",
+    "severity": "medium",
+    "content": {
+      "title": "Configurations monitoring",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Security Assurance.",
+      "risk_explanation": "Việc không thực hiện Configurations monitoring làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Configurations monitoring"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Security Assurance"
+    }
+  },
+  {
+    "id": "mm_security_create_your_compliance_reports",
+    "provider": "aws",
+    "service": "security_assurance",
+    "severity": "low",
+    "content": {
+      "title": "Create your compliance reports",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Security Assurance.",
+      "risk_explanation": "Việc không thực hiện Create your compliance reports làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Create your compliance reports"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Security Assurance"
+    }
+  },
+  {
+    "id": "mm_security_automate_evidence_gathering",
+    "provider": "aws",
+    "service": "security_assurance",
+    "severity": "low",
+    "content": {
+      "title": "Automate Evidence Gathering",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Security Assurance.",
+      "risk_explanation": "Việc không thực hiện Automate Evidence Gathering làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Automate Evidence Gathering"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Security Assurance"
+    }
+  },
+  {
+    "id": "mm_identity_multi_factor_authentication",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "high",
+    "content": {
+      "title": "Multi-Factor Authentication",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Multi-Factor Authentication làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Multi-Factor Authentication"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_root_account_protection",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "high",
+    "content": {
+      "title": "Root Account Protection",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Root Account Protection làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Root Account Protection"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_identity_federation",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "high",
+    "content": {
+      "title": "Identity Federation",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Identity Federation làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Identity Federation"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_cleanup_unintended_access",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "high",
+    "content": {
+      "title": "Cleanup unintended access",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Cleanup unintended access làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Cleanup unintended access"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_organizational_policies_with_scps/rcps",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "medium",
+    "content": {
+      "title": "Organizational Policies with SCPs/RCPs",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Organizational Policies with SCPs/RCPs làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Organizational Policies with SCPs/RCPs"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_use_temporary_credentials",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "medium",
+    "content": {
+      "title": "Use Temporary Credentials",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Use Temporary Credentials làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Use Temporary Credentials"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_instance_metadata_service_(imds)_v2",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "medium",
+    "content": {
+      "title": "Instance Metadata Service (IMDS) v2",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Instance Metadata Service (IMDS) v2 làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Instance Metadata Service (IMDS) v2"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_least_privilege_review",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "low",
+    "content": {
+      "title": "Least Privilege Review",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Least Privilege Review làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Least Privilege Review"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_customer_iam:_security_of_your_custome",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "low",
+    "content": {
+      "title": "Customer IAM: security of your customers",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Customer IAM: security of your customers làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Customer IAM: security of your customers"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_iam_data_perimeters",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "low",
+    "content": {
+      "title": "IAM Data Perimeters",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện IAM Data Perimeters làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "IAM Data Perimeters"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_iam_policy_generation_pipeline",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "low",
+    "content": {
+      "title": "IAM Policy Generation Pipeline",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện IAM Policy Generation Pipeline làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "IAM Policy Generation Pipeline"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_identity_temporary_elevated_access",
+    "provider": "aws",
+    "service": "identity_access_management",
+    "severity": "low",
+    "content": {
+      "title": "Temporary elevated access",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Identity & Access Management.",
+      "risk_explanation": "Việc không thực hiện Temporary elevated access làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Temporary elevated access"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Identity & Access Management"
+    }
+  },
+  {
+    "id": "mm_threat_detect_common_threats",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "high",
+    "content": {
+      "title": "Detect Common Threats",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Detect Common Threats làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Detect Common Threats"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_threat_audit_api_calls",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "high",
+    "content": {
+      "title": "Audit API calls",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Audit API calls làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Audit API calls"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_threat_billing_alarms",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "high",
+    "content": {
+      "title": "Billing alarms",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Billing alarms làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Billing alarms"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_threat_advanced_threat_detection",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "medium",
+    "content": {
+      "title": "Advanced Threat Detection",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Advanced Threat Detection làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Advanced Threat Detection"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_threat_custom_threat_detection_(seclake_/_siem)",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "low",
+    "content": {
+      "title": "Custom Threat Detection (SecLake / SIEM)",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Custom Threat Detection (SecLake / SIEM) làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Custom Threat Detection (SecLake / SIEM)"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_threat_threat_intelligence",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "low",
+    "content": {
+      "title": "Threat Intelligence",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Threat Intelligence làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Threat Intelligence"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_threat_network_flows_analysis",
+    "provider": "aws",
+    "service": "threat_detection",
+    "severity": "low",
+    "content": {
+      "title": "Network Flows analysis",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Threat Detection.",
+      "risk_explanation": "Việc không thực hiện Network Flows analysis làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Network Flows analysis"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Threat Detection"
+    }
+  },
+  {
+    "id": "mm_vulnerability_manage_infrastructure_vulnerabili",
+    "provider": "aws",
+    "service": "vulnerability_management",
+    "severity": "medium",
+    "content": {
+      "title": "Manage infrastructure vulnerabilities",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Vulnerability Management.",
+      "risk_explanation": "Việc không thực hiện Manage infrastructure vulnerabilities làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Manage infrastructure vulnerabilities"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Vulnerability Management"
+    }
+  },
+  {
+    "id": "mm_vulnerability_manage_application_vulnerabilitie",
+    "provider": "aws",
+    "service": "vulnerability_management",
+    "severity": "medium",
+    "content": {
+      "title": "Manage application vulnerabilities",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Vulnerability Management.",
+      "risk_explanation": "Việc không thực hiện Manage application vulnerabilities làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Manage application vulnerabilities"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Vulnerability Management"
+    }
+  },
+  {
+    "id": "mm_vulnerability_security_champions_program",
+    "provider": "aws",
+    "service": "vulnerability_management",
+    "severity": "low",
+    "content": {
+      "title": "Security Champions Program",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Vulnerability Management.",
+      "risk_explanation": "Việc không thực hiện Security Champions Program làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Security Champions Program"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Vulnerability Management"
+    }
+  },
+  {
+    "id": "mm_vulnerability_devsecops:_security_in_the_pipeli",
+    "provider": "aws",
+    "service": "vulnerability_management",
+    "severity": "low",
+    "content": {
+      "title": "DevSecOps: Security in the Pipeline",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Vulnerability Management.",
+      "risk_explanation": "Việc không thực hiện DevSecOps: Security in the Pipeline làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "DevSecOps: Security in the Pipeline"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Vulnerability Management"
+    }
+  },
+  {
+    "id": "mm_vulnerability_vulnerability_management_team",
+    "provider": "aws",
+    "service": "vulnerability_management",
+    "severity": "low",
+    "content": {
+      "title": "Vulnerability Management Team",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Vulnerability Management.",
+      "risk_explanation": "Việc không thực hiện Vulnerability Management Team làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Vulnerability Management Team"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Vulnerability Management"
+    }
+  },
+  {
+    "id": "mm_infrastructure_cleanup_risky_admin_open_ports",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "high",
+    "content": {
+      "title": "Cleanup risky admin open ports",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Cleanup risky admin open ports làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Cleanup risky admin open ports"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_limit_network_access",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Limit Network Access",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Limit Network Access làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Limit Network Access"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_secure_ec2_instances_management",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Secure EC2 Instances Management",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Secure EC2 Instances Management làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Secure EC2 Instances Management"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_network_segmentation___public/pr",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Network segmentation - Public/Private (VPCs)",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Network segmentation - Public/Private (VPCs) làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Network segmentation - Public/Private (VPCs)"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_multi_account_management",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Multi-account management",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Multi-account management làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Multi-account management"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_image_generation_pipeline",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "low",
+    "content": {
+      "title": "Image Generation Pipeline",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Image Generation Pipeline làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Image Generation Pipeline"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_anti_malware_/_edr_/_runtime_pro",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "low",
+    "content": {
+      "title": "Anti-Malware / EDR / Runtime Protection",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Anti-Malware / EDR / Runtime Protection làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Anti-Malware / EDR / Runtime Protection"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_outbound_traffic_control",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "low",
+    "content": {
+      "title": "Outbound Traffic Control",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Outbound Traffic Control làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Outbound Traffic Control"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_zero_trust_access",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "low",
+    "content": {
+      "title": "Zero Trust Access",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Zero Trust Access làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Zero Trust Access"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_infrastructure_use_abstract_services",
+    "provider": "aws",
+    "service": "infrastructure_protection",
+    "severity": "low",
+    "content": {
+      "title": "Use abstract services",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Infrastructure Protection.",
+      "risk_explanation": "Việc không thực hiện Use abstract services làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Use abstract services"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Infrastructure Protection"
+    }
+  },
+  {
+    "id": "mm_data_block_public_access",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "high",
+    "content": {
+      "title": "Block Public Access",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện Block Public Access làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Block Public Access"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_data_analyze_data_security_posture",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "high",
+    "content": {
+      "title": "Analyze data security posture",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện Analyze data security posture làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Analyze data security posture"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_data_data_encryption_at_rest",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Data Encryption at rest",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện Data Encryption at rest làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Data Encryption at rest"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_data_backups",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Backups",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện Backups làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Backups"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_data_discover_sensitive_data",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "medium",
+    "content": {
+      "title": "Discover sensitive data",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện Discover sensitive data làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Discover sensitive data"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_data_encryption_in_transit",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "low",
+    "content": {
+      "title": "Encryption in transit",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện Encryption in transit làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Encryption in transit"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_data_genai_data_protection",
+    "provider": "aws",
+    "service": "data_protection",
+    "severity": "low",
+    "content": {
+      "title": "GenAI Data Protection",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Data Protection.",
+      "risk_explanation": "Việc không thực hiện GenAI Data Protection làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "GenAI Data Protection"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Data Protection"
+    }
+  },
+  {
+    "id": "mm_application_waf_with_managed_rules",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "high",
+    "content": {
+      "title": "WAF with managed rules",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện WAF with managed rules làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "WAF with managed rules"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_application_involve_security_teams_in_developme",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "medium",
+    "content": {
+      "title": "Involve security teams in development",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện Involve security teams in development làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Involve security teams in development"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_application_no_secrets_in_your_code",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "medium",
+    "content": {
+      "title": "No secrets in your code",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện No secrets in your code làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "No secrets in your code"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_application_perform_threat_modeling",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "low",
+    "content": {
+      "title": "Perform threat modeling",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện Perform threat modeling làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Perform threat modeling"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_application_waf_with_custom_rules",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "low",
+    "content": {
+      "title": "WAF with custom rules",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện WAF with custom rules làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "WAF with custom rules"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_application_advanced_ddos_mitigation_(l7)",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "low",
+    "content": {
+      "title": "Advanced DDoS Mitigation (L7)",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện Advanced DDoS Mitigation (L7) làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Advanced DDoS Mitigation (L7)"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_application_forming_a_red_team",
+    "provider": "aws",
+    "service": "application_security",
+    "severity": "low",
+    "content": {
+      "title": "Forming a Red Team",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Application Security.",
+      "risk_explanation": "Việc không thực hiện Forming a Red Team làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Forming a Red Team"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Application Security"
+    }
+  },
+  {
+    "id": "mm_incident_act_on_critical_security_findings",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "high",
+    "content": {
+      "title": "Act on Critical Security Findings",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Act on Critical Security Findings làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Act on Critical Security Findings"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_define_incident_response_playbooks",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "medium",
+    "content": {
+      "title": "Define incident response playbooks",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Define incident response playbooks làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Define incident response playbooks"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_automate_critical_playbooks",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "medium",
+    "content": {
+      "title": "Automate Critical Playbooks",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Automate Critical Playbooks làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Automate Critical Playbooks"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_run_tabletop_exercises___simulations",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "low",
+    "content": {
+      "title": "Run TableTop Exercises - Simulations",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Run TableTop Exercises - Simulations làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Run TableTop Exercises - Simulations"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_security_investigations___root_cause_a",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "low",
+    "content": {
+      "title": "Security Investigations - Root cause analysis",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Security Investigations - Root cause analysis làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Security Investigations - Root cause analysis"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_automate_deviation_correction_in_confi",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "low",
+    "content": {
+      "title": "Automate deviation correction in configurations",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Automate deviation correction in configurations làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Automate deviation correction in configurations"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_forming_a_blue_team",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "low",
+    "content": {
+      "title": "Forming a Blue Team",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Forming a Blue Team làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Forming a Blue Team"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_advanced_security_automations",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "low",
+    "content": {
+      "title": "Advanced Security Automations",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Advanced Security Automations làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Advanced Security Automations"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_incident_security_orchestration_&_ticketing",
+    "provider": "aws",
+    "service": "incident_response",
+    "severity": "low",
+    "content": {
+      "title": "Security Orchestration & Ticketing",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Incident Response.",
+      "risk_explanation": "Việc không thực hiện Security Orchestration & Ticketing làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Security Orchestration & Ticketing"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Incident Response"
+    }
+  },
+  {
+    "id": "mm_resiliency_evaluate_resiliency",
+    "provider": "aws",
+    "service": "resiliency",
+    "severity": "high",
+    "content": {
+      "title": "Evaluate Resiliency",
+      "summary": "Maturity Level: Phase 1: Quick Wins. Thuộc nhóm: Resiliency.",
+      "risk_explanation": "Việc không thực hiện Evaluate Resiliency làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 1: Quick Wins.",
+      "recommendation": "Evaluate Resiliency"
+    },
+    "metadata": {
+      "phase": "Phase 1: Quick Wins",
+      "category": "Resiliency"
+    }
+  },
+  {
+    "id": "mm_resiliency_redundancy_using_multiple_azs",
+    "provider": "aws",
+    "service": "resiliency",
+    "severity": "medium",
+    "content": {
+      "title": "Redundancy using multiple AZs",
+      "summary": "Maturity Level: Phase 2: Foundational. Thuộc nhóm: Resiliency.",
+      "risk_explanation": "Việc không thực hiện Redundancy using multiple AZs làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 2: Foundational.",
+      "recommendation": "Redundancy using multiple AZs"
+    },
+    "metadata": {
+      "phase": "Phase 2: Foundational",
+      "category": "Resiliency"
+    }
+  },
+  {
+    "id": "mm_resiliency_disaster_recovery_plan",
+    "provider": "aws",
+    "service": "resiliency",
+    "severity": "low",
+    "content": {
+      "title": "Disaster Recovery Plan",
+      "summary": "Maturity Level: Phase 3: Efficient. Thuộc nhóm: Resiliency.",
+      "risk_explanation": "Việc không thực hiện Disaster Recovery Plan làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 3: Efficient.",
+      "recommendation": "Disaster Recovery Plan"
+    },
+    "metadata": {
+      "phase": "Phase 3: Efficient",
+      "category": "Resiliency"
+    }
+  },
+  {
+    "id": "mm_resiliency_multi_region_disaster_recovery_autom",
+    "provider": "aws",
+    "service": "resiliency",
+    "severity": "low",
+    "content": {
+      "title": "Multi-region disaster recovery automation",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Resiliency.",
+      "risk_explanation": "Việc không thực hiện Multi-region disaster recovery automation làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Multi-region disaster recovery automation"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Resiliency"
+    }
+  },
+  {
+    "id": "mm_resiliency_forming_a_chaos_engineering_team",
+    "provider": "aws",
+    "service": "resiliency",
+    "severity": "low",
+    "content": {
+      "title": "Forming a Chaos Engineering team",
+      "summary": "Maturity Level: Phase 4: Optimized. Thuộc nhóm: Resiliency.",
+      "risk_explanation": "Việc không thực hiện Forming a Chaos Engineering team làm giảm khả năng bảo mật của hệ thống ở cấp độ Phase 4: Optimized.",
+      "recommendation": "Forming a Chaos Engineering team"
+    },
+    "metadata": {
+      "phase": "Phase 4: Optimized",
+      "category": "Resiliency"
+    }
+  }
+]
