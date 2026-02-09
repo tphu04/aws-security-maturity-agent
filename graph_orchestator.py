@@ -34,6 +34,7 @@ load_dotenv()
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_API_KEY = "ollama"
+RETRIEVAL_API_URL = "http://localhost:8111/retrieve"
 
 
 # ==============================================================================
@@ -128,38 +129,33 @@ def environment_node(state: PDCAState):
 
 
 def planning_node(state: PDCAState):
-    print("\n [Node: Planning] Generating Assessment Plan via RAG...")
-    metrics = state.get("performance_metrics", {})
-    agent = PlanningAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
+    """
+    Node lập kế hoạch: Nhận yêu cầu từ user -> Gọi PlanningAgent -> Trả về danh sách checks
+    """
+    user_request = state["user_request"]
+    print(f"\n[Node: Planning] 📝 Đang lập kế hoạch thực thi cho: {user_request}")
 
-    with measure_time() as timer:
-        # Agent.run giờ đây sẽ trả về ID chuẩn từ VectorDB
-        raw_plan = agent.run(state["user_request"])
+    try:
+        # Khởi tạo PlanningAgent 
+        # (Lúc này Agent đã được sửa để gọi API nội bộ ở port 8111)
+        agent = PlanningAgent(
+            model_name=OLLAMA_MODEL,
+            api_key=OLLAMA_API_KEY,
+            base_url=OLLAMA_BASE_URL
+        )
 
-    # Cập nhật Metrics
-    llm_metrics = agent.get_llm_metrics()
-    metrics = update_metrics(metrics, "step_duration", "planning_node", timer())
-    metrics = update_metrics(metrics, "llm_latency", "planning_agent", llm_metrics)
+        # Chạy Agent để lấy bản kế hoạch (Plan)
+        plan_result = agent.run(user_request)
 
-    # Lấy dữ liệu đã được RAG lọc sạch
-    target_services = raw_plan.get("groups_to_scan", [])
-    checks_to_scan = raw_plan.get("checks_to_scan", [])
-
-    # Lưu cấu hình để RescanAgent có thể dùng lại sau này
-    save_scan_configuration({
-        "target_services": target_services,
-        "checks_to_scan": checks_to_scan,
-        "reasoning": raw_plan.get("reasoning", ""),
-    })
-
-    return {
-        "assessment_plan": {
-            "target_services": target_services,
-            "checks_to_scan": checks_to_scan,
-            "reasoning": raw_plan.get("reasoning", ""),
-        },
-        "performance_metrics": metrics,
-    }
+        # Cập nhật State của Graph
+        return {
+            "assessment_plan": plan_result,
+            "next_step": "execute", # Hoặc bước tiếp theo trong logic của bạn
+            "logs": [f"PlanningAgent đã chọn {len(plan_result.get('checks_to_scan', []))} mã kiểm tra."]
+        }
+    except Exception as e:
+        print(f"❌ Lỗi tại Planning Node: {e}")
+        return {"error": str(e), "next_step": "end"}
 
 def scanning_node(state: PDCAState):
     target_services = state["assessment_plan"].get("target_services", [])

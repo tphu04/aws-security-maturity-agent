@@ -1,123 +1,37 @@
 import json
+import requests
 import re
-import time
-import chromadb
 from typing import List, Dict, Any
-from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.callbacks import BaseCallbackHandler
 from .base_agent import BaseAgent
 
-try:
-    from agent_tools import ALLOWED_GROUPS_LIST
-except ImportError:
-    from ..agent_tools import ALLOWED_GROUPS_LIST
-
-# ===============================================
-# 1. TIMER CALLBACK (Để đo hiệu năng cho Orchestrator)
-# ===============================================
-class TimerCallback(BaseCallbackHandler):
-    def __init__(self):
-        self.total_duration = 0.0
-        self.call_history = []
-        self.start_time = 0.0
-
-    def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> Any:
-        self.start_time = time.perf_counter()
-
-    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
-        duration = time.perf_counter() - self.start_time
-        self.total_duration += duration
-        self.call_history.append(duration)
-
-# ===============================================
-# 2. SYSTEM PROMPTS (Đã tối ưu cho RAG)
-# ===============================================
-TRANSLATION_PROMPT = """Bạn là chuyên gia bảo mật AWS. Hãy chuyển đổi yêu cầu sau đây sang các từ khóa tiếng Anh kỹ thuật và xác định service mục tiêu.
-
+# Prompt dịch thuật kỹ thuật (English-centric)
+TRANSLATION_PROMPT = """You are an AWS Security Expert. Translate the user request into technical English keywords.
 USER REQUEST: "{request}"
+FORMAT: {{"target_service": "s3", "search_queries": ["public access", "encryption"]}}
+JSON OUTPUT:"""
 
-QUY TẮC:
-1. target_service: Phải là tên service (vd: s3, iam, ec2, rds...).
-2. search_queries: Danh sách các thuật ngữ kỹ thuật (vd: "KMS encryption", "Public access").
-
-JSON OUTPUT: {{"target_service": "string", "search_queries": ["string"]}}
-"""
-
-RERANK_PROMPT = """Bạn là AWS Security Planner. Hãy chọn ra tối đa 5 mã kiểm tra (Check ID) phù hợp nhất.
-
-YÊU CẦU NGƯỜI DÙNG: "{request}"
-DỊCH VỤ MỤC TIÊU: "{target_service}"
-
-DANH SÁCH ỨNG VIÊN TỪ DATABASE:
+# Prompt Re-ranking sử dụng dữ liệu đã làm giàu (Enrichment)
+RERANK_PROMPT = """Analyze these AWS Security Checks for the request: "{request}"
+CANDIDATES (Enriched):
 {candidates}
 
-QUY TẮC CHỌN:
-1. CHỈ chọn các ID thuộc về dịch vụ "{target_service}".
-2. Ưu tiên các ID giải quyết trực tiếp vấn đề người dùng hỏi.
-3. Nếu ứng viên không liên quan, hãy bỏ qua (trả về list rỗng).
+Select the top 5 most relevant Check IDs. Prioritize 'critical' or 'high' severity.
+JSON OUTPUT: {{"selected_ids": ["id1", "id2"], "reasoning": "explanation"}}"""
 
-JSON OUTPUT: {{"selected_ids": ["id1", "id2"]}}
-"""
-
-# ===============================================
-# 3. PLANNING AGENT CLASS
-# ===============================================
 class PlanningAgent(BaseAgent):
     def __init__(self, model_name: str, api_key: str, base_url: str):
         super().__init__(model_name, api_key, base_url)
+        self.retrieval_api_url = "http://localhost:8111/retrieve"
         
-        self.timer = TimerCallback()
-
-        # 1. Khởi tạo LLM kèm Callback
         self.llm = ChatOllama(
             model=model_name,
             base_url=base_url,
             temperature=0,
-            format="json",
-            callbacks=[self.timer]
+            format="json"
         )
-
-        # 2. Cấu hình RAG
-        self.embeddings = OllamaEmbeddings(model="nomic-embed-text")
-        self.chroma_client = chromadb.PersistentClient(path="./prowler_vector_kb")
-        self.collection = self.chroma_client.get_collection(name="prowler_checks_v2")
-
-    def get_llm_metrics(self) -> Dict[str, Any]:
-        """Trả về dữ liệu hiệu năng cho Orchestrator"""
-        return {
-            "total_latency": round(self.timer.total_duration, 4),
-            "call_history": [round(t, 4) for t in self.timer.call_history],
-            "call_count": len(self.timer.call_history),
-        }
-
-    def _get_vector_candidates(self, queries: List[str], target_svc: str = None) -> List[Dict]:
-        """Tìm kiếm ứng viên có sử dụng Metadata Filter để ép đúng Service"""
-        all_candidates = []
-        unique_ids = set()
-        
-        # Metadata Filtering: Chỉ tìm trong service được chỉ định
-        search_filter = None
-        if target_svc and target_svc != "null":
-            search_filter = {"service": target_svc} 
-
-        for q in queries:
-            results = self.collection.query(
-                query_embeddings=[self.embeddings.embed_query(q)],
-                n_results=15, 
-                where=search_filter # <--- QUAN TRỌNG: Loại bỏ nhiễu từ service khác
-            )
-            
-            for i in range(len(results['ids'][0])):
-                c_id = results['ids'][0][i]
-                if c_id not in unique_ids:
-                    unique_ids.add(c_id)
-                    all_candidates.append({
-                        "id": c_id, 
-                        "description": results['documents'][0][i]
-                    })
-        return all_candidates
 
     def _clean_json(self, text: str) -> Dict:
         try:
@@ -126,51 +40,57 @@ class PlanningAgent(BaseAgent):
             match = re.search(r"\{.*\}", text, re.DOTALL)
             return json.loads(match.group(0)) if match else {}
 
-    def run(self, user_request: str) -> Dict[str, Any]:
-        print(f"   [PlanningAgent] 🧠 Bắt đầu phân tích: '{user_request}'")
+    def _call_retrieval_service(self, query: str, target_service: str = None) -> List[Dict]:
         try:
-            # Bước 1: Dịch intent sang English keywords và Target Service
+            payload = {
+                "query": query,
+                "mode": "technical",
+                "top_k": 5,
+                "service": target_service # <--- TRUYỀN THÊM DÒNG NÀY
+            }
+            response = requests.post(self.retrieval_api_url, json=payload, timeout=10)
+            return response.json().get("technical", [])
+        except Exception as e:
+            return []
+
+    def run(self, user_request: str) -> Dict[str, Any]:
+        print(f"   [PlanningAgent] 🧠 Phân tích: '{user_request}'")
+        try:
+            # --- BƯỚC 1: TRANSLATION (Chuyển sang Tiếng Anh kỹ thuật) ---
             t_prompt = ChatPromptTemplate.from_template(TRANSLATION_PROMPT)
-            raw_translation = (t_prompt | self.llm | StrOutputParser()).invoke({"request": user_request})
-            translation_data = self._clean_json(raw_translation)
+            raw_t = (t_prompt | self.llm | StrOutputParser()).invoke({"request": user_request})
+            t_data = self._clean_json(raw_t)
             
-            search_queries = translation_data.get("search_queries", [])
-            target_svc = translation_data.get("target_service", "").lower()
+            eng_query = t_data.get("search_queries", [user_request])[0]
+            target_svc = t_data.get("target_service", "s3")
+            print(f"   [PlanningAgent] 🌐 Dịch: -> '{eng_query}' (Service: {target_svc})")
 
-            # Kiểm tra Group Scan (Quét toàn bộ service)
-            if any(word in user_request.lower() for word in ["tất cả", "toàn bộ", "full scan"]):
-                if target_svc in ALLOWED_GROUPS_LIST:
-                    return {
-                        "groups_to_scan": [target_svc], 
-                        "checks_to_scan": [], 
-                        "reasoning": f"Yêu cầu quét toàn bộ dịch vụ {target_svc}."
-                    }
+            # --- BƯỚC 2: GỌI RETRIEVAL VỚI TIẾNG ANH ---
+            enriched_candidates = self._call_retrieval_service(eng_query)
+            print(f"   [DEBUG Retrieval] Tìm thấy {len(enriched_candidates)} ứng viên từ DB.")
+            for c in enriched_candidates:
+                print(f"      -> ID: {c['id']} | Severity: {c['metadata'].get('severity')}")
 
-            # Bước 2: RAG Recall (Có Filter Service)
-            print(f"   [PlanningAgent] 🔍 Tìm kiếm trong service: {target_svc}")
-            candidates = self._get_vector_candidates(search_queries, target_svc=target_svc)
-            
-            if not candidates:
+            if not enriched_candidates:
                 return {
-                    "groups_to_scan": [target_svc] if target_svc in ALLOWED_GROUPS_LIST else ["s3"], 
+                    "groups_to_scan": [target_svc], 
                     "checks_to_scan": [], 
-                    "reasoning": "Không tìm thấy check cụ thể, fallback về quét toàn bộ service."
+                    "reasoning": f"Không tìm thấy check cụ thể cho '{eng_query}', thực hiện quét toàn bộ service {target_svc}."
                 }
 
-            # Bước 3: LLM Re-ranking (Chốt danh sách cuối cùng)
+            # --- BƯỚC 3: RE-RANKING (Dựa trên Metadata rủi ro) ---
             r_prompt = ChatPromptTemplate.from_template(RERANK_PROMPT)
             raw_final = (r_prompt | self.llm | StrOutputParser()).invoke({
                 "request": user_request,
-                "target_service": target_svc,
-                "candidates": json.dumps(candidates, indent=2)
+                "candidates": json.dumps(enriched_candidates, indent=2)
             })
+            
             final_data = self._clean_json(raw_final)
-            selected_ids = final_data.get("selected_ids", [])
-
             return {
                 "groups_to_scan": [],
-                "checks_to_scan": selected_ids if selected_ids else [c['id'] for c in candidates[:2]],
-                "reasoning": f"Đã lọc {len(candidates)} ứng viên và chọn {len(selected_ids)} check liên quan nhất đến {target_svc}."
+                "checks_to_scan": final_data.get("selected_ids", []),
+                "reasoning": final_data.get("reasoning", "Đã chọn các check phù hợp dựa trên rủi ro.")
             }
+
         except Exception as e:
-            return {"groups_to_scan": ["s3"], "checks_to_scan": [], "reasoning": f"Lỗi hệ thống: {e}"}
+            return {"error": str(e), "groups_to_scan": ["s3"], "checks_to_scan": []}

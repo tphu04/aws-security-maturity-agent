@@ -765,7 +765,24 @@ def s3_disable_bucket_acls(
 
     except Exception as e:
         return {"success": False, "error": str(e), "bucket": resource_id}
-
+@tool
+def lookup_security_knowledge(query: str, mode: str = "both"):
+    """
+    Tra cứu tri thức bảo mật từ 2 nguồn:
+    - 'maturity': Lộ trình bảo mật, Phase 1/2/3, rủi ro chiến lược.
+    - 'technical': Chi tiết kỹ thuật của Prowler, cách fix lỗi.
+    - 'both': Lấy cả hai.
+    Dùng tool này khi người dùng hỏi 'Tại sao', 'Rủi ro là gì' hoặc 'Sửa thế nào'.
+    """
+    url = "http://localhost:8111/retrieve"
+    try:
+        # Gọi API Port 8111 bạn vừa test thành công
+        resp = requests.post(url, json={"query": query, "mode": mode, "top_k": 2})
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as e:
+        return f"Lỗi kết nối Knowledge API: {e}"
+    return "Không tìm thấy thông tin."
 
 @tool
 def s3_enable_intelligent_tiering(resource_id: str, region: str = "us-east-1") -> str:
@@ -796,6 +813,7 @@ def s3_enable_intelligent_tiering(resource_id: str, region: str = "us-east-1") -
 
 # ⚠️ ĐÂY LÀ BIẾN MÀ SCANNER AGENT ĐANG TÌM KIẾM
 AVAILABLE_FUNCTIONS = {
+    "lookup_security_knowledge": lookup_security_knowledge,
     "start_scan_by_group": start_scan_by_group,
     "start_scan_by_file": start_scan_by_file,
     "start_scan_by_check_ids": start_scan_by_check_ids,
@@ -907,6 +925,7 @@ SCANNER_AGENT_TOOLS = [
     start_scan_by_file,
     start_scan_by_check_ids,
     check_job_status,
+    lookup_security_knowledge
 ]
 
 # Danh sách tất cả tool cho RemediateAgent
