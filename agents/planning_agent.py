@@ -8,9 +8,15 @@ from langchain_core.output_parsers import StrOutputParser
 from .base_agent import BaseAgent
 
 # Prompt dịch thuật kỹ thuật (English-centric)
-TRANSLATION_PROMPT = """You are an AWS Security Expert. Translate the user request into technical English keywords.
+TRANSLATION_PROMPT = """You are an AWS Security Expert. 
+Classify the request into the correct AWS Service (iam, s3, ec2, rds, cloudtrail, etc.) and translate to technical keywords.
+
 USER REQUEST: "{request}"
-FORMAT: {{"target_service": "s3", "search_queries": ["public access", "encryption"]}}
+
+EXAMPLES:
+- "check mfa": {{"target_service": "iam", "search_queries": ["mfa enabled", "console access"]}}
+- "public buckets": {{"target_service": "s3", "search_queries": ["public access", "bucket policy"]}}
+
 JSON OUTPUT:"""
 
 # Prompt Re-ranking sử dụng dữ liệu đã làm giàu (Enrichment)
@@ -18,9 +24,10 @@ RERANK_PROMPT = """Analyze these AWS Security Checks for the request: "{request}
 CANDIDATES (Enriched):
 {candidates}
 
-Select the top 5 most relevant Check IDs. Prioritize 'critical' or 'high' severity.
+Select the top 5 most relevant Check IDs. 
+IMPORTANT: Return the clean Prowler Check ID (e.g., instead of 'check_id_risk', return 'check_id').
+Prioritize 'critical' or 'high' severity.
 JSON OUTPUT: {{"selected_ids": ["id1", "id2"], "reasoning": "explanation"}}"""
-
 class PlanningAgent(BaseAgent):
     def __init__(self, model_name: str, api_key: str, base_url: str):
         super().__init__(model_name, api_key, base_url)
@@ -32,7 +39,15 @@ class PlanningAgent(BaseAgent):
             temperature=0,
             format="json"
         )
-
+    def _sanitize_id(self, raw_id: str) -> str:
+            """Loại bỏ các hậu tố tài liệu để trả về Prowler Check ID chuẩn"""
+            # Danh sách các hậu tố cần loại bỏ
+            suffixes = ["_overview", "_risk", "_recommendation", "_remediation"]
+            clean_id = raw_id
+            for suffix in suffixes:
+                if clean_id.endswith(suffix):
+                    clean_id = clean_id.replace(suffix, "")
+            return clean_id.strip()
     def _clean_json(self, text: str) -> Dict:
         try:
             return json.loads(text)
@@ -54,43 +69,48 @@ class PlanningAgent(BaseAgent):
             return []
 
     def run(self, user_request: str) -> Dict[str, Any]:
-        print(f"   [PlanningAgent] 🧠 Phân tích: '{user_request}'")
-        try:
-            # --- BƯỚC 1: TRANSLATION (Chuyển sang Tiếng Anh kỹ thuật) ---
-            t_prompt = ChatPromptTemplate.from_template(TRANSLATION_PROMPT)
-            raw_t = (t_prompt | self.llm | StrOutputParser()).invoke({"request": user_request})
-            t_data = self._clean_json(raw_t)
-            
-            eng_query = t_data.get("search_queries", [user_request])[0]
-            target_svc = t_data.get("target_service", "s3")
-            print(f"   [PlanningAgent] 🌐 Dịch: -> '{eng_query}' (Service: {target_svc})")
+            print(f"   [PlanningAgent] 🧠 Phân tích: '{user_request}'")
+            try:
+                # --- BƯỚC 1: TRANSLATION (Giữ nguyên như bạn đã sửa) ---
+                t_prompt = ChatPromptTemplate.from_template(TRANSLATION_PROMPT)
+                raw_t = (t_prompt | self.llm | StrOutputParser()).invoke({"request": user_request})
+                t_data = self._clean_json(raw_t)
+                
+                eng_query = t_data.get("search_queries", [user_request])[0]
+                target_svc = t_data.get("target_service", None) 
+                print(f"   [PlanningAgent] 🌐 Dịch: -> '{eng_query}' (Service: {target_svc})")
 
-            # --- BƯỚC 2: GỌI RETRIEVAL VỚI TIẾNG ANH ---
-            enriched_candidates = self._call_retrieval_service(eng_query)
-            print(f"   [DEBUG Retrieval] Tìm thấy {len(enriched_candidates)} ứng viên từ DB.")
-            for c in enriched_candidates:
-                print(f"      -> ID: {c['id']} | Severity: {c['metadata'].get('severity')}")
+                # --- BƯỚC 2: GỌI RETRIEVAL ---
+                enriched_candidates = self._call_retrieval_service(eng_query, target_svc)
+                
+                # Mẹo: Làm sạch ID ngay tại log debug để bạn dễ theo dõi
+                print(f"   [DEBUG Retrieval] Tìm thấy {len(enriched_candidates)} ứng viên.")
+                for c in enriched_candidates:
+                    clean_c_id = self._sanitize_id(c['id'])
+                    print(f"      -> ID: {clean_c_id} (Gốc: {c['id']}) | Severity: {c['metadata'].get('severity')}")
 
-            if not enriched_candidates:
+                if not enriched_candidates:
+                    return {"groups_to_scan": [target_svc], "checks_to_scan": [], "reasoning": "..."}
+
+                # --- BƯỚC 3: RE-RANKING ---
+                r_prompt = ChatPromptTemplate.from_template(RERANK_PROMPT)
+                raw_final = (r_prompt | self.llm | StrOutputParser()).invoke({
+                    "request": user_request,
+                    "candidates": json.dumps(enriched_candidates, indent=2)
+                })
+                
+                final_data = self._clean_json(raw_final)
+                raw_selected_ids = final_data.get("selected_ids", [])
+                
+                # --- BƯỚC 4: FINAL CLEANING (QUAN TRỌNG NHẤT) ---
+                # Đảm bảo mọi ID trong danh sách cuối đều không có hậu tố và không bị trùng
+                clean_ids = list(set([self._sanitize_id(idx) for idx in raw_selected_ids]))
+                
                 return {
-                    "groups_to_scan": [target_svc], 
-                    "checks_to_scan": [], 
-                    "reasoning": f"Không tìm thấy check cụ thể cho '{eng_query}', thực hiện quét toàn bộ service {target_svc}."
+                    "groups_to_scan": [],
+                    "checks_to_scan": clean_ids, # Trả về danh sách đã làm sạch
+                    "reasoning": final_data.get("reasoning", "Đã chọn các check phù hợp.")
                 }
 
-            # --- BƯỚC 3: RE-RANKING (Dựa trên Metadata rủi ro) ---
-            r_prompt = ChatPromptTemplate.from_template(RERANK_PROMPT)
-            raw_final = (r_prompt | self.llm | StrOutputParser()).invoke({
-                "request": user_request,
-                "candidates": json.dumps(enriched_candidates, indent=2)
-            })
-            
-            final_data = self._clean_json(raw_final)
-            return {
-                "groups_to_scan": [],
-                "checks_to_scan": final_data.get("selected_ids", []),
-                "reasoning": final_data.get("reasoning", "Đã chọn các check phù hợp dựa trên rủi ro.")
-            }
-
-        except Exception as e:
-            return {"error": str(e), "groups_to_scan": ["s3"], "checks_to_scan": []}
+            except Exception as e:
+                return {"error": str(e), "groups_to_scan": ["s3"], "checks_to_scan": []}
