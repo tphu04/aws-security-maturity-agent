@@ -1,0 +1,47 @@
+{
+  "index_version": "rag-v2-2026-03-17",
+  "built_at": "2026-03-17T07:18:23+00:00",
+  "embedding_model": "intfloat/multilingual-e5-base",
+  "storage_layout": "multi_corpus",
+  "corpora": {
+    "prowler_checks": {
+      "normalized_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\normalized\\prowler_checks.json",
+      "bm25_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\indexes\\bm25\\bm25_prowler_checks.pkl",
+      "chroma_collection": "prowler_checks",
+      "doc_count": 577,
+      "doc_type": "prowler_check"
+    },
+    "maturity_capabilities": {
+      "normalized_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\normalized\\maturity_capabilities.json",
+      "bm25_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\indexes\\bm25\\bm25_maturity_capabilities.pkl",
+      "chroma_collection": "maturity_capabilities",
+      "doc_count": 78,
+      "doc_type": "maturity_capability"
+    },
+    "maturity_mappings": {
+      "normalized_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\normalized\\maturity_mappings.json",
+      "bm25_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\indexes\\bm25\\bm25_maturity_mappings.pkl",
+      "chroma_collection": "maturity_mappings",
+      "doc_count": 151,
+      "doc_type": "maturity_mapping"
+    }
+  },
+  "counts": {
+    "prowler_checks": 577,
+    "maturity_capabilities": 78,
+    "maturity_mappings": 151,
+    "total": 806
+  },
+  "vector": {
+    "persist_dir": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\indexes\\chroma",
+    "collections": {
+      "prowler_checks": "prowler_checks",
+      "maturity_capabilities": "maturity_capabilities",
+      "maturity_mappings": "maturity_mappings"
+    },
+    "error": null
+  },
+  "legacy_cleanup": {
+    "removed_collection": "rag_docs"
+  }
+}

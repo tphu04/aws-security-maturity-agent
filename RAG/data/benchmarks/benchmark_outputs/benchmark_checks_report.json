@@ -1,0 +1,5181 @@
+{
+  "report_name": "benchmark_checks_report",
+  "base_url": "http://localhost:8000",
+  "endpoint": "http://localhost:8000/v1/retrieve/checks",
+  "top_k": 5,
+  "requested_retrieval_mode": "hybrid",
+  "total_cases": 20,
+  "summary": {
+    "report_name": "benchmark_checks_report",
+    "total_cases": 20,
+    "http_200": 20,
+    "hit_expected_in_top1": 7,
+    "hit_expected_in_top3": 7,
+    "hit_expected_in_top5": 9,
+    "top1_correct_service": 14,
+    "vector_visible_cases": 20,
+    "hybrid_visible_cases": 20,
+    "average_latency_ms": 2298.62,
+    "median_latency_ms": 2264.95,
+    "by_category": {
+      "exact": {
+        "total": 5,
+        "top1": 5,
+        "top3": 5,
+        "top5": 5,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2320.4
+      },
+      "paraphrase": {
+        "total": 5,
+        "top1": 0,
+        "top3": 0,
+        "top5": 1,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2341.59
+      },
+      "risk": {
+        "total": 5,
+        "top1": 2,
+        "top3": 2,
+        "top5": 3,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2270.99
+      },
+      "semantic_hard": {
+        "total": 5,
+        "top1": 0,
+        "top3": 0,
+        "top5": 0,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2261.48
+      }
+    },
+    "failures_top5": [
+      {
+        "case_id": "checks_paraphrase_1",
+        "category": "paraphrase",
+        "query": "how to prevent an s3 bucket from being publicly exposed",
+        "expected_doc_id": "check:s3_bucket_level_public_access_block",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:s3_bucket_object_lock",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_shadow_resource_vulnerability"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:s3_bucket_object_lock",
+            "check:s3_bucket_default_encryption",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_shadow_resource_vulnerability"
+          ],
+          "top_vector_doc_ids": [
+            "check:s3_bucket_shadow_resource_vulnerability",
+            "check:s3_bucket_cross_account_access",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_level_public_access_block"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_paraphrase_2",
+        "category": "paraphrase",
+        "query": "stop public access to aws object storage",
+        "expected_doc_id": "check:s3_account_level_public_access_blocks",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:cloudtrail_s3_dataevents_write_enabled",
+          "check:cloudtrail_s3_dataevents_read_enabled"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:cloudtrail_s3_dataevents_write_enabled",
+            "check:s3_bucket_public_access",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_public_list_acl",
+            "check:cloudtrail_s3_dataevents_read_enabled"
+          ],
+          "top_vector_doc_ids": [
+            "check:ec2_ebs_snapshot_account_block_public_access",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_access_point_public_access_block",
+            "check:s3_bucket_public_list_acl",
+            "check:ec2_ami_public"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_paraphrase_3",
+        "category": "paraphrase",
+        "query": "prevent anonymous users from accessing bucket data",
+        "expected_doc_id": "check:s3_bucket_policy_public_write_access",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:iam_administrator_access_with_mfa",
+          "check:ecr_repositories_not_publicly_accessible",
+          "check:s3_bucket_object_lock",
+          "check:s3_bucket_level_public_access_block",
+          "check:s3_bucket_default_encryption"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:iam_administrator_access_with_mfa",
+            "check:ecr_repositories_not_publicly_accessible",
+            "check:s3_bucket_object_lock",
+            "check:s3_bucket_default_encryption",
+            "check:s3_bucket_level_public_access_block"
+          ],
+          "top_vector_doc_ids": [
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_cross_account_access",
+            "check:s3_bucket_public_access",
+            "check:s3_bucket_policy_public_write_access"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_paraphrase_4",
+        "category": "paraphrase",
+        "query": "make sure users cannot upload files publicly to s3",
+        "expected_doc_id": "check:s3_bucket_public_write_acl",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_access_point_public_access_block",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_lifecycle_enabled",
+          "check:s3_bucket_level_public_access_block"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:s3_bucket_policy_public_write_access",
+            "check:s3_bucket_default_encryption",
+            "check:s3_bucket_lifecycle_enabled",
+            "check:s3_access_point_public_access_block",
+            "check:s3_bucket_event_notifications_enabled"
+          ],
+          "top_vector_doc_ids": [
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_policy_public_write_access",
+            "check:s3_bucket_public_access",
+            "check:s3_bucket_cross_account_access"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_risk_1",
+        "category": "risk",
+        "query": "misconfiguration that allows public reads on cloud storage",
+        "expected_doc_id": "check:s3_bucket_level_public_access_block",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:storagegateway_gateway_fault_tolerant",
+          "check:storagegateway_fileshare_encryption_enabled",
+          "check:mq_broker_not_publicly_accessible",
+          "check:ecr_repositories_not_publicly_accessible",
+          "check:efs_mount_target_not_publicly_accessible"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:storagegateway_gateway_fault_tolerant",
+            "check:storagegateway_fileshare_encryption_enabled",
+            "check:mq_broker_not_publicly_accessible",
+            "check:efs_mount_target_not_publicly_accessible",
+            "check:ecr_repositories_not_publicly_accessible"
+          ],
+          "top_vector_doc_ids": [
+            "check:glacier_vaults_policy_public_access",
+            "check:ec2_ebs_snapshot_account_block_public_access",
+            "check:s3_bucket_level_public_access_block",
+            "check:rds_instance_no_public_access",
+            "check:storagegateway_gateway_fault_tolerant"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_risk_2",
+        "category": "risk",
+        "query": "security issue when bucket objects are publicly accessible",
+        "expected_doc_id": "check:s3_account_level_public_access_blocks",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:glue_data_catalogs_not_publicly_accessible",
+          "check:cloudwatch_log_group_not_publicly_accessible",
+          "check:emr_cluster_publicly_accesible",
+          "check:secretsmanager_not_publicly_accessible",
+          "check:ec2_ami_public"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:glue_data_catalogs_not_publicly_accessible",
+            "check:cloudwatch_log_group_not_publicly_accessible",
+            "check:emr_cluster_publicly_accesible",
+            "check:secretsmanager_not_publicly_accessible",
+            "check:ec2_ami_public"
+          ],
+          "top_vector_doc_ids": [
+            "check:s3_bucket_public_access",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_policy_public_write_access",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_cross_account_access"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_semantic_hard_1",
+        "category": "semantic_hard",
+        "query": "make object storage private by default",
+        "expected_doc_id": "check:s3_account_level_public_access_blocks",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:s3_bucket_object_lock",
+          "check:cloudfront_distributions_default_root_object",
+          "check:storagegateway_fileshare_encryption_enabled",
+          "check:cloudtrail_s3_dataevents_write_enabled",
+          "check:networkfirewall_deletion_protection"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:s3_bucket_object_lock",
+            "check:cloudfront_distributions_default_root_object",
+            "check:storagegateway_fileshare_encryption_enabled",
+            "check:cloudtrail_s3_dataevents_write_enabled",
+            "check:networkfirewall_deletion_protection"
+          ],
+          "top_vector_doc_ids": [
+            "check:ec2_ebs_volume_encryption",
+            "check:s3_bucket_public_write_acl",
+            "check:efs_access_point_enforce_user_identity",
+            "check:workspaces_volume_encryption_enabled",
+            "check:s3_bucket_public_list_acl"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_semantic_hard_2",
+        "category": "semantic_hard",
+        "query": "avoid outsiders browsing files in cloud buckets",
+        "expected_doc_id": "check:s3_bucket_public_list_acl",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:s3_bucket_shadow_resource_vulnerability",
+          "check:cloudtrail_log_file_validation_enabled",
+          "check:awslambda_function_no_secrets_in_code",
+          "check:s3_bucket_secure_transport_policy",
+          "check:mq_broker_not_publicly_accessible"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:s3_bucket_shadow_resource_vulnerability",
+            "check:cloudtrail_log_file_validation_enabled",
+            "check:awslambda_function_no_secrets_in_code",
+            "check:s3_bucket_secure_transport_policy",
+            "check:mq_broker_not_publicly_accessible"
+          ],
+          "top_vector_doc_ids": [
+            "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+            "check:s3_bucket_public_access",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_shadow_resource_vulnerability",
+            "check:s3_bucket_public_write_acl"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_semantic_hard_3",
+        "category": "semantic_hard",
+        "query": "prevent world-readable bucket objects",
+        "expected_doc_id": "check:s3_bucket_level_public_access_block",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:s3_bucket_object_lock",
+          "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_list_acl"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:s3_bucket_object_lock",
+            "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+            "check:s3_bucket_default_encryption",
+            "check:s3_bucket_policy_public_write_access",
+            "check:s3_bucket_public_write_acl"
+          ],
+          "top_vector_doc_ids": [
+            "check:s3_bucket_level_public_access_block",
+            "check:s3_bucket_shadow_resource_vulnerability",
+            "check:s3_bucket_policy_public_write_access",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_public_write_acl"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_semantic_hard_4",
+        "category": "semantic_hard",
+        "query": "stop unauthenticated access to bucket contents",
+        "expected_doc_id": "check:s3_bucket_policy_public_write_access",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:cognito_identity_pool_guest_access_disabled",
+          "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:s3_bucket_level_public_access_block",
+          "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:cognito_identity_pool_guest_access_disabled",
+            "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+            "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+            "check:s3_bucket_level_public_access_block",
+            "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+          ],
+          "top_vector_doc_ids": [
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_public_list_acl",
+            "check:s3_bucket_public_access",
+            "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+            "check:s3_bucket_cross_account_access"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "checks_semantic_hard_5",
+        "category": "semantic_hard",
+        "query": "keep cloud file storage inaccessible to the public",
+        "expected_doc_id": "check:s3_account_level_public_access_blocks",
+        "expected_capability_id": null,
+        "top_ids": [
+          "check:storagegateway_fileshare_encryption_enabled",
+          "check:storagegateway_gateway_fault_tolerant",
+          "check:efs_encryption_at_rest_enabled",
+          "check:efs_not_publicly_accessible",
+          "check:efs_multi_az_enabled"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "prowler_checks",
+          "collection_name": "prowler_checks",
+          "lexical_candidate_count": 15,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [
+            "check:storagegateway_fileshare_encryption_enabled",
+            "check:storagegateway_gateway_fault_tolerant",
+            "check:efs_not_publicly_accessible",
+            "check:efs_encryption_at_rest_enabled",
+            "check:efs_multi_az_enabled"
+          ],
+          "top_vector_doc_ids": [
+            "check:efs_encryption_at_rest_enabled",
+            "check:ec2_ebs_snapshot_account_block_public_access",
+            "check:s3_bucket_public_write_acl",
+            "check:s3_bucket_public_list_acl",
+            "check:storagegateway_fileshare_encryption_enabled"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "case_index": 1,
+      "case_id": "checks_exact_check_id_1",
+      "category": "exact",
+      "query": "s3_bucket_level_public_access_block",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2587.47,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_level_public_access_block",
+      "top_ids": [
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_access_point_public_access_block",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_public_write_acl"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "high",
+      "review_recommended": false,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 1,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_level_public_access_block"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_account_level_public_access_blocks",
+          "check:s3_bucket_level_public_access_block",
+          "check:s3_access_point_public_access_block",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_public_write_acl"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "885ad4ba-3e34-4510-9103-ae9bb3807aaf",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 0.874157,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "exact_check_id",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_account_level_public_access_blocks",
+              "score": 0.284218,
+              "metadata": {
+                "source_name": "prowler_checks",
+                "service": "s3",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_check_metadata",
+                "check_id": "s3_account_level_public_access_blocks",
+                "provider": "aws",
+                "doc_type": "prowler_check"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_access_point_public_access_block",
+              "score": 0.269287,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "source_name": "prowler_checks",
+                "provider": "aws",
+                "check_id": "s3_access_point_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_check_metadata",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.268342,
+              "metadata": {
+                "source_name": "prowler_checks",
+                "service": "s3",
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_check_metadata",
+                "doc_type": "prowler_check",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.26833,
+              "metadata": {
+                "source_type": "official_check_metadata",
+                "index_version": "rag-v2-2026-03-17",
+                "check_id": "s3_bucket_public_write_acl",
+                "service": "s3",
+                "provider": "aws",
+                "source_name": "prowler_checks",
+                "doc_type": "prowler_check"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "high",
+          "review_recommended": false,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "s3_bucket_level_public_access_block",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.874157,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 0.284218
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "s3_bucket_level_public_access_block",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 1,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_level_public_access_block"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_account_level_public_access_blocks",
+              "check:s3_bucket_level_public_access_block",
+              "check:s3_access_point_public_access_block",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_public_write_acl"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "case_index": 2,
+      "case_id": "checks_exact_check_id_2",
+      "category": "exact",
+      "query": "s3_account_level_public_access_blocks",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2258.97,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_account_level_public_access_blocks",
+      "top_ids": [
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_access_point_public_access_block",
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_cross_account_access"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "high",
+      "review_recommended": false,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 1,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_account_level_public_access_blocks"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_account_level_public_access_blocks",
+          "check:s3_access_point_public_access_block",
+          "check:s3_bucket_level_public_access_block",
+          "check:s3_multi_region_access_point_public_access_block",
+          "check:s3_bucket_cross_account_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "4e686d84-2282-4576-8908-b1e5ae666668",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_account_level_public_access_blocks",
+              "score": 0.857928,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_account_level_public_access_blocks",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "exact_check_id",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_access_point_public_access_block",
+              "score": 0.246886,
+              "metadata": {
+                "source_name": "prowler_checks",
+                "service": "s3",
+                "source_type": "official_check_metadata",
+                "check_id": "s3_access_point_public_access_block",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 0.235361,
+              "metadata": {
+                "service": "s3",
+                "doc_type": "prowler_check",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata",
+                "check_id": "s3_bucket_level_public_access_block",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_multi_region_access_point_public_access_block",
+              "score": 0.234838,
+              "metadata": {
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata",
+                "index_version": "rag-v2-2026-03-17",
+                "check_id": "s3_multi_region_access_point_public_access_block",
+                "service": "s3",
+                "doc_type": "prowler_check",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_cross_account_access",
+              "score": 0.231176,
+              "metadata": {
+                "source_type": "official_check_metadata",
+                "service": "s3",
+                "check_id": "s3_bucket_cross_account_access",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "source_name": "prowler_checks"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "high",
+          "review_recommended": false,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "s3_account_level_public_access_blocks",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.857928,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 0.246886
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "s3_account_level_public_access_blocks",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 1,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_account_level_public_access_blocks"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_account_level_public_access_blocks",
+              "check:s3_access_point_public_access_block",
+              "check:s3_bucket_level_public_access_block",
+              "check:s3_multi_region_access_point_public_access_block",
+              "check:s3_bucket_cross_account_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "case_index": 3,
+      "case_id": "checks_exact_check_id_3",
+      "category": "exact",
+      "query": "s3_bucket_public_write_acl",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2239.15,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_public_write_acl",
+      "top_ids": [
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_acl_prohibited",
+        "check:s3_bucket_policy_public_write_access"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_public_write_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "high",
+      "review_recommended": false,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 1,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_public_write_acl"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_acl_prohibited",
+          "check:s3_bucket_policy_public_write_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "e09398fc-4646-4164-9a94-2acad687cf85",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.885845,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "exact_check_id",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.27185,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_check_metadata",
+                "provider": "aws",
+                "service": "s3",
+                "source_name": "prowler_checks",
+                "check_id": "s3_bucket_public_list_acl"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.266613,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_check_metadata",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "check_id": "s3_bucket_public_access",
+                "source_name": "prowler_checks",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_acl_prohibited",
+              "score": 0.266318,
+              "metadata": {
+                "source_name": "prowler_checks",
+                "check_id": "s3_bucket_acl_prohibited",
+                "index_version": "rag-v2-2026-03-17",
+                "service": "s3",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 0.260396,
+              "metadata": {
+                "source_type": "official_check_metadata",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "source_name": "prowler_checks",
+                "index_version": "rag-v2-2026-03-17",
+                "check_id": "s3_bucket_policy_public_write_access",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "high",
+          "review_recommended": false,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "s3_bucket_public_write_acl",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.885845,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 0.27185
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "s3_bucket_public_write_acl",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 1,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_public_write_acl"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_acl_prohibited",
+              "check:s3_bucket_policy_public_write_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "case_index": 4,
+      "case_id": "checks_exact_check_id_4",
+      "category": "exact",
+      "query": "s3_bucket_public_list_acl",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2267.07,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_public_list_acl",
+      "top_ids": [
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_acl_prohibited",
+        "check:s3_bucket_policy_public_write_access"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_public_list_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "high",
+      "review_recommended": false,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 1,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_public_list_acl"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_acl_prohibited",
+          "check:s3_bucket_policy_public_write_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "67e0f740-cd97-4961-8c4c-39efcbab9053",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.881559,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "exact_check_id",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.277722,
+              "metadata": {
+                "check_id": "s3_bucket_public_write_acl",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "service": "s3",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata",
+                "doc_type": "prowler_check"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.273395,
+              "metadata": {
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "prowler_check",
+                "check_id": "s3_bucket_public_access",
+                "provider": "aws",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_acl_prohibited",
+              "score": 0.262182,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "source_name": "prowler_checks",
+                "index_version": "rag-v2-2026-03-17",
+                "check_id": "s3_bucket_acl_prohibited",
+                "provider": "aws",
+                "service": "s3",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 0.250962,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "check_id": "s3_bucket_policy_public_write_access",
+                "doc_type": "prowler_check",
+                "source_name": "prowler_checks",
+                "service": "s3",
+                "provider": "aws",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "high",
+          "review_recommended": false,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "s3_bucket_public_list_acl",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.881559,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 0.277722
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "s3_bucket_public_list_acl",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 1,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_public_list_acl"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_acl_prohibited",
+              "check:s3_bucket_policy_public_write_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "case_index": 5,
+      "case_id": "checks_exact_check_id_5",
+      "category": "exact",
+      "query": "s3_bucket_policy_public_write_access",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2249.36,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_policy_public_write_access",
+      "top_ids": [
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_acl_prohibited",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_bucket_level_public_access_block"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_policy_public_write_access",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "high",
+      "review_recommended": false,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 1,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_policy_public_write_access"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_acl_prohibited",
+          "check:s3_account_level_public_access_blocks",
+          "check:s3_bucket_level_public_access_block"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "3a2019b5-f268-463c-ac3a-99957a53f13c",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 0.89307,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_policy_public_write_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "exact_check_id",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.278589,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "check_id": "s3_bucket_public_write_acl",
+                "service": "s3",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "source_type": "official_check_metadata",
+                "source_name": "prowler_checks"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_acl_prohibited",
+              "score": 0.269576,
+              "metadata": {
+                "service": "s3",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "check_id": "s3_bucket_acl_prohibited",
+                "source_type": "official_check_metadata",
+                "source_name": "prowler_checks"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_account_level_public_access_blocks",
+              "score": 0.268427,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_check_metadata",
+                "source_name": "prowler_checks",
+                "doc_type": "prowler_check",
+                "check_id": "s3_account_level_public_access_blocks",
+                "provider": "aws",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 0.260123,
+              "metadata": {
+                "check_id": "s3_bucket_level_public_access_block",
+                "source_name": "prowler_checks",
+                "provider": "aws",
+                "source_type": "official_check_metadata",
+                "doc_type": "prowler_check",
+                "service": "s3",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "high",
+          "review_recommended": false,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "s3_bucket_policy_public_write_access",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.89307,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 0.278589
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "s3_bucket_policy_public_write_access",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 1,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_policy_public_write_access"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_acl_prohibited",
+              "check:s3_account_level_public_access_blocks",
+              "check:s3_bucket_level_public_access_block"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "case_index": 6,
+      "case_id": "checks_paraphrase_1",
+      "category": "paraphrase",
+      "query": "how to prevent an s3 bucket from being publicly exposed",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2227.6,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:s3_bucket_object_lock",
+      "top_ids": [
+        "check:s3_bucket_object_lock",
+        "check:s3_bucket_default_encryption",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_shadow_resource_vulnerability"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_object_lock",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_shadow_resource_vulnerability"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_shadow_resource_vulnerability",
+          "check:s3_bucket_cross_account_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_level_public_access_block"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "3fa959e3-1d37-46c6-9a1c-3b02987e1186",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 12.110611,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_default_encryption",
+              "score": 11.809138,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_default_encryption",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 8.734278,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 8.734208,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_shadow_resource_vulnerability",
+              "score": 8.500295,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_shadow_resource_vulnerability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "how to prevent an s3 bucket from being publicly exposed",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 12.110611,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 11.809138
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "how_to_prevent_an_s3_bucket_from_being_publicly_exposed",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_object_lock",
+              "check:s3_bucket_default_encryption",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_shadow_resource_vulnerability"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_shadow_resource_vulnerability",
+              "check:s3_bucket_cross_account_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_level_public_access_block"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 7,
+      "case_id": "checks_paraphrase_2",
+      "category": "paraphrase",
+      "query": "stop public access to aws object storage",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2565.17,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:s3_bucket_public_access",
+      "top_ids": [
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_list_acl",
+        "check:cloudtrail_s3_dataevents_write_enabled",
+        "check:cloudtrail_s3_dataevents_read_enabled"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:cloudtrail_s3_dataevents_write_enabled",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:cloudtrail_s3_dataevents_read_enabled"
+        ],
+        "top_vector_doc_ids": [
+          "check:ec2_ebs_snapshot_account_block_public_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_access_point_public_access_block",
+          "check:s3_bucket_public_list_acl",
+          "check:ec2_ami_public"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "24fce6bc-119c-4741-93ce-1104dd7f15cf",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 5.767355,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 5.636929,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 5.63605,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
+              "score": 5.575335,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_s3_dataevents_write_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_s3_dataevents_read_enabled",
+              "score": 5.074205,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_s3_dataevents_read_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "stop public access to aws object storage",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 5.767355,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 5.636929
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "stop_public_access_to_aws_object_storage",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:cloudtrail_s3_dataevents_write_enabled",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:cloudtrail_s3_dataevents_read_enabled"
+            ],
+            "top_vector_doc_ids": [
+              "check:ec2_ebs_snapshot_account_block_public_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_access_point_public_access_block",
+              "check:s3_bucket_public_list_acl",
+              "check:ec2_ami_public"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 8,
+      "case_id": "checks_paraphrase_3",
+      "category": "paraphrase",
+      "query": "prevent anonymous users from accessing bucket data",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2312.97,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:iam_administrator_access_with_mfa",
+      "top_ids": [
+        "check:iam_administrator_access_with_mfa",
+        "check:ecr_repositories_not_publicly_accessible",
+        "check:s3_bucket_object_lock",
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_default_encryption"
+      ],
+      "top1_service": "iam",
+      "expected_doc_id": "check:s3_bucket_policy_public_write_access",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": false,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:iam_administrator_access_with_mfa",
+          "check:ecr_repositories_not_publicly_accessible",
+          "check:s3_bucket_object_lock",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_level_public_access_block"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_cross_account_access",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_policy_public_write_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "64db1d6a-3521-4848-9721-b4e2a83d7615",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:iam_administrator_access_with_mfa",
+              "score": 6.91549,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "iam",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "iam_administrator_access_with_mfa",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:ecr_repositories_not_publicly_accessible",
+              "score": 6.531966,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "ecr",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "ecr_repositories_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 6.223919,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 6.010405,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_default_encryption",
+              "score": 5.839038,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_default_encryption",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "prevent anonymous users from accessing bucket data",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 6.91549,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 6.531966
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "prevent_anonymous_users_from_accessing_bucket_data",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:iam_administrator_access_with_mfa",
+              "check:ecr_repositories_not_publicly_accessible",
+              "check:s3_bucket_object_lock",
+              "check:s3_bucket_default_encryption",
+              "check:s3_bucket_level_public_access_block"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_cross_account_access",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_policy_public_write_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 9,
+      "case_id": "checks_paraphrase_4",
+      "category": "paraphrase",
+      "query": "make sure users cannot upload files publicly to s3",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2331.22,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:s3_bucket_policy_public_write_access",
+      "top_ids": [
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_access_point_public_access_block",
+        "check:s3_bucket_default_encryption",
+        "check:s3_bucket_lifecycle_enabled",
+        "check:s3_bucket_level_public_access_block"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_public_write_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_lifecycle_enabled",
+          "check:s3_access_point_public_access_block",
+          "check:s3_bucket_event_notifications_enabled"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_cross_account_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "cd5127b8-32d8-4a38-bdf9-6cab86cc1a44",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 4.913625,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_policy_public_write_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_access_point_public_access_block",
+              "score": 3.376247,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_access_point_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_default_encryption",
+              "score": 3.373113,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_default_encryption",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_lifecycle_enabled",
+              "score": 3.361718,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_lifecycle_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 3.310662,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "make sure users cannot upload files publicly to s3",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 4.913625,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 3.376247
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "make_sure_users_cannot_upload_files_publicly_to_s3",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_default_encryption",
+              "check:s3_bucket_lifecycle_enabled",
+              "check:s3_access_point_public_access_block",
+              "check:s3_bucket_event_notifications_enabled"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_cross_account_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 10,
+      "case_id": "checks_paraphrase_5",
+      "category": "paraphrase",
+      "query": "avoid public listing of files in object storage buckets",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2271.0,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": true,
+      "top1_doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
+      "top_ids": [
+        "check:cloudtrail_s3_dataevents_write_enabled",
+        "check:s3_bucket_object_lock",
+        "check:cloudtrail_s3_dataevents_read_enabled",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_public_write_acl"
+      ],
+      "top1_service": "cloudtrail",
+      "expected_doc_id": "check:s3_bucket_public_list_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": false,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:cloudtrail_s3_dataevents_write_enabled",
+          "check:s3_bucket_object_lock",
+          "check:cloudtrail_s3_dataevents_read_enabled",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_public_write_acl",
+          "check:cloudtrail_s3_dataevents_write_enabled",
+          "check:s3_bucket_level_public_access_block",
+          "check:cloudtrail_s3_dataevents_read_enabled"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "02e7c4df-9678-4110-a8ed-82ce4a709f00",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
+              "score": 9.450082,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_s3_dataevents_write_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 8.289306,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_s3_dataevents_read_enabled",
+              "score": 8.138442,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_s3_dataevents_read_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 7.549169,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 7.547333,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "avoid public listing of files in object storage buckets",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 9.450082,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 8.289306
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "avoid_public_listing_of_files_in_object_storage_buckets",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:cloudtrail_s3_dataevents_write_enabled",
+              "check:s3_bucket_object_lock",
+              "check:cloudtrail_s3_dataevents_read_enabled",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_public_write_acl",
+              "check:cloudtrail_s3_dataevents_write_enabled",
+              "check:s3_bucket_level_public_access_block",
+              "check:cloudtrail_s3_dataevents_read_enabled"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 11,
+      "case_id": "checks_risk_1",
+      "category": "risk",
+      "query": "misconfiguration that allows public reads on cloud storage",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2269.33,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:storagegateway_gateway_fault_tolerant",
+      "top_ids": [
+        "check:storagegateway_gateway_fault_tolerant",
+        "check:storagegateway_fileshare_encryption_enabled",
+        "check:mq_broker_not_publicly_accessible",
+        "check:ecr_repositories_not_publicly_accessible",
+        "check:efs_mount_target_not_publicly_accessible"
+      ],
+      "top1_service": "storagegateway",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": false,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:storagegateway_gateway_fault_tolerant",
+          "check:storagegateway_fileshare_encryption_enabled",
+          "check:mq_broker_not_publicly_accessible",
+          "check:efs_mount_target_not_publicly_accessible",
+          "check:ecr_repositories_not_publicly_accessible"
+        ],
+        "top_vector_doc_ids": [
+          "check:glacier_vaults_policy_public_access",
+          "check:ec2_ebs_snapshot_account_block_public_access",
+          "check:s3_bucket_level_public_access_block",
+          "check:rds_instance_no_public_access",
+          "check:storagegateway_gateway_fault_tolerant"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "371b4e0d-8d0e-4863-8b51-13e7319c5e4c",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:storagegateway_gateway_fault_tolerant",
+              "score": 5.897784,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "storagegateway",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "storagegateway_gateway_fault_tolerant",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:storagegateway_fileshare_encryption_enabled",
+              "score": 5.678675,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "storagegateway",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "storagegateway_fileshare_encryption_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:mq_broker_not_publicly_accessible",
+              "score": 5.460432,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "mq",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "mq_broker_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:ecr_repositories_not_publicly_accessible",
+              "score": 5.117428,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "ecr",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "ecr_repositories_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:efs_mount_target_not_publicly_accessible",
+              "score": 4.943889,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "efs",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "efs_mount_target_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "misconfiguration that allows public reads on cloud storage",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 5.897784,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 5.678675
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "misconfiguration_that_allows_public_reads_on_cloud_storage",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:storagegateway_gateway_fault_tolerant",
+              "check:storagegateway_fileshare_encryption_enabled",
+              "check:mq_broker_not_publicly_accessible",
+              "check:efs_mount_target_not_publicly_accessible",
+              "check:ecr_repositories_not_publicly_accessible"
+            ],
+            "top_vector_doc_ids": [
+              "check:glacier_vaults_policy_public_access",
+              "check:ec2_ebs_snapshot_account_block_public_access",
+              "check:s3_bucket_level_public_access_block",
+              "check:rds_instance_no_public_access",
+              "check:storagegateway_gateway_fault_tolerant"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 12,
+      "case_id": "checks_risk_2",
+      "category": "risk",
+      "query": "security issue when bucket objects are publicly accessible",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2239.19,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:glue_data_catalogs_not_publicly_accessible",
+      "top_ids": [
+        "check:glue_data_catalogs_not_publicly_accessible",
+        "check:cloudwatch_log_group_not_publicly_accessible",
+        "check:emr_cluster_publicly_accesible",
+        "check:secretsmanager_not_publicly_accessible",
+        "check:ec2_ami_public"
+      ],
+      "top1_service": "glue",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": false,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:glue_data_catalogs_not_publicly_accessible",
+          "check:cloudwatch_log_group_not_publicly_accessible",
+          "check:emr_cluster_publicly_accesible",
+          "check:secretsmanager_not_publicly_accessible",
+          "check:ec2_ami_public"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_cross_account_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "5b7ac12f-16d6-4be2-ab3a-50b41c859eb3",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:glue_data_catalogs_not_publicly_accessible",
+              "score": 8.531829,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "glue",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "glue_data_catalogs_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudwatch_log_group_not_publicly_accessible",
+              "score": 8.164465,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudwatch",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudwatch_log_group_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:emr_cluster_publicly_accesible",
+              "score": 8.07685,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "emr",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "emr_cluster_publicly_accesible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:secretsmanager_not_publicly_accessible",
+              "score": 7.949921,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "secretsmanager",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "secretsmanager_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:ec2_ami_public",
+              "score": 7.394346,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "ec2",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "ec2_ami_public",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "security issue when bucket objects are publicly accessible",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 8.531829,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 8.164465
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "security_issue_when_bucket_objects_are_publicly_accessible",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:glue_data_catalogs_not_publicly_accessible",
+              "check:cloudwatch_log_group_not_publicly_accessible",
+              "check:emr_cluster_publicly_accesible",
+              "check:secretsmanager_not_publicly_accessible",
+              "check:ec2_ami_public"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_cross_account_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 13,
+      "case_id": "checks_risk_3",
+      "category": "risk",
+      "query": "how to avoid accidental public exposure of files in s3",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2266.6,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_level_public_access_block",
+      "top_ids": [
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_access_point_public_access_block",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_lifecycle_enabled"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_level_public_access_block",
+          "check:s3_account_level_public_access_blocks",
+          "check:s3_access_point_public_access_block",
+          "check:s3_multi_region_access_point_public_access_block",
+          "check:s3_bucket_lifecycle_enabled"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_level_public_access_block",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_access_point_public_access_block",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_cross_account_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "36f3b66f-d562-4d39-acc5-009f30c1e5ea",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 8.536036,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_account_level_public_access_blocks",
+              "score": 8.403748,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_account_level_public_access_blocks",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_access_point_public_access_block",
+              "score": 8.082751,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_access_point_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_multi_region_access_point_public_access_block",
+              "score": 7.905999,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_multi_region_access_point_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_lifecycle_enabled",
+              "score": 6.923593,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_lifecycle_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "how to avoid accidental public exposure of files in s3",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "service": "s3",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 8.536036,
+                "top1_doc_type": "prowler_check",
+                "top1_service": "s3",
+                "top2_score": 8.403748
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "how_to_avoid_accidental_public_exposure_of_files_in_s3",
+              "service": "s3",
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_level_public_access_block",
+              "check:s3_account_level_public_access_blocks",
+              "check:s3_access_point_public_access_block",
+              "check:s3_multi_region_access_point_public_access_block",
+              "check:s3_bucket_lifecycle_enabled"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_level_public_access_block",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_access_point_public_access_block",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_cross_account_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 14,
+      "case_id": "checks_risk_4",
+      "category": "risk",
+      "query": "publicly writable bucket through acl misconfiguration",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2332.66,
+      "hit_top1": true,
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_public_write_acl",
+      "top_ids": [
+        "check:s3_bucket_public_write_acl",
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+        "check:s3_bucket_public_list_acl",
+        "check:elb_internet_facing",
+        "check:elbv2_internet_facing"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_public_write_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_public_write_acl",
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:s3_bucket_public_list_acl",
+          "check:elb_internet_facing",
+          "check:elbv2_internet_facing"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_acl_prohibited",
+          "check:s3_bucket_policy_public_write_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "6f6e0a6a-0ec6-4af6-b48c-a767b72dac18",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 11.622577,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "score": 9.176326,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 6.935863,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:elb_internet_facing",
+              "score": 6.706821,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "elb",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "elb_internet_facing",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:elbv2_internet_facing",
+              "score": 6.677916,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "elbv2",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "elbv2_internet_facing",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "publicly writable bucket through acl misconfiguration",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 11.622577,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 9.176326
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "publicly_writable_bucket_through_acl_misconfiguration",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_public_write_acl",
+              "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "check:s3_bucket_public_list_acl",
+              "check:elb_internet_facing",
+              "check:elbv2_internet_facing"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_acl_prohibited",
+              "check:s3_bucket_policy_public_write_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 15,
+      "case_id": "checks_risk_5",
+      "category": "risk",
+      "query": "anyone can enumerate objects in the bucket",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2247.17,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_policy_public_write_access",
+      "top_ids": [
+        "check:s3_bucket_policy_public_write_access",
+        "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+        "check:s3_bucket_object_lock",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_public_write_acl"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_public_list_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_policy_public_write_access",
+          "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+          "check:s3_bucket_object_lock",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_shadow_resource_vulnerability"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "e407cb0e-1413-4ea9-aa4e-f31f7f496f5b",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 7.661217,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_policy_public_write_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+              "score": 7.436126,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudfront",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudfront_distributions_s3_origin_non_existent_bucket",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 6.95859,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 6.549726,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 6.54657,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "anyone can enumerate objects in the bucket",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 7.661217,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 7.436126
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "anyone_can_enumerate_objects_in_the_bucket",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_policy_public_write_access",
+              "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+              "check:s3_bucket_object_lock",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_shadow_resource_vulnerability"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 16,
+      "case_id": "checks_semantic_hard_1",
+      "category": "semantic_hard",
+      "query": "make object storage private by default",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2242.84,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:s3_bucket_object_lock",
+      "top_ids": [
+        "check:s3_bucket_object_lock",
+        "check:cloudfront_distributions_default_root_object",
+        "check:storagegateway_fileshare_encryption_enabled",
+        "check:cloudtrail_s3_dataevents_write_enabled",
+        "check:networkfirewall_deletion_protection"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_object_lock",
+          "check:cloudfront_distributions_default_root_object",
+          "check:storagegateway_fileshare_encryption_enabled",
+          "check:cloudtrail_s3_dataevents_write_enabled",
+          "check:networkfirewall_deletion_protection"
+        ],
+        "top_vector_doc_ids": [
+          "check:ec2_ebs_volume_encryption",
+          "check:s3_bucket_public_write_acl",
+          "check:efs_access_point_enforce_user_identity",
+          "check:workspaces_volume_encryption_enabled",
+          "check:s3_bucket_public_list_acl"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "ca8122f7-312d-406c-88a5-d647a61916f6",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 6.72294,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudfront_distributions_default_root_object",
+              "score": 6.434876,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudfront",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudfront_distributions_default_root_object",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:storagegateway_fileshare_encryption_enabled",
+              "score": 5.867423,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "storagegateway",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "storagegateway_fileshare_encryption_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
+              "score": 5.44606,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_s3_dataevents_write_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:networkfirewall_deletion_protection",
+              "score": 4.559443,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "networkfirewall",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "networkfirewall_deletion_protection",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "make object storage private by default",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 6.72294,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 6.434876
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "make_object_storage_private_by_default",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_object_lock",
+              "check:cloudfront_distributions_default_root_object",
+              "check:storagegateway_fileshare_encryption_enabled",
+              "check:cloudtrail_s3_dataevents_write_enabled",
+              "check:networkfirewall_deletion_protection"
+            ],
+            "top_vector_doc_ids": [
+              "check:ec2_ebs_volume_encryption",
+              "check:s3_bucket_public_write_acl",
+              "check:efs_access_point_enforce_user_identity",
+              "check:workspaces_volume_encryption_enabled",
+              "check:s3_bucket_public_list_acl"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 17,
+      "case_id": "checks_semantic_hard_2",
+      "category": "semantic_hard",
+      "query": "avoid outsiders browsing files in cloud buckets",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2281.56,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:s3_bucket_shadow_resource_vulnerability",
+      "top_ids": [
+        "check:s3_bucket_shadow_resource_vulnerability",
+        "check:cloudtrail_log_file_validation_enabled",
+        "check:awslambda_function_no_secrets_in_code",
+        "check:s3_bucket_secure_transport_policy",
+        "check:mq_broker_not_publicly_accessible"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_public_list_acl",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_shadow_resource_vulnerability",
+          "check:cloudtrail_log_file_validation_enabled",
+          "check:awslambda_function_no_secrets_in_code",
+          "check:s3_bucket_secure_transport_policy",
+          "check:mq_broker_not_publicly_accessible"
+        ],
+        "top_vector_doc_ids": [
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:s3_bucket_public_access",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_shadow_resource_vulnerability",
+          "check:s3_bucket_public_write_acl"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "26378632-d712-4782-a605-669413f96f3d",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_shadow_resource_vulnerability",
+              "score": 5.577003,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_shadow_resource_vulnerability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_log_file_validation_enabled",
+              "score": 4.521926,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_log_file_validation_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:awslambda_function_no_secrets_in_code",
+              "score": 4.261371,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "awslambda",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "awslambda_function_no_secrets_in_code",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_secure_transport_policy",
+              "score": 4.004015,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_secure_transport_policy",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:mq_broker_not_publicly_accessible",
+              "score": 3.968471,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "mq",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "mq_broker_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "avoid outsiders browsing files in cloud buckets",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 5.577003,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 4.521926
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "avoid_outsiders_browsing_files_in_cloud_buckets",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_shadow_resource_vulnerability",
+              "check:cloudtrail_log_file_validation_enabled",
+              "check:awslambda_function_no_secrets_in_code",
+              "check:s3_bucket_secure_transport_policy",
+              "check:mq_broker_not_publicly_accessible"
+            ],
+            "top_vector_doc_ids": [
+              "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "check:s3_bucket_public_access",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_shadow_resource_vulnerability",
+              "check:s3_bucket_public_write_acl"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 18,
+      "case_id": "checks_semantic_hard_3",
+      "category": "semantic_hard",
+      "query": "prevent world-readable bucket objects",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2260.6,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:s3_bucket_object_lock",
+      "top_ids": [
+        "check:s3_bucket_object_lock",
+        "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+        "check:s3_bucket_default_encryption",
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_public_list_acl"
+      ],
+      "top1_service": "s3",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": true,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:s3_bucket_object_lock",
+          "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+          "check:s3_bucket_default_encryption",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_write_acl"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_level_public_access_block",
+          "check:s3_bucket_shadow_resource_vulnerability",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_public_write_acl"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "6fe921ae-7d5f-4071-b203-37805a97f462",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 9.015649,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+              "score": 7.596414,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudfront",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudfront_distributions_s3_origin_non_existent_bucket",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_default_encryption",
+              "score": 7.274846,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_default_encryption",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 6.320904,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_policy_public_write_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 5.464749,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "prevent world-readable bucket objects",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 9.015649,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 7.596414
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "prevent_world_readable_bucket_objects",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:s3_bucket_object_lock",
+              "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+              "check:s3_bucket_default_encryption",
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_public_write_acl"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_level_public_access_block",
+              "check:s3_bucket_shadow_resource_vulnerability",
+              "check:s3_bucket_policy_public_write_access",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_public_write_acl"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 19,
+      "case_id": "checks_semantic_hard_4",
+      "category": "semantic_hard",
+      "query": "stop unauthenticated access to bucket contents",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2259.12,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:cognito_identity_pool_guest_access_disabled",
+      "top_ids": [
+        "check:cognito_identity_pool_guest_access_disabled",
+        "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+        "check:s3_bucket_level_public_access_block",
+        "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+      ],
+      "top1_service": "cognito",
+      "expected_doc_id": "check:s3_bucket_policy_public_write_access",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": false,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:cognito_identity_pool_guest_access_disabled",
+          "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:s3_bucket_level_public_access_block",
+          "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+        ],
+        "top_vector_doc_ids": [
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:s3_bucket_public_access",
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:s3_bucket_cross_account_access"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "f02a04a4-5b2a-4c93-aafd-8a6cb97ce24c",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:cognito_identity_pool_guest_access_disabled",
+              "score": 5.599714,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cognito",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cognito_identity_pool_guest_access_disabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+              "score": 5.225878,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_logs_s3_bucket_access_logging_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "score": 4.814517,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 4.785632,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:cloudfront_distributions_s3_origin_non_existent_bucket",
+              "score": 4.783944,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudfront",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudfront_distributions_s3_origin_non_existent_bucket",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "stop unauthenticated access to bucket contents",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 5.599714,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 5.225878
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "stop_unauthenticated_access_to_bucket_contents",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:cognito_identity_pool_guest_access_disabled",
+              "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+              "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "check:s3_bucket_level_public_access_block",
+              "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+            ],
+            "top_vector_doc_ids": [
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:s3_bucket_public_access",
+              "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "check:s3_bucket_cross_account_access"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 20,
+      "case_id": "checks_semantic_hard_5",
+      "category": "semantic_hard",
+      "query": "keep cloud file storage inaccessible to the public",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2263.3,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "check:storagegateway_fileshare_encryption_enabled",
+      "top_ids": [
+        "check:storagegateway_fileshare_encryption_enabled",
+        "check:storagegateway_gateway_fault_tolerant",
+        "check:efs_encryption_at_rest_enabled",
+        "check:efs_not_publicly_accessible",
+        "check:efs_multi_az_enabled"
+      ],
+      "top1_service": "storagegateway",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": null,
+      "expected_service": "s3",
+      "top1_correct_service": false,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "prowler_checks",
+        "collection_name": "prowler_checks",
+        "lexical_candidate_count": 15,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [
+          "check:storagegateway_fileshare_encryption_enabled",
+          "check:storagegateway_gateway_fault_tolerant",
+          "check:efs_not_publicly_accessible",
+          "check:efs_encryption_at_rest_enabled",
+          "check:efs_multi_az_enabled"
+        ],
+        "top_vector_doc_ids": [
+          "check:efs_encryption_at_rest_enabled",
+          "check:ec2_ebs_snapshot_account_block_public_access",
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:storagegateway_fileshare_encryption_enabled"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "ded18f69-6d67-45b0-9dee-b9cb3f338237",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "check:storagegateway_fileshare_encryption_enabled",
+              "score": 8.745041,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "storagegateway",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "storagegateway_fileshare_encryption_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:storagegateway_gateway_fault_tolerant",
+              "score": 6.339737,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "storagegateway",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "storagegateway_gateway_fault_tolerant",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:efs_encryption_at_rest_enabled",
+              "score": 5.59837,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "efs",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "efs_encryption_at_rest_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "check:efs_not_publicly_accessible",
+              "score": 5.453688,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "efs",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "efs_not_publicly_accessible",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            },
+            {
+              "doc_id": "check:efs_multi_az_enabled",
+              "score": 5.039828,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "efs",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "efs_multi_az_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "check_search",
+            "normalized_query": "keep cloud file storage inaccessible to the public",
+            "query_type": "check_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "prowler_check"
+            },
+            "verification": {
+              "valid": false,
+              "warnings": [
+                "exact_lookup_miss",
+                "exact_lookup_mismatch"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 8.745041,
+                "top1_doc_type": "prowler_check",
+                "top2_score": 6.339737
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": true,
+              "exact_check_id": "keep_cloud_file_storage_inaccessible_to_the_public",
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "prowler_check"
+              ],
+              "corpus": "prowler_checks",
+              "collection_name": "prowler_checks"
+            },
+            "corpus": "prowler_checks",
+            "collection_name": "prowler_checks",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 15,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [
+              "check:storagegateway_fileshare_encryption_enabled",
+              "check:storagegateway_gateway_fault_tolerant",
+              "check:efs_not_publicly_accessible",
+              "check:efs_encryption_at_rest_enabled",
+              "check:efs_multi_az_enabled"
+            ],
+            "top_vector_doc_ids": [
+              "check:efs_encryption_at_rest_enabled",
+              "check:ec2_ebs_snapshot_account_block_public_access",
+              "check:s3_bucket_public_write_acl",
+              "check:s3_bucket_public_list_acl",
+              "check:storagegateway_fileshare_encryption_enabled"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_miss",
+            "details": null
+          },
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "exact_lookup_mismatch",
+            "details": null
+          }
+        ]
+      }
+    }
+  ]
+}

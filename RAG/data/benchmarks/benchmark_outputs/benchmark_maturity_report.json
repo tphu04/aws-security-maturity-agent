@@ -1,0 +1,3706 @@
+{
+  "report_name": "benchmark_maturity_report",
+  "base_url": "http://localhost:8000",
+  "endpoint": "http://localhost:8000/v1/retrieve/maturity",
+  "top_k": 5,
+  "requested_retrieval_mode": "hybrid",
+  "total_cases": 15,
+  "summary": {
+    "report_name": "benchmark_maturity_report",
+    "total_cases": 15,
+    "http_200": 15,
+    "hit_expected_in_top1": 0,
+    "hit_expected_in_top3": 0,
+    "hit_expected_in_top5": 0,
+    "top1_correct_service": null,
+    "vector_visible_cases": 15,
+    "hybrid_visible_cases": 15,
+    "average_latency_ms": 2268.55,
+    "median_latency_ms": 2263.96,
+    "by_category": {
+      "exact": {
+        "total": 5,
+        "top1": 0,
+        "top3": 0,
+        "top5": 0,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2256.78
+      },
+      "paraphrase": {
+        "total": 5,
+        "top1": 0,
+        "top3": 0,
+        "top5": 0,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2263.01
+      },
+      "semantic_hard": {
+        "total": 5,
+        "top1": 0,
+        "top3": 0,
+        "top5": 0,
+        "vector": 5,
+        "hybrid": 5,
+        "avg_latency_ms": 2285.87
+      }
+    },
+    "failures_top5": [
+      {
+        "case_id": "maturity_exact_1",
+        "category": "exact",
+        "query": "block_public_access",
+        "expected_doc_id": "capability:block_public_access",
+        "expected_capability_id": "block_public_access",
+        "top_ids": [
+          "capability:block-public-access",
+          "capability:limit-network-access-using-security-groups",
+          "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+          "capability:cleanup-risky-open-admin-ports-in-security-groups",
+          "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:block-public-access",
+            "capability:limit-network-access-using-security-groups",
+            "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+            "capability:cleanup-risky-open-admin-ports-in-security-groups",
+            "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_exact_2",
+        "category": "exact",
+        "query": "audit_api_calls",
+        "expected_doc_id": "capability:audit_api_calls",
+        "expected_capability_id": "audit_api_calls",
+        "top_ids": [
+          "capability:audit-api-calls",
+          "capability:automate-evidence-gathering-for-compliance-audit-reports",
+          "capability:security-investigations-root-cause-analysis-with-amazon-detective",
+          "capability:vpc-flow-logs-analysis",
+          "capability:billing-alarms-for-anomaly-detection"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:audit-api-calls",
+            "capability:automate-evidence-gathering-for-compliance-audit-reports",
+            "capability:security-investigations-root-cause-analysis-with-amazon-detective",
+            "capability:vpc-flow-logs-analysis",
+            "capability:billing-alarms-for-anomaly-detection"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_exact_3",
+        "category": "exact",
+        "query": "data_backups",
+        "expected_doc_id": "capability:data_backups",
+        "expected_capability_id": "data_backups",
+        "top_ids": [
+          "capability:data-backups",
+          "capability:disaster-recovery-plan",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:analyze-data-security-posture",
+          "capability:data-encryption-at-rest"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:data-backups",
+            "capability:disaster-recovery-plan",
+            "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+            "capability:analyze-data-security-posture",
+            "capability:data-encryption-at-rest"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_exact_4",
+        "category": "exact",
+        "query": "encryption_at_rest",
+        "expected_doc_id": "capability:encryption_at_rest",
+        "expected_capability_id": "encryption_at_rest",
+        "top_ids": [
+          "capability:data-encryption-at-rest",
+          "capability:encryption-in-transit",
+          "capability:generative-ai-data-protection-with-amazon-bedrock",
+          "capability:don-t-store-secrets-in-code-remove-secrets-from-code",
+          "capability:use-infrastructure-as-code"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:data-encryption-at-rest",
+            "capability:encryption-in-transit",
+            "capability:generative-ai-data-protection-with-amazon-bedrock",
+            "capability:don-t-store-secrets-in-code-remove-secrets-from-code",
+            "capability:use-infrastructure-as-code"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_exact_5",
+        "category": "exact",
+        "query": "network_segmentation",
+        "expected_doc_id": "capability:network_segmentation",
+        "expected_capability_id": "network_segmentation",
+        "top_ids": [
+          "capability:network-segmentation-vpcs-public-private-networks",
+          "capability:4-optimized",
+          "capability:analyze-data-security-posture",
+          "capability:vpc-flow-logs-analysis",
+          "capability:3-efficient"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:network-segmentation-vpcs-public-private-networks",
+            "capability:4-optimized",
+            "capability:analyze-data-security-posture",
+            "capability:vpc-flow-logs-analysis",
+            "capability:3-efficient"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_paraphrase_1",
+        "category": "paraphrase",
+        "query": "practice to stop public access to resources",
+        "expected_doc_id": null,
+        "expected_capability_id": "block_public_access",
+        "top_ids": [
+          "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+          "capability:limit-network-access-using-security-groups",
+          "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+          "capability:block-public-access",
+          "capability:network-segmentation-vpcs-public-private-networks"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+            "capability:limit-network-access-using-security-groups",
+            "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+            "capability:block-public-access",
+            "capability:network-segmentation-vpcs-public-private-networks"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_paraphrase_2",
+        "category": "paraphrase",
+        "query": "ability to record and monitor api activity",
+        "expected_doc_id": null,
+        "expected_capability_id": "audit_api_calls",
+        "top_ids": [
+          "capability:audit-api-calls",
+          "capability:security-orchestration-and-ticketing",
+          "capability:automate-evidence-gathering-for-compliance-audit-reports",
+          "capability:vpc-flow-logs-analysis",
+          "capability:act-on-critical-security-findings"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:audit-api-calls",
+            "capability:security-orchestration-and-ticketing",
+            "capability:automate-evidence-gathering-for-compliance-audit-reports",
+            "capability:vpc-flow-logs-analysis",
+            "capability:act-on-critical-security-findings"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_paraphrase_3",
+        "category": "paraphrase",
+        "query": "capability for recovering data from backups",
+        "expected_doc_id": null,
+        "expected_capability_id": "data_backups",
+        "top_ids": [
+          "capability:data-backups",
+          "capability:disaster-recovery-plan",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:multi-region-disaster-recovery-automation",
+          "capability:analyze-data-security-posture"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:data-backups",
+            "capability:disaster-recovery-plan",
+            "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+            "capability:multi-region-disaster-recovery-automation",
+            "capability:analyze-data-security-posture"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_paraphrase_4",
+        "category": "paraphrase",
+        "query": "protect stored data with encryption",
+        "expected_doc_id": null,
+        "expected_capability_id": "encryption_at_rest",
+        "top_ids": [
+          "capability:data-encryption-at-rest",
+          "capability:encryption-in-transit",
+          "capability:generative-ai-data-protection-with-amazon-bedrock",
+          "capability:data-backups",
+          "capability:analyze-data-security-posture"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:data-encryption-at-rest",
+            "capability:encryption-in-transit",
+            "capability:generative-ai-data-protection-with-amazon-bedrock",
+            "capability:data-backups",
+            "capability:analyze-data-security-posture"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_paraphrase_5",
+        "category": "paraphrase",
+        "query": "separate networks to reduce exposure",
+        "expected_doc_id": null,
+        "expected_capability_id": "network_segmentation",
+        "top_ids": [
+          "capability:network-segmentation-vpcs-public-private-networks",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+          "capability:achieve-redundancy-using-multiple-availability-zones",
+          "capability:set-up-multi-account-management-with-aws-control-tower"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:network-segmentation-vpcs-public-private-networks",
+            "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+            "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+            "capability:achieve-redundancy-using-multiple-availability-zones",
+            "capability:set-up-multi-account-management-with-aws-control-tower"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_semantic_hard_1",
+        "category": "semantic_hard",
+        "query": "control internet-facing access to storage services",
+        "expected_doc_id": null,
+        "expected_capability_id": "block_public_access",
+        "top_ids": [
+          "capability:limit-network-access-using-security-groups",
+          "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+          "capability:encryption-in-transit",
+          "capability:analyze-data-security-posture",
+          "capability:outbound-traffic-control"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:limit-network-access-using-security-groups",
+            "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+            "capability:encryption-in-transit",
+            "capability:analyze-data-security-posture",
+            "capability:outbound-traffic-control"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_semantic_hard_2",
+        "category": "semantic_hard",
+        "query": "know who called cloud apis and when",
+        "expected_doc_id": null,
+        "expected_capability_id": "audit_api_calls",
+        "top_ids": [
+          "capability:audit-api-calls",
+          "capability:analyze-data-security-posture",
+          "capability:formation-of-a-blue-team-incident-response-team",
+          "capability:evaluate-cloud-security-posture-aws-security-hub",
+          "capability:use-infrastructure-as-code"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:audit-api-calls",
+            "capability:analyze-data-security-posture",
+            "capability:formation-of-a-blue-team-incident-response-team",
+            "capability:evaluate-cloud-security-posture-aws-security-hub",
+            "capability:use-infrastructure-as-code"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_semantic_hard_3",
+        "category": "semantic_hard",
+        "query": "restore critical information after loss or corruption",
+        "expected_doc_id": null,
+        "expected_capability_id": "data_backups",
+        "top_ids": [
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:disaster-recovery-plan",
+          "capability:evaluate-resilience-posture-aws-resilience-hub",
+          "capability:multi-region-disaster-recovery-automation",
+          "capability:forming-a-chaos-engineering-team"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+            "capability:disaster-recovery-plan",
+            "capability:evaluate-resilience-posture-aws-resilience-hub",
+            "capability:multi-region-disaster-recovery-automation",
+            "capability:forming-a-chaos-engineering-team"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_semantic_hard_4",
+        "category": "semantic_hard",
+        "query": "make stolen storage media unreadable",
+        "expected_doc_id": null,
+        "expected_capability_id": "encryption_at_rest",
+        "top_ids": [
+          "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+          "capability:analyze-data-security-posture",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:data-encryption-at-rest",
+          "capability:disaster-recovery-plan"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+            "capability:analyze-data-security-posture",
+            "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+            "capability:data-encryption-at-rest",
+            "capability:disaster-recovery-plan"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      },
+      {
+        "case_id": "maturity_semantic_hard_5",
+        "category": "semantic_hard",
+        "query": "limit blast radius by isolating network zones",
+        "expected_doc_id": null,
+        "expected_capability_id": "network_segmentation",
+        "top_ids": [
+          "capability:network-segmentation-vpcs-public-private-networks",
+          "capability:achieve-redundancy-using-multiple-availability-zones",
+          "capability:multi-region-disaster-recovery-automation",
+          "capability:threat-intelligence",
+          "capability:select-the-region-s-where-you-want-to-operate-and-block-the-rest"
+        ],
+        "confidence": "low",
+        "warnings": [],
+        "diagnostics": {
+          "retrieval_mode": "hybrid",
+          "corpus": "maturity_capabilities",
+          "collection_name": "maturity_capabilities",
+          "lexical_candidate_count": 0,
+          "vector_candidate_count": 15,
+          "top_lexical_doc_ids": [],
+          "top_vector_doc_ids": [
+            "capability:network-segmentation-vpcs-public-private-networks",
+            "capability:achieve-redundancy-using-multiple-availability-zones",
+            "capability:multi-region-disaster-recovery-automation",
+            "capability:threat-intelligence",
+            "capability:select-the-region-s-where-you-want-to-operate-and-block-the-rest"
+          ],
+          "used_vector": true,
+          "used_hybrid": true,
+          "vector_error": null
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "case_index": 1,
+      "case_id": "maturity_exact_1",
+      "category": "exact",
+      "query": "block_public_access",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2274.09,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:block-public-access",
+      "top_ids": [
+        "capability:block-public-access",
+        "capability:limit-network-access-using-security-groups",
+        "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+        "capability:cleanup-risky-open-admin-ports-in-security-groups",
+        "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions"
+      ],
+      "top1_service": null,
+      "expected_doc_id": "capability:block_public_access",
+      "expected_capability_id": "block_public_access",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:block-public-access",
+          "capability:limit-network-access-using-security-groups",
+          "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+          "capability:cleanup-risky-open-admin-ports-in-security-groups",
+          "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "344fc0f3-2244-4db1-99ba-ceca506cd8af",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:block-public-access",
+              "score": 0.184665,
+              "metadata": {
+                "capability_id": "block-public-access",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:limit-network-access-using-security-groups",
+              "score": 0.16231,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "capability_id": "limit-network-access-using-security-groups",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+              "score": 0.159991,
+              "metadata": {
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "capability_id": "permission-guardrails-organizational-policies-with-scps-and-rcps",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:cleanup-risky-open-admin-ports-in-security-groups",
+              "score": 0.153891,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "provider": "aws",
+                "capability_id": "cleanup-risky-open-admin-ports-in-security-groups",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+              "score": 0.153779,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "capability_id": "cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "block_public_access",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.184665,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.16231
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:block-public-access",
+              "capability:limit-network-access-using-security-groups",
+              "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+              "capability:cleanup-risky-open-admin-ports-in-security-groups",
+              "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 2,
+      "case_id": "maturity_exact_2",
+      "category": "exact",
+      "query": "audit_api_calls",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2296.01,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:audit-api-calls",
+      "top_ids": [
+        "capability:audit-api-calls",
+        "capability:automate-evidence-gathering-for-compliance-audit-reports",
+        "capability:security-investigations-root-cause-analysis-with-amazon-detective",
+        "capability:vpc-flow-logs-analysis",
+        "capability:billing-alarms-for-anomaly-detection"
+      ],
+      "top1_service": null,
+      "expected_doc_id": "capability:audit_api_calls",
+      "expected_capability_id": "audit_api_calls",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:audit-api-calls",
+          "capability:automate-evidence-gathering-for-compliance-audit-reports",
+          "capability:security-investigations-root-cause-analysis-with-amazon-detective",
+          "capability:vpc-flow-logs-analysis",
+          "capability:billing-alarms-for-anomaly-detection"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "5eb753dd-1228-47f6-9f8c-b12a530ce0d4",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:audit-api-calls",
+              "score": 0.196077,
+              "metadata": {
+                "capability_id": "audit-api-calls",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:automate-evidence-gathering-for-compliance-audit-reports",
+              "score": 0.179961,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "automate-evidence-gathering-for-compliance-audit-reports",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "provider": "aws",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:security-investigations-root-cause-analysis-with-amazon-detective",
+              "score": 0.165953,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "capability_id": "security-investigations-root-cause-analysis-with-amazon-detective",
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:vpc-flow-logs-analysis",
+              "score": 0.16444,
+              "metadata": {
+                "capability_id": "vpc-flow-logs-analysis",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:billing-alarms-for-anomaly-detection",
+              "score": 0.163939,
+              "metadata": {
+                "capability_id": "billing-alarms-for-anomaly-detection",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "audit_api_calls",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.196077,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.179961
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:audit-api-calls",
+              "capability:automate-evidence-gathering-for-compliance-audit-reports",
+              "capability:security-investigations-root-cause-analysis-with-amazon-detective",
+              "capability:vpc-flow-logs-analysis",
+              "capability:billing-alarms-for-anomaly-detection"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 3,
+      "case_id": "maturity_exact_3",
+      "category": "exact",
+      "query": "data_backups",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2238.27,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:data-backups",
+      "top_ids": [
+        "capability:data-backups",
+        "capability:disaster-recovery-plan",
+        "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+        "capability:analyze-data-security-posture",
+        "capability:data-encryption-at-rest"
+      ],
+      "top1_service": null,
+      "expected_doc_id": "capability:data_backups",
+      "expected_capability_id": "data_backups",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:data-backups",
+          "capability:disaster-recovery-plan",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:analyze-data-security-posture",
+          "capability:data-encryption-at-rest"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "72b7ae1e-6122-4866-b492-e2e0edbcb659",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:data-backups",
+              "score": 0.207556,
+              "metadata": {
+                "capability_id": "data-backups",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "domain": "",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:disaster-recovery-plan",
+              "score": 0.165388,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "capability_id": "disaster-recovery-plan",
+                "domain": "",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "score": 0.16428,
+              "metadata": {
+                "source_type": "official_doc",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "capability_id": "sharing-security-tasks-and-responsibility-raci-matrix",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.162583,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "analyze-data-security-posture",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:data-encryption-at-rest",
+              "score": 0.155304,
+              "metadata": {
+                "domain": "",
+                "capability_id": "data-encryption-at-rest",
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "data_backups",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.207556,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.165388
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:data-backups",
+              "capability:disaster-recovery-plan",
+              "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "capability:analyze-data-security-posture",
+              "capability:data-encryption-at-rest"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "case_index": 4,
+      "case_id": "maturity_exact_4",
+      "category": "exact",
+      "query": "encryption_at_rest",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2227.43,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:data-encryption-at-rest",
+      "top_ids": [
+        "capability:data-encryption-at-rest",
+        "capability:encryption-in-transit",
+        "capability:generative-ai-data-protection-with-amazon-bedrock",
+        "capability:don-t-store-secrets-in-code-remove-secrets-from-code",
+        "capability:use-infrastructure-as-code"
+      ],
+      "top1_service": null,
+      "expected_doc_id": "capability:encryption_at_rest",
+      "expected_capability_id": "encryption_at_rest",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:data-encryption-at-rest",
+          "capability:encryption-in-transit",
+          "capability:generative-ai-data-protection-with-amazon-bedrock",
+          "capability:don-t-store-secrets-in-code-remove-secrets-from-code",
+          "capability:use-infrastructure-as-code"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "95887d92-4cdf-4bd0-8247-20f5577cfbdd",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:data-encryption-at-rest",
+              "score": 0.19903,
+              "metadata": {
+                "source_type": "official_doc",
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "data-encryption-at-rest",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:encryption-in-transit",
+              "score": 0.173593,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "capability_id": "encryption-in-transit",
+                "source_type": "official_doc",
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:generative-ai-data-protection-with-amazon-bedrock",
+              "score": 0.17267,
+              "metadata": {
+                "capability_id": "generative-ai-data-protection-with-amazon-bedrock",
+                "domain": "",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:don-t-store-secrets-in-code-remove-secrets-from-code",
+              "score": 0.163192,
+              "metadata": {
+                "capability_id": "don-t-store-secrets-in-code-remove-secrets-from-code",
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:use-infrastructure-as-code",
+              "score": 0.154676,
+              "metadata": {
+                "source_type": "official_doc",
+                "domain": "",
+                "capability_id": "use-infrastructure-as-code",
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "encryption_at_rest",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.19903,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.173593
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:data-encryption-at-rest",
+              "capability:encryption-in-transit",
+              "capability:generative-ai-data-protection-with-amazon-bedrock",
+              "capability:don-t-store-secrets-in-code-remove-secrets-from-code",
+              "capability:use-infrastructure-as-code"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 5,
+      "case_id": "maturity_exact_5",
+      "category": "exact",
+      "query": "network_segmentation",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2248.08,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+      "top_ids": [
+        "capability:network-segmentation-vpcs-public-private-networks",
+        "capability:4-optimized",
+        "capability:analyze-data-security-posture",
+        "capability:vpc-flow-logs-analysis",
+        "capability:3-efficient"
+      ],
+      "top1_service": null,
+      "expected_doc_id": "capability:network_segmentation",
+      "expected_capability_id": "network_segmentation",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:network-segmentation-vpcs-public-private-networks",
+          "capability:4-optimized",
+          "capability:analyze-data-security-posture",
+          "capability:vpc-flow-logs-analysis",
+          "capability:3-efficient"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "2fae0cbe-1508-484d-9681-9550e1e1d335",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+              "score": 0.171796,
+              "metadata": {
+                "provider": "aws",
+                "capability_id": "network-segmentation-vpcs-public-private-networks",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:4-optimized",
+              "score": 0.15339,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "4-optimized",
+                "domain": "",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.150432,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "capability_id": "analyze-data-security-posture",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:vpc-flow-logs-analysis",
+              "score": 0.150276,
+              "metadata": {
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "vpc-flow-logs-analysis",
+                "doc_type": "maturity_capability",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:3-efficient",
+              "score": 0.148071,
+              "metadata": {
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "capability_id": "3-efficient",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "network_segmentation",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.171796,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.15339
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:network-segmentation-vpcs-public-private-networks",
+              "capability:4-optimized",
+              "capability:analyze-data-security-posture",
+              "capability:vpc-flow-logs-analysis",
+              "capability:3-efficient"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 6,
+      "case_id": "maturity_paraphrase_1",
+      "category": "paraphrase",
+      "query": "practice to stop public access to resources",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2280.66,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+      "top_ids": [
+        "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+        "capability:limit-network-access-using-security-groups",
+        "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+        "capability:block-public-access",
+        "capability:network-segmentation-vpcs-public-private-networks"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "block_public_access",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+          "capability:limit-network-access-using-security-groups",
+          "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+          "capability:block-public-access",
+          "capability:network-segmentation-vpcs-public-private-networks"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "a24cfa02-d360-4f8f-950b-a51799821c13",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+              "score": 0.173272,
+              "metadata": {
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "capability_id": "cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:limit-network-access-using-security-groups",
+              "score": 0.172864,
+              "metadata": {
+                "source_type": "official_doc",
+                "capability_id": "limit-network-access-using-security-groups",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": "",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+              "score": 0.172846,
+              "metadata": {
+                "capability_id": "permission-guardrails-organizational-policies-with-scps-and-rcps",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:block-public-access",
+              "score": 0.171882,
+              "metadata": {
+                "domain": "",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "block-public-access",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+              "score": 0.169226,
+              "metadata": {
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "capability_id": "network-segmentation-vpcs-public-private-networks",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "practice to stop public access to resources",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.173272,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.172864
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+              "capability:limit-network-access-using-security-groups",
+              "capability:permission-guardrails-organizational-policies-with-scps-and-rcps",
+              "capability:block-public-access",
+              "capability:network-segmentation-vpcs-public-private-networks"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 7,
+      "case_id": "maturity_paraphrase_2",
+      "category": "paraphrase",
+      "query": "ability to record and monitor api activity",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2240.23,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:audit-api-calls",
+      "top_ids": [
+        "capability:audit-api-calls",
+        "capability:security-orchestration-and-ticketing",
+        "capability:automate-evidence-gathering-for-compliance-audit-reports",
+        "capability:vpc-flow-logs-analysis",
+        "capability:act-on-critical-security-findings"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "audit_api_calls",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:audit-api-calls",
+          "capability:security-orchestration-and-ticketing",
+          "capability:automate-evidence-gathering-for-compliance-audit-reports",
+          "capability:vpc-flow-logs-analysis",
+          "capability:act-on-critical-security-findings"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "1984cc9f-5e75-4b90-8164-058857271112",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:audit-api-calls",
+              "score": 0.19059,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "capability_id": "audit-api-calls",
+                "source_type": "official_doc",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:security-orchestration-and-ticketing",
+              "score": 0.182759,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "security-orchestration-and-ticketing",
+                "provider": "aws",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:automate-evidence-gathering-for-compliance-audit-reports",
+              "score": 0.173808,
+              "metadata": {
+                "domain": "",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "automate-evidence-gathering-for-compliance-audit-reports",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:vpc-flow-logs-analysis",
+              "score": 0.172538,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "capability_id": "vpc-flow-logs-analysis",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:act-on-critical-security-findings",
+              "score": 0.168084,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "capability_id": "act-on-critical-security-findings",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "ability to record and monitor api activity",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.19059,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.182759
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:audit-api-calls",
+              "capability:security-orchestration-and-ticketing",
+              "capability:automate-evidence-gathering-for-compliance-audit-reports",
+              "capability:vpc-flow-logs-analysis",
+              "capability:act-on-critical-security-findings"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 8,
+      "case_id": "maturity_paraphrase_3",
+      "category": "paraphrase",
+      "query": "capability for recovering data from backups",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2263.96,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:data-backups",
+      "top_ids": [
+        "capability:data-backups",
+        "capability:disaster-recovery-plan",
+        "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+        "capability:multi-region-disaster-recovery-automation",
+        "capability:analyze-data-security-posture"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "data_backups",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:data-backups",
+          "capability:disaster-recovery-plan",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:multi-region-disaster-recovery-automation",
+          "capability:analyze-data-security-posture"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "bc0e5221-296e-40e5-9d0e-f90e475d18e4",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:data-backups",
+              "score": 0.207949,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "data-backups"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:disaster-recovery-plan",
+              "score": 0.1905,
+              "metadata": {
+                "provider": "aws",
+                "capability_id": "disaster-recovery-plan",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "score": 0.184941,
+              "metadata": {
+                "source_type": "official_doc",
+                "provider": "aws",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "sharing-security-tasks-and-responsibility-raci-matrix"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:multi-region-disaster-recovery-automation",
+              "score": 0.175831,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "multi-region-disaster-recovery-automation",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.162369,
+              "metadata": {
+                "provider": "aws",
+                "domain": "",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "analyze-data-security-posture",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "capability for recovering data from backups",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.207949,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.1905
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:data-backups",
+              "capability:disaster-recovery-plan",
+              "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "capability:multi-region-disaster-recovery-automation",
+              "capability:analyze-data-security-posture"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 9,
+      "case_id": "maturity_paraphrase_4",
+      "category": "paraphrase",
+      "query": "protect stored data with encryption",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2244.14,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:data-encryption-at-rest",
+      "top_ids": [
+        "capability:data-encryption-at-rest",
+        "capability:encryption-in-transit",
+        "capability:generative-ai-data-protection-with-amazon-bedrock",
+        "capability:data-backups",
+        "capability:analyze-data-security-posture"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "encryption_at_rest",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:data-encryption-at-rest",
+          "capability:encryption-in-transit",
+          "capability:generative-ai-data-protection-with-amazon-bedrock",
+          "capability:data-backups",
+          "capability:analyze-data-security-posture"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "0d3aed84-4716-4749-b9c3-65ea151b3fab",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:data-encryption-at-rest",
+              "score": 0.196325,
+              "metadata": {
+                "capability_id": "data-encryption-at-rest",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:encryption-in-transit",
+              "score": 0.182963,
+              "metadata": {
+                "capability_id": "encryption-in-transit",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:generative-ai-data-protection-with-amazon-bedrock",
+              "score": 0.179039,
+              "metadata": {
+                "capability_id": "generative-ai-data-protection-with-amazon-bedrock",
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:data-backups",
+              "score": 0.173704,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "capability_id": "data-backups",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.170409,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "domain": "",
+                "provider": "aws",
+                "capability_id": "analyze-data-security-posture",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "protect stored data with encryption",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.196325,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.182963
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:data-encryption-at-rest",
+              "capability:encryption-in-transit",
+              "capability:generative-ai-data-protection-with-amazon-bedrock",
+              "capability:data-backups",
+              "capability:analyze-data-security-posture"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 10,
+      "case_id": "maturity_paraphrase_5",
+      "category": "paraphrase",
+      "query": "separate networks to reduce exposure",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2286.04,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+      "top_ids": [
+        "capability:network-segmentation-vpcs-public-private-networks",
+        "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+        "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+        "capability:achieve-redundancy-using-multiple-availability-zones",
+        "capability:set-up-multi-account-management-with-aws-control-tower"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "network_segmentation",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:network-segmentation-vpcs-public-private-networks",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+          "capability:achieve-redundancy-using-multiple-availability-zones",
+          "capability:set-up-multi-account-management-with-aws-control-tower"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "31610cc1-769e-419a-a22f-005c8e1ca9f2",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+              "score": 0.18698,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "capability_id": "network-segmentation-vpcs-public-private-networks",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "score": 0.164573,
+              "metadata": {
+                "capability_id": "sharing-security-tasks-and-responsibility-raci-matrix",
+                "source_type": "official_doc",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+              "score": 0.160757,
+              "metadata": {
+                "provider": "aws",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "advanced-ddos-mitigation-layer-7-aws-shield",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:achieve-redundancy-using-multiple-availability-zones",
+              "score": 0.158412,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "achieve-redundancy-using-multiple-availability-zones",
+                "provider": "aws",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:set-up-multi-account-management-with-aws-control-tower",
+              "score": 0.15768,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "capability_id": "set-up-multi-account-management-with-aws-control-tower",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "separate networks to reduce exposure",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.18698,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.164573
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:network-segmentation-vpcs-public-private-networks",
+              "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+              "capability:achieve-redundancy-using-multiple-availability-zones",
+              "capability:set-up-multi-account-management-with-aws-control-tower"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 11,
+      "case_id": "maturity_semantic_hard_1",
+      "category": "semantic_hard",
+      "query": "control internet-facing access to storage services",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2278.25,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:limit-network-access-using-security-groups",
+      "top_ids": [
+        "capability:limit-network-access-using-security-groups",
+        "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+        "capability:encryption-in-transit",
+        "capability:analyze-data-security-posture",
+        "capability:outbound-traffic-control"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "block_public_access",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:limit-network-access-using-security-groups",
+          "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+          "capability:encryption-in-transit",
+          "capability:analyze-data-security-posture",
+          "capability:outbound-traffic-control"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "b60f1723-c1d8-44e8-8219-b16839435f9e",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:limit-network-access-using-security-groups",
+              "score": 0.173958,
+              "metadata": {
+                "domain": "",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "capability_id": "limit-network-access-using-security-groups",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+              "score": 0.172379,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "advanced-ddos-mitigation-layer-7-aws-shield",
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:encryption-in-transit",
+              "score": 0.17223,
+              "metadata": {
+                "domain": "",
+                "capability_id": "encryption-in-transit",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.172141,
+              "metadata": {
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "capability_id": "analyze-data-security-posture",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:outbound-traffic-control",
+              "score": 0.171121,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "provider": "aws",
+                "capability_id": "outbound-traffic-control",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "control internet-facing access to storage services",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.173958,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.172379
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:limit-network-access-using-security-groups",
+              "capability:advanced-ddos-mitigation-layer-7-aws-shield",
+              "capability:encryption-in-transit",
+              "capability:analyze-data-security-posture",
+              "capability:outbound-traffic-control"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 12,
+      "case_id": "maturity_semantic_hard_2",
+      "category": "semantic_hard",
+      "query": "know who called cloud apis and when",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2252.94,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:audit-api-calls",
+      "top_ids": [
+        "capability:audit-api-calls",
+        "capability:analyze-data-security-posture",
+        "capability:formation-of-a-blue-team-incident-response-team",
+        "capability:evaluate-cloud-security-posture-aws-security-hub",
+        "capability:use-infrastructure-as-code"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "audit_api_calls",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:audit-api-calls",
+          "capability:analyze-data-security-posture",
+          "capability:formation-of-a-blue-team-incident-response-team",
+          "capability:evaluate-cloud-security-posture-aws-security-hub",
+          "capability:use-infrastructure-as-code"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "4bd6b7a1-6f74-437a-9f09-5e14bc62322f",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:audit-api-calls",
+              "score": 0.19257,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "audit-api-calls",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": "",
+                "provider": "aws",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.174545,
+              "metadata": {
+                "provider": "aws",
+                "capability_id": "analyze-data-security-posture",
+                "source_name": "aws_security_maturity_model",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:formation-of-a-blue-team-incident-response-team",
+              "score": 0.171376,
+              "metadata": {
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "formation-of-a-blue-team-incident-response-team",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:evaluate-cloud-security-posture-aws-security-hub",
+              "score": 0.170386,
+              "metadata": {
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "capability_id": "evaluate-cloud-security-posture-aws-security-hub",
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:use-infrastructure-as-code",
+              "score": 0.170255,
+              "metadata": {
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "domain": "",
+                "index_version": "rag-v2-2026-03-17",
+                "capability_id": "use-infrastructure-as-code"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "know who called cloud apis and when",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.19257,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.174545
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:audit-api-calls",
+              "capability:analyze-data-security-posture",
+              "capability:formation-of-a-blue-team-incident-response-team",
+              "capability:evaluate-cloud-security-posture-aws-security-hub",
+              "capability:use-infrastructure-as-code"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 13,
+      "case_id": "maturity_semantic_hard_3",
+      "category": "semantic_hard",
+      "query": "restore critical information after loss or corruption",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2360.77,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+      "top_ids": [
+        "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+        "capability:disaster-recovery-plan",
+        "capability:evaluate-resilience-posture-aws-resilience-hub",
+        "capability:multi-region-disaster-recovery-automation",
+        "capability:forming-a-chaos-engineering-team"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "data_backups",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:disaster-recovery-plan",
+          "capability:evaluate-resilience-posture-aws-resilience-hub",
+          "capability:multi-region-disaster-recovery-automation",
+          "capability:forming-a-chaos-engineering-team"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "db60ec55-8e7c-4ff2-a06c-46ac225d88c4",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "score": 0.178151,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "domain": "",
+                "capability_id": "sharing-security-tasks-and-responsibility-raci-matrix",
+                "provider": "aws",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:disaster-recovery-plan",
+              "score": 0.173135,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "domain": "",
+                "capability_id": "disaster-recovery-plan"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:evaluate-resilience-posture-aws-resilience-hub",
+              "score": 0.169401,
+              "metadata": {
+                "domain": "",
+                "source_type": "official_doc",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "capability_id": "evaluate-resilience-posture-aws-resilience-hub",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:multi-region-disaster-recovery-automation",
+              "score": 0.1682,
+              "metadata": {
+                "domain": "",
+                "capability_id": "multi-region-disaster-recovery-automation",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "provider": "aws",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:forming-a-chaos-engineering-team",
+              "score": 0.166268,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "capability_id": "forming-a-chaos-engineering-team",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "restore critical information after loss or corruption",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.178151,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.173135
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "capability:disaster-recovery-plan",
+              "capability:evaluate-resilience-posture-aws-resilience-hub",
+              "capability:multi-region-disaster-recovery-automation",
+              "capability:forming-a-chaos-engineering-team"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 14,
+      "case_id": "maturity_semantic_hard_4",
+      "category": "semantic_hard",
+      "query": "make stolen storage media unreadable",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2287.98,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+      "top_ids": [
+        "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+        "capability:analyze-data-security-posture",
+        "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+        "capability:data-encryption-at-rest",
+        "capability:disaster-recovery-plan"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "encryption_at_rest",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+          "capability:analyze-data-security-posture",
+          "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+          "capability:data-encryption-at-rest",
+          "capability:disaster-recovery-plan"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "f11d2c97-0b8f-4432-9a45-e4d0ab9b1ffd",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+              "score": 0.166589,
+              "metadata": {
+                "capability_id": "cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:analyze-data-security-posture",
+              "score": 0.159344,
+              "metadata": {
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "capability_id": "analyze-data-security-posture",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "doc_type": "maturity_capability",
+                "domain": ""
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "score": 0.159011,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "sharing-security-tasks-and-responsibility-raci-matrix",
+                "provider": "aws",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:data-encryption-at-rest",
+              "score": 0.158972,
+              "metadata": {
+                "capability_id": "data-encryption-at-rest",
+                "source_name": "aws_security_maturity_model",
+                "doc_type": "maturity_capability",
+                "source_type": "official_doc",
+                "domain": "",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:disaster-recovery-plan",
+              "score": 0.157392,
+              "metadata": {
+                "provider": "aws",
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "capability_id": "disaster-recovery-plan",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "make stolen storage media unreadable",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.166589,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.159344
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:cleanup-unused-and-unintended-external-access-using-iam-access-analyzer-or-ciem-solutions",
+              "capability:analyze-data-security-posture",
+              "capability:sharing-security-tasks-and-responsibility-raci-matrix",
+              "capability:data-encryption-at-rest",
+              "capability:disaster-recovery-plan"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    },
+    {
+      "case_index": 15,
+      "case_id": "maturity_semantic_hard_5",
+      "category": "semantic_hard",
+      "query": "limit blast radius by isolating network zones",
+      "http_status": 200,
+      "response_status": "success",
+      "latency_ms": 2249.43,
+      "hit_top1": false,
+      "hit_top3": false,
+      "hit_top5": false,
+      "top1_doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+      "top_ids": [
+        "capability:network-segmentation-vpcs-public-private-networks",
+        "capability:achieve-redundancy-using-multiple-availability-zones",
+        "capability:multi-region-disaster-recovery-automation",
+        "capability:threat-intelligence",
+        "capability:select-the-region-s-where-you-want-to-operate-and-block-the-rest"
+      ],
+      "top1_service": null,
+      "expected_doc_id": null,
+      "expected_capability_id": "network_segmentation",
+      "expected_service": null,
+      "top1_correct_service": null,
+      "confidence": "low",
+      "review_recommended": true,
+      "warnings": [],
+      "verification": {},
+      "index_version": "rag-v2-2026-03-17",
+      "diagnostics": {
+        "retrieval_mode": "hybrid",
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities",
+        "lexical_candidate_count": 0,
+        "vector_candidate_count": 15,
+        "top_lexical_doc_ids": [],
+        "top_vector_doc_ids": [
+          "capability:network-segmentation-vpcs-public-private-networks",
+          "capability:achieve-redundancy-using-multiple-availability-zones",
+          "capability:multi-region-disaster-recovery-automation",
+          "capability:threat-intelligence",
+          "capability:select-the-region-s-where-you-want-to-operate-and-block-the-rest"
+        ],
+        "used_vector": true,
+        "used_hybrid": true,
+        "vector_error": null
+      },
+      "raw_response": {
+        "request_id": "c29c2d7a-fbcf-4b6b-a05f-cfd494b439d2",
+        "status": "success",
+        "data": {
+          "results": [
+            {
+              "doc_id": "capability:network-segmentation-vpcs-public-private-networks",
+              "score": 0.17928,
+              "metadata": {
+                "capability_id": "network-segmentation-vpcs-public-private-networks",
+                "domain": "",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:achieve-redundancy-using-multiple-availability-zones",
+              "score": 0.173241,
+              "metadata": {
+                "capability_id": "achieve-redundancy-using-multiple-availability-zones",
+                "domain": "",
+                "doc_type": "maturity_capability",
+                "source_name": "aws_security_maturity_model",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "index_version": "rag-v2-2026-03-17"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:multi-region-disaster-recovery-automation",
+              "score": 0.162927,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "domain": "",
+                "source_name": "aws_security_maturity_model",
+                "source_type": "official_doc",
+                "provider": "aws",
+                "capability_id": "multi-region-disaster-recovery-automation",
+                "doc_type": "maturity_capability"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:threat-intelligence",
+              "score": 0.161008,
+              "metadata": {
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model",
+                "capability_id": "threat-intelligence",
+                "doc_type": "maturity_capability",
+                "domain": "",
+                "source_type": "official_doc"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            },
+            {
+              "doc_id": "capability:select-the-region-s-where-you-want-to-operate-and-block-the-rest",
+              "score": 0.161006,
+              "metadata": {
+                "capability_id": "select-the-region-s-where-you-want-to-operate-and-block-the-rest",
+                "domain": "",
+                "provider": "aws",
+                "source_type": "official_doc",
+                "doc_type": "maturity_capability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "aws_security_maturity_model"
+              },
+              "matched_by": [
+                "vector"
+              ]
+            }
+          ]
+        },
+        "meta": {
+          "index_version": "rag-v2-2026-03-17",
+          "confidence": "low",
+          "review_recommended": true,
+          "diagnostics": {
+            "service": "maturity_search",
+            "normalized_query": "limit blast radius by isolating network zones",
+            "query_type": "maturity_search",
+            "filters": {
+              "provider": "aws",
+              "doc_type": "maturity_capability"
+            },
+            "verification": {
+              "valid": true,
+              "warnings": [
+                "ambiguous_top_results"
+              ],
+              "diagnostics": {
+                "result_count": 5,
+                "top1_score": 0.17928,
+                "top1_doc_type": "maturity_capability",
+                "top2_score": 0.173241
+              }
+            },
+            "readiness": {
+              "lexical_ready": true,
+              "lexical_ready_by_corpus": {
+                "prowler_checks": true,
+                "maturity_capabilities": false,
+                "maturity_mappings": false
+              },
+              "vector_ready": true,
+              "mapping_ready": true,
+              "minimal_ready": true,
+              "hybrid_ready": true
+            },
+            "degraded": false,
+            "routing": {
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
+              "service": null,
+              "domain": null,
+              "provider": "aws",
+              "doc_types": [
+                "maturity_capability"
+              ],
+              "corpus": "maturity_capabilities",
+              "collection_name": "maturity_capabilities"
+            },
+            "corpus": "maturity_capabilities",
+            "collection_name": "maturity_capabilities",
+            "retrieval_mode": "hybrid",
+            "lexical_candidate_count": 0,
+            "vector_candidate_count": 15,
+            "top_lexical_doc_ids": [],
+            "top_vector_doc_ids": [
+              "capability:network-segmentation-vpcs-public-private-networks",
+              "capability:achieve-redundancy-using-multiple-availability-zones",
+              "capability:multi-region-disaster-recovery-automation",
+              "capability:threat-intelligence",
+              "capability:select-the-region-s-where-you-want-to-operate-and-block-the-rest"
+            ],
+            "used_vector": true,
+            "used_hybrid": true,
+            "vector_error": null
+          }
+        },
+        "errors": [
+          {
+            "code": "RETRIEVAL_WARNING",
+            "message": "ambiguous_top_results",
+            "details": null
+          }
+        ]
+      }
+    }
+  ]
+}
