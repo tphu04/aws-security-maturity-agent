@@ -48,25 +48,14 @@ class RetrievalPipeline:
 
     def __init__(
         self,
-        lexical_index: Optional[BM25Index] = None,
+        lexical_indexes: Optional[Dict[str, BM25Index]] = None,
         vector_index: Optional[VectorIndex] = None,
         router: Optional[SemanticRouter] = None,
-        lexical_indexes: Optional[Dict[str, BM25Index]] = None,
         manifest: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.vector_index = vector_index
         self.router = router or SemanticRouter()
-
-        # Backward compatibility:
-        # - old runtime may still pass lexical_index=...
-        # - new runtime should prefer lexical_indexes={corpus: BM25Index()}
-        if lexical_indexes is not None:
-            self.lexical_indexes = lexical_indexes
-        else:
-            self.lexical_indexes = {}
-            if lexical_index is not None:
-                self.lexical_indexes[CORPUS_PROWLER_CHECKS] = lexical_index
-
+        self.lexical_indexes = lexical_indexes or {}
         self._mapping_index: Optional[Dict[str, List[Dict[str, Any]]]] = None
         self._manifest = manifest if manifest is not None else self._load_manifest()
 
@@ -223,6 +212,8 @@ class RetrievalPipeline:
                 lexical_results=lexical_results,
                 vector_results=vector_results,
                 top_k=top_k,
+                preferred_service=route.service,
+                preferred_domain=route.domain,
             )
 
         mapping_exists = None
@@ -358,11 +349,16 @@ class RetrievalPipeline:
             return []
 
         exact_check_id = route.exact_check_id if route.requires_exact_lookup else None
+        exact_capability_id = (
+            route.exact_capability_id if route.requires_exact_lookup else None
+        )
+
         return lexical_index.query(
             query_text=route.normalized_query,
             top_k=top_k,
             filters=route.filters,
             exact_check_id=exact_check_id,
+            exact_capability_id=exact_capability_id,
         )
 
     def _run_vector(self, route: RouteDecision, top_k: int) -> List[Dict[str, Any]]:
@@ -394,6 +390,40 @@ class RetrievalPipeline:
             return CORPUS_PROWLER_CHECKS
         return CORPUS_PROWLER_CHECKS
 
+    @staticmethod
+    def _rrf(rank: int, k: int = 60) -> float:
+        return 1.0 / (k + rank)
+
+    @staticmethod
+    def _has_exact_match(item: Dict[str, Any]) -> bool:
+        matched_by = set(item.get("matched_by", []) or [])
+        return bool(
+            {"exact_check_id", "exact_capability_id", "exact_mapping"} & matched_by
+        )
+
+    @staticmethod
+    def _metadata_bonus(
+        metadata: Dict[str, Any],
+        preferred_service: Optional[str],
+        preferred_domain: Optional[str],
+    ) -> float:
+        bonus = 0.0
+
+        if preferred_service:
+            actual_service = str(metadata.get("service", "") or "").strip().lower()
+            if (
+                actual_service
+                and actual_service == str(preferred_service).strip().lower()
+            ):
+                bonus += 0.03
+
+        if preferred_domain:
+            actual_domain = str(metadata.get("domain", "") or "").strip().lower()
+            if actual_domain and actual_domain == str(preferred_domain).strip().lower():
+                bonus += 0.02
+
+        return bonus
+
     def _collection_name_for_route(self, route: RouteDecision) -> Optional[str]:
         corpus_name = self._corpus_for_route(route)
 
@@ -416,60 +446,97 @@ class RetrievalPipeline:
         lexical_results: List[Dict[str, Any]],
         vector_results: List[Dict[str, Any]],
         top_k: int,
+        preferred_service: Optional[str] = None,
+        preferred_domain: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         merged: Dict[str, Dict[str, Any]] = {}
 
-        # BM25-first weighting because technical IDs / exact lexical terms matter a lot here
-        lexical_weight = 0.60
-        vector_weight = 0.40
+        lexical_rank_map = {
+            item["doc_id"]: rank
+            for rank, item in enumerate(lexical_results, start=1)
+            if item.get("doc_id")
+        }
+        vector_rank_map = {
+            item["doc_id"]: rank
+            for rank, item in enumerate(vector_results, start=1)
+            if item.get("doc_id")
+        }
 
-        for item in lexical_results:
-            doc_id = item["doc_id"]
+        all_doc_ids = list(
+            dict.fromkeys(list(lexical_rank_map.keys()) + list(vector_rank_map.keys()))
+        )
+
+        for doc_id in all_doc_ids:
+            lexical_item = next(
+                (x for x in lexical_results if x.get("doc_id") == doc_id), None
+            )
+            vector_item = next(
+                (x for x in vector_results if x.get("doc_id") == doc_id), None
+            )
+
+            metadata = {}
+            matched_by = set()
+
+            if lexical_item:
+                metadata = lexical_item.get("metadata", {}) or {}
+                matched_by.update(lexical_item.get("matched_by", []) or [])
+
+            if vector_item:
+                if not metadata:
+                    metadata = vector_item.get("metadata", {}) or {}
+                matched_by.update(vector_item.get("matched_by", []) or [])
+
+            score = 0.0
+
+            if doc_id in lexical_rank_map:
+                score += self._rrf(lexical_rank_map[doc_id])
+
+            if doc_id in vector_rank_map:
+                score += self._rrf(vector_rank_map[doc_id])
+
+            if lexical_item and self._has_exact_match(lexical_item):
+                score += 1.0
+
+            if vector_item and self._has_exact_match(vector_item):
+                score += 1.0
+
+            score += self._metadata_bonus(
+                metadata=metadata,
+                preferred_service=preferred_service,
+                preferred_domain=preferred_domain,
+            )
+
             merged[doc_id] = {
                 "doc_id": doc_id,
-                "score": float(item.get("score", 0.0)) * lexical_weight,
-                "metadata": item.get("metadata", {}) or {},
-                "matched_by": list(item.get("matched_by", []) or []),
-                "_raw_lexical_score": float(item.get("score", 0.0)),
-                "_raw_vector_score": 0.0,
+                "score": score,
+                "metadata": metadata,
+                "matched_by": sorted(matched_by),
+                "_lexical_rank": lexical_rank_map.get(doc_id),
+                "_vector_rank": vector_rank_map.get(doc_id),
+                "_raw_lexical_score": float(
+                    (lexical_item or {}).get("score", 0.0) or 0.0
+                ),
+                "_raw_vector_score": float(
+                    (vector_item or {}).get("score", 0.0) or 0.0
+                ),
             }
 
-        for item in vector_results:
-            doc_id = item["doc_id"]
-            vector_score = float(item.get("score", 0.0))
-            if doc_id not in merged:
-                merged[doc_id] = {
-                    "doc_id": doc_id,
-                    "score": vector_score * vector_weight,
-                    "metadata": item.get("metadata", {}) or {},
-                    "matched_by": list(item.get("matched_by", []) or []),
-                    "_raw_lexical_score": 0.0,
-                    "_raw_vector_score": vector_score,
-                }
-            else:
-                merged[doc_id]["score"] += vector_score * vector_weight
-                merged[doc_id]["_raw_vector_score"] = vector_score
-                merged[doc_id]["matched_by"] = sorted(
-                    set(merged[doc_id]["matched_by"])
-                    | set(item.get("matched_by", []) or [])
-                )
-                if not merged[doc_id]["metadata"] and item.get("metadata"):
-                    merged[doc_id]["metadata"] = item["metadata"]
+        ranked = sorted(
+            merged.values(),
+            key=lambda item: (
+                float(item.get("score", 0.0)),
+                1 if self._has_exact_match(item) else 0,
+                1 if item.get("_vector_rank") is not None else 0,
+                1 if item.get("_lexical_rank") is not None else 0,
+            ),
+            reverse=True,
+        )
 
-        results = list(merged.values())
-        results.sort(key=lambda x: x["score"], reverse=True)
+        for item in ranked:
+            item.pop("_lexical_rank", None)
+            item.pop("_vector_rank", None)
 
-        trimmed: List[Dict[str, Any]] = []
-        for item in results[: max(1, top_k)]:
-            trimmed.append(
-                {
-                    "doc_id": item["doc_id"],
-                    "score": round(float(item["score"]), 6),
-                    "metadata": item.get("metadata", {}) or {},
-                    "matched_by": item.get("matched_by", []) or [],
-                }
-            )
-        return trimmed
+        return ranked[:top_k]
 
     # ----------------------------
     # Mapping support

@@ -1,6 +1,6 @@
 {
   "index_version": "rag-v2-2026-03-17",
-  "built_at": "2026-03-17T07:18:23+00:00",
+  "built_at": "2026-03-17T17:36:14+00:00",
   "embedding_model": "intfloat/multilingual-e5-base",
   "storage_layout": "multi_corpus",
   "corpora": {

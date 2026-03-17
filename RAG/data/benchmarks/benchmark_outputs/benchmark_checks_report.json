@@ -10,13 +10,13 @@
     "total_cases": 20,
     "http_200": 20,
     "hit_expected_in_top1": 7,
-    "hit_expected_in_top3": 7,
-    "hit_expected_in_top5": 9,
-    "top1_correct_service": 14,
+    "hit_expected_in_top3": 12,
+    "hit_expected_in_top5": 13,
+    "top1_correct_service": 16,
     "vector_visible_cases": 20,
     "hybrid_visible_cases": 20,
-    "average_latency_ms": 2298.62,
-    "median_latency_ms": 2264.95,
+    "average_latency_ms": 2344.15,
+    "median_latency_ms": 2322.74,
     "by_category": {
       "exact": {
         "total": 5,
@@ -25,77 +25,37 @@
         "top5": 5,
         "vector": 5,
         "hybrid": 5,
-        "avg_latency_ms": 2320.4
+        "avg_latency_ms": 2343.0
       },
       "paraphrase": {
         "total": 5,
         "top1": 0,
-        "top3": 0,
-        "top5": 1,
+        "top3": 3,
+        "top5": 4,
         "vector": 5,
         "hybrid": 5,
-        "avg_latency_ms": 2341.59
+        "avg_latency_ms": 2316.36
       },
       "risk": {
         "total": 5,
         "top1": 2,
-        "top3": 2,
+        "top3": 3,
         "top5": 3,
         "vector": 5,
         "hybrid": 5,
-        "avg_latency_ms": 2270.99
+        "avg_latency_ms": 2367.87
       },
       "semantic_hard": {
         "total": 5,
         "top1": 0,
-        "top3": 0,
-        "top5": 0,
+        "top3": 1,
+        "top5": 1,
         "vector": 5,
         "hybrid": 5,
-        "avg_latency_ms": 2261.48
+        "avg_latency_ms": 2349.36
       }
     },
     "failures_top5": [
-      {
-        "case_id": "checks_paraphrase_1",
-        "category": "paraphrase",
-        "query": "how to prevent an s3 bucket from being publicly exposed",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_capability_id": null,
-        "top_ids": [
-          "check:s3_bucket_object_lock",
-          "check:s3_bucket_default_encryption",
-          "check:s3_bucket_public_write_acl",
-          "check:s3_bucket_public_list_acl",
-          "check:s3_bucket_shadow_resource_vulnerability"
-        ],
-        "confidence": "low",
-        "warnings": [],
-        "diagnostics": {
-          "retrieval_mode": "hybrid",
-          "corpus": "prowler_checks",
-          "collection_name": "prowler_checks",
-          "lexical_candidate_count": 15,
-          "vector_candidate_count": 15,
-          "top_lexical_doc_ids": [
-            "check:s3_bucket_object_lock",
-            "check:s3_bucket_default_encryption",
-            "check:s3_bucket_public_write_acl",
-            "check:s3_bucket_public_list_acl",
-            "check:s3_bucket_shadow_resource_vulnerability"
-          ],
-          "top_vector_doc_ids": [
-            "check:s3_bucket_shadow_resource_vulnerability",
-            "check:s3_bucket_cross_account_access",
-            "check:s3_bucket_public_write_acl",
-            "check:s3_bucket_public_list_acl",
-            "check:s3_bucket_level_public_access_block"
-          ],
-          "used_vector": true,
-          "used_hybrid": true,
-          "vector_error": null
-        }
-      },
       {
         "case_id": "checks_paraphrase_2",
         "category": "paraphrase",
@@ -103,11 +63,11 @@
         "expected_doc_id": "check:s3_account_level_public_access_blocks",
         "expected_capability_id": null,
         "top_ids": [
-          "check:s3_bucket_public_access",
           "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_access",
           "check:s3_bucket_public_list_acl",
-          "check:cloudtrail_s3_dataevents_write_enabled",
-          "check:cloudtrail_s3_dataevents_read_enabled"
+          "check:ec2_ebs_snapshot_account_block_public_access",
+          "check:s3_access_point_public_access_block"
         ],
         "confidence": "low",
         "warnings": [],
@@ -137,86 +97,6 @@
         }
       },
       {
-        "case_id": "checks_paraphrase_3",
-        "category": "paraphrase",
-        "query": "prevent anonymous users from accessing bucket data",
-        "expected_doc_id": "check:s3_bucket_policy_public_write_access",
-        "expected_capability_id": null,
-        "top_ids": [
-          "check:iam_administrator_access_with_mfa",
-          "check:ecr_repositories_not_publicly_accessible",
-          "check:s3_bucket_object_lock",
-          "check:s3_bucket_level_public_access_block",
-          "check:s3_bucket_default_encryption"
-        ],
-        "confidence": "low",
-        "warnings": [],
-        "diagnostics": {
-          "retrieval_mode": "hybrid",
-          "corpus": "prowler_checks",
-          "collection_name": "prowler_checks",
-          "lexical_candidate_count": 15,
-          "vector_candidate_count": 15,
-          "top_lexical_doc_ids": [
-            "check:iam_administrator_access_with_mfa",
-            "check:ecr_repositories_not_publicly_accessible",
-            "check:s3_bucket_object_lock",
-            "check:s3_bucket_default_encryption",
-            "check:s3_bucket_level_public_access_block"
-          ],
-          "top_vector_doc_ids": [
-            "check:s3_bucket_public_list_acl",
-            "check:s3_bucket_public_write_acl",
-            "check:s3_bucket_cross_account_access",
-            "check:s3_bucket_public_access",
-            "check:s3_bucket_policy_public_write_access"
-          ],
-          "used_vector": true,
-          "used_hybrid": true,
-          "vector_error": null
-        }
-      },
-      {
-        "case_id": "checks_paraphrase_4",
-        "category": "paraphrase",
-        "query": "make sure users cannot upload files publicly to s3",
-        "expected_doc_id": "check:s3_bucket_public_write_acl",
-        "expected_capability_id": null,
-        "top_ids": [
-          "check:s3_bucket_policy_public_write_access",
-          "check:s3_access_point_public_access_block",
-          "check:s3_bucket_default_encryption",
-          "check:s3_bucket_lifecycle_enabled",
-          "check:s3_bucket_level_public_access_block"
-        ],
-        "confidence": "low",
-        "warnings": [],
-        "diagnostics": {
-          "retrieval_mode": "hybrid",
-          "corpus": "prowler_checks",
-          "collection_name": "prowler_checks",
-          "lexical_candidate_count": 15,
-          "vector_candidate_count": 15,
-          "top_lexical_doc_ids": [
-            "check:s3_bucket_policy_public_write_access",
-            "check:s3_bucket_default_encryption",
-            "check:s3_bucket_lifecycle_enabled",
-            "check:s3_access_point_public_access_block",
-            "check:s3_bucket_event_notifications_enabled"
-          ],
-          "top_vector_doc_ids": [
-            "check:s3_bucket_public_write_acl",
-            "check:s3_bucket_public_list_acl",
-            "check:s3_bucket_policy_public_write_access",
-            "check:s3_bucket_public_access",
-            "check:s3_bucket_cross_account_access"
-          ],
-          "used_vector": true,
-          "used_hybrid": true,
-          "vector_error": null
-        }
-      },
-      {
         "case_id": "checks_risk_1",
         "category": "risk",
         "query": "misconfiguration that allows public reads on cloud storage",
@@ -224,10 +104,10 @@
         "expected_capability_id": null,
         "top_ids": [
           "check:storagegateway_gateway_fault_tolerant",
+          "check:ec2_ebs_snapshot_account_block_public_access",
           "check:storagegateway_fileshare_encryption_enabled",
-          "check:mq_broker_not_publicly_accessible",
           "check:ecr_repositories_not_publicly_accessible",
-          "check:efs_mount_target_not_publicly_accessible"
+          "check:workspaces_volume_encryption_enabled"
         ],
         "confidence": "low",
         "warnings": [],
@@ -263,11 +143,11 @@
         "expected_doc_id": "check:s3_account_level_public_access_blocks",
         "expected_capability_id": null,
         "top_ids": [
+          "check:s3_bucket_public_write_acl",
           "check:glue_data_catalogs_not_publicly_accessible",
-          "check:cloudwatch_log_group_not_publicly_accessible",
-          "check:emr_cluster_publicly_accesible",
-          "check:secretsmanager_not_publicly_accessible",
-          "check:ec2_ami_public"
+          "check:s3_bucket_public_list_acl",
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:s3_bucket_public_access"
         ],
         "confidence": "low",
         "warnings": [],
@@ -303,11 +183,11 @@
         "expected_doc_id": "check:s3_account_level_public_access_blocks",
         "expected_capability_id": null,
         "top_ids": [
-          "check:s3_bucket_object_lock",
-          "check:cloudfront_distributions_default_root_object",
+          "check:s3_bucket_public_write_acl",
           "check:storagegateway_fileshare_encryption_enabled",
-          "check:cloudtrail_s3_dataevents_write_enabled",
-          "check:networkfirewall_deletion_protection"
+          "check:s3_bucket_public_list_acl",
+          "check:ec2_ebs_snapshot_account_block_public_access",
+          "check:ec2_ebs_volume_encryption"
         ],
         "confidence": "low",
         "warnings": [],
@@ -344,10 +224,10 @@
         "expected_capability_id": null,
         "top_ids": [
           "check:s3_bucket_shadow_resource_vulnerability",
-          "check:cloudtrail_log_file_validation_enabled",
-          "check:awslambda_function_no_secrets_in_code",
-          "check:s3_bucket_secure_transport_policy",
-          "check:mq_broker_not_publicly_accessible"
+          "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+          "check:cloudtrail_s3_dataevents_read_enabled",
+          "check:s3_bucket_policy_public_write_access",
+          "check:s3_bucket_public_access"
         ],
         "confidence": "low",
         "warnings": [],
@@ -377,57 +257,17 @@
         }
       },
       {
-        "case_id": "checks_semantic_hard_3",
-        "category": "semantic_hard",
-        "query": "prevent world-readable bucket objects",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_capability_id": null,
-        "top_ids": [
-          "check:s3_bucket_object_lock",
-          "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-          "check:s3_bucket_default_encryption",
-          "check:s3_bucket_policy_public_write_access",
-          "check:s3_bucket_public_list_acl"
-        ],
-        "confidence": "low",
-        "warnings": [],
-        "diagnostics": {
-          "retrieval_mode": "hybrid",
-          "corpus": "prowler_checks",
-          "collection_name": "prowler_checks",
-          "lexical_candidate_count": 15,
-          "vector_candidate_count": 15,
-          "top_lexical_doc_ids": [
-            "check:s3_bucket_object_lock",
-            "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-            "check:s3_bucket_default_encryption",
-            "check:s3_bucket_policy_public_write_access",
-            "check:s3_bucket_public_write_acl"
-          ],
-          "top_vector_doc_ids": [
-            "check:s3_bucket_level_public_access_block",
-            "check:s3_bucket_shadow_resource_vulnerability",
-            "check:s3_bucket_policy_public_write_access",
-            "check:s3_bucket_public_list_acl",
-            "check:s3_bucket_public_write_acl"
-          ],
-          "used_vector": true,
-          "used_hybrid": true,
-          "vector_error": null
-        }
-      },
-      {
         "case_id": "checks_semantic_hard_4",
         "category": "semantic_hard",
         "query": "stop unauthenticated access to bucket contents",
         "expected_doc_id": "check:s3_bucket_policy_public_write_access",
         "expected_capability_id": null,
         "top_ids": [
-          "check:cognito_identity_pool_guest_access_disabled",
-          "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
           "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
-          "check:s3_bucket_level_public_access_block",
-          "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+          "check:s3_bucket_public_write_acl",
+          "check:s3_bucket_public_list_acl",
+          "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+          "check:s3_bucket_acl_prohibited"
         ],
         "confidence": "low",
         "warnings": [],
@@ -463,11 +303,11 @@
         "expected_doc_id": "check:s3_account_level_public_access_blocks",
         "expected_capability_id": null,
         "top_ids": [
+          "check:efs_encryption_at_rest_enabled",
           "check:storagegateway_fileshare_encryption_enabled",
           "check:storagegateway_gateway_fault_tolerant",
-          "check:efs_encryption_at_rest_enabled",
-          "check:efs_not_publicly_accessible",
-          "check:efs_multi_az_enabled"
+          "check:ec2_ebs_snapshot_account_block_public_access",
+          "check:s3_bucket_public_write_acl"
         ],
         "confidence": "low",
         "warnings": [],
@@ -506,7 +346,7 @@
       "query": "s3_bucket_level_public_access_block",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2587.47,
+      "latency_ms": 2485.13,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -549,13 +389,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "885ad4ba-3e34-4510-9103-ae9bb3807aaf",
+        "request_id": "e3a01337-d501-4799-a950-30c48f0a6be3",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 0.874157,
+              "score": 1.0625224748810154,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -570,71 +410,81 @@
               "matched_by": [
                 "exact_check_id",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 1.0,
+              "_raw_vector_score": 0.6853930254752981
             },
             {
               "doc_id": "check:s3_account_level_public_access_blocks",
-              "score": 0.284218,
+              "score": 0.04639344262295082,
               "metadata": {
-                "source_name": "prowler_checks",
-                "service": "s3",
-                "index_version": "rag-v2-2026-03-17",
-                "source_type": "official_check_metadata",
-                "check_id": "s3_account_level_public_access_blocks",
                 "provider": "aws",
-                "doc_type": "prowler_check"
+                "doc_type": "prowler_check",
+                "check_id": "s3_account_level_public_access_blocks",
+                "source_type": "official_check_metadata",
+                "index_version": "rag-v2-2026-03-17",
+                "service": "s3",
+                "source_name": "prowler_checks"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.7105456220892521
             },
             {
               "doc_id": "check:s3_access_point_public_access_block",
-              "score": 0.269287,
+              "score": 0.04587301587301587,
               "metadata": {
-                "doc_type": "prowler_check",
-                "source_name": "prowler_checks",
                 "provider": "aws",
+                "source_type": "official_check_metadata",
                 "check_id": "s3_access_point_public_access_block",
+                "doc_type": "prowler_check",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.673218352794699
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.045625,
+              "metadata": {
+                "source_type": "official_check_metadata",
+                "doc_type": "prowler_check",
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "source_name": "prowler_checks",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.670855182396526
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.045384615384615384,
+              "metadata": {
+                "check_id": "s3_bucket_public_write_acl",
+                "provider": "aws",
+                "source_name": "prowler_checks",
+                "doc_type": "prowler_check",
                 "index_version": "rag-v2-2026-03-17",
                 "source_type": "official_check_metadata",
                 "service": "s3"
               },
               "matched_by": [
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_public_access",
-              "score": 0.268342,
-              "metadata": {
-                "source_name": "prowler_checks",
-                "service": "s3",
-                "check_id": "s3_bucket_public_access",
-                "index_version": "rag-v2-2026-03-17",
-                "source_type": "official_check_metadata",
-                "doc_type": "prowler_check",
-                "provider": "aws"
-              },
-              "matched_by": [
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 0.26833,
-              "metadata": {
-                "source_type": "official_check_metadata",
-                "index_version": "rag-v2-2026-03-17",
-                "check_id": "s3_bucket_public_write_acl",
-                "service": "s3",
-                "provider": "aws",
-                "source_name": "prowler_checks",
-                "doc_type": "prowler_check"
-              },
-              "matched_by": [
-                "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6708262127855583
             }
           ]
         },
@@ -656,18 +506,18 @@
               "warnings": [],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 0.874157,
+                "top1_score": 1.0625224748810154,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 0.284218
+                "top2_score": 0.04639344262295082
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -717,7 +567,7 @@
       "query": "s3_account_level_public_access_blocks",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2258.97,
+      "latency_ms": 2290.58,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -760,13 +610,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "4e686d84-2282-4576-8908-b1e5ae666668",
+        "request_id": "3dcfe7ef-5f6f-4083-ad1b-c02718b390ac",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_account_level_public_access_blocks",
-              "score": 0.857928,
+              "score": 1.0627868852459017,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -781,71 +631,81 @@
               "matched_by": [
                 "exact_check_id",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 1.0,
+              "_raw_vector_score": 0.6448211538894664
             },
             {
               "doc_id": "check:s3_access_point_public_access_block",
-              "score": 0.246886,
+              "score": 0.046129032258064515,
               "metadata": {
-                "source_name": "prowler_checks",
-                "service": "s3",
-                "source_type": "official_check_metadata",
                 "check_id": "s3_access_point_public_access_block",
+                "source_type": "official_check_metadata",
                 "provider": "aws",
                 "doc_type": "prowler_check",
-                "index_version": "rag-v2-2026-03-17"
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "service": "s3"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6172150264190162
             },
             {
               "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 0.235361,
+              "score": 0.04587301587301587,
               "metadata": {
-                "service": "s3",
                 "doc_type": "prowler_check",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata",
-                "check_id": "s3_bucket_level_public_access_block",
+                "service": "s3",
                 "provider": "aws",
+                "source_name": "prowler_checks",
+                "check_id": "s3_bucket_level_public_access_block",
+                "source_type": "official_check_metadata",
                 "index_version": "rag-v2-2026-03-17"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.5884032497874838
             },
             {
               "doc_id": "check:s3_multi_region_access_point_public_access_block",
-              "score": 0.234838,
+              "score": 0.045625,
               "metadata": {
                 "source_name": "prowler_checks",
-                "source_type": "official_check_metadata",
-                "index_version": "rag-v2-2026-03-17",
-                "check_id": "s3_multi_region_access_point_public_access_block",
-                "service": "s3",
                 "doc_type": "prowler_check",
-                "provider": "aws"
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "source_type": "official_check_metadata",
+                "service": "s3",
+                "check_id": "s3_multi_region_access_point_public_access_block"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.5870944054686246
             },
             {
               "doc_id": "check:s3_bucket_cross_account_access",
-              "score": 0.231176,
+              "score": 0.045384615384615384,
               "metadata": {
-                "source_type": "official_check_metadata",
                 "service": "s3",
-                "check_id": "s3_bucket_cross_account_access",
                 "index_version": "rag-v2-2026-03-17",
-                "provider": "aws",
+                "check_id": "s3_bucket_cross_account_access",
                 "doc_type": "prowler_check",
+                "source_type": "official_check_metadata",
+                "provider": "aws",
                 "source_name": "prowler_checks"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.577939097846513
             }
           ]
         },
@@ -867,18 +727,18 @@
               "warnings": [],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 0.857928,
+                "top1_score": 1.0627868852459017,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 0.246886
+                "top2_score": 0.046129032258064515
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -928,7 +788,7 @@
       "query": "s3_bucket_public_write_acl",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2239.15,
+      "latency_ms": 2286.19,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -971,13 +831,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "e09398fc-4646-4164-9a94-2acad687cf85",
+        "request_id": "036a59a6-e42b-4b5f-a81f-54a9d29c9e5b",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 0.885845,
+              "score": 1.0627868852459017,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -992,71 +852,81 @@
               "matched_by": [
                 "exact_check_id",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 1.0,
+              "_raw_vector_score": 0.7146127132850509
             },
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 0.27185,
+              "score": 0.046129032258064515,
               "metadata": {
                 "doc_type": "prowler_check",
-                "index_version": "rag-v2-2026-03-17",
                 "source_type": "official_check_metadata",
-                "provider": "aws",
-                "service": "s3",
+                "check_id": "s3_bucket_public_list_acl",
                 "source_name": "prowler_checks",
-                "check_id": "s3_bucket_public_list_acl"
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "service": "s3"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6796247816272204
             },
             {
               "doc_id": "check:s3_bucket_public_access",
-              "score": 0.266613,
+              "score": 0.04587301587301587,
               "metadata": {
+                "check_id": "s3_bucket_public_access",
                 "index_version": "rag-v2-2026-03-17",
+                "service": "s3",
                 "source_type": "official_check_metadata",
                 "provider": "aws",
-                "doc_type": "prowler_check",
-                "check_id": "s3_bucket_public_access",
                 "source_name": "prowler_checks",
-                "service": "s3"
+                "doc_type": "prowler_check"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6665319609024862
             },
             {
               "doc_id": "check:s3_bucket_acl_prohibited",
-              "score": 0.266318,
+              "score": 0.045625,
               "metadata": {
                 "source_name": "prowler_checks",
-                "check_id": "s3_bucket_acl_prohibited",
-                "index_version": "rag-v2-2026-03-17",
-                "service": "s3",
                 "provider": "aws",
+                "source_type": "official_check_metadata",
+                "check_id": "s3_bucket_acl_prohibited",
                 "doc_type": "prowler_check",
-                "source_type": "official_check_metadata"
+                "service": "s3",
+                "index_version": "rag-v2-2026-03-17"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.665795195351645
             },
             {
               "doc_id": "check:s3_bucket_policy_public_write_access",
-              "score": 0.260396,
+              "score": 0.045384615384615384,
               "metadata": {
-                "source_type": "official_check_metadata",
-                "provider": "aws",
-                "doc_type": "prowler_check",
-                "source_name": "prowler_checks",
                 "index_version": "rag-v2-2026-03-17",
                 "check_id": "s3_bucket_policy_public_write_access",
-                "service": "s3"
+                "service": "s3",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata",
+                "doc_type": "prowler_check",
+                "provider": "aws"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.650988864070293
             }
           ]
         },
@@ -1078,18 +948,18 @@
               "warnings": [],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 0.885845,
+                "top1_score": 1.0627868852459017,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 0.27185
+                "top2_score": 0.046129032258064515
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -1139,7 +1009,7 @@
       "query": "s3_bucket_public_list_acl",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2267.07,
+      "latency_ms": 2321.04,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -1182,13 +1052,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "67e0f740-cd97-4961-8c4c-39efcbab9053",
+        "request_id": "302721c1-1af9-419e-8f3b-d8a46a5bcb1f",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 0.881559,
+              "score": 1.0627868852459017,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -1203,71 +1073,81 @@
               "matched_by": [
                 "exact_check_id",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 1.0,
+              "_raw_vector_score": 0.703897470012684
             },
             {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 0.277722,
+              "score": 0.046129032258064515,
               "metadata": {
-                "check_id": "s3_bucket_public_write_acl",
-                "provider": "aws",
+                "doc_type": "prowler_check",
                 "index_version": "rag-v2-2026-03-17",
                 "service": "s3",
                 "source_name": "prowler_checks",
+                "check_id": "s3_bucket_public_write_acl",
                 "source_type": "official_check_metadata",
-                "doc_type": "prowler_check"
+                "provider": "aws"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6943053786971792
             },
             {
               "doc_id": "check:s3_bucket_public_access",
-              "score": 0.273395,
+              "score": 0.04587301587301587,
               "metadata": {
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata",
-                "index_version": "rag-v2-2026-03-17",
-                "doc_type": "prowler_check",
                 "check_id": "s3_bucket_public_access",
                 "provider": "aws",
-                "service": "s3"
+                "doc_type": "prowler_check",
+                "service": "s3",
+                "index_version": "rag-v2-2026-03-17"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.68348844638501
             },
             {
               "doc_id": "check:s3_bucket_acl_prohibited",
-              "score": 0.262182,
+              "score": 0.045625,
               "metadata": {
                 "doc_type": "prowler_check",
-                "source_name": "prowler_checks",
+                "service": "s3",
                 "index_version": "rag-v2-2026-03-17",
                 "check_id": "s3_bucket_acl_prohibited",
                 "provider": "aws",
-                "service": "s3",
-                "source_type": "official_check_metadata"
+                "source_type": "official_check_metadata",
+                "source_name": "prowler_checks"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6554538118268177
             },
             {
               "doc_id": "check:s3_bucket_policy_public_write_access",
-              "score": 0.250962,
+              "score": 0.045384615384615384,
               "metadata": {
-                "index_version": "rag-v2-2026-03-17",
                 "check_id": "s3_bucket_policy_public_write_access",
-                "doc_type": "prowler_check",
                 "source_name": "prowler_checks",
+                "index_version": "rag-v2-2026-03-17",
                 "service": "s3",
+                "doc_type": "prowler_check",
                 "provider": "aws",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6274051545735198
             }
           ]
         },
@@ -1289,18 +1169,18 @@
               "warnings": [],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 0.881559,
+                "top1_score": 1.0627868852459017,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 0.277722
+                "top2_score": 0.046129032258064515
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -1350,7 +1230,7 @@
       "query": "s3_bucket_policy_public_write_access",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2249.36,
+      "latency_ms": 2332.06,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -1393,13 +1273,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "3a2019b5-f268-463c-ac3a-99957a53f13c",
+        "request_id": "e22f9271-2d86-445b-82cf-6fa1c04379c5",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_policy_public_write_access",
-              "score": 0.89307,
+              "score": 1.0627868852459017,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -1414,71 +1294,81 @@
               "matched_by": [
                 "exact_check_id",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 1.0,
+              "_raw_vector_score": 0.732674439952563
             },
             {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 0.278589,
+              "score": 0.046129032258064515,
               "metadata": {
-                "doc_type": "prowler_check",
-                "check_id": "s3_bucket_public_write_acl",
-                "service": "s3",
+                "source_name": "prowler_checks",
                 "index_version": "rag-v2-2026-03-17",
-                "provider": "aws",
+                "doc_type": "prowler_check",
+                "service": "s3",
+                "check_id": "s3_bucket_public_write_acl",
                 "source_type": "official_check_metadata",
-                "source_name": "prowler_checks"
+                "provider": "aws"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6964735115358764
             },
             {
               "doc_id": "check:s3_bucket_acl_prohibited",
-              "score": 0.269576,
+              "score": 0.04587301587301587,
               "metadata": {
-                "service": "s3",
-                "index_version": "rag-v2-2026-03-17",
                 "provider": "aws",
                 "doc_type": "prowler_check",
+                "index_version": "rag-v2-2026-03-17",
                 "check_id": "s3_bucket_acl_prohibited",
-                "source_type": "official_check_metadata",
-                "source_name": "prowler_checks"
-              },
-              "matched_by": [
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_account_level_public_access_blocks",
-              "score": 0.268427,
-              "metadata": {
-                "index_version": "rag-v2-2026-03-17",
-                "source_type": "official_check_metadata",
                 "source_name": "prowler_checks",
-                "doc_type": "prowler_check",
-                "check_id": "s3_account_level_public_access_blocks",
-                "provider": "aws",
+                "source_type": "official_check_metadata",
                 "service": "s3"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6739394984298882
             },
             {
-              "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 0.260123,
+              "doc_id": "check:s3_account_level_public_access_blocks",
+              "score": 0.045625,
               "metadata": {
-                "check_id": "s3_bucket_level_public_access_block",
                 "source_name": "prowler_checks",
+                "index_version": "rag-v2-2026-03-17",
+                "service": "s3",
                 "provider": "aws",
                 "source_type": "official_check_metadata",
-                "doc_type": "prowler_check",
-                "service": "s3",
-                "index_version": "rag-v2-2026-03-17"
+                "check_id": "s3_account_level_public_access_blocks",
+                "doc_type": "prowler_check"
               },
               "matched_by": [
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6710684542608958
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 0.045384615384615384,
+              "metadata": {
+                "source_type": "official_check_metadata",
+                "service": "s3",
+                "check_id": "s3_bucket_level_public_access_block",
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.6503064079376905
             }
           ]
         },
@@ -1500,18 +1390,18 @@
               "warnings": [],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 0.89307,
+                "top1_score": 1.0627868852459017,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 0.278589
+                "top2_score": 0.046129032258064515
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -1561,17 +1451,17 @@
       "query": "how to prevent an s3 bucket from being publicly exposed",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2227.6,
+      "latency_ms": 2324.45,
       "hit_top1": false,
       "hit_top3": false,
-      "hit_top5": false,
-      "top1_doc_id": "check:s3_bucket_object_lock",
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_shadow_resource_vulnerability",
       "top_ids": [
-        "check:s3_bucket_object_lock",
-        "check:s3_bucket_default_encryption",
+        "check:s3_bucket_shadow_resource_vulnerability",
         "check:s3_bucket_public_write_acl",
         "check:s3_bucket_public_list_acl",
-        "check:s3_bucket_shadow_resource_vulnerability"
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_public_access"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
@@ -1608,88 +1498,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "3fa959e3-1d37-46c6-9a1c-3b02987e1186",
+        "request_id": "f628ac76-7668-4e66-be0a-c22bf70d7d33",
         "status": "success",
         "data": {
           "results": [
             {
-              "doc_id": "check:s3_bucket_object_lock",
-              "score": 12.110611,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_object_lock",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_default_encryption",
-              "score": 11.809138,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_default_encryption",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 8.734278,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_public_write_acl",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 8.734208,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_public_list_acl",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
               "doc_id": "check:s3_bucket_shadow_resource_vulnerability",
-              "score": 8.500295,
+              "score": 0.06177805800756621,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -1704,7 +1519,93 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 13.760209516134342,
+              "_raw_vector_score": 0.6104226848879816
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.06174603174603174,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 14.163893730758652,
+              "_raw_vector_score": 0.5898549282136774
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.06125,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_list_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 14.163893730758652,
+              "_raw_vector_score": 0.5896792245366383
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 0.060536130536130536,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 13.444554505193995,
+              "_raw_vector_score": 0.5860229953343012
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.05985739750445633,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 13.15857034199383,
+              "_raw_vector_score": 0.5826005227328651
             }
           ]
         },
@@ -1722,25 +1623,25 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 12.110611,
+                "top1_score": 0.06177805800756621,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 11.809138
+                "top2_score": 0.06174603174603174
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -1749,8 +1650,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "how_to_prevent_an_s3_bucket_from_being_publicly_exposed",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": "s3",
               "domain": null,
               "provider": "aws",
@@ -1787,12 +1688,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -1805,17 +1706,17 @@
       "query": "stop public access to aws object storage",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2565.17,
+      "latency_ms": 2438.52,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
-      "top1_doc_id": "check:s3_bucket_public_access",
+      "top1_doc_id": "check:s3_bucket_public_write_acl",
       "top_ids": [
-        "check:s3_bucket_public_access",
         "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_access",
         "check:s3_bucket_public_list_acl",
-        "check:cloudtrail_s3_dataevents_write_enabled",
-        "check:cloudtrail_s3_dataevents_read_enabled"
+        "check:ec2_ebs_snapshot_account_block_public_access",
+        "check:s3_access_point_public_access_block"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
@@ -1852,32 +1753,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "24fce6bc-119c-4741-93ce-1104dd7f15cf",
+        "request_id": "bcf96bc5-ce3a-4f3b-ada1-5269a62136bf",
         "status": "success",
         "data": {
           "results": [
             {
-              "doc_id": "check:s3_bucket_public_access",
-              "score": 5.767355,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_public_access",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 5.636929,
+              "score": 0.03200204813108039,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -1892,11 +1774,34 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 9.035715772653397,
+              "_raw_vector_score": 0.5387490688338206
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.03128054740957967,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 9.26003802109425,
+              "_raw_vector_score": 0.5283304377931434
             },
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 5.63605,
+              "score": 0.03125,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -1911,43 +1816,51 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 9.035715772653397,
+              "_raw_vector_score": 0.5365523458488038
             },
             {
-              "doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
-              "score": 5.575335,
+              "doc_id": "check:ec2_ebs_snapshot_account_block_public_access",
+              "score": 0.03028233151183971,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "cloudtrail",
+                "service": "ec2",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "cloudtrail_s3_dataevents_write_enabled",
+                "check_id": "ec2_ebs_snapshot_account_block_public_access",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 6.465219351824809,
+              "_raw_vector_score": 0.5572307691183541
             },
             {
-              "doc_id": "check:cloudtrail_s3_dataevents_read_enabled",
-              "score": 5.074205,
+              "doc_id": "check:s3_access_point_public_access_block",
+              "score": 0.029386529386529386,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "cloudtrail",
+                "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "cloudtrail_s3_dataevents_read_enabled",
+                "check_id": "s3_access_point_public_access_block",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 6.420606329813061,
+              "_raw_vector_score": 0.5379215200657822
             }
           ]
         },
@@ -1964,24 +1877,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 5.767355,
+                "top1_score": 0.03200204813108039,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 5.636929
+                "top2_score": 0.03128054740957967
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -1990,8 +1903,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "stop_public_access_to_aws_object_storage",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -2028,12 +1941,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -2046,23 +1959,23 @@
       "query": "prevent anonymous users from accessing bucket data",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2312.97,
+      "latency_ms": 2271.67,
       "hit_top1": false,
-      "hit_top3": false,
-      "hit_top5": false,
-      "top1_doc_id": "check:iam_administrator_access_with_mfa",
+      "hit_top3": true,
+      "hit_top5": true,
+      "top1_doc_id": "check:s3_bucket_level_public_access_block",
       "top_ids": [
-        "check:iam_administrator_access_with_mfa",
-        "check:ecr_repositories_not_publicly_accessible",
-        "check:s3_bucket_object_lock",
         "check:s3_bucket_level_public_access_block",
-        "check:s3_bucket_default_encryption"
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_shadow_resource_vulnerability",
+        "check:s3_bucket_public_list_acl",
+        "check:iam_administrator_access_with_mfa"
       ],
-      "top1_service": "iam",
+      "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_policy_public_write_access",
       "expected_capability_id": null,
       "expected_service": "s3",
-      "top1_correct_service": false,
+      "top1_correct_service": true,
       "confidence": "low",
       "review_recommended": true,
       "warnings": [],
@@ -2093,67 +2006,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "64db1d6a-3521-4848-9721-b4e2a83d7615",
+        "request_id": "bf510067-6e81-4cb7-989a-6aad60e89501",
         "status": "success",
         "data": {
           "results": [
             {
-              "doc_id": "check:iam_administrator_access_with_mfa",
-              "score": 6.91549,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "iam",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "iam_administrator_access_with_mfa",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
-            },
-            {
-              "doc_id": "check:ecr_repositories_not_publicly_accessible",
-              "score": 6.531966,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "ecr",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "ecr_repositories_not_publicly_accessible",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_object_lock",
-              "score": 6.223919,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_object_lock",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
-            },
-            {
               "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 6.010405,
+              "score": 0.030090497737556562,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2168,25 +2027,89 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 9.692406782821063,
+              "_raw_vector_score": 0.4874023639044398
             },
             {
-              "doc_id": "check:s3_bucket_default_encryption",
-              "score": 5.839038,
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 0.030090497737556562,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_bucket_default_encryption",
+                "check_id": "s3_bucket_policy_public_write_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.527339875226541,
+              "_raw_vector_score": 0.5035497443835882
+            },
+            {
+              "doc_id": "check:s3_bucket_shadow_resource_vulnerability",
+              "score": 0.03007688828584351,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_shadow_resource_vulnerability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.769239138353353,
+              "_raw_vector_score": 0.5021412184781519
+            },
+            {
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.01639344262295082,
+              "metadata": {
+                "index_version": "rag-v2-2026-03-17",
+                "provider": "aws",
+                "service": "s3",
+                "doc_type": "prowler_check",
+                "source_type": "official_check_metadata",
+                "source_name": "prowler_checks",
+                "check_id": "s3_bucket_public_list_acl"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.5181257363207857
+            },
+            {
+              "doc_id": "check:iam_administrator_access_with_mfa",
+              "score": 0.01639344262295082,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "iam",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "iam_administrator_access_with_mfa",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
                 "bm25"
-              ]
+              ],
+              "_raw_lexical_score": 11.52581659129936,
+              "_raw_vector_score": 0.0
             }
           ]
         },
@@ -2203,24 +2126,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 6.91549,
+                "top1_score": 0.030090497737556562,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 6.531966
+                "top2_score": 0.030090497737556562
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -2229,8 +2152,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "prevent_anonymous_users_from_accessing_bucket_data",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -2267,12 +2190,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -2285,17 +2208,17 @@
       "query": "make sure users cannot upload files publicly to s3",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2331.22,
+      "latency_ms": 2273.34,
       "hit_top1": false,
-      "hit_top3": false,
-      "hit_top5": false,
+      "hit_top3": true,
+      "hit_top5": true,
       "top1_doc_id": "check:s3_bucket_policy_public_write_access",
       "top_ids": [
         "check:s3_bucket_policy_public_write_access",
         "check:s3_access_point_public_access_block",
+        "check:s3_bucket_public_write_acl",
         "check:s3_bucket_default_encryption",
-        "check:s3_bucket_lifecycle_enabled",
-        "check:s3_bucket_level_public_access_block"
+        "check:s3_bucket_public_list_acl"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_public_write_acl",
@@ -2332,13 +2255,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "cd5127b8-32d8-4a38-bdf9-6cab86cc1a44",
+        "request_id": "996edfb7-c461-403f-b4e4-9c5c8aa17d9d",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_policy_public_write_access",
-              "score": 4.913625,
+              "score": 0.062266458495966695,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2353,11 +2276,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 7.81810246540207,
+              "_raw_vector_score": 0.5569092000401253
             },
             {
               "doc_id": "check:s3_access_point_public_access_block",
-              "score": 3.376247,
+              "score": 0.06077651515151515,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2372,11 +2297,34 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 5.269144359724207,
+              "_raw_vector_score": 0.5369003942744504
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.060282331511839704,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 5.068821937899514,
+              "_raw_vector_score": 0.5720933542581021
             },
             {
               "doc_id": "check:s3_bucket_default_encryption",
-              "score": 3.373113,
+              "score": 0.059827662395050815,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2391,18 +2339,20 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 5.3093968929079525,
+              "_raw_vector_score": 0.46868696259670856
             },
             {
-              "doc_id": "check:s3_bucket_lifecycle_enabled",
-              "score": 3.361718,
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.059827662395050815,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_bucket_lifecycle_enabled",
+                "check_id": "s3_bucket_public_list_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
@@ -2410,26 +2360,9 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 3.310662,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_level_public_access_block",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
+              ],
+              "_raw_lexical_score": 5.068821937899514,
+              "_raw_vector_score": 0.5580338595166432
             }
           ]
         },
@@ -2447,25 +2380,25 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 4.913625,
+                "top1_score": 0.062266458495966695,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 3.376247
+                "top2_score": 0.06077651515151515
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -2474,8 +2407,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "make_sure_users_cannot_upload_files_publicly_to_s3",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": "s3",
               "domain": null,
               "provider": "aws",
@@ -2512,12 +2445,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -2530,17 +2463,17 @@
       "query": "avoid public listing of files in object storage buckets",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2271.0,
+      "latency_ms": 2273.83,
       "hit_top1": false,
-      "hit_top3": false,
+      "hit_top3": true,
       "hit_top5": true,
       "top1_doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
       "top_ids": [
         "check:cloudtrail_s3_dataevents_write_enabled",
-        "check:s3_bucket_object_lock",
-        "check:cloudtrail_s3_dataevents_read_enabled",
         "check:s3_bucket_public_list_acl",
-        "check:s3_bucket_public_write_acl"
+        "check:s3_bucket_public_write_acl",
+        "check:cloudtrail_s3_dataevents_read_enabled",
+        "check:s3_bucket_public_access"
       ],
       "top1_service": "cloudtrail",
       "expected_doc_id": "check:s3_bucket_public_list_acl",
@@ -2577,13 +2510,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "02e7c4df-9678-4110-a8ed-82ce4a709f00",
+        "request_id": "2500d2da-5c3f-484c-bd1d-68eb9ceffacb",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
-              "score": 9.450082,
+              "score": 0.032266458495966696,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2598,49 +2531,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_object_lock",
-              "score": 8.289306,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_object_lock",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:cloudtrail_s3_dataevents_read_enabled",
-              "score": 8.138442,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cloudtrail",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cloudtrail_s3_dataevents_read_enabled",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
+              ],
+              "_raw_lexical_score": 15.44657591782264,
+              "_raw_vector_score": 0.4553422160607231
             },
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 7.549169,
+              "score": 0.03177805800756621,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2655,11 +2552,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 12.269232972527059,
+              "_raw_vector_score": 0.4690734256955545
             },
             {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 7.547333,
+              "score": 0.031754032258064516,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2674,7 +2573,51 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 12.269232972527059,
+              "_raw_vector_score": 0.4644824065399344
+            },
+            {
+              "doc_id": "check:cloudtrail_s3_dataevents_read_enabled",
+              "score": 0.03125763125763126,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_s3_dataevents_read_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 13.262083524138324,
+              "_raw_vector_score": 0.4529802460279892
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.030303030303030304,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 12.226513690385797,
+              "_raw_vector_score": 0.44815500722696405
             }
           ]
         },
@@ -2691,24 +2634,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 9.450082,
+                "top1_score": 0.032266458495966696,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 8.289306
+                "top2_score": 0.03177805800756621
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -2717,8 +2660,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "avoid_public_listing_of_files_in_object_storage_buckets",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -2755,12 +2698,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -2773,17 +2716,17 @@
       "query": "misconfiguration that allows public reads on cloud storage",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2269.33,
+      "latency_ms": 2307.58,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
       "top1_doc_id": "check:storagegateway_gateway_fault_tolerant",
       "top_ids": [
         "check:storagegateway_gateway_fault_tolerant",
+        "check:ec2_ebs_snapshot_account_block_public_access",
         "check:storagegateway_fileshare_encryption_enabled",
-        "check:mq_broker_not_publicly_accessible",
         "check:ecr_repositories_not_publicly_accessible",
-        "check:efs_mount_target_not_publicly_accessible"
+        "check:workspaces_volume_encryption_enabled"
       ],
       "top1_service": "storagegateway",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
@@ -2820,13 +2763,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "371b4e0d-8d0e-4863-8b51-13e7319c5e4c",
+        "request_id": "d93f64df-592a-46d8-a3d3-d845c25b56c4",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:storagegateway_gateway_fault_tolerant",
-              "score": 5.897784,
+              "score": 0.03177805800756621,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2841,11 +2784,34 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 9.51269315420232,
+              "_raw_vector_score": 0.47542109944779093
+            },
+            {
+              "doc_id": "check:ec2_ebs_snapshot_account_block_public_access",
+              "score": 0.03128054740957967,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "ec2",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "ec2_ebs_snapshot_account_block_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 7.470909126056454,
+              "_raw_vector_score": 0.4797763036395556
             },
             {
               "doc_id": "check:storagegateway_fileshare_encryption_enabled",
-              "score": 5.678675,
+              "score": 0.030017921146953404,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2860,29 +2826,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:mq_broker_not_publicly_accessible",
-              "score": 5.460432,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "mq",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "mq_broker_not_publicly_accessible",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
+              ],
+              "_raw_lexical_score": 9.153421214007716,
+              "_raw_vector_score": 0.4665551531614357
             },
             {
               "doc_id": "check:ecr_repositories_not_publicly_accessible",
-              "score": 5.117428,
+              "score": 0.029083245521601686,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -2897,25 +2847,30 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 8.218020042696862,
+              "_raw_vector_score": 0.4665394028150064
             },
             {
-              "doc_id": "check:efs_mount_target_not_publicly_accessible",
-              "score": 4.943889,
+              "doc_id": "check:workspaces_volume_encryption_enabled",
+              "score": 0.027031963470319637,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "efs",
+                "service": "workspaces",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "efs_mount_target_not_publicly_accessible",
+                "check_id": "workspaces_volume_encryption_enabled",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 6.508201021605544,
+              "_raw_vector_score": 0.46481843251622534
             }
           ]
         },
@@ -2932,24 +2887,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 5.897784,
+                "top1_score": 0.03177805800756621,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 5.678675
+                "top2_score": 0.03128054740957967
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -2958,8 +2913,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "misconfiguration_that_allows_public_reads_on_cloud_storage",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -2996,12 +2951,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -3014,23 +2969,23 @@
       "query": "security issue when bucket objects are publicly accessible",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2239.19,
+      "latency_ms": 2509.36,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
-      "top1_doc_id": "check:glue_data_catalogs_not_publicly_accessible",
+      "top1_doc_id": "check:s3_bucket_public_write_acl",
       "top_ids": [
+        "check:s3_bucket_public_write_acl",
         "check:glue_data_catalogs_not_publicly_accessible",
-        "check:cloudwatch_log_group_not_publicly_accessible",
-        "check:emr_cluster_publicly_accesible",
-        "check:secretsmanager_not_publicly_accessible",
-        "check:ec2_ami_public"
+        "check:s3_bucket_public_list_acl",
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+        "check:s3_bucket_public_access"
       ],
-      "top1_service": "glue",
+      "top1_service": "s3",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
       "expected_capability_id": null,
       "expected_service": "s3",
-      "top1_correct_service": false,
+      "top1_correct_service": true,
       "confidence": "low",
       "review_recommended": true,
       "warnings": [],
@@ -3061,13 +3016,34 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "5b7ac12f-16d6-4be2-ab3a-50b41c859eb3",
+        "request_id": "51c96633-b262-41ba-8680-129889c0c0fc",
         "status": "success",
         "data": {
           "results": [
             {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.0304147465437788,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 11.573424152393635,
+              "_raw_vector_score": 0.528633999226516
+            },
+            {
               "doc_id": "check:glue_data_catalogs_not_publicly_accessible",
-              "score": 8.531829,
+              "score": 0.03009207275993712,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3082,79 +3058,69 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 13.891887262930467,
+              "_raw_vector_score": 0.4917412163170983
             },
             {
-              "doc_id": "check:cloudwatch_log_group_not_publicly_accessible",
-              "score": 8.164465,
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.029709507042253523,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "cloudwatch",
+                "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "cloudwatch_log_group_not_publicly_accessible",
+                "check_id": "s3_bucket_public_list_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 11.573424152393635,
+              "_raw_vector_score": 0.5271835556795701
             },
             {
-              "doc_id": "check:emr_cluster_publicly_accesible",
-              "score": 8.07685,
+              "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "score": 0.028484848484848488,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "emr",
+                "service": "cloudtrail",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "emr_cluster_publicly_accesible",
+                "check_id": "cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 11.254418461774133,
+              "_raw_vector_score": 0.5200422773398703
             },
             {
-              "doc_id": "check:secretsmanager_not_publicly_accessible",
-              "score": 7.949921,
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.01639344262295082,
               "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "secretsmanager",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "secretsmanager_not_publicly_accessible",
+                "service": "s3",
+                "source_type": "official_check_metadata",
                 "index_version": "rag-v2-2026-03-17",
+                "doc_type": "prowler_check",
                 "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
+                "check_id": "s3_bucket_public_access",
+                "provider": "aws"
               },
               "matched_by": [
-                "bm25"
-              ]
-            },
-            {
-              "doc_id": "check:ec2_ami_public",
-              "score": 7.394346,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "ec2",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "ec2_ami_public",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.530043142182424
             }
           ]
         },
@@ -3171,24 +3137,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 8.531829,
+                "top1_score": 0.0304147465437788,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 8.164465
+                "top2_score": 0.03009207275993712
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -3197,8 +3163,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "security_issue_when_bucket_objects_are_publicly_accessible",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -3235,12 +3201,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -3253,17 +3219,17 @@
       "query": "how to avoid accidental public exposure of files in s3",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2266.6,
+      "latency_ms": 2336.93,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
       "top1_doc_id": "check:s3_bucket_level_public_access_block",
       "top_ids": [
         "check:s3_bucket_level_public_access_block",
-        "check:s3_account_level_public_access_blocks",
         "check:s3_access_point_public_access_block",
-        "check:s3_multi_region_access_point_public_access_block",
-        "check:s3_bucket_lifecycle_enabled"
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_cross_account_access"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
@@ -3300,13 +3266,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "36f3b66f-d562-4d39-acc5-009f30c1e5ea",
+        "request_id": "a4a47b04-561b-453a-960d-0496910dfd59",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 8.536036,
+              "score": 0.06278688524590165,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3321,30 +3287,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_account_level_public_access_blocks",
-              "score": 8.403748,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_account_level_public_access_blocks",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
+              ],
+              "_raw_lexical_score": 13.886191393657459,
+              "_raw_vector_score": 0.5108039567752826
             },
             {
               "doc_id": "check:s3_access_point_public_access_block",
-              "score": 8.082751,
+              "score": 0.06174603174603174,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3359,18 +3308,20 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 13.13836395252429,
+              "_raw_vector_score": 0.4993315050045307
             },
             {
-              "doc_id": "check:s3_multi_region_access_point_public_access_block",
-              "score": 7.905999,
+              "doc_id": "check:s3_account_level_public_access_blocks",
+              "score": 0.060834914611005694,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_multi_region_access_point_public_access_block",
+                "check_id": "s3_account_level_public_access_blocks",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
@@ -3378,25 +3329,51 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 13.686137878870838,
+              "_raw_vector_score": 0.4801635780652585
             },
             {
-              "doc_id": "check:s3_bucket_lifecycle_enabled",
-              "score": 6.923593,
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.06062178588125292,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_bucket_lifecycle_enabled",
+                "check_id": "s3_bucket_public_write_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 9.609613162663187,
+              "_raw_vector_score": 0.5023802191046656
+            },
+            {
+              "doc_id": "check:s3_bucket_cross_account_access",
+              "score": 0.060536130536130536,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_cross_account_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 10.868313743704297,
+              "_raw_vector_score": 0.4836683249037692
             }
           ]
         },
@@ -3414,25 +3391,25 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 8.536036,
+                "top1_score": 0.06278688524590165,
                 "top1_doc_type": "prowler_check",
                 "top1_service": "s3",
-                "top2_score": 8.403748
+                "top2_score": 0.06174603174603174
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -3441,8 +3418,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "how_to_avoid_accidental_public_exposure_of_files_in_s3",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": "s3",
               "domain": null,
               "provider": "aws",
@@ -3479,12 +3456,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -3497,17 +3474,17 @@
       "query": "publicly writable bucket through acl misconfiguration",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2332.66,
+      "latency_ms": 2369.64,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
       "top1_doc_id": "check:s3_bucket_public_write_acl",
       "top_ids": [
         "check:s3_bucket_public_write_acl",
-        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
         "check:s3_bucket_public_list_acl",
-        "check:elb_internet_facing",
-        "check:elbv2_internet_facing"
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_shadow_resource_vulnerability"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_public_write_acl",
@@ -3544,13 +3521,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "6f6e0a6a-0ec6-4af6-b48c-a767b72dac18",
+        "request_id": "8234be5c-0875-4a6f-8024-03ab61e305f2",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 11.622577,
+              "score": 0.03278688524590164,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3565,30 +3542,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
-              "score": 9.176326,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cloudtrail",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
+              ],
+              "_raw_lexical_score": 18.990960991457793,
+              "_raw_vector_score": 0.5700006057686091
             },
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 6.935863,
+              "score": 0.031746031746031744,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3603,43 +3563,72 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 11.19911180811635,
+              "_raw_vector_score": 0.540988692878898
             },
             {
-              "doc_id": "check:elb_internet_facing",
-              "score": 6.706821,
+              "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "score": 0.03128054740957967,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "elb",
+                "service": "cloudtrail",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "elb_internet_facing",
+                "check_id": "cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 14.947118101222983,
+              "_raw_vector_score": 0.5201366109113564
             },
             {
-              "doc_id": "check:elbv2_internet_facing",
-              "score": 6.677916,
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.03128054740957967,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "elbv2",
+                "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "elbv2_internet_facing",
+                "check_id": "s3_bucket_public_access",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.982065564582363,
+              "_raw_vector_score": 0.55093438937638
+            },
+            {
+              "doc_id": "check:s3_bucket_shadow_resource_vulnerability",
+              "score": 0.029418126757516764,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_shadow_resource_vulnerability",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.449779986482005,
+              "_raw_vector_score": 0.4847147376229597
             }
           ]
         },
@@ -3656,24 +3645,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 11.622577,
+                "top1_score": 0.03278688524590164,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 9.176326
+                "top2_score": 0.031746031746031744
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -3682,8 +3671,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "publicly_writable_bucket_through_acl_misconfiguration",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -3720,12 +3709,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -3738,17 +3727,17 @@
       "query": "anyone can enumerate objects in the bucket",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2247.17,
+      "latency_ms": 2315.86,
       "hit_top1": false,
-      "hit_top3": false,
+      "hit_top3": true,
       "hit_top5": true,
       "top1_doc_id": "check:s3_bucket_policy_public_write_access",
       "top_ids": [
         "check:s3_bucket_policy_public_write_access",
-        "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-        "check:s3_bucket_object_lock",
         "check:s3_bucket_public_list_acl",
-        "check:s3_bucket_public_write_acl"
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_object_lock"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_public_list_acl",
@@ -3785,13 +3774,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "e407cb0e-1413-4ea9-aa4e-f31f7f496f5b",
+        "request_id": "f0c098cb-f383-48b6-bc5d-78b678027f90",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_policy_public_write_access",
-              "score": 7.661217,
+              "score": 0.03252247488101534,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3806,48 +3795,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-              "score": 7.436126,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cloudfront",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cloudfront_distributions_s3_origin_non_existent_bucket",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_object_lock",
-              "score": 6.95859,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_object_lock",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
+              ],
+              "_raw_lexical_score": 12.459553931384704,
+              "_raw_vector_score": 0.4637121770018305
             },
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 6.549726,
+              "score": 0.03177805800756621,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3862,11 +3816,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 10.60374484133003,
+              "_raw_vector_score": 0.4686987467742979
             },
             {
               "doc_id": "check:s3_bucket_public_write_acl",
-              "score": 6.54657,
+              "score": 0.03149801587301587,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -3881,7 +3837,51 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 10.60374484133003,
+              "_raw_vector_score": 0.46080684572669983
+            },
+            {
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.03055037313432836,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 9.706478789898519,
+              "_raw_vector_score": 0.45741191887186883
+            },
+            {
+              "doc_id": "check:s3_bucket_object_lock",
+              "score": 0.030158730158730156,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_object_lock",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 11.300833217819326,
+              "_raw_vector_score": 0.4452257090400806
             }
           ]
         },
@@ -3898,24 +3898,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 7.661217,
+                "top1_score": 0.03252247488101534,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 7.436126
+                "top2_score": 0.03177805800756621
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -3924,8 +3924,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "anyone_can_enumerate_objects_in_the_bucket",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -3962,12 +3962,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -3980,17 +3980,17 @@
       "query": "make object storage private by default",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2242.84,
+      "latency_ms": 2417.53,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
-      "top1_doc_id": "check:s3_bucket_object_lock",
+      "top1_doc_id": "check:s3_bucket_public_write_acl",
       "top_ids": [
-        "check:s3_bucket_object_lock",
-        "check:cloudfront_distributions_default_root_object",
+        "check:s3_bucket_public_write_acl",
         "check:storagegateway_fileshare_encryption_enabled",
-        "check:cloudtrail_s3_dataevents_write_enabled",
-        "check:networkfirewall_deletion_protection"
+        "check:s3_bucket_public_list_acl",
+        "check:ec2_ebs_snapshot_account_block_public_access",
+        "check:ec2_ebs_volume_encryption"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
@@ -4027,20 +4027,20 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "ca8122f7-312d-406c-88a5-d647a61916f6",
+        "request_id": "df2dbfc4-034c-471d-a507-ba92f696941d",
         "status": "success",
         "data": {
           "results": [
             {
-              "doc_id": "check:s3_bucket_object_lock",
-              "score": 6.72294,
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.0304147465437788,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_bucket_object_lock",
+                "check_id": "s3_bucket_public_write_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
@@ -4048,29 +4048,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:cloudfront_distributions_default_root_object",
-              "score": 6.434876,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cloudfront",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cloudfront_distributions_default_root_object",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
+              ],
+              "_raw_lexical_score": 7.1826593910107155,
+              "_raw_vector_score": 0.4226363077121505
             },
             {
               "doc_id": "check:storagegateway_fileshare_encryption_enabled",
-              "score": 5.867423,
+              "score": 0.030158730158730156,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -4085,43 +4069,69 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 9.50430666724204,
+              "_raw_vector_score": 0.41209626102804475
             },
             {
-              "doc_id": "check:cloudtrail_s3_dataevents_write_enabled",
-              "score": 5.44606,
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.02946912242686891,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "cloudtrail",
+                "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "cloudtrail_s3_dataevents_write_enabled",
+                "check_id": "s3_bucket_public_list_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 7.1826593910107155,
+              "_raw_vector_score": 0.41721457340066903
             },
             {
-              "doc_id": "check:networkfirewall_deletion_protection",
-              "score": 4.559443,
+              "doc_id": "check:ec2_ebs_snapshot_account_block_public_access",
+              "score": 0.02819138376017471,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "networkfirewall",
+                "service": "ec2",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "networkfirewall_deletion_protection",
+                "check_id": "ec2_ebs_snapshot_account_block_public_access",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 7.262953665990075,
+              "_raw_vector_score": 0.4050930040708703
+            },
+            {
+              "doc_id": "check:ec2_ebs_volume_encryption",
+              "score": 0.01639344262295082,
+              "metadata": {
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "check_id": "ec2_ebs_volume_encryption",
+                "service": "ec2",
+                "source_type": "official_check_metadata",
+                "source_name": "prowler_checks",
+                "doc_type": "prowler_check"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.4263503431978238
             }
           ]
         },
@@ -4138,24 +4148,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 6.72294,
+                "top1_score": 0.0304147465437788,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 6.434876
+                "top2_score": 0.030158730158730156
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -4164,8 +4174,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "make_object_storage_private_by_default",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -4202,12 +4212,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -4220,17 +4230,17 @@
       "query": "avoid outsiders browsing files in cloud buckets",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2281.56,
+      "latency_ms": 2294.77,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
       "top1_doc_id": "check:s3_bucket_shadow_resource_vulnerability",
       "top_ids": [
         "check:s3_bucket_shadow_resource_vulnerability",
-        "check:cloudtrail_log_file_validation_enabled",
-        "check:awslambda_function_no_secrets_in_code",
-        "check:s3_bucket_secure_transport_policy",
-        "check:mq_broker_not_publicly_accessible"
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+        "check:cloudtrail_s3_dataevents_read_enabled",
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_public_access"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_public_list_acl",
@@ -4267,13 +4277,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "26378632-d712-4782-a605-669413f96f3d",
+        "request_id": "8205804a-4247-4743-ae0f-697798b3d3f5",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_shadow_resource_vulnerability",
-              "score": 5.577003,
+              "score": 0.032018442622950824,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -4288,79 +4298,90 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 8.964322851413602,
+              "_raw_vector_score": 0.49602235226458474
             },
             {
-              "doc_id": "check:cloudtrail_log_file_validation_enabled",
-              "score": 4.521926,
+              "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+              "score": 0.031099324975891997,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "cloudtrail",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "cloudtrail_log_file_validation_enabled",
+                "check_id": "cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 6.046940287319497,
+              "_raw_vector_score": 0.5082315671567098
             },
             {
-              "doc_id": "check:awslambda_function_no_secrets_in_code",
-              "score": 4.261371,
+              "doc_id": "check:cloudtrail_s3_dataevents_read_enabled",
+              "score": 0.02900988017658188,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "awslambda",
+                "service": "cloudtrail",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "awslambda_function_no_secrets_in_code",
+                "check_id": "cloudtrail_s3_dataevents_read_enabled",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 6.168907878169046,
+              "_raw_vector_score": 0.4794907386342981
             },
             {
-              "doc_id": "check:s3_bucket_secure_transport_policy",
-              "score": 4.004015,
+              "doc_id": "check:s3_bucket_policy_public_write_access",
+              "score": 0.02900988017658188,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_bucket_secure_transport_policy",
+                "check_id": "s3_bucket_policy_public_write_access",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 5.896541753899449,
+              "_raw_vector_score": 0.4856615182248818
             },
             {
-              "doc_id": "check:mq_broker_not_publicly_accessible",
-              "score": 3.968471,
+              "doc_id": "check:s3_bucket_public_access",
+              "score": 0.016129032258064516,
               "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "mq",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "mq_broker_not_publicly_accessible",
-                "index_version": "rag-v2-2026-03-17",
+                "service": "s3",
                 "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
+                "source_type": "official_check_metadata",
+                "check_id": "s3_bucket_public_access",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "prowler_check",
+                "provider": "aws"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.4978347124574938
             }
           ]
         },
@@ -4377,24 +4398,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 5.577003,
+                "top1_score": 0.032018442622950824,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 4.521926
+                "top2_score": 0.031099324975891997
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -4403,8 +4424,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "avoid_outsiders_browsing_files_in_cloud_buckets",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -4441,12 +4462,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -4459,17 +4480,17 @@
       "query": "prevent world-readable bucket objects",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2260.6,
+      "latency_ms": 2401.75,
       "hit_top1": false,
-      "hit_top3": false,
-      "hit_top5": false,
+      "hit_top3": true,
+      "hit_top5": true,
       "top1_doc_id": "check:s3_bucket_object_lock",
       "top_ids": [
         "check:s3_bucket_object_lock",
-        "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-        "check:s3_bucket_default_encryption",
         "check:s3_bucket_policy_public_write_access",
-        "check:s3_bucket_public_list_acl"
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_public_write_acl"
       ],
       "top1_service": "s3",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
@@ -4506,13 +4527,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "6fe921ae-7d5f-4071-b203-37805a97f462",
+        "request_id": "99e5a5ff-c769-4711-a4e9-bbeba2d5a7ad",
         "status": "success",
         "data": {
           "results": [
             {
               "doc_id": "check:s3_bucket_object_lock",
-              "score": 9.015649,
+              "score": 0.031544957774465976,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -4527,48 +4548,13 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
-            },
-            {
-              "doc_id": "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-              "score": 7.596414,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cloudfront",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cloudfront_distributions_s3_origin_non_existent_bucket",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:s3_bucket_default_encryption",
-              "score": 7.274846,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "s3",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "s3_bucket_default_encryption",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
+              ],
+              "_raw_lexical_score": 14.711833664010786,
+              "_raw_vector_score": 0.4713732053869984
             },
             {
               "doc_id": "check:s3_bucket_policy_public_write_access",
-              "score": 6.320904,
+              "score": 0.03149801587301587,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -4583,11 +4569,34 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 10.217142272980311,
+              "_raw_vector_score": 0.47654744697757145
+            },
+            {
+              "doc_id": "check:s3_bucket_level_public_access_block",
+              "score": 0.03131881575727918,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_level_public_access_block",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.269502603010785,
+              "_raw_vector_score": 0.4777464757930284
             },
             {
               "doc_id": "check:s3_bucket_public_list_acl",
-              "score": 5.464749,
+              "score": 0.030776515151515152,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -4602,7 +4611,30 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 8.792171309476865,
+              "_raw_vector_score": 0.4736166433583016
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.03076923076923077,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_public_write_acl",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.792171309476865,
+              "_raw_vector_score": 0.4735845840760313
             }
           ]
         },
@@ -4619,24 +4651,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 9.015649,
+                "top1_score": 0.031544957774465976,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 7.596414
+                "top2_score": 0.03149801587301587
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -4645,8 +4677,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "prevent_world_readable_bucket_objects",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -4683,12 +4715,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -4701,19 +4733,19 @@
       "query": "stop unauthenticated access to bucket contents",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2259.12,
+      "latency_ms": 2340.05,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
-      "top1_doc_id": "check:cognito_identity_pool_guest_access_disabled",
+      "top1_doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
       "top_ids": [
-        "check:cognito_identity_pool_guest_access_disabled",
-        "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
         "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
-        "check:s3_bucket_level_public_access_block",
-        "check:cloudfront_distributions_s3_origin_non_existent_bucket"
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_list_acl",
+        "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+        "check:s3_bucket_acl_prohibited"
       ],
-      "top1_service": "cognito",
+      "top1_service": "cloudtrail",
       "expected_doc_id": "check:s3_bucket_policy_public_write_access",
       "expected_capability_id": null,
       "expected_service": "s3",
@@ -4748,50 +4780,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "f02a04a4-5b2a-4c93-aafd-8a6cb97ce24c",
+        "request_id": "b4af314d-f081-4907-8508-232267e5d7b3",
         "status": "success",
         "data": {
           "results": [
             {
-              "doc_id": "check:cognito_identity_pool_guest_access_disabled",
-              "score": 5.599714,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cognito",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cognito_identity_pool_guest_access_disabled",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25"
-              ]
-            },
-            {
-              "doc_id": "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
-              "score": 5.225878,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "cloudtrail",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "cloudtrail_logs_s3_bucket_access_logging_enabled",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
               "doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
-              "score": 4.814517,
+              "score": 0.03149801587301587,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -4806,18 +4801,20 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 7.6800368861390975,
+              "_raw_vector_score": 0.5162378514738483
             },
             {
-              "doc_id": "check:s3_bucket_level_public_access_block",
-              "score": 4.785632,
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.03131881575727918,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
                 "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "s3_bucket_level_public_access_block",
+                "check_id": "s3_bucket_public_write_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
@@ -4825,18 +4822,20 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 7.5074025685448795,
+              "_raw_vector_score": 0.5425538730109134
             },
             {
-              "doc_id": "check:cloudfront_distributions_s3_origin_non_existent_bucket",
-              "score": 4.783944,
+              "doc_id": "check:s3_bucket_public_list_acl",
+              "score": 0.030834914611005692,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "cloudfront",
+                "service": "s3",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "cloudfront_distributions_s3_origin_non_existent_bucket",
+                "check_id": "s3_bucket_public_list_acl",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
@@ -4844,7 +4843,51 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 7.5074025685448795,
+              "_raw_vector_score": 0.5402737897259713
+            },
+            {
+              "doc_id": "check:cloudtrail_logs_s3_bucket_access_logging_enabled",
+              "score": 0.030621785881252923,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "cloudtrail",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "cloudtrail_logs_s3_bucket_access_logging_enabled",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 8.381618352066326,
+              "_raw_vector_score": 0.4922679684884484
+            },
+            {
+              "doc_id": "check:s3_bucket_acl_prohibited",
+              "score": 0.030303030303030304,
+              "metadata": {
+                "doc_type": "prowler_check",
+                "provider": "aws",
+                "service": "s3",
+                "domain": null,
+                "capability_id": null,
+                "check_id": "s3_bucket_acl_prohibited",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 7.6163636377231185,
+              "_raw_vector_score": 0.5143064055690172
             }
           ]
         },
@@ -4861,24 +4904,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 5.599714,
+                "top1_score": 0.03149801587301587,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 5.225878
+                "top2_score": 0.03131881575727918
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -4887,8 +4930,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "stop_unauthenticated_access_to_bucket_contents",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -4925,12 +4968,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]
@@ -4943,19 +4986,19 @@
       "query": "keep cloud file storage inaccessible to the public",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2263.3,
+      "latency_ms": 2292.68,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
-      "top1_doc_id": "check:storagegateway_fileshare_encryption_enabled",
+      "top1_doc_id": "check:efs_encryption_at_rest_enabled",
       "top_ids": [
+        "check:efs_encryption_at_rest_enabled",
         "check:storagegateway_fileshare_encryption_enabled",
         "check:storagegateway_gateway_fault_tolerant",
-        "check:efs_encryption_at_rest_enabled",
-        "check:efs_not_publicly_accessible",
-        "check:efs_multi_az_enabled"
+        "check:ec2_ebs_snapshot_account_block_public_access",
+        "check:s3_bucket_public_write_acl"
       ],
-      "top1_service": "storagegateway",
+      "top1_service": "efs",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
       "expected_capability_id": null,
       "expected_service": "s3",
@@ -4990,51 +5033,13 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "ded18f69-6d67-45b0-9dee-b9cb3f338237",
+        "request_id": "bd632779-856f-4474-8ea3-5c83dff8c914",
         "status": "success",
         "data": {
           "results": [
             {
-              "doc_id": "check:storagegateway_fileshare_encryption_enabled",
-              "score": 8.745041,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "storagegateway",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "storagegateway_fileshare_encryption_enabled",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
-              "doc_id": "check:storagegateway_gateway_fault_tolerant",
-              "score": 6.339737,
-              "metadata": {
-                "doc_type": "prowler_check",
-                "provider": "aws",
-                "service": "storagegateway",
-                "domain": null,
-                "capability_id": null,
-                "check_id": "storagegateway_gateway_fault_tolerant",
-                "index_version": "rag-v2-2026-03-17",
-                "source_name": "prowler_checks",
-                "source_type": "official_check_metadata"
-              },
-              "matched_by": [
-                "bm25",
-                "vector"
-              ]
-            },
-            {
               "doc_id": "check:efs_encryption_at_rest_enabled",
-              "score": 5.59837,
+              "score": 0.032018442622950824,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
@@ -5049,43 +5054,87 @@
               "matched_by": [
                 "bm25",
                 "vector"
-              ]
+              ],
+              "_raw_lexical_score": 9.007496517356127,
+              "_raw_vector_score": 0.4846797861231004
             },
             {
-              "doc_id": "check:efs_not_publicly_accessible",
-              "score": 5.453688,
+              "doc_id": "check:storagegateway_fileshare_encryption_enabled",
+              "score": 0.03177805800756621,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "efs",
+                "service": "storagegateway",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "efs_not_publicly_accessible",
+                "check_id": "storagegateway_fileshare_encryption_enabled",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 14.262037399180896,
+              "_raw_vector_score": 0.4695465073712563
             },
             {
-              "doc_id": "check:efs_multi_az_enabled",
-              "score": 5.039828,
+              "doc_id": "check:storagegateway_gateway_fault_tolerant",
+              "score": 0.02946236559139785,
               "metadata": {
                 "doc_type": "prowler_check",
                 "provider": "aws",
-                "service": "efs",
+                "service": "storagegateway",
                 "domain": null,
                 "capability_id": null,
-                "check_id": "efs_multi_az_enabled",
+                "check_id": "storagegateway_gateway_fault_tolerant",
                 "index_version": "rag-v2-2026-03-17",
                 "source_name": "prowler_checks",
                 "source_type": "official_check_metadata"
               },
               "matched_by": [
-                "bm25"
-              ]
+                "bm25",
+                "vector"
+              ],
+              "_raw_lexical_score": 10.265896550950922,
+              "_raw_vector_score": 0.45049718115967013
+            },
+            {
+              "doc_id": "check:ec2_ebs_snapshot_account_block_public_access",
+              "score": 0.016129032258064516,
+              "metadata": {
+                "service": "ec2",
+                "check_id": "ec2_ebs_snapshot_account_block_public_access",
+                "source_name": "prowler_checks",
+                "provider": "aws",
+                "index_version": "rag-v2-2026-03-17",
+                "doc_type": "prowler_check",
+                "source_type": "official_check_metadata"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.4803738444061176
+            },
+            {
+              "doc_id": "check:s3_bucket_public_write_acl",
+              "score": 0.015873015873015872,
+              "metadata": {
+                "source_type": "official_check_metadata",
+                "index_version": "rag-v2-2026-03-17",
+                "source_name": "prowler_checks",
+                "check_id": "s3_bucket_public_write_acl",
+                "provider": "aws",
+                "doc_type": "prowler_check",
+                "service": "s3"
+              },
+              "matched_by": [
+                "vector"
+              ],
+              "_raw_lexical_score": 0.0,
+              "_raw_vector_score": 0.47659374481391037
             }
           ]
         },
@@ -5102,24 +5151,24 @@
               "doc_type": "prowler_check"
             },
             "verification": {
-              "valid": false,
+              "valid": true,
               "warnings": [
-                "exact_lookup_miss",
-                "exact_lookup_mismatch"
+                "ambiguous_top_results",
+                "low_score_top1"
               ],
               "diagnostics": {
                 "result_count": 5,
-                "top1_score": 8.745041,
+                "top1_score": 0.032018442622950824,
                 "top1_doc_type": "prowler_check",
-                "top2_score": 6.339737
+                "top2_score": 0.03177805800756621
               }
             },
             "readiness": {
               "lexical_ready": true,
               "lexical_ready_by_corpus": {
                 "prowler_checks": true,
-                "maturity_capabilities": false,
-                "maturity_mappings": false
+                "maturity_capabilities": true,
+                "maturity_mappings": true
               },
               "vector_ready": true,
               "mapping_ready": true,
@@ -5128,8 +5177,8 @@
             },
             "degraded": false,
             "routing": {
-              "requires_exact_lookup": true,
-              "exact_check_id": "keep_cloud_file_storage_inaccessible_to_the_public",
+              "requires_exact_lookup": false,
+              "exact_check_id": null,
               "service": null,
               "domain": null,
               "provider": "aws",
@@ -5166,12 +5215,12 @@
         "errors": [
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_miss",
+            "message": "ambiguous_top_results",
             "details": null
           },
           {
             "code": "RETRIEVAL_WARNING",
-            "message": "exact_lookup_mismatch",
+            "message": "low_score_top1",
             "details": null
           }
         ]

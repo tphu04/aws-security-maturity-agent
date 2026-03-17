@@ -63,6 +63,65 @@ def _slugify(text: str) -> str:
     return text
 
 
+def _capability_aliases(capability_id: str, capability_name: str) -> List[str]:
+    aliases = set()
+
+    cid = _normalize_identifier(capability_id)
+    cname = _normalize_for_index(capability_name).lower()
+
+    if cid:
+        aliases.add(cid)
+        aliases.add(cid.replace("_", " "))
+        aliases.add(cid.replace("_", "-"))
+
+    if cname:
+        aliases.add(cname)
+
+    handcrafted = {
+        "block_public_access": [
+            "block public access",
+            "prevent public exposure",
+            "prevent anonymous access",
+            "restrict public access",
+            "keep storage private",
+        ],
+        "audit_api_calls": [
+            "audit api calls",
+            "record api activity",
+            "monitor api activity",
+            "track cloud api calls",
+            "log api usage",
+        ],
+        "data_backups": [
+            "data backups",
+            "backup and restore",
+            "recover from backup",
+            "restore critical data",
+            "backup recovery",
+        ],
+        "encryption_at_rest": [
+            "encryption at rest",
+            "protect stored data with encryption",
+            "encrypt stored data",
+            "make stolen storage unreadable",
+        ],
+        "network_segmentation": [
+            "network segmentation",
+            "separate network zones",
+            "limit blast radius",
+            "isolate network zones",
+            "public private network separation",
+        ],
+    }
+
+    normalized_cid = _normalize_identifier(cid)
+    for key, values in handcrafted.items():
+        if normalized_cid == key or normalized_cid.startswith(key):
+            aliases.update(values)
+
+    return sorted(a for a in aliases if a)
+
+
 def normalize_provider(provider: Optional[str]) -> str:
     if not provider:
         return "aws"
@@ -129,17 +188,18 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
     if not capability_name:
         raise ValueError("maturity doc missing capability/title/name")
 
-    capability_id = _normalize_identifier(raw.get("capability_id")) or _slugify(
-        capability_name
-    )
+    # Canonical capability_id must always be underscore-normalized.
+    capability_id = _normalize_identifier(raw.get("capability_id")) or _normalize_identifier(
+        raw.get("id")
+    ) or _normalize_identifier(capability_name)
     if not capability_id:
         raise ValueError("maturity doc missing resolvable capability_id")
 
-    doc_id = _normalize_for_index(
-        raw.get("doc_id") or raw.get("id") or f"capability:{capability_id}"
-    )
-    if not doc_id:
-        raise ValueError("maturity doc missing doc_id")
+    # IMPORTANT:
+    # Always use canonical doc_id derived from canonical capability_id.
+    # Do not trust raw doc_id from source as primary runtime key.
+    source_doc_id = _normalize_for_index(raw.get("doc_id") or raw.get("id") or "")
+    doc_id = f"capability:{capability_id}"
 
     raw_recommendations = raw.get("recommended_practices") or raw.get("recommendation")
     if isinstance(raw_recommendations, list):
@@ -159,6 +219,15 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
     risk_explanation = _normalize_for_index(raw.get("risk_explanation", ""))
     guidance = _normalize_for_index(raw.get("guidance", ""))
     how_to_check = _normalize_for_index(raw.get("how_to_check", ""))
+
+    aliases = _capability_aliases(capability_id, capability_name)
+
+    # Include both canonical and source aliases in retrieval text.
+    alias_inputs = list(aliases)
+    if source_doc_id:
+        alias_inputs.append(source_doc_id)
+        alias_inputs.append(source_doc_id.replace("-", "_"))
+        alias_inputs.append(source_doc_id.replace("_", "-"))
 
     doc = MaturityCapabilityDoc(
         doc_id=doc_id,
@@ -187,6 +256,7 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
             [
                 capability_id,
                 capability_name,
+                alias_inputs,
                 raw.get("domain", ""),
                 summary,
                 risk_explanation,

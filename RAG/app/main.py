@@ -12,11 +12,13 @@ from app.api.routes.health import router as health_router
 from app.api.routes.resolve import router as resolve_router
 from app.api.routes.retrieve import router as retrieve_router
 from app.core.config import (
-    BM25_INDEX_PATH,
+    BM25_INDEX_PATHS,
     CHROMA_DIR,
     INDEX_DIR,
     SERVICE_NAME,
     SERVICE_VERSION,
+    CORPUS_PROWLER_CHECKS,
+    CORPUS_MATURITY_CAPABILITIES,
 )
 from app.indexing.lexical_index import BM25Index
 from app.indexing.vector_index import VectorIndex
@@ -51,12 +53,13 @@ def _load_manifest() -> Dict[str, Any]:
 
 
 def _build_services() -> Dict[str, Any]:
-    lexical_index: Optional[BM25Index] = None
+    lexical_indexes: Dict[str, BM25Index] = {}
     vector_index: Optional[VectorIndex] = None
 
     # Load BM25 if available
-    if Path(BM25_INDEX_PATH).exists():
-        lexical_index = BM25Index.load(BM25_INDEX_PATH)
+    for corpus, path in BM25_INDEX_PATHS.items():
+        if Path(path).exists():
+            lexical_indexes[corpus] = BM25Index.load(path)
 
     # Vector index is optional. Fail open for lexical-only mode.
     try:
@@ -67,7 +70,7 @@ def _build_services() -> Dict[str, Any]:
         vector_index = None
 
     retrieval_pipeline = RetrievalPipeline(
-        lexical_index=lexical_index,
+        lexical_indexes=lexical_indexes,
         vector_index=vector_index,
     )
 
@@ -82,7 +85,7 @@ def _build_services() -> Dict[str, Any]:
     )
 
     return {
-        "lexical_index": lexical_index,
+        "lexical_index": lexical_indexes,
         "vector_index": vector_index,
         "retrieval_pipeline": retrieval_pipeline,
         "check_service": check_service,

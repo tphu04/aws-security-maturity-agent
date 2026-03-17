@@ -68,11 +68,6 @@ BM25_INDEX_PATHS = {
     CORPUS_MATURITY_MAPPINGS: BM25_DIR / "bm25_maturity_mappings.pkl",
 }
 
-# Legacy alias for backward compatibility.
-# Chưa refactor runtime thì code cũ nào còn dùng BM25_INDEX_PATH
-# sẽ mặc định trỏ vào corpus checks.
-BM25_INDEX_PATH = BM25_INDEX_PATHS[CORPUS_PROWLER_CHECKS]
-
 # -------------------------------------------------------------------
 # Chroma storage
 # -------------------------------------------------------------------

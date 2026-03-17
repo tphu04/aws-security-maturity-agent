@@ -29,8 +29,8 @@ def calculate_confidence(
     Route-aware confidence estimation.
 
     Signals considered:
-    - exact check hit
-    - top1 score magnitude
+    - exact hit
+    - top1 score
     - ambiguity gap between top1 and top2
     - verification penalties
     - route type
@@ -43,7 +43,11 @@ def calculate_confidence(
     top1, top2 = _top_scores(results)
 
     matched_by = results[0].get("matched_by", []) or []
-    exact_hit = "exact_check_id" in matched_by or "exact_mapping" in matched_by
+    exact_hit = (
+        "exact_check_id" in matched_by
+        or "exact_mapping" in matched_by
+        or "exact_capability_id" in matched_by
+    )
 
     # Base confidence by route + score
     if exact_hit:
