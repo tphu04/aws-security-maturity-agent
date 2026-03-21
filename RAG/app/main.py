@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import FastAPI
 
-from app.api.routes.build import router as build_router
+# from app.api.routes.build import router as build_router
 from app.api.routes.health import router as health_router
 from app.api.routes.resolve import router as resolve_router
 from app.api.routes.retrieve import router as retrieve_router
@@ -118,7 +118,7 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(retrieve_router)
 app.include_router(resolve_router)
-app.include_router(build_router)
+# app.include_router(build_router)
 
 
 @app.get("/")
@@ -128,3 +128,15 @@ def root() -> dict[str, str]:
         "version": SERVICE_VERSION,
         "status": "running",
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    print("Starting Prowler Scan API server...")
+    uvicorn.run(
+        "api_server:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True
+    )

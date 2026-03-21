@@ -58,6 +58,7 @@ class RetrievalPipeline:
         self.lexical_indexes = lexical_indexes or {}
         self._mapping_index: Optional[Dict[str, List[Dict[str, Any]]]] = None
         self._manifest = manifest if manifest is not None else self._load_manifest()
+        self._doc_store: Optional[Dict[str, Dict[str, Any]]] = None
 
     # ----------------------------
     # Factory helpers
@@ -96,6 +97,35 @@ class RetrievalPipeline:
             return payload if isinstance(payload, dict) else {}
         except Exception:
             return {}
+
+    def _get_doc_store(self) -> Dict[str, Dict[str, Any]]:
+        if self._doc_store is not None:
+            return self._doc_store
+
+        store: Dict[str, Dict[str, Any]] = {}
+
+        for _, path in NORMALIZED_PATHS.items():
+            p = Path(path)
+            if not p.exists():
+                continue
+
+            try:
+                with p.open("r", encoding="utf-8") as f:
+                    payload = json.load(f)
+
+                if isinstance(payload, list):
+                    for item in payload:
+                        if not isinstance(item, dict):
+                            continue
+                        doc_id = str(item.get("doc_id", "")).strip()
+                        if doc_id:
+                            store[doc_id] = item
+            except Exception:
+                # degraded runtime: skip bad file rather than failing retrieval
+                continue
+
+        self._doc_store = store
+        return self._doc_store
 
     # ----------------------------
     # Readiness
@@ -161,6 +191,7 @@ class RetrievalPipeline:
         # mapping resolution stays exact-first by design
         if route.query_type == "mapping_resolution":
             results = self._resolve_mapping_exact(route)
+            results = self._hydrate_results(results)
 
             verification = verify_retrieval(
                 route_info=route.__dict__,
@@ -193,6 +224,42 @@ class RetrievalPipeline:
                 },
             )
 
+        # maturity capability lookup should also prefer exact capability_id
+        if route.query_type == "maturity_search" and route.exact_capability_id:
+            results = self._resolve_maturity_exact(route)
+            results = self._hydrate_results(results)
+
+            verification = verify_retrieval(
+                route_info=route.__dict__,
+                results=results,
+                mapping_exists=None,
+            )
+            confidence = calculate_confidence(
+                results=results,
+                route_info=route.__dict__,
+                verification=verification,
+            )
+
+            return self._build_response(
+                route=route,
+                results=results[: max(1, top_k)],
+                verification=verification,
+                confidence=confidence,
+                degraded=not self.readiness()["hybrid_ready"],
+                corpus_name=corpus_name,
+                collection_name=collection_name,
+                extra_diagnostics={
+                    "retrieval_mode": "exact_maturity",
+                    "lexical_candidate_count": len(results),
+                    "vector_candidate_count": 0,
+                    "top_lexical_doc_ids": [r.get("doc_id") for r in results[:5]],
+                    "top_vector_doc_ids": [],
+                    "used_vector": False,
+                    "used_hybrid": False,
+                    "vector_error": None,
+                },
+            )
+
         if retrieval_mode in {"lexical", "hybrid"}:
             lexical_results = self._run_lexical(route=route, top_k=search_top_k)
 
@@ -212,9 +279,11 @@ class RetrievalPipeline:
                 lexical_results=lexical_results,
                 vector_results=vector_results,
                 top_k=top_k,
+                query=route.normalized_query,
                 preferred_service=route.service,
                 preferred_domain=route.domain,
             )
+        merged_results = self._hydrate_results(merged_results)
 
         mapping_exists = None
         if route.query_type in {"check_search", "context_build"}:
@@ -424,6 +493,50 @@ class RetrievalPipeline:
 
         return bonus
 
+    @staticmethod
+    def _extract_rich_metadata(doc: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            # common
+            "doc_id": doc.get("doc_id"),
+            "doc_type": doc.get("doc_type"),
+            "provider": doc.get("provider"),
+            "service": doc.get("service"),
+            "domain": doc.get("domain"),
+            "capability_id": doc.get("capability_id"),
+            "capability_name": doc.get("capability_name"),
+            "check_id": doc.get("check_id"),
+            "source_name": doc.get("source_name"),
+            "source_type": doc.get("source_type"),
+            "index_version": doc.get("index_version"),
+            "retrieval_text": doc.get("retrieval_text"),
+
+            # prowler_check
+            "title": doc.get("title"),
+            "severity": doc.get("severity"),
+            "description": doc.get("description"),
+            "risk": doc.get("risk"),
+            "remediation": doc.get("remediation"),
+            "resource_type": doc.get("resource_type"),
+            "keywords": doc.get("keywords"),
+            "synonyms": doc.get("synonyms"),
+
+            # maturity_capability
+            "stage": doc.get("stage"),
+            "summary": doc.get("summary"),
+            "risk_explanation": doc.get("risk_explanation"),
+            "guidance": doc.get("guidance"),
+            "how_to_check": doc.get("how_to_check"),
+            "recommended_practices": doc.get("recommended_practices"),
+
+            # maturity_mapping
+            "mapping_confidence": doc.get("mapping_confidence"),
+            "mapping_reason": doc.get("mapping_reason"),
+            "review_status": doc.get("review_status"),
+            "mapping_type": doc.get("mapping_type"),
+            "assessment_weight_hint": doc.get("assessment_weight_hint"),
+            "report_note": doc.get("report_note"),
+        }
+
     def _collection_name_for_route(self, route: RouteDecision) -> Optional[str]:
         corpus_name = self._corpus_for_route(route)
 
@@ -441,11 +554,141 @@ class RetrievalPipeline:
     # Merge
     # ----------------------------
 
+    _CONTROL_INTENT_MARKERS: Dict[str, List[str]] = {
+        "public_access": [
+            "public access",
+            "publicly accessible",
+            "public exposure",
+            "public read",
+            "public write",
+            "anonymous access",
+            "unauthenticated access",
+            "internet exposed",
+            "block public access",
+        ],
+        "encryption_at_rest": [
+            "encryption at rest",
+            "default encryption",
+            "server side encryption",
+            "kms",
+            "sse",
+            "stored data",
+            "storage encryption",
+        ],
+        "encryption_in_transit": [
+            "encryption in transit",
+            "secure transport",
+            "https",
+            "tls",
+            "ssl",
+            "secure protocol",
+        ],
+        "logging_monitoring": [
+            "logging",
+            "cloudtrail",
+            "audit",
+            "monitoring",
+            "detection",
+        ],
+        "identity_access": [
+            "identity",
+            "iam",
+            "least privilege",
+            "mfa",
+            "password",
+            "credential",
+            "role",
+            "permission",
+        ],
+    }
+
+    _PRODUCT_ENTITY_GATES: Dict[str, List[str]] = {
+        "bedrock": ["bedrock", "genai", "gen_ai", "generative", "llm", "prompt"],
+        "generative": ["bedrock", "genai", "gen_ai", "generative", "llm", "prompt"],
+        "genai": ["bedrock", "genai", "gen_ai", "generative", "llm", "prompt"],
+        "prompt": ["bedrock", "genai", "generative", "llm", "prompt", "inference"],
+        "sagemaker": ["sagemaker", "ml", "model", "training", "endpoint"],
+        "waf": ["waf", "web acl", "webacl", "sql injection", "xss", "rate limit"],
+        "macie": ["macie", "pii", "sensitive data", "classification"],
+    }
+
+    def _infer_control_intents(self, text: str) -> set[str]:
+        normalized = (text or "").lower()
+        intents: set[str] = set()
+        for intent, markers in self._CONTROL_INTENT_MARKERS.items():
+            if any(marker in normalized for marker in markers):
+                intents.add(intent)
+        return intents
+
+    def _doc_signal_text(self, metadata: Dict[str, Any]) -> str:
+        return " ".join(
+            str(metadata.get(key) or "")
+            for key in (
+                "check_id",
+                "capability_id",
+                "service",
+                "domain",
+                "title",
+                "description",
+                "risk",
+                "remediation",
+                "summary",
+                "guidance",
+                "how_to_check",
+                "mapping_reason",
+            )
+        ).lower()
+
+    def _intent_bonus(self, query: str, metadata: Dict[str, Any]) -> float:
+        query_intents = self._infer_control_intents(query)
+        doc_intents = self._infer_control_intents(self._doc_signal_text(metadata))
+
+        if not query_intents or not doc_intents:
+            return 0.0
+        if query_intents & doc_intents:
+            return 0.18
+        return -0.18
+
+    def _check_id_intent_boost(self, query: str, metadata: Dict[str, Any]) -> float:
+        check_id = str(metadata.get("check_id") or "").lower()
+        if not check_id:
+            return 0.0
+
+        query_intents = self._infer_control_intents(query)
+        boost = 0.0
+
+        if "public_access" in query_intents:
+            if "public_access" in check_id or "public_access_block" in check_id:
+                boost += 0.30
+            if "public" in check_id and ("acl" in check_id or "policy" in check_id):
+                boost += 0.12
+
+        if "encryption_at_rest" in query_intents:
+            if "default_encryption" in check_id or "kms_encryption" in check_id:
+                boost += 0.22
+
+        if "encryption_in_transit" in query_intents:
+            if "secure_transport" in check_id or "https" in check_id:
+                boost += 0.22
+
+        return boost
+
+    def _product_penalty(self, query: str, metadata: Dict[str, Any]) -> float:
+        query_text = (query or "").lower()
+        doc_text = self._doc_signal_text(metadata)
+        for entity_token, required_signals in self._PRODUCT_ENTITY_GATES.items():
+            if entity_token in doc_text and not any(
+                signal in query_text for signal in required_signals
+            ):
+                return -0.20
+        return 0.0
+
     def _merge_results(
         self,
         lexical_results: List[Dict[str, Any]],
         vector_results: List[Dict[str, Any]],
         top_k: int,
+        query: str,
         preferred_service: Optional[str] = None,
         preferred_domain: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
@@ -505,6 +748,9 @@ class RetrievalPipeline:
                 preferred_service=preferred_service,
                 preferred_domain=preferred_domain,
             )
+            score += self._intent_bonus(query=query, metadata=metadata)
+            score += self._check_id_intent_boost(query=query, metadata=metadata)
+            score += self._product_penalty(query=query, metadata=metadata)
 
             merged[doc_id] = {
                 "doc_id": doc_id,
@@ -625,3 +871,47 @@ class RetrievalPipeline:
             "results": results,
             "meta": meta,
         }
+
+    def _resolve_maturity_exact(self, route: RouteDecision) -> List[Dict[str, Any]]:
+        if not route.exact_capability_id:
+            return []
+
+        corpus_name = CORPUS_MATURITY_CAPABILITIES
+        lexical_index = self.lexical_indexes.get(corpus_name)
+
+        if lexical_index is None:
+            return []
+
+        results = lexical_index.query(
+            query_text=route.exact_capability_id,
+            top_k=1,
+            exact_capability_id=route.exact_capability_id,
+            filters=route.filters,
+        )
+
+        return results or []
+    
+    
+    def _hydrate_result_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(item, dict):
+            return item
+
+        doc_id = str(item.get("doc_id", "")).strip()
+        if not doc_id:
+            return item
+
+        full_doc = self._get_doc_store().get(doc_id)
+        if not isinstance(full_doc, dict):
+            return item
+
+        current_meta = item.get("metadata", {}) or {}
+        rich_meta = self._extract_rich_metadata(full_doc)
+
+        item["metadata"] = {
+            **rich_meta,
+            **current_meta,
+        }
+        return item
+    
+    def _hydrate_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        return [self._hydrate_result_item(item) for item in results]

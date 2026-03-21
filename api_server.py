@@ -368,3 +368,15 @@ def list_all_jobs():
             "submitted_time": job["submitted_time"],
         }
     return summary_list
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    print("Starting Prowler Scan API server...")
+    uvicorn.run(
+        "api_server:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True
+    )

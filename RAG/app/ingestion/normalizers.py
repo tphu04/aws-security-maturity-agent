@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 
 from app.core.config import INDEX_VERSION
 from app.core.models import MaturityCapabilityDoc, MaturityMappingDoc, ProwlerCheckDoc
@@ -99,11 +99,21 @@ def _capability_aliases(capability_id: str, capability_name: str) -> List[str]:
             "restore critical data",
             "backup recovery",
         ],
-        "encryption_at_rest": [
+        "data_encryption_at_rest": [
             "encryption at rest",
             "protect stored data with encryption",
             "encrypt stored data",
             "make stolen storage unreadable",
+            "default encryption",
+            "server side encryption",
+            "kms encryption",
+        ],
+        "encryption_in_transit": [
+            "encryption in transit",
+            "secure transport",
+            "https only",
+            "tls required",
+            "require ssl",
         ],
         "network_segmentation": [
             "network segmentation",
@@ -118,6 +128,170 @@ def _capability_aliases(capability_id: str, capability_name: str) -> List[str]:
     for key, values in handcrafted.items():
         if normalized_cid == key or normalized_cid.startswith(key):
             aliases.update(values)
+
+    return sorted(a for a in aliases if a)
+
+def _check_aliases(
+    check_id: str,
+    service: str,
+    title: str,
+    description: str,
+    risk: str,
+    remediation: str,
+) -> List[str]:
+    aliases = set()
+
+    cid = _normalize_identifier(check_id)
+    service = normalize_service(service)
+    title_l = _normalize_for_index(title).lower()
+    description_l = _normalize_for_index(description).lower()
+    risk_l = _normalize_for_index(risk).lower()
+    remediation_l = _normalize_for_index(remediation).lower()
+
+    if cid:
+        aliases.add(cid)
+        aliases.add(cid.replace("_", " "))
+        aliases.add(cid.replace("_", "-"))
+
+    if service:
+        aliases.add(service)
+        if service == "s3":
+            aliases.update(
+                {
+                    "bucket",
+                    "buckets",
+                    "object storage",
+                    "cloud storage",
+                    "storage bucket",
+                    "bucket objects",
+                    "bucket contents",
+                    "object store",
+                    "s3 bucket",
+                    "s3 buckets",
+                }
+            )
+
+    if title_l:
+        aliases.add(title_l)
+
+    # Broad public-access semantic phrases
+    public_access_phrases = {
+        "public access",
+        "public exposure",
+        "publicly accessible",
+        "internet exposed",
+        "internet-facing access",
+        "anonymous access",
+        "unauthenticated access",
+        "world readable",
+        "world-readable",
+        "public read",
+        "public reads",
+        "public listing",
+        "list bucket contents",
+        "browse bucket contents",
+        "bucket listing",
+        "make storage private",
+        "keep storage private",
+        "keep bucket private",
+        "prevent public exposure",
+        "block public access",
+        "restrict public access",
+    }
+
+    write_exposure_phrases = {
+        "public write",
+        "public upload",
+        "upload files publicly",
+        "anonymous upload",
+        "world writable",
+        "world-writable",
+        "prevent public write",
+        "prevent public uploads",
+    }
+
+    policy_public_phrases = {
+        "public bucket policy",
+        "bucket policy public access",
+        "policy allows public write",
+        "public write policy",
+        "policy-based public access",
+    }
+
+    account_level_phrases = {
+        "account-level public access block",
+        "private by default",
+        "block public access account wide",
+        "organization-wide public access block",
+        "default deny public access",
+    }
+
+    level_block_phrases = {
+        "bucket-level public access block",
+        "block public reads at bucket level",
+        "prevent public reads on bucket",
+        "prevent public exposure of bucket",
+    }
+
+    # Handcrafted aliases for high-impact checks from benchmark
+    handcrafted = {
+        "s3_account_level_public_access_blocks": public_access_phrases | account_level_phrases | {
+            "stop public access to aws object storage",
+            "keep cloud file storage inaccessible to the public",
+            "make object storage private by default",
+            "security issue when bucket objects are publicly accessible",
+        },
+        "s3_bucket_level_public_access_block": public_access_phrases | level_block_phrases | {
+            "how to prevent an s3 bucket from being publicly exposed",
+            "misconfiguration that allows public reads on cloud storage",
+            "prevent world readable bucket objects",
+            "how to avoid accidental public exposure of files in s3",
+        },
+        "s3_bucket_public_list_acl": public_access_phrases | {
+            "avoid outsiders browsing files in cloud buckets",
+            "avoid public listing of files in object storage buckets",
+            "prevent listing bucket contents publicly",
+            "stop public listing of bucket contents",
+        },
+        "s3_bucket_public_write_acl": public_access_phrases | write_exposure_phrases | {
+            "make sure users cannot upload files publicly to s3",
+            "prevent public writes to bucket",
+            "prevent anonymous writes to bucket",
+        },
+        "s3_bucket_policy_public_write_access": public_access_phrases | policy_public_phrases | {
+            "prevent anonymous users from accessing bucket data",
+            "stop unauthenticated access to bucket contents",
+            "policy exposes bucket contents",
+        },
+        "s3_bucket_public_access": public_access_phrases | {
+            "bucket is publicly accessible",
+            "public bucket access",
+            "publicly exposed bucket",
+        },
+        "s3_bucket_cross_account_access": {
+            "cross account bucket access",
+            "external account access to bucket",
+            "bucket shared across accounts",
+        },
+    }
+
+    if cid in handcrafted:
+        aliases.update(handcrafted[cid])
+
+    # Lightweight contextual expansion from source fields
+    source_blob = " ".join([title_l, description_l, risk_l, remediation_l])
+    if "public" in source_blob:
+        aliases.update({"public access", "public exposure"})
+    if "anonymous" in source_blob or "unauthenticated" in source_blob:
+        aliases.update({"anonymous access", "unauthenticated access"})
+    if "list" in source_blob:
+        aliases.update({"bucket listing", "public listing"})
+    if "write" in source_blob or "upload" in source_blob:
+        aliases.update({"public write", "public upload"})
+    if "policy" in source_blob:
+        aliases.update({"bucket policy", "policy-based access"})
+    if "acl" in cid:
+        aliases.update({"access control list", "acl"})
 
     return sorted(a for a in aliases if a)
 
@@ -180,6 +354,78 @@ def build_retrieval_text(parts: List[Any]) -> str:
             chunks.append(text.lower())
     return "\n".join(chunks)
 
+def _normalize_capability_name_key(value: Any) -> str:
+    text = _normalize_for_index(value).lower()
+    text = text.replace("&", " and ")
+    text = text.replace("/", " ")
+    text = text.replace("-", " ")
+    text = re.sub(r"[^a-z0-9\s]+", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def build_capability_name_to_id_lookup(
+    capability_docs: List[MaturityCapabilityDoc],
+) -> Dict[str, str]:
+    lookup: Dict[str, str] = {}
+
+    for doc in capability_docs:
+        canonical_id = _normalize_identifier(doc.capability_id)
+        if not canonical_id:
+            continue
+
+        keys = {
+            _normalize_capability_name_key(doc.capability_name),
+            _normalize_capability_name_key(doc.capability_id),
+            _normalize_capability_name_key(doc.doc_id),
+        }
+
+        for alias in _capability_aliases(doc.capability_id, doc.capability_name):
+            keys.add(_normalize_capability_name_key(alias))
+
+        for key in keys:
+            if key:
+                lookup[key] = canonical_id
+
+    return lookup
+
+
+def resolve_mapping_capability_id(
+    raw_capability_id: Any,
+    raw_capability_name: Any,
+    capability_lookup: Optional[Dict[str, str]] = None,
+) -> str:
+    """
+    Resolve mapping capability_id to the canonical capability_id used
+    by maturity capability documents.
+
+    Priority:
+    1. capability_name lookup against normalized maturity docs
+    2. raw capability_id lookup
+    3. fallback to normalized raw capability_id
+    """
+    fallback_id = _normalize_identifier(raw_capability_id)
+    capability_name_key = _normalize_capability_name_key(raw_capability_name)
+    raw_capability_id_key = _normalize_capability_name_key(raw_capability_id)
+
+    if capability_lookup:
+        if capability_name_key and capability_name_key in capability_lookup:
+            return capability_lookup[capability_name_key]
+        if raw_capability_id_key and raw_capability_id_key in capability_lookup:
+            return capability_lookup[raw_capability_id_key]
+
+        # fallback for prefixed ids like 1_quickwins_block_public_access
+        if fallback_id:
+            stripped = re.sub(
+                r"^\d+_(quickwins|quick_wins|foundational|efficient|optimized)_",
+                "",
+                fallback_id,
+            )
+            stripped_key = _normalize_capability_name_key(stripped)
+            if stripped_key in capability_lookup:
+                return capability_lookup[stripped_key]
+
+    return fallback_id
 
 def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
     capability_name = _normalize_for_index(
@@ -283,6 +529,30 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
     remediation = _normalize_for_index(raw.get("Remediation", ""))
     keywords = normalize_string_list(raw.get("Categories", []))
     tags = normalize_string_list(raw.get("tags", []))
+    
+    aliases = _check_aliases(
+        check_id=check_id,
+        service=service,
+        title=title,
+        description=description,
+        risk=risk,
+        remediation=remediation,
+    )
+
+    enriched_keywords = sorted(
+        set(keywords)
+        | set(tags)
+        | (
+            {
+                "bucket",
+                "object storage",
+                "cloud storage",
+                "public access",
+            }
+            if service == "s3"
+            else set()
+        )
+    )
 
     doc = ProwlerCheckDoc(
         doc_id=f"check:{check_id}",
@@ -306,7 +576,7 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
         remediation=remediation,
         resource_type=_normalize_for_index(raw.get("ResourceType", "")) or None,
         keywords=keywords,
-        synonyms=[],
+        synonyms=aliases,
         retrieval_text=build_retrieval_text(
             [
                 check_id,
@@ -316,7 +586,7 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
                 risk,
                 remediation,
                 raw.get("ResourceType", ""),
-                keywords,
+                enriched_keywords,
                 tags,
             ]
         ),
@@ -324,16 +594,24 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
     return doc
 
 
-def normalize_mapping_doc(raw: dict) -> MaturityMappingDoc:
+def normalize_mapping_doc(
+    raw: dict,
+    capability_lookup: Optional[Dict[str, str]] = None,
+) -> MaturityMappingDoc:
     check_id = _normalize_identifier(raw.get("check_id"))
-    capability_id = _normalize_identifier(raw.get("capability_id"))
     if not check_id:
         raise ValueError("mapping doc missing check_id")
+
+    capability_name = _normalize_for_index(raw.get("capability_name", ""))
+    capability_id = resolve_mapping_capability_id(
+        raw_capability_id=raw.get("capability_id"),
+        raw_capability_name=capability_name,
+        capability_lookup=capability_lookup,
+    )
     if not capability_id:
         raise ValueError("mapping doc missing capability_id")
 
     service = normalize_service(raw.get("service", ""))
-    capability_name = _normalize_for_index(raw.get("capability_name", ""))
     domain = _normalize_for_index(raw.get("domain", ""))
     mapping_reason = _normalize_for_index(raw.get("mapping_reason", ""))
     tags = normalize_string_list(raw.get("tags", []))

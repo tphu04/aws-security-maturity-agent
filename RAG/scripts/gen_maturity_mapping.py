@@ -126,6 +126,81 @@ IMPORTANT_PHRASES = [
     "encryption in transit",
 ]
 
+CONTROL_INTENT_CLUSTERS: Dict[str, List[str]] = {
+    "public_access": [
+        "public access",
+        "publicly accessible",
+        "public exposure",
+        "public read",
+        "public write",
+        "anonymous access",
+        "unauthenticated access",
+        "internet exposed",
+        "world readable",
+        "world writable",
+        "block public access",
+    ],
+    "encryption_at_rest": [
+        "encryption at rest",
+        "encrypt everything",
+        "default encryption",
+        "server side encryption",
+        "sse",
+        "kms",
+        "customer managed key",
+        "stored data",
+        "storage encryption",
+    ],
+    "encryption_in_transit": [
+        "encryption in transit",
+        "secure transport",
+        "https",
+        "tls",
+        "ssl",
+        "secure protocol",
+        "transport encryption",
+    ],
+    "identity_access": [
+        "least privilege",
+        "identity",
+        "iam",
+        "mfa",
+        "password",
+        "credential",
+        "role",
+        "permission",
+        "policy",
+    ],
+    "logging_monitoring": [
+        "cloudtrail",
+        "logging",
+        "audit logs",
+        "audit api calls",
+        "monitoring",
+        "detection",
+    ],
+    "resilience_backup": [
+        "backup",
+        "recovery",
+        "resilience",
+        "business continuity",
+        "disaster recovery",
+        "rto",
+        "rpo",
+    ],
+}
+
+PRODUCT_ENTITY_GATES: Dict[str, List[str]] = {
+    "bedrock": ["bedrock", "genai", "gen ai", "generative", "llm", "prompt"],
+    "generative": ["bedrock", "genai", "gen ai", "generative", "llm", "prompt"],
+    "genai": ["bedrock", "genai", "gen ai", "generative", "llm", "prompt"],
+    "prompt": ["bedrock", "genai", "generative", "llm", "prompt", "inference"],
+    "sagemaker": ["sagemaker", "ml", "model", "training", "endpoint"],
+    "guardduty": ["guardduty", "guard duty", "threat", "malware"],
+    "macie": ["macie", "sensitive data", "pii", "classification"],
+    "waf": ["waf", "web acl", "webacl", "sql injection", "xss", "rate limit"],
+}
+
 
 @dataclass
 class ScoredCandidate:
@@ -136,6 +211,11 @@ class ScoredCandidate:
     service_bonus: float
     domain_bonus: float
     title_bonus: float
+    intent_bonus: float
+    intent_penalty: float
+    product_penalty: float
+    control_bonus: float
+    control_penalty: float
 
 
 def utc_now() -> str:
@@ -275,6 +355,7 @@ def flatten_maturity_text(record: Dict[str, Any]) -> str:
         record.get("domain"),
         record.get("phase"),
         record.get("title"),
+        maturity_aliases(record),
         record.get("summary"),
         record.get("risk_explanation"),
         record.get("recommendation"),
@@ -292,6 +373,48 @@ def infer_maturity_capability_id(record: Dict[str, Any]) -> str:
     phase = textify(record.get("phase"))
     title = textify(record.get("title")) or textify(record.get("capability_name"))
     return slugify(f"{phase}_{title}" if phase else title)
+
+
+def maturity_aliases(record: Dict[str, Any]) -> List[str]:
+    capability_id = infer_maturity_capability_id(record)
+    capability_name = textify(record.get("title") or record.get("capability_name"))
+    aliases = {
+        capability_id.replace("_", " "),
+        capability_id.replace("_", "-"),
+        capability_name.lower(),
+    }
+
+    if "block_public_access" in capability_id or "block public access" in capability_name.lower():
+        aliases.update(
+            {
+                "prevent public exposure",
+                "restrict public access",
+                "prevent anonymous access",
+                "keep storage private",
+                "bucket private by default",
+            }
+        )
+    if "data_encryption_at_rest" in capability_id or "encryption at rest" in capability_name.lower():
+        aliases.update(
+            {
+                "protect stored data with encryption",
+                "encrypt stored data",
+                "default encryption",
+                "server side encryption",
+                "kms encryption",
+            }
+        )
+    if "encryption_in_transit" in capability_id or "encryption in transit" in capability_name.lower():
+        aliases.update(
+            {
+                "secure transport",
+                "https only",
+                "tls required",
+                "ssl required",
+            }
+        )
+
+    return sorted(alias for alias in aliases if alias)
 
 
 def infer_maturity_domain(record: Dict[str, Any]) -> str:
@@ -357,7 +480,93 @@ def extract_maturity_keywords(record: Dict[str, Any]) -> List[str]:
     out.extend(tokenize(textify(record.get("guidance"))))
     out.extend(tokenize(textify(record.get("how_to_check"))))
     out.extend(tokenize(textify(record.get("keywords"))))
+    out.extend(tokenize(textify(maturity_aliases(record))))
     return unique_preserve_order(out)
+
+
+def infer_control_intents(text: str) -> List[str]:
+    normalized = text.lower()
+    matched: List[str] = []
+    for intent, markers in CONTROL_INTENT_CLUSTERS.items():
+        if any(marker in normalized for marker in markers):
+            matched.append(intent)
+    return matched
+
+
+def infer_record_intents(record: Dict[str, Any], *, kind: str) -> List[str]:
+    if kind == "prowler":
+        text = flatten_prowler_text(record)
+    else:
+        text = flatten_maturity_text(record)
+    return infer_control_intents(text)
+
+
+def intent_alignment_score(
+    prowler: Dict[str, Any], maturity: Dict[str, Any]
+) -> Tuple[float, float]:
+    check_intents = set(infer_record_intents(prowler, kind="prowler"))
+    maturity_intents = set(infer_record_intents(maturity, kind="maturity"))
+
+    if not check_intents or not maturity_intents:
+        return 0.0, 0.0
+
+    overlap = check_intents & maturity_intents
+    if overlap:
+        # Stronger weighting for security-critical control families.
+        if "public_access" in overlap:
+            return 0.22, 0.0
+        if "encryption_at_rest" in overlap or "encryption_in_transit" in overlap:
+            return 0.18, 0.0
+        return min(0.14, 0.10 + (len(overlap) - 1) * 0.02), 0.0
+
+    high_conflict_pairs = [
+        ("public_access", "encryption_at_rest"),
+        ("public_access", "encryption_in_transit"),
+        ("encryption_at_rest", "encryption_in_transit"),
+    ]
+    for left, right in high_conflict_pairs:
+        if (left in check_intents and right in maturity_intents) or (
+            right in check_intents and left in maturity_intents
+        ):
+            return 0.0, 0.26
+
+    if "public_access" in check_intents and "public_access" not in maturity_intents:
+        return 0.0, 0.20
+
+    return 0.0, 0.12
+
+
+def product_mismatch_penalty(
+    prowler: Dict[str, Any], maturity: Dict[str, Any]
+) -> float:
+    maturity_text = flatten_maturity_text(maturity).lower()
+    check_text = flatten_prowler_text(prowler).lower()
+
+    for entity_token, required_signals in PRODUCT_ENTITY_GATES.items():
+        if entity_token in maturity_text:
+            if not any(signal in check_text for signal in required_signals):
+                return 0.28
+
+    return 0.0
+
+
+def control_family_adjustments(
+    prowler: Dict[str, Any], maturity: Dict[str, Any]
+) -> Tuple[float, float]:
+    check_text = flatten_prowler_text(prowler).lower()
+    capability_id = infer_maturity_capability_id(maturity)
+    bonus = 0.0
+    penalty = 0.0
+
+    check_intents = set(infer_record_intents(prowler, kind="prowler"))
+    if "public_access" in check_intents:
+        if "block_public_access" in capability_id:
+            bonus += 0.30
+        if "network_segmentation" in capability_id:
+            if not any(token in check_text for token in ["vpc", "subnet", "network"]):
+                penalty += 0.18
+
+    return bonus, penalty
 
 
 def jaccard_score(a: List[str], b: List[str]) -> float:
@@ -464,6 +673,9 @@ def score_candidate(
 
     service_bonus, domain_bonus = service_domain_bonus(prowler, maturity)
     title_bonus = title_alignment_bonus(prowler, maturity)
+    intent_bonus, intent_penalty = intent_alignment_score(prowler, maturity)
+    product_penalty = product_mismatch_penalty(prowler, maturity)
+    control_bonus, control_penalty = control_family_adjustments(prowler, maturity)
 
     score = (
         0.42 * jac
@@ -472,6 +684,11 @@ def score_candidate(
         + service_bonus
         + domain_bonus
         + title_bonus
+        + intent_bonus
+        - intent_penalty
+        - product_penalty
+        + control_bonus
+        - control_penalty
     )
     score = max(0.0, min(1.0, score))
 
@@ -485,6 +702,11 @@ def score_candidate(
         service_bonus=service_bonus,
         domain_bonus=domain_bonus,
         title_bonus=title_bonus,
+        intent_bonus=intent_bonus,
+        intent_penalty=intent_penalty,
+        product_penalty=product_penalty,
+        control_bonus=control_bonus,
+        control_penalty=control_penalty,
     )
 
 
@@ -510,6 +732,18 @@ def build_mapping_reason(prowler: Dict[str, Any], candidate: ScoredCandidate) ->
     if candidate.service_bonus > 0:
         service = textify(prowler.get("ServiceName"))
         parts.append(f"Service-aware bonus applied for '{service}' context.")
+    if candidate.intent_bonus > 0:
+        parts.append("Control intent alignment boosted this match.")
+    if candidate.intent_penalty > 0:
+        parts.append("Conflicting control intent reduced this match score.")
+    if candidate.product_penalty > 0:
+        parts.append(
+            "Product-specific capability penalty applied due to missing entity signals."
+        )
+    if candidate.control_bonus > 0:
+        parts.append("Control-family boost applied based on check intent.")
+    if candidate.control_penalty > 0:
+        parts.append("Control-family penalty applied due to intent mismatch.")
 
     if not parts:
         parts.append("Auto-generated from lexical overlap and contextual similarity.")

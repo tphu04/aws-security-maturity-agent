@@ -13,6 +13,8 @@ This script is responsible for:
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
@@ -38,12 +40,36 @@ from app.ingestion.loaders import (
     load_prowler_raw,
 )
 from app.ingestion.normalizers import (
+    build_capability_name_to_id_lookup,
     normalize_mapping_doc,
     normalize_maturity_doc,
     normalize_prowler_doc,
 )
 from app.indexing.lexical_index import BM25Index
 from app.indexing.vector_index import VectorIndex
+
+
+def _generate_maturity_mappings() -> None:
+    script_path = Path(__file__).resolve().parent / "gen_maturity_mapping.py"
+    if not script_path.exists():
+        raise FileNotFoundError(f"missing mapping generator: {script_path}")
+
+    print("[build_all] Generating maturity mappings...")
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=str(script_path.parent.parent),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.stdout:
+        print(result.stdout.strip())
+    if result.stderr:
+        print(result.stderr.strip())
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"maturity mapping generation failed with exit code {result.returncode}"
+        )
 
 
 def _ensure_dir(path: Path) -> None:
@@ -174,9 +200,19 @@ def _normalize_all() -> (
     maturity_raw = load_maturity_raw()
     mapping_raw = load_mappings_raw()
 
+    # Normalize capabilities first -> this corpus is the source of truth
+    # for canonical capability_id values.
     prowler_normalized = [normalize_prowler_doc(r).model_dump() for r in prowler_raw]
-    maturity_normalized = [normalize_maturity_doc(r).model_dump() for r in maturity_raw]
-    mapping_normalized = [normalize_mapping_doc(r).model_dump() for r in mapping_raw]
+
+    maturity_docs = [normalize_maturity_doc(r) for r in maturity_raw]
+    capability_lookup = build_capability_name_to_id_lookup(maturity_docs)
+    maturity_normalized = [doc.model_dump() for doc in maturity_docs]
+
+    # Normalize mappings second, using canonical capability ids from capabilities.
+    mapping_normalized = [
+        normalize_mapping_doc(r, capability_lookup=capability_lookup).model_dump()
+        for r in mapping_raw
+    ]
 
     return prowler_normalized, maturity_normalized, mapping_normalized
 
@@ -212,6 +248,9 @@ def main() -> None:
 
     _ensure_dir(DATA_ROOT / "normalized")
     _ensure_dir(INDEX_DIR)
+
+    # 0) Generate maturity mappings so build_all is self-contained.
+    _generate_maturity_mappings()
 
     # 1) Normalize all corpora
     prowler_normalized, maturity_normalized, mapping_normalized = _normalize_all()

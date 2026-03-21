@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import re
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from app.core.errors import make_error_item
 from app.core.models import (
@@ -16,6 +17,17 @@ from app.retrieval.pipeline import RetrievalPipeline
 from app.retrieval.router import normalize_query
 
 
+def normalize_capability_id(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip().lower()
+    if not text:
+        return None
+    text = text.replace("-", "_").replace(" ", "_")
+    text = re.sub(r"_+", "_", text)
+    return text
+
+
 class MaturityService:
     """
     Service wrapper for maturity capability retrieval.
@@ -24,6 +36,7 @@ class MaturityService:
     - prefers capability_id if present
     - falls back to query
     - uses RetrievalPipeline with explicit_type="maturity_search"
+    - re-ranks results to prefer exact capability_id match
     - defaults to storage-aware pipeline loading when no pipeline is injected
     """
 
@@ -36,7 +49,6 @@ class MaturityService:
         if pipeline is not None:
             self._pipeline = pipeline
         else:
-            # Backward compatibility with legacy constructor usage.
             if lexical_index is not None:
                 self._pipeline = RetrievalPipeline(
                     lexical_index=lexical_index,
@@ -50,7 +62,11 @@ class MaturityService:
     def search(self, request: RetrieveMaturityRequest) -> ResponseEnvelope:
         request_id = str(uuid.uuid4())
 
+        requested_capability_id = normalize_capability_id(
+            getattr(request, "capability_id", None)
+        )
         query = (getattr(request, "capability_id", None) or request.query or "").strip()
+
         if not query:
             return ResponseEnvelope(
                 request_id=request_id,
@@ -77,7 +93,7 @@ class MaturityService:
                 explicit_type="maturity_search",
                 provider=getattr(request, "provider", "aws") or "aws",
                 domain=request.domain,
-                top_k=request.top_k or 5,
+                top_k=max(request.top_k or 5, 5),
                 retrieval_mode=request.retrieval_mode,
             )
         except Exception as exc:
@@ -103,9 +119,13 @@ class MaturityService:
                 ],
             )
 
-        results = pipeline_output.get("results", []) or []
-        meta = pipeline_output.get("meta", {}) or {}
+        raw_results = pipeline_output.get("results", []) or []
+        results = self._rerank_results_by_capability_id(
+            results=raw_results,
+            requested_capability_id=requested_capability_id,
+        )
 
+        meta = pipeline_output.get("meta", {}) or {}
         verification = meta.get("verification", {}) or {}
         readiness = meta.get("readiness", {}) or {}
         degraded = bool(meta.get("degraded", False))
@@ -115,7 +135,17 @@ class MaturityService:
 
         warnings = verification.get("warnings", []) or []
         status = "success" if results else "partial"
-        review_recommended = (confidence == "low") or bool(warnings)
+
+        exact_match_found = self._has_exact_capability_match(
+            results=results,
+            requested_capability_id=requested_capability_id,
+        )
+
+        review_recommended = (
+            (confidence == "low")
+            or bool(warnings)
+            or (requested_capability_id is not None and not exact_match_found)
+        )
 
         diagnostics: Dict[str, Any] = {
             "service": "maturity_search",
@@ -126,14 +156,25 @@ class MaturityService:
             "readiness": readiness,
             "degraded": degraded,
             "routing": routing,
+            "requested_capability_id": requested_capability_id,
+            "resolved_capability_ids": self._extract_capability_ids(results),
+            "exact_capability_match_found": exact_match_found,
         }
         diagnostics.update(pipeline_diagnostics)
 
-        errors: list[ErrorItem] = []
+        errors: List[ErrorItem] = []
         if not results:
             errors.append(
                 make_error_item("NO_RESULTS", "no maturity capability results found")
             )
+        elif requested_capability_id and not exact_match_found:
+            errors.append(
+                make_error_item(
+                    "RETRIEVAL_WARNING",
+                    "capability_exact_match_miss",
+                )
+            )
+
         for warning in warnings:
             errors.append(make_error_item("RETRIEVAL_WARNING", warning))
 
@@ -149,6 +190,60 @@ class MaturityService:
             ),
             errors=errors,
         )
+
+    def _rerank_results_by_capability_id(
+        self,
+        results: List[Dict[str, Any]],
+        requested_capability_id: Optional[str],
+    ) -> List[Dict[str, Any]]:
+        if not results or not requested_capability_id:
+            return results
+
+        exact: List[Dict[str, Any]] = []
+        non_exact: List[Dict[str, Any]] = []
+
+        for item in results:
+            item_capability_id = self._result_capability_id(item)
+            if item_capability_id == requested_capability_id:
+                exact.append(item)
+            else:
+                non_exact.append(item)
+
+        return exact + non_exact
+
+    def _has_exact_capability_match(
+        self,
+        results: List[Dict[str, Any]],
+        requested_capability_id: Optional[str],
+    ) -> bool:
+        if not requested_capability_id:
+            return False
+        return any(
+            self._result_capability_id(item) == requested_capability_id
+            for item in results
+        )
+
+    def _extract_capability_ids(self, results: List[Dict[str, Any]]) -> List[str]:
+        seen = set()
+        out: List[str] = []
+
+        for item in results:
+            cap_id = self._result_capability_id(item)
+            if cap_id and cap_id not in seen:
+                seen.add(cap_id)
+                out.append(cap_id)
+
+        return out
+
+    def _result_capability_id(self, item: Dict[str, Any]) -> Optional[str]:
+        metadata = item.get("metadata", {}) if isinstance(item, dict) else {}
+        capability_id = (
+            metadata.get("capability_id")
+            or item.get("capability_id")
+            or metadata.get("id")
+            or item.get("id")
+        )
+        return normalize_capability_id(capability_id)
 
     def _index_version(self) -> str:
         try:
