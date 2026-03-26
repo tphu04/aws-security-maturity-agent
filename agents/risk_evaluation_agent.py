@@ -1,6 +1,7 @@
 import json
 import re
 import time
+import requests
 from typing import List, Dict, Any
 from langchain_core.callbacks import BaseCallbackHandler
 from .base_agent import BaseAgent
@@ -37,37 +38,25 @@ class RiskEvaluationAgent(BaseAgent):
     """
 
     SYSTEM_PROMPT_SINGLE = """
-    Bạn là Chuyên gia An ninh mạng AWS (Senior AWS Security Analyst).
-    Nhiệm vụ: Đánh giá rủi ro dựa trên thông tin lỗ hổng đã được cung cấp.
+        Bạn là Chuyên gia An ninh mạng AWS (Senior AWS Security Analyst)._
+        Nhiệm vụ: Đánh giá rủi ro dựa trên thông tin lỗ hổng và RAG Context (Compliance & Best Practices).
 
-    HƯỚNG DẪN CHẤM ĐIỂM (SCORING RUBRIC):
-    
-    1. CRITICAL (Score 9-10):
-        - Public Access vào dữ liệu nhạy cảm (S3 Public, SG Open 0.0.0.0/0).
-        - Chiếm quyền Admin/Root hoặc leo thang đặc quyền.
-        - Mất dữ liệu vĩnh viễn.
+        HƯỚNG DẪN CHẤM ĐIỂM (SCORING RUBRIC):
+        1. CRITICAL (Score 9-10): Public Access vào dữ liệu nhạy cảm, chiếm quyền Admin, mất dữ liệu.
+        2. HIGH (Score 7-8): Cấu hình sai nghiêm trọng, thiếu mã hóa, dịch vụ phơi bày ra internet.
+        3. MEDIUM (Score 4-6): Thiếu Logging/Monitoring, thiếu MFA, vi phạm Compliance không nguy hiểm tức thì.
+        4. LOW (Score 1-3): Lỗi thông tin, thiếu Tagging.
 
-    2. HIGH (Score 7-8):
-        - Cấu hình sai nghiêm trọng (IAM Policy rộng) nhưng giới hạn nội bộ.
-        - Thiếu mã hóa dữ liệu quan trọng.
-        - Services (EC2/Lambda) phơi bày ra internet không cần thiết.
+        LƯU Ý QUAN TRỌNG: 
+        - Hãy tham khảo phần "rag_context" (nếu có). Nếu lỗ hổng vi phạm các chuẩn nghiêm trọng (như CIS, PCI-DSS) hoặc có official_severity là High/Critical từ AWS, hãy điều chỉnh điểm số cho phù hợp.
 
-    3. MEDIUM (Score 4-6):
-        - Thiếu Logging/Monitoring (CloudTrail, VPC Flow Logs).
-        - Thiếu MFA.
-        - Vi phạm Compliance không gây nguy hiểm tức thì.
-
-    4. LOW (Score 1-3):
-        - Lỗi cấu hình nhỏ, thông tin (Informational).
-        - Tagging thiếu sót.
-
-    YÊU CẦU OUTPUT JSON:
-    {
-        "ai_severity": "Critical" | "High" | "Medium" | "Low",
-        "ai_risk_score": <int 0-10>,
-        "ai_reasoning": "<Giải thích ngắn gọn 1 câu tại sao>"
-    }
-    """
+        YÊU CẦU OUTPUT JSON:
+        {
+            "ai_severity": "Critical" | "High" | "Medium" | "Low",
+            "ai_risk_score": <int 0-10>,
+            "ai_reasoning": "<Giải thích ngắn gọn 1-2 câu, có nhắc đến chuẩn compliance nếu có>"
+        }
+        """
 
     def __init__(self, model_name: str, api_key: str, base_url: str):
         super().__init__(model_name, api_key, base_url)
@@ -98,118 +87,206 @@ class RiskEvaluationAgent(BaseAgent):
         if match:
             return match.group(1)
         return text
+    def _fetch_risk_context_batch(self, check_ids: list) -> Dict[str, Any]:
+            if not check_ids: return {}
+            url = "http://localhost:8001/v1/context/build"
+            
+            formatted_ids = [f"check:{cid}" if not str(cid).startswith("check:") else cid for cid in check_ids]
+            payload = {"consumer": "risk", "check_ids": formatted_ids, "include_mappings": True}
 
+            try:
+                response = requests.post(url, json=payload, timeout=10)
+                data = response.json()
+                
+                # --- PHẦN SỬA ĐỔI CHÍNH Ở ĐÂY ---
+                # Truy cập đúng vào related_findings thay vì checks
+                risk_bundle = data.get("data", {}).get("payload", {}).get("risk_bundle", {})
+                findings = risk_bundle.get("related_findings", []) # API của bạn dùng key này
+                mappings = risk_bundle.get("control_mapping", [])   # Và key này cho compliance
+                
+                context_map = {}
+                # 1. Map thông tin cơ bản (Severity, Title)
+                for f in findings:
+                    cid = f.get("check_id")
+                    if cid:
+                        clean_id = str(cid).replace("check:", "")
+                        context_map[clean_id] = {
+                            "severity": f.get("severity"),
+                            "title": f.get("title"),
+                            "mappings": [] # Khởi tạo mảng mappings
+                        }
+                
+                # 2. Bơm thêm thông tin Compliance Mapping vào
+                for m in mappings:
+                    cid = m.get("check_id")
+                    clean_id = str(cid).replace("check:", "")
+                    if clean_id in context_map:
+                        context_map[clean_id]["mappings"].append(m.get("capability_id"))
+
+                return context_map
+                
+            except Exception as e:
+                print(f"   [RiskEvaluationAgent] ❌ Lỗi bóc tách JSON RAG: {e}")
+                return {}
     # ===============================================================
     # 2. CORE: XỬ LÝ
     # ===============================================================
     def run(self, normalized_findings: list) -> list:
-        """
-        Input: List[Dict] đã được chuẩn hóa bởi Normalizer.
-        Output: List[Dict] đã được bổ sung điểm rủi ro từ AI.
-        """
-        print("--------------------------------------------------")
+            """
+            Input: List[Dict] đã được chuẩn hóa bởi Normalizer.
+            Output: List[Dict] đã được bổ sung điểm rủi ro từ AI và Compliance từ RAG.
+            """
+            print("--------------------------------------------------")
 
-        # 1. LỌC FINDINGS (Chỉ lấy FAIL)
-        # Normalizer đã flatten dữ liệu, nên ta truy cập trực tiếp key "status"
-        fail_findings = [
-            f
-            for f in normalized_findings
-            if isinstance(f, dict) and f.get("status") == "FAIL"
-        ]
+            # 1. LỌC FINDINGS (Chỉ lấy FAIL)
+            fail_findings = [
+                f
+                for f in normalized_findings
+                if isinstance(f, dict) and f.get("status") == "FAIL"
+            ]
 
-        if not fail_findings:
+            if not fail_findings:
+                print(
+                    "[RiskEvaluationModule] Không có finding 'FAIL' nào. Hệ thống an toàn."
+                )
+                return []
+
             print(
-                "[RiskEvaluationModule] Không có finding 'FAIL' nào. Hệ thống an toàn."
-            )
-            return []
-
-        print(
-            f"[RiskEvaluationModule] Bắt đầu phân tích rủi ro cho {len(fail_findings)} finding(s) 'FAIL'..."
-        )
-
-        enriched_results = []
-
-        # 2. LOOP VÀ CHẤM ĐIỂM
-        for index, finding in enumerate(fail_findings):
-            short_title = finding.get("description", "Unknown")[:60]
-            print(
-                f"--- [{index + 1}/{len(fail_findings)}] Evaluating: {short_title}..."
+                f"[RiskEvaluationModule] Bắt đầu phân tích rủi ro cho {len(fail_findings)} finding(s) 'FAIL'..."
             )
 
-            try:
-                # A. Tạo View tối giản cho LLM (Tiết kiệm token & tăng độ chính xác)
-                # Dữ liệu từ Normalizer đã có sẵn các trường này
-                llm_view = {
-                    "service": finding.get("service"),
-                    "resource_id": finding.get("resource_id"),
-                    "region": finding.get("region"),
-                    "description": finding.get("description"),
-                    "original_severity": finding.get(
-                        "severity"
-                    ),  # Severity gốc của Prowler
-                    "remediation_text": finding.get("remediation_text"),
-                }
+            # --- BƯỚC MỚI: LẤY RAG CONTEXT THEO LÔ (BATCH) ---
+            unique_check_ids = []
+            for f in fail_findings:
+                # Ưu tiên lấy từ các key trực tiếp trước
+                cid = f.get("check_id") or f.get("CheckID") or f.get("checkId")
+                
+                # Nếu không có, mổ xẻ từ finding_id / uid / id
+                if not cid:
+                    raw_str = f.get("finding_id") or f.get("uid") or f.get("id") or str(f)
+                    # Dùng Regex để bắt theo chuẩn của Prowler (vd: prowler-aws-s3_account_level_public_access_blocks-123...)
+                    match = re.search(r'prowler-[^-]+-([a-z0-9_]+)-\d+', raw_str)
+                    if match:
+                        cid = match.group(1)
+                    else:
+                        # Fallback tìm cụm có dấu gạch dưới
+                        fallback_match = re.search(r'\b[a-z0-9]+_[a-z0-9_]+\b', raw_str)
+                        if fallback_match:
+                            cid = fallback_match.group(0)
+                            
+                if cid:
+                    unique_check_ids.append(cid)
+                    
+            unique_check_ids = list(set(unique_check_ids))
+            
+            print(f"   -> Đang tải RAG Context cho {len(unique_check_ids)} loại lỗ hổng...")
+            rag_context_map = self._fetch_risk_context_batch(unique_check_ids)
 
-                # B. Gọi LLM
-                messages = [
-                    SystemMessage(content=self.SYSTEM_PROMPT_SINGLE),
-                    HumanMessage(content=json.dumps(llm_view, ensure_ascii=False)),
-                ]
+            enriched_results = []
 
-                # Invoke
-                response = self.llm.invoke(messages)
-
-                # C. Parse Output
-                ai_data = {
-                    "ai_severity": "Medium",
-                    "ai_risk_score": 5,
-                    "ai_reasoning": "Parse Error",
-                }
-
-                if response and response.content:
-                    try:
-                        json_str = self._extract_json_from_text(response.content)
-                        parsed = json.loads(json_str)
-                        # Merge an toàn
-                        ai_data.update(parsed)
-                    except Exception as e:
-                        print(f"   -> ⚠️ Lỗi parse JSON AI: {e}")
-
-                # D. Merge vào Finding gốc
-                # Chúng ta giữ nguyên finding gốc và chỉ thêm các trường AI vào
-                enriched_finding = finding.copy()
-                enriched_finding.update(
-                    {
-                        "severity": ai_data.get(
-                            "ai_severity", finding.get("severity")
-                        ),  # Ưu tiên AI severity
-                        "risk_score": ai_data.get("ai_risk_score", 0),
-                        "reasoning": ai_data.get("ai_reasoning", ""),
-                        # Giữ lại severity gốc để tham khảo nếu cần
-                        "prowler_severity": finding.get("severity"),
-                    }
+            # 2. LOOP VÀ CHẤM ĐIỂM
+            for index, finding in enumerate(fail_findings):
+                short_title = finding.get("description", "Unknown")[:60]
+                print(
+                    f"--- [{index + 1}/{len(fail_findings)}] Evaluating: {short_title}..."
                 )
 
-                enriched_results.append(enriched_finding)
+                try:
+                    # Trích xuất lại check_id cho finding hiện tại (dùng chung logic Regex ở trên)
+                    check_id = finding.get("check_id") or finding.get("CheckID") or finding.get("checkId")
+                    if not check_id:
+                        raw_str = finding.get("finding_id") or finding.get("uid") or finding.get("id") or str(finding)
+                        match = re.search(r'prowler-[^-]+-([a-z0-9_]+)-\d+', raw_str)
+                        if match:
+                            check_id = match.group(1)
+                        else:
+                            fallback_match = re.search(r'\b[a-z0-9]+_[a-z0-9_]+\b', raw_str)
+                            check_id = fallback_match.group(0) if fallback_match else ""
 
-            except Exception as e:
-                print(f"   -> ❌ Lỗi xử lý finding: {e}")
-                # Fallback: Giữ nguyên finding gốc
-                enriched_results.append(finding)
+                    # Lookup RAG data
+                    rag_data = rag_context_map.get(check_id, {})
 
-        # 3. SẮP XẾP (Priority Sort)
-        severity_map = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1, "N/A": 0}
+                    # A. Tạo View tối giản cho LLM + Bơm RAG Context
+                    llm_view = {
+                        "check_id": check_id,
+                        "service": finding.get("service"),
+                        "resource_id": finding.get("resource_id"),
+                        "region": finding.get("region"),
+                        "description": finding.get("description"),
+                        "original_severity": finding.get("severity"),  # Severity gốc của Prowler
+                        "remediation_text": finding.get("remediation_text"),
+                        "rag_context": {
+                            "official_severity": rag_data.get("severity", "Unknown"),
+                            "compliance_mappings": rag_data.get("mappings", []),
+                            "extended_description": rag_data.get("description", "")
+                        }
+                    }
 
-        sorted_results = sorted(
-            enriched_results,
-            key=lambda f: (
-                severity_map.get(f.get("severity"), 0),
-                f.get("risk_score", 0),
-            ),
-            reverse=True,
-        )
+                    # B. Gọi LLM
+                    messages = [
+                        SystemMessage(content=self.SYSTEM_PROMPT_SINGLE),
+                        HumanMessage(content=json.dumps(llm_view, ensure_ascii=False)),
+                    ]
 
-        print(
-            f"[RiskEvaluationModule] Hoàn tất. Output {len(sorted_results)} findings đã chấm điểm."
-        )
-        return sorted_results
+                    # Invoke
+                    response = self.llm.invoke(messages)
+
+                    # C. Parse Output
+                    ai_data = {
+                        "ai_severity": "Medium",
+                        "ai_risk_score": 5,
+                        "ai_reasoning": "Parse Error",
+                    }
+
+                    if response and response.content:
+                        try:
+                            json_str = self._extract_json_from_text(response.content)
+                            parsed = json.loads(json_str)
+                            # Merge an toàn
+                            ai_data.update(parsed)
+                        except Exception as e:
+                            print(f"   -> ⚠️ Lỗi parse JSON AI: {e}")
+                    print(f"      => Điểm AI chấm: {ai_data.get('ai_severity')} (Score: {ai_data.get('ai_risk_score')})")
+                    print(f"      => Lý do (AI): {ai_data.get('ai_reasoning')}")
+                    mappings = rag_data.get("mappings", [])
+                    if mappings:
+                        print(f"      => 📚 Vi phạm chuẩn (Từ RAG): {len(mappings)} frameworks")
+                    else:
+                        print(f"      => 📚 Vi phạm chuẩn (Từ RAG): Không có data")
+                    # D. Merge vào Finding gốc
+                    enriched_finding = finding.copy()
+                    enriched_finding.update(
+                        {
+                            "severity": ai_data.get(
+                                "ai_severity", finding.get("severity")
+                            ),  # Ưu tiên AI severity
+                            "risk_score": ai_data.get("ai_risk_score", 0),
+                            "reasoning": ai_data.get("ai_reasoning", ""),
+                            "prowler_severity": finding.get("severity"),
+                            "compliance": rag_data.get("mappings", []) # Lưu thêm Compliance để report
+                        }
+                    )
+
+                    enriched_results.append(enriched_finding)
+
+                except Exception as e:
+                    print(f"   -> ❌ Lỗi xử lý finding: {e}")
+                    # Fallback: Giữ nguyên finding gốc
+                    enriched_results.append(finding)
+
+            # 3. SẮP XẾP (Priority Sort)
+            severity_map = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1, "N/A": 0}
+
+            sorted_results = sorted(
+                enriched_results,
+                key=lambda f: (
+                    severity_map.get(f.get("severity"), 0),
+                    f.get("risk_score", 0),
+                ),
+                reverse=True,
+            )
+
+            print(
+                f"[RiskEvaluationModule] Hoàn tất. Output {len(sorted_results)} findings đã chấm điểm."
+            )
+            return sorted_results
