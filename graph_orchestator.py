@@ -15,11 +15,11 @@ from AgentState import PDCAState
 # Import các agent cũ (không thay đổi)
 from agents.environment_agent import EnvironmentAgent
 from agents.planning_agent import PlanningAgent
-from agents.scanner_agent import ScannerAgent
 from agents.monitoring_agent import MonitoringAgent
 from agents.risk_evaluation_agent import RiskEvaluationAgent
 from agents.remediate_planner_agent import RemediationPlannerAgent
 from agents.execution_agent import ExecutionAgent
+from agents.scanner_agent import ScannerModule
 from agents.rescan_agent import RescanAgent
 from agents.analysis_agent import AnalysisAgent
 from agents.report_agent import ReportAgent
@@ -96,7 +96,7 @@ def save_scan_configuration(
 
         # Chuẩn hóa format dữ liệu mà RescanAgent mong đợi
         config_data = {
-            "groups_to_scan": plan_data.get("target_services", []),
+            "groups_to_scan": plan_data.get("groups_to_scan", []),
             "checks_to_scan": plan_data.get("checks_to_scan", []),
             "reasoning": plan_data.get("reasoning", ""),
         }
@@ -123,6 +123,8 @@ def environment_node(state: PDCAState):
     with measure_time() as timer:
         agent = EnvironmentAgent()
         ctx = agent.get_aws_context()
+
+    print(f"   AWS Context: Account {ctx.get('account_id')}, Region {ctx.get('region')}")
 
     metrics = update_metrics(metrics, "step_duration", "environment_setup", timer())
     return {"aws_context": ctx, "performance_metrics": metrics}
@@ -157,28 +159,36 @@ def planning_node(state: PDCAState):
         print(f"❌ Lỗi tại Planning Node: {e}")
         return {"error": str(e), "next_step": "end"}
 
-def scanning_node(state: PDCAState):
-    target_services = state["assessment_plan"].get("target_services", [])
-    checks_to_scan = state["assessment_plan"].get("checks_to_scan", [])
-    print(f"\n [Node: Scanning] Triggering scans: {target_services} {checks_to_scan}")
+def scanning_node(state: PDCAState): # Đừng quên đổi tên import: from agents.scanner_agent import ScannerModule
+    plan = state.get("assessment_plan", {})
+    target_groups = plan.get("groups_to_scan", [])
+    checks_to_scan = plan.get("checks_to_scan", [])
+
+    print(f"\n [Node: Scanning] Triggering scans: groups={target_groups}, checks={checks_to_scan}")
     metrics = state.get("performance_metrics", {})
 
-    scanner = ScannerAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
+    # 1. KHỞI TẠO SCANNER MỚI (Bỏ qua các biến cấu hình của AI)
+    scanner = ScannerModule()
 
     with measure_time() as timer:
         job_ids = scanner.run_batch(
-            target_groups=target_services, specific_checks=checks_to_scan
+            target_groups=target_groups,
+            specific_checks=checks_to_scan
         )
 
-    # [METRICS] Lấy thời gian LLM tích lũy
-    llm_metrics = scanner.get_llm_metrics()
-
+    # 2. GHI NHẬN THỜI GIAN CHẠY NODE
     metrics = update_metrics(metrics, "step_duration", "scanning_trigger", timer())
-    metrics = update_metrics(metrics, "llm_latency", "scanner_agent", llm_metrics)
+    
+    # 3. MÔ PHỎNG LẠI LLM METRICS (Để giữ nguyên cấu trúc metrics, tránh lỗi ở các node sau)
+    # Vì bước này chỉ chạy code thuần, LLM latency = 0
+    mock_llm_metrics = {
+        "total_latency": 0.0,
+        "call_history": [],
+        "call_count": 0
+    }
+    metrics = update_metrics(metrics, "llm_latency", "scanner_agent", mock_llm_metrics)
 
     return {"scan_job_ids": job_ids, "performance_metrics": metrics}
-
-
 def monitoring_node(state: PDCAState):
     job_ids = state.get("scan_job_ids", [])
     print(f"\n [Node: Monitoring] Polling results for jobs: {job_ids}")
@@ -632,6 +642,10 @@ def handle_task_review_interaction(app, config):
         print(f" Resource   : {finding.get('resource_id', 'N/A')}")
         print(f" Region     : {finding.get('region', 'N/A')}")
         print(f" Severity   : {finding.get('severity', 'N/A')}")
+        # --- CHÈN 2 DÒNG NÀY VÀO ĐÂY ---
+        compliance = finding.get('compliance', [])
+        print(f" Compliance : {', '.join(compliance) if compliance else 'N/A'}")
+        print(f" Service    : {finding.get('service', 'N/A')}")
         print(f" Risk Score : {finding.get('risk_score', 'N/A')}")
         print(
             f" Description: {finding.get('description', '')[:200]}..."
