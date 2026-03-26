@@ -74,36 +74,23 @@ class RemediationPlannerAgent(BaseAgent):
     """
 
     SYSTEM_PROMPT = """
-    Bạn là chuyên gia AWS Security chuyên về remediating misconfigurations.
-    Nhiệm vụ: dựa trên thông tin finding, hãy chọn đúng tool để sửa lỗi.
+        Bạn là chuyên gia AWS Security chuyên về remediating misconfigurations.
+        Nhiệm vụ: Dựa trên thông tin Finding và chuẩn Compliance liên quan, hãy chọn đúng tool sửa lỗi.
 
-    Bạn phải trả 2 trường:
-    1) tool_name  → Tên tool chính xác trong danh sách tools. Nếu không tìm được thì dùng null.
-    2) reasoning  → Một câu giải thích ngắn gọn vì sao chọn tool đó.
+        DANH SÁCH CÔNG CỤ (TOOLS):
+        {tool_descriptions}
 
+        QUY TẮC SUY LUẬN MỚI:
+        1. Ưu tiên dựa vào "Compliance Context" để chọn Tool. Ví dụ: Nếu vi phạm 'block_public_access', hãy tìm tool có chức năng tương ứng.
+        2. Phân biệt rõ cấp độ: Nếu lỗi là cấp Bucket, dùng tool Bucket. Nếu lỗi cấp Account, dùng tool Account.
+        3. Trong 'reasoning', hãy nhắc tên chuẩn Compliance (ví dụ: "Vi phạm chuẩn {compliance_data}") để tăng tính thuyết phục.
 
-    FORMAT OUTPUT BẮT BUỘC (JSON THUẦN):
-    {
-    "tool_name": "<tên_tool_trong_danh_sách_hoặc_null>",
-    "reasoning": "<một câu giải thích ngắn gọn>"
-    }
-
-    TRẢ LỜI CHỈ BẰNG JSON. KHÔNG dùng Markdown block (```json). KHÔNG THÊM CHỮ, KHÔNG GIẢI THÍCH.
-
-    DANH SÁCH CÔNG CỤ (TOOLS):
-    {tool_descriptions}
-
-    QUY TẮC SUY LUẬN (BẮT BUỘC):
-    1. So sánh kỹ "Tiêu đề lỗi" (Check Title) với "Chức năng" của từng tool.
-    2. Tìm từ khóa khớp nhau (Ví dụ: Lỗi "Versioning" -> Phải tìm tool có chữ "versioning").
-    3. Lỗi "Logging" -> Phải tìm tool có chữ "logging".
-    4. Lỗi "Encryption" -> Phải tìm tool có chữ "encryption" hoặc "kms".
-    5. Nếu lỗi là "Public Access" -> Mới được dùng tool "s3_public_access_block".
-    6. Nếu lỗi có chữ "ACL", "ACLs enabled", "ACL prohibited", "BucketOwnerEnforced" -> Tìm các tool có chữ "acls"
-    
-    Đừng đoán mò. Hãy chọn tool có ý nghĩa sát nhất với lỗi. Nếu không tìm thấy tool phù hợp, hãy trả lời "Không tìm thấy công cụ phù hợp".
-    """
-
+        FORMAT OUTPUT JSON:
+        {{
+        "tool_name": "<tên_tool_hoặc_null>",
+        "reasoning": "<lý do chọn tool + nhắc đến compliance>"
+        }}
+        """
     def __init__(self, model_name, api_key, base_url, aws_context=None):
         super().__init__(model_name, api_key, base_url)
         self.timer = TimerCallback()
@@ -132,104 +119,101 @@ class RemediationPlannerAgent(BaseAgent):
         }
 
     def plan_remediation(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Input: Danh sách Fail Findings
-        Output: Danh sách Remediation Plans (không thực thi)
-        """
-        plans = []
-        print(f"[RemediationPlanner] Đang lập kế hoạch cho {len(findings)} findings...")
-
-        for finding in findings:
-            if finding.get("status") != "FAIL":
-                continue
-
-            # Chuẩn bị Context
-            finding_id = finding.get("finding_id")
-            event_code = finding.get("event_code", "")
-            description = (
-                finding.get("description") or finding.get("short_description") or ""
-            )
-            resource_id = finding.get("resource_id", "N/A")
-            region = finding.get("region", "us-east-1")
-
-            # Validate sơ bộ
-            if not resource_id or resource_id == "N/A":
-                continue
-
-            # Tạo Prompt
-            formatted_prompt = self.SYSTEM_PROMPT.replace(
-                "{tool_descriptions}", self.tools_desc_str
-            )
-            user_msg = f"""
-            LẬP KẾ HOẠCH SỬA LỖI:
-            - Mã lỗi (event_code): {event_code}
-            - Mô tả: {description}
-            - Resource ID: {resource_id}
-            - Region: {region}
-            
-            OUTPUT CHỈ JSON. KHÔNG GIẢI THÍCH THÊM.
             """
+            Input: Danh sách Fail Findings (Đã được enriched bởi RiskEvaluationAgent)
+            Output: Danh sách Remediation Plans có chứa thông tin Compliance
+            """
+            plans = []
+            print(f"[RemediationPlanner] Đang lập kế hoạch cho {len(findings)} findings...")
 
-            try:
-                response = self.lc_llm.invoke(
-                    [
-                        SystemMessage(content=formatted_prompt),
-                        HumanMessage(content=f"FINDING:\n{user_msg}"),
-                    ]
+            for finding in findings:
+                if finding.get("status") != "FAIL":
+                    continue
+
+                # --- TRÍCH XUẤT DỮ LIỆU TỪ RAG & RISK AGENT ---
+                compliance_list = finding.get("compliance", [])
+                compliance_str = ", ".join(compliance_list) if compliance_list else "Unknown/None"
+                risk_reasoning = finding.get("reasoning", "N/A") # Phân tích từ Risk Agent
+
+                finding_id = finding.get("finding_id")
+                event_code = finding.get("event_code", "")
+                description = finding.get("description") or finding.get("short_description") or ""
+                resource_id = finding.get("resource_id", "N/A")
+                region = finding.get("region", "us-east-1")
+
+                if not resource_id or resource_id == "N/A":
+                    continue
+
+                # Tạo Prompt với Context mới
+                formatted_prompt = self.SYSTEM_PROMPT.replace(
+                    "{tool_descriptions}", self.tools_desc_str
                 )
+                
+                user_msg = f"""
+                LẬP KẾ HOẠCH SỬA LỖI:
+                - Mã lỗi (event_code): {event_code}
+                - Mô tả: {description}
+                - Chuẩn vi phạm (RAG): {compliance_str}
+                - Phân tích rủi ro: {risk_reasoning}
+                - Resource ID: {resource_id}
+                - Region: {region}
+                
+                YÊU CẦU: Hãy chọn tool phù hợp nhất để thỏa mãn chuẩn {compliance_str}.
+                OUTPUT CHỈ JSON.
+                """
 
-                parsed = {}
                 try:
-                    clean_content = self._clean_json_text(response.content)
-                    parsed = json.loads(clean_content)
-                except:
-                    print(f"[RemediationPlanner] ❌ Response không phải JSON hợp lệ.")
-                    continue
-
-                tool_name = parsed.get("tool_name")
-
-                # Nếu không có tool phù hợp
-                if not tool_name or tool_name not in self.tools_map:
-                    print(
-                        f"[Planner] ⚠️ Không tìm thấy tool phù hợp cho finding: {event_code}"
+                    response = self.lc_llm.invoke(
+                        [
+                            SystemMessage(content=formatted_prompt),
+                            HumanMessage(content=user_msg),
+                        ]
                     )
-                    continue
 
-                tool_obj = self.tools_map[tool_name]
+                    parsed = {}
+                    try:
+                        clean_content = self._clean_json_text(response.content)
+                        parsed = json.loads(clean_content)
+                    except:
+                        print(f"[RemediationPlanner] ❌ Response không phải JSON hợp lệ.")
+                        continue
 
-                # ========================
-                # Build params tự động
-                # ========================
+                    tool_name = parsed.get("tool_name")
 
-                tool_params = build_params_from_signature(
-                    tool=tool_obj,
-                    finding=finding,
-                    aws_context=self.aws_context,
-                )
+                    if not tool_name or tool_name not in self.tools_map:
+                        print(f"[Planner] ⚠️ Không tìm thấy tool phù hợp cho: {event_code}")
+                        continue
 
-                is_manual = tool_name in ALWAYS_MANUAL_TOOLS
+                    tool_obj = self.tools_map[tool_name]
 
-                plans.append(
-                    {
-                        "finding_id": finding_id,
-                        "tool_id": tool_name,
-                        "params": tool_params,
-                        "reasoning": parsed.get(
-                            "reasoning", "Không có giải thích từ AI"
-                        ),
-                        "manual_required": is_manual,
-                    }
-                )
+                    # Build params tự động
+                    tool_params = build_params_from_signature(
+                        tool=tool_obj,
+                        finding=finding,
+                        aws_context=self.aws_context,
+                    )
 
-            except Exception as e:
-                print(f"[RemediationPlanner] ❌ Lỗi khi suy luận tool: {e}")
+                    is_manual = tool_name in ALWAYS_MANUAL_TOOLS
 
-        print(
-            f"[RemediationPlanner] Generated remediation plan với {len(plans)} task(s)."
-        )
+                    # THÊM: Lưu thông tin compliance vào task để hiển thị ở bước Review
+                    plans.append(
+                        {
+                            "finding_id": finding_id,
+                            "tool_id": tool_name,
+                            "params": tool_params,
+                            "reasoning": parsed.get("reasoning", "Không có giải thích"),
+                            "manual_required": is_manual,
+                            "compliance": compliance_list, # Quan trọng: Để in ra màn hình
+                            "severity": finding.get("severity"), # Lấy từ Risk Agent luôn
+                            "risk_score": finding.get("risk_score")
+                        }
+                    )
 
-        return plans
+                except Exception as e:
+                    print(f"[RemediationPlanner] ❌ Lỗi khi suy luận tool: {e}")
 
+            print(f"[RemediationPlanner] Generated remediation plan với {len(plans)} task(s).")
+            return plans
     def _clean_json_text(self, text: str) -> str:
         text = text.strip()
         # Xử lý trường hợp có markdown block ```json
