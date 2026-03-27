@@ -1,0 +1,115 @@
+{
+  "request_id": "59f8922a-9402-48ca-9c3c-27615beaf01a",
+  "status": "success",
+  "data": {
+    "results": [
+      {
+        "doc_id": "capability:block_public_access",
+        "score": 1.0,
+        "metadata": {
+          "doc_id": "capability:block_public_access",
+          "doc_type": "maturity_capability",
+          "provider": "aws",
+          "service": null,
+          "domain": "",
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access",
+          "check_id": null,
+          "source_name": "aws_security_maturity_model",
+          "source_type": "official_doc",
+          "index_version": "rag-v2-2026-03-17",
+          "retrieval_text": "block_public_access\nblock public access\nblock public access block-public-access block_public_access keep storage private prevent anonymous access prevent public exposure restrict public access\n[exfiltration] - users may misconfigure amazon s3 buckets opening them for public access.\ndo you have amazon s3 block public access enabled at account level in all the accounts in your organization ? have you enabled bpa for ec2 amis and amazon ebs ? have you enabled scps to prevent the removal of the bpa ? if you need buckets to be public: what is your use case ? is that a public static website ? why not protecting that data with an amazon cloudfront distribution with aws waf rules enabled? are there any public buckets that you do not have identified that they absolutely need to be public? if there are some public buckets: have you block public access at the bucket level for all other buckets in the account ?\naws security hub security standards: [s3.1] s3 general purpose buckets should have block public access settings enabled (account-level) [s3.2] s3 general purpose buckets should block public read access(bucket-level) [ec2.1] amazon ebs snapshots should not be publicly restorable",
+          "title": null,
+          "severity": null,
+          "description": null,
+          "risk": null,
+          "remediation": null,
+          "resource_type": null,
+          "keywords": [],
+          "synonyms": null,
+          "stage": "1 quickwins",
+          "summary": "",
+          "risk_explanation": "[Exfiltration] - Users may misconfigure Amazon S3 buckets opening them for public access.",
+          "guidance": "Do you have Amazon S3 Block Public Access enabled at account level in all the accounts in your organization ? Have you enabled BPA for EC2 AMIs and Amazon EBS ? Have you enabled SCPs to prevent the removal of the BPA ? If you need buckets to be public: What is your use case ? is that a public static website ? Why not protecting that data with an Amazon CloudFront distribution with AWS WAF rules enabled? Are there any public buckets that you do not have identified that they absolutely need to be public? If there are some public buckets: have you block public access at the bucket level for all other buckets in the account ?",
+          "how_to_check": "AWS Security Hub security standards: [S3.1] S3 general purpose buckets should have block public access settings enabled (account-level) [S3.2] S3 general purpose buckets should block public read access(bucket-level) [EC2.1] Amazon EBS snapshots should not be publicly restorable",
+          "recommended_practices": [],
+          "mapping_confidence": null,
+          "mapping_reason": null,
+          "review_status": null,
+          "mapping_type": null,
+          "assessment_weight_hint": null,
+          "report_note": null
+        },
+        "matched_by": [
+          "exact_capability_id"
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "index_version": "rag-v2-2026-03-17",
+    "confidence": "high",
+    "review_recommended": false,
+    "diagnostics": {
+      "service": "maturity_search",
+      "normalized_query": "block_public_access",
+      "query_type": "maturity_search",
+      "filters": {
+        "provider": "aws",
+        "doc_type": "maturity_capability"
+      },
+      "verification": {
+        "valid": true,
+        "warnings": [],
+        "diagnostics": {
+          "result_count": 1,
+          "top1_score": 1.0,
+          "top1_doc_type": "maturity_capability"
+        }
+      },
+      "readiness": {
+        "lexical_ready": true,
+        "lexical_ready_by_corpus": {
+          "prowler_checks": true,
+          "maturity_capabilities": true,
+          "maturity_mappings": true
+        },
+        "vector_ready": true,
+        "mapping_ready": true,
+        "minimal_ready": true,
+        "hybrid_ready": true
+      },
+      "degraded": false,
+      "routing": {
+        "requires_exact_lookup": true,
+        "exact_check_id": null,
+        "service": null,
+        "domain": null,
+        "provider": "aws",
+        "doc_types": [
+          "maturity_capability"
+        ],
+        "corpus": "maturity_capabilities",
+        "collection_name": "maturity_capabilities"
+      },
+      "requested_capability_id": "block_public_access",
+      "resolved_capability_ids": [
+        "block_public_access"
+      ],
+      "exact_capability_match_found": true,
+      "corpus": "maturity_capabilities",
+      "collection_name": "maturity_capabilities",
+      "retrieval_mode": "exact_maturity",
+      "lexical_candidate_count": 1,
+      "vector_candidate_count": 0,
+      "top_lexical_doc_ids": [
+        "capability:block_public_access"
+      ],
+      "top_vector_doc_ids": [],
+      "used_vector": false,
+      "used_hybrid": false,
+      "vector_error": null
+    }
+  },
+  "errors": []
+}

@@ -1,0 +1,11 @@
+{
+  "_comment": "PO-approved release criteria for RAG benchmark pipeline. All thresholds must be met for a PASS verdict.",
+  "checks_top1_accuracy_min": 0.60,
+  "checks_top5_accuracy_min": 0.80,
+  "maturity_top1_accuracy_min": 0.60,
+  "maturity_top5_accuracy_min": 0.80,
+  "forbidden_capability_rate_max": 0.0,
+  "empty_bundle_rate_max": 0.0,
+  "service_precision_min": 0.85,
+  "average_latency_ms_max": 2000
+}

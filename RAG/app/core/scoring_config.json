@@ -1,0 +1,43 @@
+{
+  "rrf": {
+    "k": 60
+  },
+  "exact_match_bonus": 2.0,
+  "metadata_bonus": {
+    "service_match": 0.03,
+    "domain_match": 0.02
+  },
+  "reranker": {
+    "enabled": true,
+    "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "top_n": 20
+  },
+  "product_gate": "filter",
+  "search_top_k_multiplier": 3,
+  "search_top_k_minimum": 10,
+  "confidence_thresholds": {
+    "mapping_resolution": {
+      "high": 0.99
+    },
+    "check_search": {
+      "high": 0.70,
+      "medium": 0.35
+    },
+    "maturity_search": {
+      "high": 0.60,
+      "medium": 0.30
+    },
+    "default": {
+      "high": 0.65,
+      "medium": 0.30
+    }
+  },
+  "ambiguity": {
+    "gap_high_to_medium": 0.10,
+    "gap_to_low": 0.03
+  },
+  "verification": {
+    "ambiguity_threshold": 0.05,
+    "low_score_threshold": 0.15
+  }
+}

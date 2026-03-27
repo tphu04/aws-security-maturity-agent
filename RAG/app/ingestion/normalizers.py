@@ -4,19 +4,47 @@ import re
 import unicodedata
 from typing import Any, List, Optional, Dict
 
+from nltk.stem import SnowballStemmer
+from nltk.corpus import stopwords as _nltk_stopwords
+
 from app.core.config import INDEX_VERSION
 from app.core.models import MaturityCapabilityDoc, MaturityMappingDoc, ProwlerCheckDoc
+
+# ---------- Stemmer & stopwords (singleton) ----------
+_stemmer = SnowballStemmer("english")
+
+# NLTK English stopwords + custom AWS domain stopwords that appear in nearly
+# every document and carry no discriminative value for ranking.
+_ENGLISH_STOPWORDS: frozenset[str] = frozenset(_nltk_stopwords.words("english"))
+_AWS_STOPWORDS: frozenset[str] = frozenset({
+    "aws", "amazon", "service", "resource", "resources",
+    "configuration", "setting", "settings", "ensure",
+    "check", "checks", "account", "using",
+})
+_STOPWORDS: frozenset[str] = _ENGLISH_STOPWORDS | _AWS_STOPWORDS
 
 
 def normalize_query(text: str) -> str:
     return _normalize_for_index(text).lower()
 
 
-def tokenize(text: str) -> List[str]:
+def tokenize(text: str, use_stemming: bool = True) -> List[str]:
+    """Tokenize text for BM25 indexing / querying.
+
+    Pipeline: lowercase → split on non-alphanumeric → remove stopwords → stem.
+    Both build-time and query-time MUST call this with the same flags to keep
+    the index consistent.
+    """
     normalized = normalize_query(text)
     if not normalized:
         return []
-    return [tok for tok in re.split(r"[^a-z0-9_]+", normalized) if tok]
+    raw_tokens = [tok for tok in re.split(r"[^a-z0-9_]+", normalized) if tok]
+    # Remove stopwords
+    filtered = [tok for tok in raw_tokens if tok not in _STOPWORDS]
+    if use_stemming:
+        filtered = [_stemmer.stem(tok) for tok in filtered]
+    # Drop empty tokens that may result from stemming
+    return [tok for tok in filtered if tok]
 
 
 def _normalize_to_text(value: Any) -> str:
@@ -354,6 +382,57 @@ def build_retrieval_text(parts: List[Any]) -> str:
             chunks.append(text.lower())
     return "\n".join(chunks)
 
+
+def build_retrieval_text_prefixed(fields: List[tuple]) -> str:
+    """Build retrieval text with field-level prefixes for better embedding quality.
+
+    Args:
+        fields: List of (field_name, value) tuples. e.g. [("check", "s3_bucket_..."), ("service", "s3")]
+    """
+    chunks: List[str] = []
+    for field_name, value in fields:
+        text = _normalize_for_index(value)
+        if text:
+            chunks.append(f"{field_name}: {text.lower()}")
+    return "\n".join(chunks)
+
+
+def _extract_recommendation_text(remediation: Any) -> str:
+    """Extract only human-readable recommendation text from Remediation,
+    excluding CLI commands, Terraform code, CloudFormation YAML, and URLs."""
+    if isinstance(remediation, dict):
+        rec = remediation.get("Recommendation") or remediation.get("recommendation") or {}
+        if isinstance(rec, dict):
+            return _normalize_for_index(rec.get("Text") or rec.get("text") or "")
+        return _normalize_for_index(rec) if isinstance(rec, str) else ""
+    if isinstance(remediation, str):
+        text = remediation.strip()
+        # If it looks like a serialized dict/JSON, try to skip it
+        if text.startswith("{") or text.startswith("["):
+            return ""
+        return _normalize_for_index(text)
+    return ""
+
+
+def _truncate_words(text: str, max_words: int = 300) -> str:
+    """Truncate text to max_words, preserving whole words."""
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words])
+
+
+def _text_overlap_ratio(text_a: str, text_b: str) -> float:
+    """Calculate word-level overlap ratio between two texts."""
+    if not text_a or not text_b:
+        return 0.0
+    words_a = set(text_a.lower().split())
+    words_b = set(text_b.lower().split())
+    if not words_a or not words_b:
+        return 0.0
+    intersection = len(words_a & words_b)
+    return intersection / min(len(words_a), len(words_b))
+
 def _normalize_capability_name_key(value: Any) -> str:
     text = _normalize_for_index(value).lower()
     text = text.replace("&", " and ")
@@ -475,6 +554,17 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
         alias_inputs.append(source_doc_id.replace("-", "_"))
         alias_inputs.append(source_doc_id.replace("_", "-"))
 
+    # For retrieval text: truncate summary and deduplicate vs recommendations
+    summary_for_retrieval = _truncate_words(summary, max_words=300)
+    rec_text_combined = " ".join(recommended_practices)
+    # If recommendations overlap heavily with summary, skip them in retrieval text
+    if _text_overlap_ratio(summary_for_retrieval, rec_text_combined) > 0.8:
+        rec_for_retrieval = ""
+    else:
+        rec_for_retrieval = rec_text_combined
+
+    alias_text = " ".join(alias_inputs) if alias_inputs else ""
+
     doc = MaturityCapabilityDoc(
         doc_id=doc_id,
         doc_type="maturity_capability",
@@ -498,19 +588,17 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
         how_to_check=how_to_check or None,
         recommended_practices=recommended_practices,
         keywords=keywords,
-        retrieval_text=build_retrieval_text(
+        retrieval_text=build_retrieval_text_prefixed(
             [
-                capability_id,
-                capability_name,
-                alias_inputs,
-                raw.get("domain", ""),
-                summary,
-                risk_explanation,
-                guidance,
-                how_to_check,
-                recommended_practices,
-                keywords,
-                tags,
+                ("capability", capability_id),
+                ("name", capability_name),
+                ("aliases", alias_text),
+                ("domain", raw.get("domain", "")),
+                ("summary", summary_for_retrieval),
+                ("risk", risk_explanation),
+                ("guidance", guidance),
+                ("keywords", " ".join(keywords)),
+                ("recommendations", rec_for_retrieval),
             ]
         ),
     )
@@ -526,10 +614,13 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
     title = _normalize_for_index(raw.get("CheckTitle", ""))
     description = _normalize_for_index(raw.get("Description", ""))
     risk = _normalize_for_index(raw.get("Risk", ""))
+    # Full remediation kept in doc field for downstream use
     remediation = _normalize_for_index(raw.get("Remediation", ""))
+    # Extract only human-readable recommendation text for retrieval
+    recommendation_text = _extract_recommendation_text(raw.get("Remediation", ""))
     keywords = normalize_string_list(raw.get("Categories", []))
     tags = normalize_string_list(raw.get("tags", []))
-    
+
     aliases = _check_aliases(
         check_id=check_id,
         service=service,
@@ -554,6 +645,8 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
         )
     )
 
+    alias_text = " ".join(aliases) if aliases else ""
+
     doc = ProwlerCheckDoc(
         doc_id=f"check:{check_id}",
         doc_type="prowler_check",
@@ -577,17 +670,17 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
         resource_type=_normalize_for_index(raw.get("ResourceType", "")) or None,
         keywords=keywords,
         synonyms=aliases,
-        retrieval_text=build_retrieval_text(
+        retrieval_text=build_retrieval_text_prefixed(
             [
-                check_id,
-                service,
-                title,
-                description,
-                risk,
-                remediation,
-                raw.get("ResourceType", ""),
-                enriched_keywords,
-                tags,
+                ("check", check_id),
+                ("service", service),
+                ("title", title),
+                ("description", description),
+                ("risk", risk),
+                ("recommendation", recommendation_text),
+                ("resource_type", raw.get("ResourceType", "")),
+                ("keywords", " ".join(enriched_keywords)),
+                ("aliases", alias_text),
             ]
         ),
     )

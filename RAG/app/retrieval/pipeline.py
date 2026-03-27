@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -12,13 +14,19 @@ from app.core.config import (
     CORPUS_PROWLER_CHECKS,
     MANIFEST_PATH,
     NORMALIZED_PATHS,
+    load_scoring_config,
 )
+from app.core.constants import PRODUCT_ENTITY_GATES
 from app.core.models import Confidence
+from app.core.utils import mapping_sort_key
 from app.indexing.lexical_index import BM25Index
 from app.indexing.vector_index import VectorIndex
 from app.retrieval.confidence import calculate_confidence
+from app.retrieval.reranker import CrossEncoderReranker
 from app.retrieval.router import RouteDecision, SemanticRouter
 from app.retrieval.verifier import verify_retrieval
+
+logger = logging.getLogger(__name__)
 
 
 class RetrievalPipeline:
@@ -59,6 +67,7 @@ class RetrievalPipeline:
         self._mapping_index: Optional[Dict[str, List[Dict[str, Any]]]] = None
         self._manifest = manifest if manifest is not None else self._load_manifest()
         self._doc_store: Optional[Dict[str, Dict[str, Any]]] = None
+        self._scoring = load_scoring_config()
 
     # ----------------------------
     # Factory helpers
@@ -186,7 +195,10 @@ class RetrievalPipeline:
         lexical_results: List[Dict[str, Any]] = []
         vector_results: List[Dict[str, Any]] = []
         vector_error: Optional[str] = None
-        search_top_k = max(top_k * 3, 10)
+        search_top_k = max(
+            top_k * self._scoring["search_top_k_multiplier"],
+            self._scoring["search_top_k_minimum"],
+        )
 
         # mapping resolution stays exact-first by design
         if route.query_type == "mapping_resolution":
@@ -260,10 +272,23 @@ class RetrievalPipeline:
                 },
             )
 
-        if retrieval_mode in {"lexical", "hybrid"}:
+        if retrieval_mode == "hybrid":
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                lex_future = executor.submit(
+                    self._run_lexical, route=route, top_k=search_top_k
+                )
+                vec_future = executor.submit(
+                    self._run_vector, route=route, top_k=search_top_k
+                )
+                lexical_results = lex_future.result()
+                try:
+                    vector_results = vec_future.result()
+                except Exception as exc:
+                    vector_results = []
+                    vector_error = f"{type(exc).__name__}: {exc}"
+        elif retrieval_mode == "lexical":
             lexical_results = self._run_lexical(route=route, top_k=search_top_k)
-
-        if retrieval_mode in {"vector", "hybrid"}:
+        elif retrieval_mode == "vector":
             try:
                 vector_results = self._run_vector(route=route, top_k=search_top_k)
             except Exception as exc:
@@ -271,9 +296,9 @@ class RetrievalPipeline:
                 vector_error = f"{type(exc).__name__}: {exc}"
 
         if retrieval_mode == "lexical":
-            merged_results = lexical_results[:top_k]
+            merged_results = self._hydrate_results(lexical_results[:top_k])
         elif retrieval_mode == "vector":
-            merged_results = vector_results[:top_k]
+            merged_results = self._hydrate_results(vector_results[:top_k])
         else:
             merged_results = self._merge_results(
                 lexical_results=lexical_results,
@@ -283,7 +308,6 @@ class RetrievalPipeline:
                 preferred_service=route.service,
                 preferred_domain=route.domain,
             )
-        merged_results = self._hydrate_results(merged_results)
 
         mapping_exists = None
         if route.query_type in {"check_search", "context_build"}:
@@ -337,7 +361,7 @@ class RetrievalPipeline:
         if not filtered:
             return []
 
-        ranked = sorted(filtered, key=self._mapping_sort_key, reverse=True)
+        ranked = sorted(filtered, key=mapping_sort_key, reverse=True)
         best = ranked[0]
         metadata = dict(best)
         metadata.setdefault("doc_type", "maturity_mapping")
@@ -382,30 +406,6 @@ class RetrievalPipeline:
 
         return filtered
 
-    @staticmethod
-    def _mapping_sort_key(item: Dict[str, Any]) -> tuple:
-        confidence_rank = {
-            "high": 3,
-            "medium": 2,
-            "low": 1,
-        }
-        review_rank = {
-            "approved": 3,
-            "reviewed": 2,
-            "review_required": 1,
-            "unreviewed": 0,
-        }
-        return (
-            confidence_rank.get(
-                str(item.get("mapping_confidence", "low")).strip().lower(),
-                1,
-            ),
-            review_rank.get(
-                str(item.get("review_status", "unreviewed")).strip().lower(),
-                0,
-            ),
-            float(item.get("score", 0.0) or 0.0),
-        )
 
     # ----------------------------
     # Lexical / vector execution
@@ -459,8 +459,8 @@ class RetrievalPipeline:
             return CORPUS_PROWLER_CHECKS
         return CORPUS_PROWLER_CHECKS
 
-    @staticmethod
-    def _rrf(rank: int, k: int = 60) -> float:
+    def _rrf(self, rank: int) -> float:
+        k = self._scoring["rrf"]["k"]
         return 1.0 / (k + rank)
 
     @staticmethod
@@ -470,13 +470,14 @@ class RetrievalPipeline:
             {"exact_check_id", "exact_capability_id", "exact_mapping"} & matched_by
         )
 
-    @staticmethod
     def _metadata_bonus(
+        self,
         metadata: Dict[str, Any],
         preferred_service: Optional[str],
         preferred_domain: Optional[str],
     ) -> float:
         bonus = 0.0
+        meta_cfg = self._scoring["metadata_bonus"]
 
         if preferred_service:
             actual_service = str(metadata.get("service", "") or "").strip().lower()
@@ -484,12 +485,12 @@ class RetrievalPipeline:
                 actual_service
                 and actual_service == str(preferred_service).strip().lower()
             ):
-                bonus += 0.03
+                bonus += meta_cfg["service_match"]
 
         if preferred_domain:
             actual_domain = str(metadata.get("domain", "") or "").strip().lower()
             if actual_domain and actual_domain == str(preferred_domain).strip().lower():
-                bonus += 0.02
+                bonus += meta_cfg["domain_match"]
 
         return bonus
 
@@ -554,73 +555,8 @@ class RetrievalPipeline:
     # Merge
     # ----------------------------
 
-    _CONTROL_INTENT_MARKERS: Dict[str, List[str]] = {
-        "public_access": [
-            "public access",
-            "publicly accessible",
-            "public exposure",
-            "public read",
-            "public write",
-            "anonymous access",
-            "unauthenticated access",
-            "internet exposed",
-            "block public access",
-        ],
-        "encryption_at_rest": [
-            "encryption at rest",
-            "default encryption",
-            "server side encryption",
-            "kms",
-            "sse",
-            "stored data",
-            "storage encryption",
-        ],
-        "encryption_in_transit": [
-            "encryption in transit",
-            "secure transport",
-            "https",
-            "tls",
-            "ssl",
-            "secure protocol",
-        ],
-        "logging_monitoring": [
-            "logging",
-            "cloudtrail",
-            "audit",
-            "monitoring",
-            "detection",
-        ],
-        "identity_access": [
-            "identity",
-            "iam",
-            "least privilege",
-            "mfa",
-            "password",
-            "credential",
-            "role",
-            "permission",
-        ],
-    }
-
-    _PRODUCT_ENTITY_GATES: Dict[str, List[str]] = {
-        "bedrock": ["bedrock", "genai", "gen_ai", "generative", "llm", "prompt"],
-        "generative": ["bedrock", "genai", "gen_ai", "generative", "llm", "prompt"],
-        "genai": ["bedrock", "genai", "gen_ai", "generative", "llm", "prompt"],
-        "prompt": ["bedrock", "genai", "generative", "llm", "prompt", "inference"],
-        "sagemaker": ["sagemaker", "ml", "model", "training", "endpoint"],
-        "waf": ["waf", "web acl", "webacl", "sql injection", "xss", "rate limit"],
-        "macie": ["macie", "pii", "sensitive data", "classification"],
-    }
-
-    def _infer_control_intents(self, text: str) -> set[str]:
-        normalized = (text or "").lower()
-        intents: set[str] = set()
-        for intent, markers in self._CONTROL_INTENT_MARKERS.items():
-            if any(marker in normalized for marker in markers):
-                intents.add(intent)
-        return intents
-
-    def _doc_signal_text(self, metadata: Dict[str, Any]) -> str:
+    @staticmethod
+    def _doc_signal_text(metadata: Dict[str, Any]) -> str:
         return " ".join(
             str(metadata.get(key) or "")
             for key in (
@@ -639,49 +575,17 @@ class RetrievalPipeline:
             )
         ).lower()
 
-    def _intent_bonus(self, query: str, metadata: Dict[str, Any]) -> float:
-        query_intents = self._infer_control_intents(query)
-        doc_intents = self._infer_control_intents(self._doc_signal_text(metadata))
-
-        if not query_intents or not doc_intents:
-            return 0.0
-        if query_intents & doc_intents:
-            return 0.18
-        return -0.18
-
-    def _check_id_intent_boost(self, query: str, metadata: Dict[str, Any]) -> float:
-        check_id = str(metadata.get("check_id") or "").lower()
-        if not check_id:
-            return 0.0
-
-        query_intents = self._infer_control_intents(query)
-        boost = 0.0
-
-        if "public_access" in query_intents:
-            if "public_access" in check_id or "public_access_block" in check_id:
-                boost += 0.30
-            if "public" in check_id and ("acl" in check_id or "policy" in check_id):
-                boost += 0.12
-
-        if "encryption_at_rest" in query_intents:
-            if "default_encryption" in check_id or "kms_encryption" in check_id:
-                boost += 0.22
-
-        if "encryption_in_transit" in query_intents:
-            if "secure_transport" in check_id or "https" in check_id:
-                boost += 0.22
-
-        return boost
-
-    def _product_penalty(self, query: str, metadata: Dict[str, Any]) -> float:
+    @staticmethod
+    def _product_gate_pass(query: str, metadata: Dict[str, Any]) -> bool:
+        """Return True if the candidate is allowed (no entity gate violation)."""
         query_text = (query or "").lower()
-        doc_text = self._doc_signal_text(metadata)
-        for entity_token, required_signals in self._PRODUCT_ENTITY_GATES.items():
+        doc_text = RetrievalPipeline._doc_signal_text(metadata)
+        for entity_token, required_signals in PRODUCT_ENTITY_GATES.items():
             if entity_token in doc_text and not any(
                 signal in query_text for signal in required_signals
             ):
-                return -0.20
-        return 0.0
+                return False
+        return True
 
     def _merge_results(
         self,
@@ -692,6 +596,18 @@ class RetrievalPipeline:
         preferred_service: Optional[str] = None,
         preferred_domain: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
+        """Merge lexical + vector candidates via RRF, then cross-encoder rerank.
+
+        Flow:
+        1. RRF merge (pure rank fusion)
+        2. Separate exact matches (score = exact_match_bonus, skip reranking)
+        3. Product gate filter (binary — remove violating candidates)
+        4. Hydrate candidates (load retrieval_text for cross-encoder)
+        5. Cross-encoder rerank non-exact candidates
+        6. Add metadata bonus on top of cross-encoder scores
+        7. Prepend exact matches, truncate to top_k
+        """
+        # ---- Step 1: RRF merge ----
         merged: Dict[str, Dict[str, Any]] = {}
 
         lexical_rank_map = {
@@ -706,7 +622,9 @@ class RetrievalPipeline:
         }
 
         all_doc_ids = list(
-            dict.fromkeys(list(lexical_rank_map.keys()) + list(vector_rank_map.keys()))
+            dict.fromkeys(
+                list(lexical_rank_map.keys()) + list(vector_rank_map.keys())
+            )
         )
 
         for doc_id in all_doc_ids:
@@ -717,72 +635,106 @@ class RetrievalPipeline:
                 (x for x in vector_results if x.get("doc_id") == doc_id), None
             )
 
-            metadata = {}
-            matched_by = set()
+            metadata: Dict[str, Any] = {}
+            matched_by: set[str] = set()
 
             if lexical_item:
                 metadata = lexical_item.get("metadata", {}) or {}
                 matched_by.update(lexical_item.get("matched_by", []) or [])
-
             if vector_item:
                 if not metadata:
                     metadata = vector_item.get("metadata", {}) or {}
                 matched_by.update(vector_item.get("matched_by", []) or [])
 
-            score = 0.0
-
+            rrf_score = 0.0
             if doc_id in lexical_rank_map:
-                score += self._rrf(lexical_rank_map[doc_id])
-
+                rrf_score += self._rrf(lexical_rank_map[doc_id])
             if doc_id in vector_rank_map:
-                score += self._rrf(vector_rank_map[doc_id])
+                rrf_score += self._rrf(vector_rank_map[doc_id])
 
+            is_exact = False
             if lexical_item and self._has_exact_match(lexical_item):
-                score += 1.0
-
+                is_exact = True
             if vector_item and self._has_exact_match(vector_item):
-                score += 1.0
-
-            score += self._metadata_bonus(
-                metadata=metadata,
-                preferred_service=preferred_service,
-                preferred_domain=preferred_domain,
-            )
-            score += self._intent_bonus(query=query, metadata=metadata)
-            score += self._check_id_intent_boost(query=query, metadata=metadata)
-            score += self._product_penalty(query=query, metadata=metadata)
+                is_exact = True
 
             merged[doc_id] = {
                 "doc_id": doc_id,
-                "score": score,
+                "score": rrf_score,
                 "metadata": metadata,
                 "matched_by": sorted(matched_by),
-                "_lexical_rank": lexical_rank_map.get(doc_id),
-                "_vector_rank": vector_rank_map.get(doc_id),
-                "_raw_lexical_score": float(
-                    (lexical_item or {}).get("score", 0.0) or 0.0
-                ),
-                "_raw_vector_score": float(
-                    (vector_item or {}).get("score", 0.0) or 0.0
-                ),
+                "_is_exact": is_exact,
             }
 
-        ranked = sorted(
-            merged.values(),
-            key=lambda item: (
-                float(item.get("score", 0.0)),
-                1 if self._has_exact_match(item) else 0,
-                1 if item.get("_vector_rank") is not None else 0,
-                1 if item.get("_lexical_rank") is not None else 0,
-            ),
-            reverse=True,
-        )
+        # ---- Step 2: Separate exact matches ----
+        exact_match_bonus = self._scoring["exact_match_bonus"]
+        exact_results = []
+        semantic_candidates = []
 
-        for item in ranked:
-            item.pop("_lexical_rank", None)
-            item.pop("_vector_rank", None)
+        for item in merged.values():
+            if item.pop("_is_exact", False):
+                item["score"] = exact_match_bonus
+                exact_results.append(item)
+            else:
+                semantic_candidates.append(item)
 
-        return ranked[:top_k]
+        # ---- Step 3: Product gate filter ----
+        if self._scoring.get("product_gate") == "filter":
+            before_count = len(semantic_candidates)
+            semantic_candidates = [
+                c for c in semantic_candidates
+                if self._product_gate_pass(query, c.get("metadata", {}))
+            ]
+            filtered_count = before_count - len(semantic_candidates)
+            if filtered_count:
+                logger.debug(
+                    "Product gate filtered %d candidates", filtered_count
+                )
+
+        # ---- Step 4: Hydrate candidates ----
+        exact_results = self._hydrate_results(exact_results)
+        semantic_candidates = self._hydrate_results(semantic_candidates)
+
+        # ---- Step 5: Cross-encoder rerank ----
+        reranker_cfg = self._scoring.get("reranker", {})
+        if reranker_cfg.get("enabled", False) and semantic_candidates:
+            model_name = reranker_cfg.get(
+                "model", "cross-encoder/ms-marco-MiniLM-L-6-v2"
+            )
+            rerank_top_n = reranker_cfg.get("top_n", 20)
+
+            try:
+                reranker = CrossEncoderReranker.get_instance(model_name)
+                semantic_candidates = reranker.rerank(
+                    query=query,
+                    candidates=semantic_candidates,
+                    top_n=rerank_top_n,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Cross-encoder rerank failed, falling back to RRF: %s", exc
+                )
+                # Fallback: keep RRF order
+                semantic_candidates.sort(
+                    key=lambda x: x.get("score", 0.0), reverse=True
+                )
+        else:
+            # Reranker disabled — sort by pure RRF score
+            semantic_candidates.sort(
+                key=lambda x: x.get("score", 0.0), reverse=True
+            )
+
+        # ---- Step 6: Metadata bonus ----
+        for item in semantic_candidates:
+            item["score"] += self._metadata_bonus(
+                metadata=item.get("metadata", {}),
+                preferred_service=preferred_service,
+                preferred_domain=preferred_domain,
+            )
+
+        # ---- Step 7: Combine and truncate ----
+        final = exact_results + semantic_candidates
+        return final[:top_k]
 
     # ----------------------------
     # Mapping support

@@ -1,3 +1,14 @@
+"""
+Benchmark retrieval quality for RAG service.
+
+Supports:
+- Loading test cases from external JSON (benchmark_cases.json)
+- Inline fallback cases for backward compatibility
+- New metrics: forbidden_capability_rate, service_precision, mapping_false_positive_rate
+- Per-service and per-category breakdowns
+- JSON diff-able report output
+"""
+
 from __future__ import annotations
 
 import json
@@ -12,261 +23,42 @@ BASE_URL = "http://localhost:8000"
 TOP_K = 5
 TIMEOUT = 30
 
-OUTPUT_DIR = Path("benchmark_outputs")
+SCRIPT_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = SCRIPT_DIR / "benchmark_outputs"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+CASES_FILE = SCRIPT_DIR / "benchmark_cases.json"
 
 CHECKS_ENDPOINT = f"{BASE_URL}/v1/retrieve/checks"
 MATURITY_ENDPOINT = f"{BASE_URL}/v1/retrieve/maturity"
 
 
-CHECK_CASES: List[Dict[str, Any]] = [
-    # exact
-    {
-        "id": "checks_exact_check_id_1",
-        "category": "exact",
-        "query": "s3_bucket_level_public_access_block",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_exact_check_id_2",
-        "category": "exact",
-        "query": "s3_account_level_public_access_blocks",
-        "expected_doc_id": "check:s3_account_level_public_access_blocks",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_exact_check_id_3",
-        "category": "exact",
-        "query": "s3_bucket_public_write_acl",
-        "expected_doc_id": "check:s3_bucket_public_write_acl",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_exact_check_id_4",
-        "category": "exact",
-        "query": "s3_bucket_public_list_acl",
-        "expected_doc_id": "check:s3_bucket_public_list_acl",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_exact_check_id_5",
-        "category": "exact",
-        "query": "s3_bucket_policy_public_write_access",
-        "expected_doc_id": "check:s3_bucket_policy_public_write_access",
-        "expected_service": "s3",
-    },
-    # paraphrase
-    {
-        "id": "checks_paraphrase_1",
-        "category": "paraphrase",
-        "query": "how to prevent an s3 bucket from being publicly exposed",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_paraphrase_2",
-        "category": "paraphrase",
-        "query": "stop public access to aws object storage",
-        "expected_doc_id": "check:s3_account_level_public_access_blocks",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_paraphrase_3",
-        "category": "paraphrase",
-        "query": "prevent anonymous users from accessing bucket data",
-        "expected_doc_id": "check:s3_bucket_policy_public_write_access",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_paraphrase_4",
-        "category": "paraphrase",
-        "query": "make sure users cannot upload files publicly to s3",
-        "expected_doc_id": "check:s3_bucket_public_write_acl",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_paraphrase_5",
-        "category": "paraphrase",
-        "query": "avoid public listing of files in object storage buckets",
-        "expected_doc_id": "check:s3_bucket_public_list_acl",
-        "expected_service": "s3",
-    },
-    # risk
-    {
-        "id": "checks_risk_1",
-        "category": "risk",
-        "query": "misconfiguration that allows public reads on cloud storage",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_risk_2",
-        "category": "risk",
-        "query": "security issue when bucket objects are publicly accessible",
-        "expected_doc_id": "check:s3_account_level_public_access_blocks",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_risk_3",
-        "category": "risk",
-        "query": "how to avoid accidental public exposure of files in s3",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_risk_4",
-        "category": "risk",
-        "query": "publicly writable bucket through acl misconfiguration",
-        "expected_doc_id": "check:s3_bucket_public_write_acl",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_risk_5",
-        "category": "risk",
-        "query": "anyone can enumerate objects in the bucket",
-        "expected_doc_id": "check:s3_bucket_public_list_acl",
-        "expected_service": "s3",
-    },
-    # semantic hard
-    {
-        "id": "checks_semantic_hard_1",
-        "category": "semantic_hard",
-        "query": "make object storage private by default",
-        "expected_doc_id": "check:s3_account_level_public_access_blocks",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_semantic_hard_2",
-        "category": "semantic_hard",
-        "query": "avoid outsiders browsing files in cloud buckets",
-        "expected_doc_id": "check:s3_bucket_public_list_acl",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_semantic_hard_3",
-        "category": "semantic_hard",
-        "query": "prevent world-readable bucket objects",
-        "expected_doc_id": "check:s3_bucket_level_public_access_block",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_semantic_hard_4",
-        "category": "semantic_hard",
-        "query": "stop unauthenticated access to bucket contents",
-        "expected_doc_id": "check:s3_bucket_policy_public_write_access",
-        "expected_service": "s3",
-    },
-    {
-        "id": "checks_semantic_hard_5",
-        "category": "semantic_hard",
-        "query": "keep cloud file storage inaccessible to the public",
-        "expected_doc_id": "check:s3_account_level_public_access_blocks",
-        "expected_service": "s3",
-    },
-]
+# ---------------------------------------------------------------------------
+# Case loading
+# ---------------------------------------------------------------------------
 
-MATURITY_CASES: List[Dict[str, Any]] = [
-    # exact
-    {
-        "id": "maturity_exact_1",
-        "category": "exact",
-        "query": "block_public_access",
-        "expected_capability_id": "block_public_access",
-        "expected_doc_id": "capability:block_public_access",
-    },
-    {
-        "id": "maturity_exact_2",
-        "category": "exact",
-        "query": "audit_api_calls",
-        "expected_capability_id": "audit_api_calls",
-        "expected_doc_id": "capability:audit_api_calls",
-    },
-    {
-        "id": "maturity_exact_3",
-        "category": "exact",
-        "query": "data_backups",
-        "expected_capability_id": "data_backups",
-        "expected_doc_id": "capability:data_backups",
-    },
-    {
-        "id": "maturity_exact_4",
-        "category": "exact",
-        "query": "encryption_at_rest",
-        "expected_capability_id": "encryption_at_rest",
-        "expected_doc_id": "capability:encryption_at_rest",
-    },
-    {
-        "id": "maturity_exact_5",
-        "category": "exact",
-        "query": "network_segmentation",
-        "expected_capability_id": "network_segmentation",
-        "expected_doc_id": "capability:network_segmentation",
-    },
-    # paraphrase
-    {
-        "id": "maturity_paraphrase_1",
-        "category": "paraphrase",
-        "query": "practice to stop public access to resources",
-        "expected_capability_id": "block_public_access",
-    },
-    {
-        "id": "maturity_paraphrase_2",
-        "category": "paraphrase",
-        "query": "ability to record and monitor api activity",
-        "expected_capability_id": "audit_api_calls",
-    },
-    {
-        "id": "maturity_paraphrase_3",
-        "category": "paraphrase",
-        "query": "capability for recovering data from backups",
-        "expected_capability_id": "data_backups",
-    },
-    {
-        "id": "maturity_paraphrase_4",
-        "category": "paraphrase",
-        "query": "protect stored data with encryption",
-        "expected_capability_id": "encryption_at_rest",
-    },
-    {
-        "id": "maturity_paraphrase_5",
-        "category": "paraphrase",
-        "query": "separate networks to reduce exposure",
-        "expected_capability_id": "network_segmentation",
-    },
-    # semantic hard
-    {
-        "id": "maturity_semantic_hard_1",
-        "category": "semantic_hard",
-        "query": "control internet-facing access to storage services",
-        "expected_capability_id": "block_public_access",
-    },
-    {
-        "id": "maturity_semantic_hard_2",
-        "category": "semantic_hard",
-        "query": "know who called cloud apis and when",
-        "expected_capability_id": "audit_api_calls",
-    },
-    {
-        "id": "maturity_semantic_hard_3",
-        "category": "semantic_hard",
-        "query": "restore critical information after loss or corruption",
-        "expected_capability_id": "data_backups",
-    },
-    {
-        "id": "maturity_semantic_hard_4",
-        "category": "semantic_hard",
-        "query": "make stolen storage media unreadable",
-        "expected_capability_id": "encryption_at_rest",
-    },
-    {
-        "id": "maturity_semantic_hard_5",
-        "category": "semantic_hard",
-        "query": "limit blast radius by isolating network zones",
-        "expected_capability_id": "network_segmentation",
-    },
-]
+def _load_cases_from_file() -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Load test cases from benchmark_cases.json."""
+    if not CASES_FILE.exists():
+        raise FileNotFoundError(f"Benchmark cases file not found: {CASES_FILE}")
 
+    with CASES_FILE.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    check_cases = data.get("check_cases", [])
+    maturity_cases = data.get("maturity_cases", [])
+
+    # Normalize: ensure case_id field exists (map from 'id' if needed)
+    for case in check_cases + maturity_cases:
+        if "case_id" not in case and "id" in case:
+            case["case_id"] = case["id"]
+
+    return check_cases, maturity_cases
+
+
+# ---------------------------------------------------------------------------
+# HTTP helpers
+# ---------------------------------------------------------------------------
 
 def _post_json(url: str, payload: Dict[str, Any]) -> tuple[int, Dict[str, Any], float]:
     start = time.perf_counter()
@@ -297,7 +89,6 @@ def _extract_diagnostics(body: Dict[str, Any]) -> Dict[str, Any]:
     meta = body.get("meta", {}) or {}
     diagnostics = meta.get("diagnostics", {}) or {}
 
-    # Fallback compatibility for older APIs
     results = body.get("results", []) or body.get("data", {}).get("results", []) or []
     matched_by_values: List[str] = []
     for item in results:
@@ -315,20 +106,13 @@ def _extract_diagnostics(body: Dict[str, Any]) -> Dict[str, Any]:
     if "retrieval_mode" not in diagnostics:
         diagnostics["retrieval_mode"] = meta.get("retrieval_mode", "unknown")
 
-    if "lexical_candidate_count" not in diagnostics:
-        diagnostics["lexical_candidate_count"] = None
-    if "vector_candidate_count" not in diagnostics:
-        diagnostics["vector_candidate_count"] = None
-    if "top_lexical_doc_ids" not in diagnostics:
-        diagnostics["top_lexical_doc_ids"] = None
-    if "top_vector_doc_ids" not in diagnostics:
-        diagnostics["top_vector_doc_ids"] = None
-    if "vector_error" not in diagnostics:
-        diagnostics["vector_error"] = None
-    if "corpus" not in diagnostics:
-        diagnostics["corpus"] = None
-    if "collection_name" not in diagnostics:
-        diagnostics["collection_name"] = None
+    for key in [
+        "lexical_candidate_count", "vector_candidate_count",
+        "top_lexical_doc_ids", "top_vector_doc_ids",
+        "vector_error", "corpus", "collection_name",
+    ]:
+        if key not in diagnostics:
+            diagnostics[key] = None
 
     return diagnostics
 
@@ -374,6 +158,35 @@ def _build_payload(query: str) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------------
+# Forbidden capability checking
+# ---------------------------------------------------------------------------
+
+def _check_forbidden_capabilities(
+    results: List[Dict[str, Any]],
+    forbidden_ids: List[str],
+) -> Dict[str, Any]:
+    """Check if any top-K results contain forbidden capability IDs."""
+    if not forbidden_ids:
+        return {"has_forbidden": False, "forbidden_found": []}
+
+    found: List[str] = []
+    for result in results[:TOP_K]:
+        meta = result.get("metadata", {}) or {}
+        cap_id = str(meta.get("capability_id", "") or "")
+        if cap_id in forbidden_ids:
+            found.append(cap_id)
+
+    return {
+        "has_forbidden": len(found) > 0,
+        "forbidden_found": found,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Evaluation
+# ---------------------------------------------------------------------------
+
 def evaluate_cases(
     endpoint: str,
     cases: List[Dict[str, Any]],
@@ -382,6 +195,7 @@ def evaluate_cases(
     rows: List[Dict[str, Any]] = []
 
     for idx, case in enumerate(cases, start=1):
+        case_id = case.get("case_id", case.get("id", f"case_{idx}"))
         payload = _build_payload(case["query"])
         status_code, body, latency_ms = _post_json(endpoint, payload)
 
@@ -394,6 +208,7 @@ def evaluate_cases(
         expected_doc_id = case.get("expected_doc_id")
         expected_capability_id = case.get("expected_capability_id")
         expected_service = case.get("expected_service")
+        forbidden_ids = case.get("forbidden_capability_ids", [])
 
         hit_top1 = False
         hit_top3 = False
@@ -412,10 +227,14 @@ def evaluate_cases(
             hit_top3 = expected_capability_id in capability_hits[:3]
             hit_top5 = expected_capability_id in capability_hits[:5]
 
+        # Forbidden capability check
+        forbidden_result = _check_forbidden_capabilities(results, forbidden_ids)
+
         row = {
             "case_index": idx,
-            "case_id": case["id"],
-            "category": case["category"],
+            "case_id": case_id,
+            "category": case.get("category", "unknown"),
+            "service": case.get("service"),
             "query": case["query"],
             "http_status": status_code,
             "response_status": _extract_status(body),
@@ -430,6 +249,9 @@ def evaluate_cases(
             "expected_capability_id": expected_capability_id,
             "expected_service": expected_service,
             "top1_correct_service": top1_service == expected_service if expected_service else None,
+            "forbidden_capability_ids": forbidden_ids,
+            "has_forbidden_in_results": forbidden_result["has_forbidden"],
+            "forbidden_found": forbidden_result["forbidden_found"],
             "confidence": _extract_confidence(body),
             "review_recommended": (body.get("meta", {}) or {}).get("review_recommended"),
             "warnings": verification.get("warnings", []),
@@ -484,6 +306,33 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
     )
     latencies = [row["latency_ms"] for row in rows]
 
+    # New metrics: forbidden capability rate
+    cases_with_forbidden_spec = [
+        row for row in rows if row.get("forbidden_capability_ids")
+    ]
+    forbidden_violations = sum(
+        1 for row in cases_with_forbidden_spec if row.get("has_forbidden_in_results")
+    )
+    forbidden_capability_rate = (
+        round(forbidden_violations / len(cases_with_forbidden_spec) * 100, 1)
+        if cases_with_forbidden_spec
+        else 0.0
+    )
+
+    # New metrics: service precision (top-1 service correctness)
+    cases_with_service = [
+        row for row in rows if row.get("expected_service") is not None
+    ]
+    service_correct = sum(
+        1 for row in cases_with_service if row.get("top1_correct_service") is True
+    )
+    service_precision = (
+        round(service_correct / len(cases_with_service) * 100, 1)
+        if cases_with_service
+        else None
+    )
+
+    # By category
     by_category: Dict[str, Dict[str, Any]] = {}
     for row in rows:
         category = row["category"]
@@ -496,6 +345,7 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
                 "top5": 0,
                 "vector": 0,
                 "hybrid": 0,
+                "forbidden_violations": 0,
                 "avg_latency_ms": [],
             },
         )
@@ -505,6 +355,8 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
         bucket["top5"] += 1 if row["hit_top5"] else 0
         bucket["vector"] += 1 if row["diagnostics"].get("used_vector") else 0
         bucket["hybrid"] += 1 if row["diagnostics"].get("used_hybrid") else 0
+        if row.get("has_forbidden_in_results"):
+            bucket["forbidden_violations"] += 1
         bucket["avg_latency_ms"].append(row["latency_ms"])
 
     for category, bucket in by_category.items():
@@ -512,20 +364,59 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
             statistics.mean(bucket["avg_latency_ms"]), 2
         ) if bucket["avg_latency_ms"] else None
 
+    # By service
+    by_service: Dict[str, Dict[str, Any]] = {}
+    for row in rows:
+        svc = row.get("service") or "unknown"
+        bucket = by_service.setdefault(
+            svc,
+            {
+                "total": 0,
+                "top1": 0,
+                "top3": 0,
+                "top5": 0,
+                "forbidden_violations": 0,
+                "service_correct": 0,
+            },
+        )
+        bucket["total"] += 1
+        bucket["top1"] += 1 if row["hit_top1"] else 0
+        bucket["top3"] += 1 if row["hit_top3"] else 0
+        bucket["top5"] += 1 if row["hit_top5"] else 0
+        if row.get("has_forbidden_in_results"):
+            bucket["forbidden_violations"] += 1
+        if row.get("top1_correct_service") is True:
+            bucket["service_correct"] += 1
+
+    # Failures
     failures = [
         {
             "case_id": row["case_id"],
             "category": row["category"],
+            "service": row.get("service"),
             "query": row["query"],
             "expected_doc_id": row["expected_doc_id"],
             "expected_capability_id": row["expected_capability_id"],
             "top_ids": row["top_ids"],
             "confidence": row["confidence"],
             "warnings": row["warnings"],
+            "has_forbidden_in_results": row.get("has_forbidden_in_results", False),
+            "forbidden_found": row.get("forbidden_found", []),
             "diagnostics": row["diagnostics"],
         }
         for row in rows
         if not row["hit_top5"]
+    ]
+
+    # Forbidden violations detail
+    forbidden_detail = [
+        {
+            "case_id": row["case_id"],
+            "query": row["query"],
+            "forbidden_found": row["forbidden_found"],
+        }
+        for row in rows
+        if row.get("has_forbidden_in_results")
     ]
 
     summary = {
@@ -542,8 +433,12 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
         "hybrid_visible_cases": hybrid_visible,
         "average_latency_ms": round(statistics.mean(latencies), 2) if latencies else None,
         "median_latency_ms": round(statistics.median(latencies), 2) if latencies else None,
+        "forbidden_capability_rate_pct": forbidden_capability_rate,
+        "service_precision_pct": service_precision,
         "by_category": by_category,
+        "by_service": by_service,
         "failures_top5": failures,
+        "forbidden_violations": forbidden_detail,
     }
 
     return summary
@@ -571,14 +466,42 @@ def print_report(report: Dict[str, Any]) -> None:
     print(f"Average latency        : {summary['average_latency_ms']} ms")
     print(f"Median latency         : {summary['median_latency_ms']} ms")
 
+    # New metrics
+    print(f"Forbidden cap. rate    : {summary['forbidden_capability_rate_pct']}%"
+          f" (target: 0%)")
+    if summary["service_precision_pct"] is not None:
+        print(f"Service precision      : {summary['service_precision_pct']}%"
+              f" (target: >= 90%)")
+
     print("\nBy category:")
     for category, bucket in summary["by_category"].items():
+        forbidden_str = f" forbidden={bucket['forbidden_violations']}" if bucket["forbidden_violations"] else ""
         print(
             f"  - {category:<14} total={bucket['total']:<2} "
             f"top1={bucket['top1']:<2} top3={bucket['top3']:<2} top5={bucket['top5']:<2} "
             f"vector={bucket['vector']:<2} hybrid={bucket['hybrid']:<2} "
-            f"avg_latency={bucket['avg_latency_ms']} ms"
+            f"avg_latency={bucket['avg_latency_ms']} ms{forbidden_str}"
         )
+
+    print("\nBy service:")
+    for svc, bucket in summary["by_service"].items():
+        svc_str = f" svc_correct={bucket['service_correct']}/{bucket['total']}" if bucket.get("service_correct") else ""
+        print(
+            f"  - {svc:<12} total={bucket['total']:<2} "
+            f"top1={bucket['top1']:<2} top3={bucket['top3']:<2} top5={bucket['top5']:<2}"
+            f"{svc_str}"
+        )
+
+    # Forbidden violations
+    forbidden_detail = summary.get("forbidden_violations", [])
+    if forbidden_detail:
+        print("\n" + "-" * 100)
+        print("FORBIDDEN CAPABILITY VIOLATIONS")
+        print("-" * 100)
+        for item in forbidden_detail:
+            print(f"  [{item['case_id']}] query: {item['query']}")
+            print(f"    forbidden found: {item['forbidden_found']}")
+        print("-" * 100)
 
     failures = summary["failures_top5"]
     if failures:
@@ -586,23 +509,29 @@ def print_report(report: Dict[str, Any]) -> None:
         print("TOP5 FAILURES")
         print("-" * 100)
         for item in failures:
-            print(f"[{item['category']}] {item['case_id']}")
-            print(f"query          : {item['query']}")
+            svc_label = f" [{item.get('service', '?')}]" if item.get("service") else ""
+            print(f"[{item['category']}]{svc_label} {item['case_id']}")
+            print(f"  query          : {item['query']}")
             if item["expected_doc_id"]:
-                print(f"expected_doc_id: {item['expected_doc_id']}")
+                print(f"  expected_doc_id: {item['expected_doc_id']}")
             if item["expected_capability_id"]:
-                print(f"expected_cap   : {item['expected_capability_id']}")
-            print(f"top_ids        : {item['top_ids']}")
-            print(f"confidence     : {item['confidence']}")
-            print(f"warnings       : {item['warnings']}")
-            print(f"diagnostics    : {json.dumps(item['diagnostics'], ensure_ascii=False)}")
+                print(f"  expected_cap   : {item['expected_capability_id']}")
+            print(f"  top_ids        : {item['top_ids']}")
+            print(f"  confidence     : {item['confidence']}")
+            if item.get("has_forbidden_in_results"):
+                print(f"  FORBIDDEN FOUND: {item['forbidden_found']}")
+            print(f"  diagnostics    : {json.dumps(item['diagnostics'], ensure_ascii=False)}")
             print("-" * 100)
 
 
 def main() -> None:
+    # Load cases from external file
+    check_cases, maturity_cases = _load_cases_from_file()
+    print(f"[benchmark] Loaded {len(check_cases)} check cases, {len(maturity_cases)} maturity cases from {CASES_FILE.name}")
+
     checks_report = evaluate_cases(
         endpoint=CHECKS_ENDPOINT,
-        cases=CHECK_CASES,
+        cases=check_cases,
         report_name="benchmark_checks_report",
     )
     print_report(checks_report)
@@ -611,10 +540,38 @@ def main() -> None:
 
     maturity_report = evaluate_cases(
         endpoint=MATURITY_ENDPOINT,
-        cases=MATURITY_CASES,
+        cases=maturity_cases,
         report_name="benchmark_maturity_report",
     )
     print_report(maturity_report)
+
+    # Print combined summary
+    print("\n" + "=" * 100)
+    print("COMBINED SUMMARY")
+    print("=" * 100)
+    total_checks = checks_report["summary"]["total_cases"]
+    total_maturity = maturity_report["summary"]["total_cases"]
+    total = total_checks + total_maturity
+
+    combined_top1 = (
+        checks_report["summary"]["hit_expected_in_top1"]
+        + maturity_report["summary"]["hit_expected_in_top1"]
+    )
+    combined_top5 = (
+        checks_report["summary"]["hit_expected_in_top5"]
+        + maturity_report["summary"]["hit_expected_in_top5"]
+    )
+    combined_forbidden = (
+        len(checks_report["summary"].get("forbidden_violations", []))
+        + len(maturity_report["summary"].get("forbidden_violations", []))
+    )
+
+    print(f"Total cases            : {total}")
+    print(f"Combined Top-1 hit     : {combined_top1}/{total} ({round(combined_top1/total*100,1)}%)")
+    print(f"Combined Top-5 hit     : {combined_top5}/{total} ({round(combined_top5/total*100,1)}%)")
+    print(f"Forbidden violations   : {combined_forbidden}")
+    print(f"Services covered       : 6 (s3, iam, ec2, rds, cloudtrail, kms)")
+    print("=" * 100)
 
 
 if __name__ == "__main__":

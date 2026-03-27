@@ -7,10 +7,12 @@ from app.core.config import CHROMA_DIR, EMBEDDING_MODEL
 
 try:
     import chromadb
+    from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
     _CHROMADB_AVAILABLE = True
 except ImportError:  # pragma: no cover
     chromadb = None
+    SentenceTransformerEmbeddingFunction = None
     _CHROMADB_AVAILABLE = False
 
 
@@ -50,6 +52,9 @@ class VectorIndex:
         self.persist_dir.mkdir(parents=True, exist_ok=True)
 
         self.embedding_model = embedding_model or EMBEDDING_MODEL
+        self._embedding_fn = SentenceTransformerEmbeddingFunction(
+            model_name=self.embedding_model
+        )
         self.client = chromadb.PersistentClient(path=str(self.persist_dir))
 
     # ----------------------------
@@ -107,7 +112,9 @@ class VectorIndex:
             pass
 
     def get_collection(self, name: str):
-        return self.client.get_collection(name=name)
+        return self.client.get_collection(
+            name=name, embedding_function=self._embedding_fn
+        )
 
     def build_collection(self, name: str, docs: List[Dict[str, Any]]):
         """
@@ -135,7 +142,9 @@ class VectorIndex:
             metadatas.append(metadata)
 
         self.delete_collection(name)
-        collection = self.client.create_collection(name=name)
+        collection = self.client.create_collection(
+            name=name, embedding_function=self._embedding_fn
+        )
         collection.add(ids=ids, documents=documents, metadatas=metadatas)
         return collection
 

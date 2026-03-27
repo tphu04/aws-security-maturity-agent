@@ -17,7 +17,7 @@
       "empty_bundle_rate": 0.0,
       "bundle_completeness_rate": 1.0,
       "review_recommended_rate": 1.0,
-      "average_latency_ms": 1003.91,
+      "average_latency_ms": 1578.03,
       "confidence_distribution": {
         "high": 0,
         "medium": 3,
@@ -44,7 +44,7 @@
       "empty_bundle_rate": 0.0,
       "bundle_completeness_rate": 1.0,
       "review_recommended_rate": 1.0,
-      "average_latency_ms": 571.71,
+      "average_latency_ms": 1283.62,
       "confidence_distribution": {
         "high": 0,
         "medium": 3,
@@ -68,7 +68,7 @@
       "empty_bundle_rate": 0.0,
       "bundle_completeness_rate": 1.0,
       "review_recommended_rate": 1.0,
-      "average_latency_ms": 591.79,
+      "average_latency_ms": 1580.68,
       "confidence_distribution": {
         "high": 0,
         "medium": 3,
@@ -134,7 +134,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 1312.41,
+      "latency_ms": 2191.54,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -196,7 +196,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "50c05c38-df03-47a3-9793-06e69680db9a",
+        "request_id": "54a61091-01dd-47f1-a3b0-339881393627",
         "status": "success",
         "data": {
           "consumer": "planning",
@@ -934,7 +934,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 972.98,
+      "latency_ms": 1248.12,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -997,7 +997,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "759957e9-0e57-4d28-aac5-5fb56f5d3a2d",
+        "request_id": "8fa38885-ba83-4de8-a499-d905545f0f5a",
         "status": "success",
         "data": {
           "consumer": "planning",
@@ -1695,7 +1695,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 726.35,
+      "latency_ms": 1294.42,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -1756,7 +1756,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "906b4a75-cffe-460a-b9e6-f254967bea27",
+        "request_id": "2bccd144-ee78-40c8-bc5e-df7efdb02f1c",
         "status": "success",
         "data": {
           "consumer": "planning",
@@ -2834,7 +2834,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 438.45,
+      "latency_ms": 1425.52,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -2898,7 +2898,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "a3bb91b9-88cf-4140-a285-c26948583631",
+        "request_id": "c8203800-a6f2-4b49-ab41-13cb387179bf",
         "status": "success",
         "data": {
           "consumer": "risk",
@@ -3978,7 +3978,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 498.32,
+      "latency_ms": 1291.15,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -4040,7 +4040,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "daeb6975-9664-45c6-accd-be45e1270632",
+        "request_id": "5ec628cc-d388-4cab-a183-07f6ba3d214b",
         "status": "success",
         "data": {
           "consumer": "risk",
@@ -4846,7 +4846,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 838.59,
+      "latency_ms": 2025.36,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -4910,7 +4910,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "3dc29845-e74c-45d8-b93f-33bd3d74b6d7",
+        "request_id": "b76d2687-b61c-434d-a308-c78db82aa44b",
         "status": "success",
         "data": {
           "consumer": "risk",
@@ -5946,7 +5946,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 503.21,
+      "latency_ms": 1113.92,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -6013,7 +6013,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "1bed5531-f484-433d-8405-f1e5b215fdf8",
+        "request_id": "987efa1b-7e3c-4c40-919e-1980247934cb",
         "status": "success",
         "data": {
           "consumer": "report",
@@ -7073,7 +7073,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 484.96,
+      "latency_ms": 1218.73,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -7138,7 +7138,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "eddce354-385f-4932-b262-3334cdee073e",
+        "request_id": "05e9ba81-f062-4faf-aff8-1aa53d99a0b9",
         "status": "success",
         "data": {
           "consumer": "report",
@@ -7929,7 +7929,7 @@
       },
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 726.96,
+      "latency_ms": 1518.22,
       "confidence": "medium",
       "review_recommended": true,
       "selected_check_ids": [
@@ -7996,7 +7996,7 @@
       },
       "case_pass": true,
       "raw_response": {
-        "request_id": "ba1fb2a6-3ae9-4d90-83d2-a7e6d5788c14",
+        "request_id": "008c11ab-9b0a-49be-b863-ee06e4a611cb",
         "status": "success",
         "data": {
           "consumer": "report",

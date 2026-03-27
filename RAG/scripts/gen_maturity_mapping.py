@@ -4,11 +4,17 @@ import argparse
 import json
 import math
 import re
+import sys
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+
+# Ensure app package is importable when script is run directly
+_project_root = str(Path(__file__).resolve().parent.parent)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 
 
 STOPWORDS = {
@@ -126,80 +132,7 @@ IMPORTANT_PHRASES = [
     "encryption in transit",
 ]
 
-CONTROL_INTENT_CLUSTERS: Dict[str, List[str]] = {
-    "public_access": [
-        "public access",
-        "publicly accessible",
-        "public exposure",
-        "public read",
-        "public write",
-        "anonymous access",
-        "unauthenticated access",
-        "internet exposed",
-        "world readable",
-        "world writable",
-        "block public access",
-    ],
-    "encryption_at_rest": [
-        "encryption at rest",
-        "encrypt everything",
-        "default encryption",
-        "server side encryption",
-        "sse",
-        "kms",
-        "customer managed key",
-        "stored data",
-        "storage encryption",
-    ],
-    "encryption_in_transit": [
-        "encryption in transit",
-        "secure transport",
-        "https",
-        "tls",
-        "ssl",
-        "secure protocol",
-        "transport encryption",
-    ],
-    "identity_access": [
-        "least privilege",
-        "identity",
-        "iam",
-        "mfa",
-        "password",
-        "credential",
-        "role",
-        "permission",
-        "policy",
-    ],
-    "logging_monitoring": [
-        "cloudtrail",
-        "logging",
-        "audit logs",
-        "audit api calls",
-        "monitoring",
-        "detection",
-    ],
-    "resilience_backup": [
-        "backup",
-        "recovery",
-        "resilience",
-        "business continuity",
-        "disaster recovery",
-        "rto",
-        "rpo",
-    ],
-}
-
-PRODUCT_ENTITY_GATES: Dict[str, List[str]] = {
-    "bedrock": ["bedrock", "genai", "gen ai", "generative", "llm", "prompt"],
-    "generative": ["bedrock", "genai", "gen ai", "generative", "llm", "prompt"],
-    "genai": ["bedrock", "genai", "gen ai", "generative", "llm", "prompt"],
-    "prompt": ["bedrock", "genai", "generative", "llm", "prompt", "inference"],
-    "sagemaker": ["sagemaker", "ml", "model", "training", "endpoint"],
-    "guardduty": ["guardduty", "guard duty", "threat", "malware"],
-    "macie": ["macie", "sensitive data", "pii", "classification"],
-    "waf": ["waf", "web acl", "webacl", "sql injection", "xss", "rate limit"],
-}
+from app.core.constants import CONTROL_INTENT_CLUSTERS, PRODUCT_ENTITY_GATES
 
 
 @dataclass
@@ -850,8 +783,14 @@ def main() -> None:
     parser.add_argument(
         "--min-score",
         type=float,
-        default=0.20,
-        help="Minimum score to emit a mapping item",
+        default=0.25,
+        help="Minimum score to emit a mapping item (quality gate)",
+    )
+    parser.add_argument(
+        "--min-score-gap",
+        type=float,
+        default=0.05,
+        help="Minimum score gap vs second candidate to avoid ambiguous matches",
     )
     parser.add_argument(
         "--approved-threshold",
@@ -895,16 +834,24 @@ def main() -> None:
         score_gap = best.score - second_score
 
         if best.score >= args.min_score:
-            item = build_mapping_item(check, best, score_gap)
+            # Quality gate: skip ambiguous matches with tiny score gap
+            if score_gap < args.min_score_gap and best.score < args.approved_threshold:
+                # Ambiguous match - still emit but mark as review_required
+                item = build_mapping_item(check, best, score_gap)
+                item["review_status"] = "review_required"
+                item["mapping_confidence"] = "low"
+                generated_items.append(item)
+            else:
+                item = build_mapping_item(check, best, score_gap)
 
-            # vẫn tôn trọng threshold user truyền vào
-            if (
-                best.score < args.approved_threshold
-                and item["review_status"] == "approved"
-            ):
-                item["review_status"] = "draft"
+                # vẫn tôn trọng threshold user truyền vào
+                if (
+                    best.score < args.approved_threshold
+                    and item["review_status"] == "approved"
+                ):
+                    item["review_status"] = "draft"
 
-            generated_items.append(item)
+                generated_items.append(item)
 
         candidate_rows.append(
             {

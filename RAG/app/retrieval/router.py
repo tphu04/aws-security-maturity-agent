@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional
 
+from app.core.constants import CHECK_HINT_TERMS, KNOWN_SERVICES, MATURITY_HINT_TERMS
 from app.ingestion.normalizers import normalize_service
 from app.ingestion.normalizers import _normalize_for_index as normalize_text_like_index
 from app.ingestion.normalizers import _normalize_identifier as normalize_identifier
@@ -14,64 +15,6 @@ QueryType = Literal[
     "mapping_resolution",
     "context_build",
 ]
-
-
-KNOWN_SERVICES = {
-    "s3",
-    "iam",
-    "ec2",
-    "cloudtrail",
-    "kms",
-    "rds",
-    "eks",
-    "lambda",
-    "vpc",
-    "guardduty",
-    "config",
-    "acm",
-    "secretsmanager",
-    "organizations",
-    "elb",
-    "elbv2",
-    "efs",
-    "dynamodb",
-    "glue",
-    "emr",
-    "mq",
-    "cognito",
-    "cloudfront",
-    "storagegateway",
-    "ecr",
-    "workspaces",
-    "bedrock",
-    "networkfirewall",
-    "accessanalyzer",
-}
-
-
-MATURITY_HINT_TERMS = {
-    "maturity",
-    "capability",
-    "practice",
-    "best practice",
-    "control objective",
-    "security outcome",
-    "governance",
-    "foundational",
-    "advanced",
-    "domain",
-}
-
-
-CHECK_HINT_TERMS = {
-    "check",
-    "finding",
-    "prowler",
-    "security check",
-    "misconfiguration",
-    "remediation",
-    "risk",
-}
 
 
 def normalize_query(query: str) -> str:

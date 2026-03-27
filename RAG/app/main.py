@@ -7,14 +7,13 @@ from typing import Any, Dict, Optional
 
 from fastapi import FastAPI
 
-# from app.api.routes.build import router as build_router
 from app.api.routes.health import router as health_router
 from app.api.routes.resolve import router as resolve_router
 from app.api.routes.retrieve import router as retrieve_router
 from app.core.config import (
     BM25_INDEX_PATHS,
     CHROMA_DIR,
-    INDEX_DIR,
+    MANIFEST_PATH,
     SERVICE_NAME,
     SERVICE_VERSION,
     CORPUS_PROWLER_CHECKS,
@@ -30,25 +29,12 @@ from app.services.maturity_service import MaturityService
 
 
 def _load_manifest() -> Dict[str, Any]:
-    manifest_candidates = [
-        Path(INDEX_DIR) / "manifest.json",
-        Path(
-            getattr(
-                __import__("app.core.config", fromlist=["MANIFEST_PATH"]),
-                "MANIFEST_PATH",
-                "",
-            )
-        ),
-    ]
-
-    for candidate in manifest_candidates:
-        if candidate and str(candidate).strip() and Path(candidate).exists():
-            try:
-                with Path(candidate).open("r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                continue
-
+    if MANIFEST_PATH.exists():
+        try:
+            with MANIFEST_PATH.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
     return {}
 
 
@@ -118,7 +104,6 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(retrieve_router)
 app.include_router(resolve_router)
-# app.include_router(build_router)
 
 
 @app.get("/")

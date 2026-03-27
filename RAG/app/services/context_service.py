@@ -150,9 +150,15 @@ class ContextService:
                     request=request,
                     check_ids=selected_check_ids_for_mapping,
                 )
-                mapping_results = self._merge_mapping_candidates(mapping_outputs)
+                raw_mapping_results = self._merge_mapping_candidates(mapping_outputs)
+                # Filter for agent context: prefer approved/reviewed mappings
+                mapping_results = MappingService.filter_for_agent_context(
+                    raw_mapping_results
+                )
                 diagnostics["mapping_request_count"] = len(mapping_outputs)
+                diagnostics["mapping_result_count_raw"] = len(raw_mapping_results)
                 diagnostics["mapping_result_count"] = len(mapping_results)
+                diagnostics["mapping_filtered_out"] = len(raw_mapping_results) - len(mapping_results)
 
                 for resp in mapping_outputs:
                     component_confidences.append(str(resp.meta.confidence))

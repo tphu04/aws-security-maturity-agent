@@ -28,8 +28,8 @@ from app.core.config import (
     EMBEDDING_MODEL,
     INDEX_DIR,
     INDEX_VERSION,
-    LEGACY_CHROMA_COLLECTION,
     MANIFEST_PATH,
+    MAPPINGS_CURATED_PATH,
     NORMALIZED_PATHS,
     SUPPORTED_CORPORA,
     BM25_INDEX_PATHS,
@@ -193,12 +193,78 @@ def _validate_unique_doc_ids(corpus_name: str, docs: Iterable[Dict[str, Any]]) -
         )
 
 
+def _load_curated_mappings() -> List[Dict[str, Any]]:
+    """Load curated mappings if file exists. Curated mappings take priority over generated."""
+    if not MAPPINGS_CURATED_PATH.exists():
+        print("[build_all] No curated mappings found, using generated only.")
+        return []
+
+    with MAPPINGS_CURATED_PATH.open("r", encoding="utf-8") as f:
+        payload = json.load(f)
+
+    items = payload.get("items", payload) if isinstance(payload, dict) else payload
+    if not isinstance(items, list):
+        return []
+
+    print(f"[build_all] Loaded {len(items)} curated mappings from {MAPPINGS_CURATED_PATH}")
+    return items
+
+
+def _normalize_key(value: str) -> str:
+    """Normalize a mapping key for comparison: lowercase, strip, replace - with _."""
+    import re
+    text = str(value).strip().lower()
+    text = text.replace("-", "_")
+    text = re.sub(r"[^a-z0-9_]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
+    # Strip common prefixes from auto-generated capability_ids
+    text = re.sub(r"^\d+_(quickwins|quick_wins|foundational|efficient|optimized)_", "", text)
+    return text
+
+
+def _merge_mappings(
+    generated: List[Dict[str, Any]],
+    curated: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Merge curated + generated mappings. Curated override generated for same check_id."""
+    # Index curated by check_id (each curated check_id overrides generated for that check)
+    curated_check_ids: set = set()
+    merged: List[Dict[str, Any]] = []
+
+    for item in curated:
+        check_id = _normalize_key(item.get("check_id", ""))
+        if check_id:
+            curated_check_ids.add(check_id)
+            merged.append(item)
+
+    # Add generated only if check_id not covered by curated
+    overridden = 0
+    for item in generated:
+        check_id = _normalize_key(item.get("check_id", ""))
+        if check_id in curated_check_ids:
+            overridden += 1
+            continue
+        merged.append(item)
+
+    print(
+        f"[build_all] Merged mappings: {len(curated)} curated + "
+        f"{len(generated) - overridden} generated ({overridden} overridden by curated) = {len(merged)} total"
+    )
+    return merged
+
+
 def _normalize_all() -> (
     Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]
 ):
     prowler_raw = load_prowler_raw()
     maturity_raw = load_maturity_raw()
     mapping_raw = load_mappings_raw()
+
+    # Load curated mappings (if any)
+    curated_raw = _load_curated_mappings()
+
+    # Merge curated + generated: curated takes priority
+    merged_mapping_raw = _merge_mappings(mapping_raw, curated_raw)
 
     # Normalize capabilities first -> this corpus is the source of truth
     # for canonical capability_id values.
@@ -211,14 +277,15 @@ def _normalize_all() -> (
     # Normalize mappings second, using canonical capability ids from capabilities.
     mapping_normalized = [
         normalize_mapping_doc(r, capability_lookup=capability_lookup).model_dump()
-        for r in mapping_raw
+        for r in merged_mapping_raw
     ]
 
     return prowler_normalized, maturity_normalized, mapping_normalized
 
 
 def _build_bm25_for_corpus(corpus_name: str, docs: List[Dict[str, Any]]) -> Path:
-    bm25 = BM25Index()
+    from app.core.config import BM25_K1, BM25_B
+    bm25 = BM25Index(k1=BM25_K1, b=BM25_B)
     bm25.add_documents(docs)
     output_path = BM25_INDEX_PATHS[corpus_name]
     _ensure_dir(output_path.parent)
@@ -234,13 +301,23 @@ def _build_vector_for_corpus(
     return collection_name
 
 
-def _cleanup_legacy_vector_collection() -> None:
+def _cleanup_orphaned_collections(vector: VectorIndex) -> None:
+    """Remove all Chroma collections that are not in CHROMA_COLLECTIONS config."""
     try:
-        vector = VectorIndex()
-        vector.delete_collection(LEGACY_CHROMA_COLLECTION)
-        print(f"[build_all] Deleted legacy collection: {LEGACY_CHROMA_COLLECTION}")
+        active_names = set(CHROMA_COLLECTIONS.values())
+        all_collections = vector.client.list_collections()
+        removed = 0
+        for col in all_collections:
+            col_name = col if isinstance(col, str) else getattr(col, "name", str(col))
+            if col_name not in active_names:
+                vector.delete_collection(col_name)
+                removed += 1
+        if removed:
+            print(f"[build_all] Cleaned up {removed} orphaned collection(s)")
+        else:
+            print("[build_all] No orphaned collections found")
     except Exception as exc:
-        print(f"[build_all] Legacy collection cleanup skipped: {exc}")
+        print(f"[build_all] Orphaned collection cleanup skipped: {exc}")
 
 
 def main() -> None:
@@ -307,7 +384,7 @@ def main() -> None:
                 f"{collection_name} ({len(index_docs_by_corpus[corpus_name])} docs)"
             )
 
-        _cleanup_legacy_vector_collection()
+        _cleanup_orphaned_collections(vector)
     except Exception as exc:
         vector_error = str(exc)
         print(f"[build_all] Vector build skipped/failed: {exc}")
@@ -352,8 +429,8 @@ def main() -> None:
             "collections": vector_outputs,
             "error": vector_error,
         },
-        "legacy_cleanup": {
-            "removed_collection": LEGACY_CHROMA_COLLECTION,
+        "cleanup": {
+            "orphaned_collections_removed": True,
         },
     }
 

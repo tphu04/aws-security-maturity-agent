@@ -1,0 +1,330 @@
+[
+  {
+    "id": "planning_s3_public_access",
+    "consumer": "planning",
+    "request": {
+      "consumer": "planning",
+      "provider": "aws",
+      "service": "s3",
+      "query": "how to prevent an s3 bucket from being publicly exposed",
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "required_check_ids_any": [
+        "s3_bucket_level_public_access_block",
+        "s3_account_level_public_access_blocks",
+        "s3_bucket_public_access"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["block_public_access"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 2,
+      "min_mapping_count": 1,
+      "min_capability_count": 1
+    }
+  },
+  {
+    "id": "planning_s3_encryption_at_rest",
+    "consumer": "planning",
+    "request": {
+      "consumer": "planning",
+      "provider": "aws",
+      "service": "s3",
+      "query": "s3 bucket encryption at rest with kms",
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "required_check_ids_any": [
+        "s3_bucket_default_encryption",
+        "s3_bucket_kms_encryption"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["data_encryption_at_rest"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 2,
+      "min_mapping_count": 1,
+      "min_capability_count": 1
+    }
+  },
+  {
+    "id": "planning_s3_encryption_in_transit",
+    "consumer": "planning",
+    "request": {
+      "consumer": "planning",
+      "provider": "aws",
+      "service": "s3",
+      "query": "require https tls for s3 bucket access",
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "required_check_ids_any": [
+        "s3_bucket_secure_transport_policy"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["encryption_in_transit"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 1,
+      "min_mapping_count": 1,
+      "min_capability_count": 1
+    }
+  },
+  {
+    "id": "risk_s3_public_access",
+    "consumer": "risk",
+    "request": {
+      "consumer": "risk",
+      "provider": "aws",
+      "service": "s3",
+      "findings": [
+        {
+          "check_id": "s3_bucket_public_access",
+          "service": "s3",
+          "status": "FAIL",
+          "severity": "critical",
+          "resource_id": "example-public-bucket",
+          "resource_type": "AwsS3Bucket"
+        }
+      ],
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "expected_primary_check_id": "s3_bucket_public_access",
+      "required_check_ids_any": [
+        "s3_bucket_public_access",
+        "s3_bucket_level_public_access_block"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["block_public_access"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 2,
+      "min_mapping_count": 1,
+      "min_capability_count": 1
+    }
+  },
+  {
+    "id": "risk_s3_encryption_at_rest",
+    "consumer": "risk",
+    "request": {
+      "consumer": "risk",
+      "provider": "aws",
+      "service": "s3",
+      "findings": [
+        {
+          "check_id": "s3_bucket_kms_encryption",
+          "service": "s3",
+          "status": "FAIL",
+          "severity": "medium",
+          "resource_id": "example-encrypted-bucket",
+          "resource_type": "AwsS3Bucket"
+        }
+      ],
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "expected_primary_check_id": "s3_bucket_kms_encryption",
+      "required_check_ids_any": [
+        "s3_bucket_kms_encryption",
+        "s3_bucket_default_encryption"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["data_encryption_at_rest"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 2,
+      "min_mapping_count": 1,
+      "min_capability_count": 1
+    }
+  },
+  {
+    "id": "risk_s3_secure_transport",
+    "consumer": "risk",
+    "request": {
+      "consumer": "risk",
+      "provider": "aws",
+      "service": "s3",
+      "findings": [
+        {
+          "check_id": "s3_bucket_secure_transport_policy",
+          "service": "s3",
+          "status": "FAIL",
+          "severity": "medium",
+          "resource_id": "example-transport-bucket",
+          "resource_type": "AwsS3Bucket"
+        }
+      ],
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "expected_primary_check_id": "s3_bucket_secure_transport_policy",
+      "required_check_ids_any": [
+        "s3_bucket_secure_transport_policy"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["encryption_in_transit"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 1,
+      "min_mapping_count": 1,
+      "min_capability_count": 1
+    }
+  },
+  {
+    "id": "report_s3_public_access",
+    "consumer": "report",
+    "request": {
+      "consumer": "report",
+      "provider": "aws",
+      "service": "s3",
+      "findings": [
+        {
+          "check_id": "s3_bucket_public_access",
+          "service": "s3",
+          "status": "FAIL",
+          "severity": "critical",
+          "resource_id": "example-public-bucket",
+          "resource_type": "AwsS3Bucket"
+        }
+      ],
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "required_check_ids_any": [
+        "s3_bucket_public_access",
+        "s3_bucket_level_public_access_block"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["block_public_access"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 2,
+      "min_mapping_count": 1,
+      "min_capability_count": 1,
+      "min_report_topics": 1,
+      "min_report_findings": 1,
+      "min_report_themes": 1,
+      "min_recommended_practices": 1
+    }
+  },
+  {
+    "id": "report_s3_encryption_at_rest",
+    "consumer": "report",
+    "request": {
+      "consumer": "report",
+      "provider": "aws",
+      "service": "s3",
+      "findings": [
+        {
+          "check_id": "s3_bucket_default_encryption",
+          "service": "s3",
+          "status": "FAIL",
+          "severity": "medium",
+          "resource_id": "example-encrypted-bucket",
+          "resource_type": "AwsS3Bucket"
+        }
+      ],
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "required_check_ids_any": [
+        "s3_bucket_default_encryption",
+        "s3_bucket_kms_encryption"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["data_encryption_at_rest"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 2,
+      "min_mapping_count": 1,
+      "min_capability_count": 1,
+      "min_report_topics": 1,
+      "min_report_findings": 1,
+      "min_report_themes": 1,
+      "min_recommended_practices": 1
+    }
+  },
+  {
+    "id": "report_s3_secure_transport",
+    "consumer": "report",
+    "request": {
+      "consumer": "report",
+      "provider": "aws",
+      "service": "s3",
+      "findings": [
+        {
+          "check_id": "s3_bucket_secure_transport_policy",
+          "service": "s3",
+          "status": "FAIL",
+          "severity": "medium",
+          "resource_id": "example-transport-bucket",
+          "resource_type": "AwsS3Bucket"
+        }
+      ],
+      "top_k": 5,
+      "retrieval_mode": "hybrid",
+      "include_mappings": true,
+      "include_maturity": true,
+      "debug": true
+    },
+    "expectations": {
+      "required_check_ids_any": [
+        "s3_bucket_secure_transport_policy"
+      ],
+      "allowed_services": ["s3"],
+      "required_capability_ids_any": ["encryption_in_transit"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_check_count": 1,
+      "min_mapping_count": 1,
+      "min_capability_count": 1,
+      "min_report_topics": 1,
+      "min_report_findings": 1,
+      "min_report_themes": 1,
+      "min_recommended_practices": 1
+    }
+  }
+]

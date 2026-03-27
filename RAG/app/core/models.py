@@ -141,14 +141,6 @@ class FindingInput(BaseModel):
     resource_type: Optional[str] = None
 
 
-class ContextBuildRequest(BaseModel):
-    finding: FindingInput
-    include_check_context: bool = True
-    include_maturity_context: bool = True
-    include_mapping_context: bool = True
-    top_k: int = 3
-   
-   
 # ============================================================
 # Context Construction models
 # ============================================================

@@ -11,6 +11,7 @@ from app.core.config import (
     NORMALIZED_PATHS,
 )
 from app.core.errors import make_error_item
+from app.core.utils import mapping_sort_key
 from app.core.models import ErrorItem, MetaInfo, ResolveMappingRequest, ResponseEnvelope
 from app.ingestion.normalizers import normalize_service
 from app.ingestion.normalizers import _normalize_identifier as normalize_identifier
@@ -159,7 +160,7 @@ class MappingService:
                 ],
             )
 
-        ranked = sorted(filtered, key=self._mapping_sort_key, reverse=True)
+        ranked = sorted(filtered, key=mapping_sort_key, reverse=True)
         best = ranked[0]
 
         mapping_confidence = (
@@ -250,31 +251,28 @@ class MappingService:
 
         return filtered
 
+
     @staticmethod
-    def _mapping_sort_key(item: Dict[str, Any]) -> tuple:
-        confidence_rank = {
-            "high": 3,
-            "medium": 2,
-            "low": 1,
-        }
-        review_rank = {
-            "approved": 3,
-            "reviewed": 2,
-            "review_required": 1,
-            "unreviewed": 0,
-        }
+    def filter_for_agent_context(
+        candidates: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        """Filter mappings for agent context: prefer approved/reviewed, exclude draft
+        if better alternatives exist."""
+        if not candidates:
+            return []
 
-        confidence = str(item.get("mapping_confidence", "low")).strip().lower()
-        review_status = str(item.get("review_status", "unreviewed")).strip().lower()
-        score = float(item.get("score", 0.0) or 0.0)
-        capability_id = str(item.get("capability_id", "")).strip().lower()
+        trusted = [
+            item for item in candidates
+            if str(item.get("review_status", "")).strip().lower()
+            in {"approved", "reviewed", "auto_high"}
+        ]
 
-        return (
-            confidence_rank.get(confidence, 1),
-            review_rank.get(review_status, 0),
-            score,
-            capability_id,
-        )
+        # If we have trusted mappings, use only those
+        if trusted:
+            return trusted
+
+        # Fallback: return all but mark as needing review
+        return candidates
 
     @staticmethod
     def _normalize_optional_field(value: Optional[str]) -> Optional[str]:

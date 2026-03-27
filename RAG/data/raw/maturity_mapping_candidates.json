@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at": "2026-03-21T15:45:12.957342+00:00",
+    "generated_at": "2026-03-26T08:58:22.993429+00:00",
     "item_count": 577,
     "top_k": 3
   },
@@ -448,23 +448,22 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
-          "score": 0.3394,
+          "score": 0.3269,
           "matched_terms": [
+            "allows",
             "aws",
             "best",
+            "check",
+            "data",
+            "days",
             "exposure",
             "foundational",
-            "more",
-            "near",
             "practices",
-            "security",
-            "services",
-            "software",
-            "those",
-            "time"
+            "service",
+            "those"
           ],
           "matched_phrases": []
         }
@@ -1266,23 +1265,21 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3442,
+          "capability_id": "2_foundational_define_incident_response_playbooks",
+          "capability_name": "Define incident response playbooks",
+          "domain": "identity_access",
+          "score": 0.3412,
           "matched_terms": [
+            "access",
             "amazon",
             "aws",
-            "best",
-            "cis",
-            "exposure",
             "foundational",
+            "instance",
             "instances",
-            "network",
-            "other",
-            "practices",
+            "remote",
             "security",
-            "software"
+            "setting",
+            "where"
           ],
           "matched_phrases": []
         }
@@ -1650,22 +1647,20 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_data_backups",
-          "capability_name": "Data Backups",
-          "domain": "data_protection",
-          "score": 0.329,
+          "capability_id": "2_foundational_discover_sensitive_data_with_amazon_macie",
+          "capability_name": "Discover sensitive data with Amazon Macie",
+          "domain": "identity_access",
+          "score": 0.3318,
           "matched_terms": [
             "access",
-            "account",
             "amazon",
             "aws",
             "data",
-            "enabling",
-            "encrypt",
             "foundational",
-            "impact",
+            "industry",
             "managed",
-            "regulatory",
+            "security",
+            "sensitive",
             "storage"
           ],
           "matched_phrases": []
@@ -1964,19 +1959,15 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_achieve_redundancy_using_multiple_availability_zones",
+          "capability_name": "Achieve redundancy using multiple Availability Zones",
           "domain": "resilience",
-          "score": 0.313,
+          "score": 0.3074,
           "matched_terms": [
+            "availability",
             "aws",
-            "based",
-            "best",
             "foundational",
-            "instances",
-            "practices",
-            "security",
-            "software"
+            "resilience"
           ],
           "matched_phrases": []
         }
@@ -2008,27 +1999,6 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3367,
-          "matched_terms": [
-            "amazon",
-            "aws",
-            "best",
-            "cis",
-            "exposure",
-            "foundational",
-            "instances",
-            "network",
-            "practices",
-            "security",
-            "services",
-            "software"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
           "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
@@ -2044,6 +2014,25 @@
           "matched_phrases": [
             "least privilege"
           ]
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups",
+          "domain": "identity_access",
+          "score": 0.3285,
+          "matched_terms": [
+            "access",
+            "amazon",
+            "aws",
+            "ec2",
+            "groups",
+            "instances",
+            "network",
+            "no",
+            "security",
+            "standards"
+          ],
+          "matched_phrases": []
         }
       ]
     },
@@ -2152,18 +2141,19 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
-          "score": 0.3055,
+          "score": 0.3014,
           "matched_terms": [
             "aws",
-            "best",
-            "instances",
+            "configuration",
             "more",
-            "practices",
+            "one",
+            "risk",
             "security",
-            "software"
+            "service",
+            "within"
           ],
           "matched_phrases": []
         }
@@ -2882,20 +2872,19 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3178,
+          "capability_id": "1_quickwins_evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub",
+          "domain": "identity_access",
+          "score": 0.3175,
           "matched_terms": [
             "aws",
             "best",
-            "due",
-            "foundational",
-            "lack",
+            "checks",
+            "configuration",
             "practices",
             "resources",
             "security",
-            "software"
+            "standards"
           ],
           "matched_phrases": []
         }
@@ -3184,31 +3173,36 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_threat_modeling",
-          "capability_name": "Threat Modeling",
-          "domain": "data_protection",
-          "score": 0.2335,
+          "capability_id": "2_foundational_discover_sensitive_data_with_amazon_macie",
+          "capability_name": "Discover sensitive data with Amazon Macie",
+          "domain": "identity_access",
+          "score": 0.253,
           "matched_terms": [
-            "could",
+            "amazon",
+            "data",
             "during",
-            "help",
             "information",
             "other",
-            "risks",
-            "security"
+            "security",
+            "sensitive"
           ],
           "matched_phrases": []
         },
         {
-          "capability_id": "4_optimized_zero_trust_access_risk_based_access_control",
-          "capability_name": "Zero Trust Access: Risk-Based Access Control",
-          "domain": "identity_access",
-          "score": 0.2327,
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
+          "domain": "data_protection",
+          "score": 0.2457,
           "matched_terms": [
             "amazon",
+            "data",
+            "during",
+            "enabled",
             "help",
             "information",
-            "security"
+            "risks",
+            "security",
+            "sensitive"
           ],
           "matched_phrases": []
         }
@@ -3374,6 +3368,22 @@
           "matched_phrases": []
         },
         {
+          "capability_id": "2_foundational_discover_sensitive_data_with_amazon_macie",
+          "capability_name": "Discover sensitive data with Amazon Macie",
+          "domain": "identity_access",
+          "score": 0.2538,
+          "matched_terms": [
+            "allow",
+            "amazon",
+            "more",
+            "other",
+            "sensitive",
+            "set",
+            "which"
+          ],
+          "matched_phrases": []
+        },
+        {
           "capability_id": "3_efficient_encryption_in_transit",
           "capability_name": "Encryption in transit",
           "domain": "data_protection",
@@ -3384,22 +3394,6 @@
             "configure",
             "sensitive",
             "users"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2318,
-          "matched_terms": [
-            "amazon",
-            "attack",
-            "attacks",
-            "content",
-            "enabled",
-            "mitigate",
-            "which"
           ],
           "matched_phrases": []
         }
@@ -4211,18 +4205,15 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
+          "capability_name": "Automate evidence gathering for compliance audit reports",
           "domain": "resilience",
-          "score": 0.3053,
+          "score": 0.3005,
           "matched_terms": [
             "aws",
-            "best",
-            "network",
-            "point",
-            "practices",
+            "multiple",
             "security",
-            "software"
+            "service"
           ],
           "matched_phrases": []
         }
@@ -5922,6 +5913,25 @@
           ]
         },
         {
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
+          "domain": "data_protection",
+          "score": 0.3868,
+          "matched_terms": [
+            "access",
+            "aws",
+            "data",
+            "information",
+            "policy",
+            "public",
+            "security",
+            "sensitive"
+          ],
+          "matched_phrases": [
+            "public access"
+          ]
+        },
+        {
           "capability_id": "1_quickwins_select_the_region_s_where_you_want_to_operate_and_block_the_rest",
           "capability_name": "Select the region(s) where you want to operate and block the rest",
           "domain": "logging_monitoring",
@@ -5933,22 +5943,6 @@
             "no",
             "other",
             "policy"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "4_optimized_advanced_security_automations",
-          "capability_name": "Advanced security automations",
-          "domain": "logging_monitoring",
-          "score": 0.381,
-          "matched_terms": [
-            "aws",
-            "cloudwatch",
-            "configuration",
-            "information",
-            "logging",
-            "resource",
-            "security"
           ],
           "matched_phrases": []
         }
@@ -6532,20 +6526,6 @@
       "service": "codeartifact",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.219,
-          "matched_terms": [
-            "exposure",
-            "external",
-            "internal",
-            "other",
-            "vulnerable"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_use_temporary_credentials",
           "capability_name": "Use Temporary Credentials",
           "domain": "identity_access",
@@ -6566,6 +6546,16 @@
           "matched_terms": [
             "allow",
             "internal"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions",
+          "domain": "identity_access",
+          "score": 0.2038,
+          "matched_terms": [
+            "external"
           ],
           "matched_phrases": []
         }
@@ -7212,14 +7202,12 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
+          "capability_name": "Automate evidence gathering for compliance audit reports",
           "domain": "resilience",
-          "score": 0.2951,
+          "score": 0.2947,
           "matched_terms": [
             "amazon",
-            "applications",
-            "provides",
             "security",
             "which"
           ],
@@ -7247,19 +7235,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2898,
-          "matched_terms": [
-            "amazon",
-            "perform",
-            "security",
-            "system"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
           "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
@@ -7269,6 +7244,17 @@
             "amazon",
             "perform",
             "user"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
+          "capability_name": "Automate evidence gathering for compliance audit reports",
+          "domain": "resilience",
+          "score": 0.2856,
+          "matched_terms": [
+            "amazon",
+            "security"
           ],
           "matched_phrases": []
         }
@@ -7529,18 +7515,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2848,
-          "matched_terms": [
-            "more",
-            "number",
-            "vulnerable"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
           "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
@@ -7549,6 +7523,16 @@
             "more",
             "policy",
             "secure"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_achieve_redundancy_using_multiple_availability_zones",
+          "capability_name": "Achieve redundancy using multiple Availability Zones",
+          "domain": "resilience",
+          "score": 0.2785,
+          "matched_terms": [
+            "more"
           ],
           "matched_phrases": []
         }
@@ -8040,14 +8024,14 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
           "score": 0.2823,
           "matched_terms": [
             "aws",
-            "lack",
-            "other"
+            "check",
+            "connect"
           ],
           "matched_phrases": []
         }
@@ -8088,15 +8072,15 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
           "score": 0.2883,
           "matched_terms": [
             "aws",
-            "lack",
-            "other",
-            "virtual"
+            "check",
+            "connect",
+            "private"
           ],
           "matched_phrases": []
         }
@@ -8533,23 +8517,20 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3394,
+          "capability_id": "4_optimized_automate_deviation_correction_in_configurations",
+          "capability_name": "Automate deviation correction in configurations",
+          "domain": "identity_access",
+          "score": 0.3324,
           "matched_terms": [
-            "account",
+            "automate",
             "aws",
-            "best",
-            "ebs",
-            "foundational",
-            "lack",
+            "configuration",
             "manager",
+            "one",
             "other",
-            "practices",
+            "policy",
             "security",
-            "software",
-            "those"
+            "without"
           ],
           "matched_phrases": []
         }
@@ -8816,26 +8797,6 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3317,
-          "matched_terms": [
-            "aws",
-            "best",
-            "exposure",
-            "foundational",
-            "instances",
-            "management",
-            "patch",
-            "practices",
-            "security",
-            "software",
-            "vulnerabilities"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
           "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
@@ -8849,6 +8810,23 @@
           "matched_phrases": [
             "least privilege"
           ]
+        },
+        {
+          "capability_id": "1_quickwins_audit_api_calls",
+          "capability_name": "Audit API calls",
+          "domain": "identity_access",
+          "score": 0.3165,
+          "matched_terms": [
+            "aws",
+            "configuration",
+            "during",
+            "enabled",
+            "management",
+            "security",
+            "setting",
+            "without"
+          ],
+          "matched_phrases": []
         }
       ]
     },
@@ -8873,23 +8851,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3139,
-          "matched_terms": [
-            "aws",
-            "best",
-            "instances",
-            "multi",
-            "practices",
-            "security",
-            "software",
-            "those"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -8903,6 +8864,19 @@
             "practices",
             "service",
             "those"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
+          "capability_name": "Automate evidence gathering for compliance audit reports",
+          "domain": "resilience",
+          "score": 0.3031,
+          "matched_terms": [
+            "aws",
+            "manual",
+            "security",
+            "service"
           ],
           "matched_phrases": []
         }
@@ -9200,21 +9174,6 @@
       "service": "documentdb",
       "top_candidates": [
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2282,
-          "matched_terms": [
-            "additional",
-            "against",
-            "enabled",
-            "layer",
-            "offers",
-            "protection"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_use_infrastructure_as_code",
           "capability_name": "Use infrastructure as code",
           "domain": "data_protection",
@@ -9240,6 +9199,18 @@
             "documentdb"
           ],
           "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions",
+          "domain": "identity_access",
+          "score": 0.2066,
+          "matched_terms": [
+            "additional",
+            "protection",
+            "unauthorized"
+          ],
+          "matched_phrases": []
         }
       ]
     },
@@ -9261,21 +9232,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3046,
-          "matched_terms": [
-            "amazon",
-            "internal",
-            "multi",
-            "network",
-            "software",
-            "such"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -9285,6 +9241,19 @@
             "case",
             "provide",
             "such"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.2829,
+          "matched_terms": [
+            "amazon",
+            "multi",
+            "such",
+            "through"
           ],
           "matched_phrases": []
         }
@@ -9627,22 +9596,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3105,
-          "matched_terms": [
-            "applications",
-            "aws",
-            "best",
-            "practices",
-            "security",
-            "software",
-            "they"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
           "capability_name": "Automate evidence gathering for compliance audit reports",
           "domain": "resilience",
@@ -9651,6 +9604,21 @@
             "automatically",
             "aws",
             "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.2936,
+          "matched_terms": [
+            "applications",
+            "aws",
+            "configuration",
+            "may",
+            "security",
+            "they"
           ],
           "matched_phrases": []
         }
@@ -9778,23 +9746,6 @@
       "service": "dynamodb",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3186,
-          "matched_terms": [
-            "amazon",
-            "application",
-            "aws",
-            "best",
-            "due",
-            "practices",
-            "security",
-            "software"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -9821,6 +9772,21 @@
             "aws",
             "redundancy",
             "resilience"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
+          "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
+          "domain": "resilience",
+          "score": 0.3003,
+          "matched_terms": [
+            "amazon",
+            "application",
+            "aws",
+            "best",
+            "due",
+            "practices"
           ],
           "matched_phrases": []
         }
@@ -9963,27 +9929,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2711,
-          "matched_terms": [
-            "account",
-            "applications",
-            "available",
-            "aws",
-            "exposure",
-            "infrastructure",
-            "instances",
-            "other",
-            "security",
-            "therefore",
-            "they",
-            "where"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "1_quickwins_select_the_region_s_where_you_want_to_operate_and_block_the_rest",
           "capability_name": "Select the region(s) where you want to operate and block the rest",
           "domain": "logging_monitoring",
@@ -9995,6 +9940,27 @@
             "launch",
             "no",
             "other",
+            "where"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_use_temporary_credentials",
+          "capability_name": "Use Temporary Credentials",
+          "domain": "identity_access",
+          "score": 0.2589,
+          "matched_terms": [
+            "applications",
+            "aws",
+            "community",
+            "data",
+            "ec2",
+            "everyone",
+            "exposure",
+            "no",
+            "them",
+            "therefore",
+            "they",
             "where"
           ],
           "matched_phrases": []
@@ -10304,26 +10270,6 @@
       "service": "ec2",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3359,
-          "matched_terms": [
-            "amazon",
-            "aws",
-            "best",
-            "ebs",
-            "more",
-            "practices",
-            "security",
-            "software",
-            "systems",
-            "volumes",
-            "vulnerable"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_achieve_redundancy_using_multiple_availability_zones",
           "capability_name": "Achieve redundancy using multiple Availability Zones",
           "domain": "resilience",
@@ -10352,6 +10298,19 @@
             "up"
           ],
           "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
+          "capability_name": "Automate evidence gathering for compliance audit reports",
+          "domain": "resilience",
+          "score": 0.3043,
+          "matched_terms": [
+            "amazon",
+            "aws",
+            "more",
+            "security"
+          ],
+          "matched_phrases": []
         }
       ]
     },
@@ -10377,21 +10336,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2276,
-          "matched_terms": [
-            "available",
-            "ebs",
-            "more",
-            "point",
-            "time",
-            "volumes"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "1_quickwins_evaluate_resilience_posture_aws_resilience_hub",
           "capability_name": "Evaluate Resilience Posture - AWS Resilience Hub",
           "domain": "data_protection",
@@ -10401,6 +10345,20 @@
             "point",
             "recovery",
             "taken",
+            "time"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "3_efficient_disaster_recovery_plan",
+          "capability_name": "Disaster Recovery Plan",
+          "domain": "data_protection",
+          "score": 0.2159,
+          "matched_terms": [
+            "data",
+            "more",
+            "point",
+            "recovery",
             "time"
           ],
           "matched_phrases": []
@@ -10502,20 +10460,6 @@
       "service": "ec2",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2345,
-          "matched_terms": [
-            "account",
-            "exposure",
-            "instances",
-            "vulnerabilities",
-            "vulnerable"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "1_quickwins_billing_alarms_for_anomaly_detection",
           "capability_name": "Billing alarms for anomaly detection",
           "domain": "logging_monitoring",
@@ -10530,16 +10474,30 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2286,
+          "capability_id": "2_foundational_data_backups",
+          "capability_name": "Data Backups",
+          "domain": "data_protection",
+          "score": 0.2249,
           "matched_terms": [
             "account",
-            "against",
             "attacks",
-            "enabled",
-            "protection",
+            "data",
+            "ec2",
+            "instances",
+            "service"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups",
+          "domain": "identity_access",
+          "score": 0.2233,
+          "matched_terms": [
+            "attacks",
+            "ec2",
+            "instance",
+            "instances",
             "service"
           ],
           "matched_phrases": []
@@ -10696,26 +10654,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2666,
-          "matched_terms": [
-            "aws",
-            "best",
-            "infrastructure",
-            "instances",
-            "manager",
-            "practices",
-            "provides",
-            "security",
-            "ssm",
-            "systems",
-            "which"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_inventory_configurations_monitoring",
           "capability_name": "Inventory & Configurations Monitoring",
           "domain": "logging_monitoring",
@@ -10731,6 +10669,24 @@
             "security",
             "systems",
             "which"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups",
+          "domain": "identity_access",
+          "score": 0.2571,
+          "matched_terms": [
+            "aws",
+            "ec2",
+            "instance",
+            "instances",
+            "managed",
+            "manager",
+            "security",
+            "ssm",
+            "systems"
           ],
           "matched_phrases": []
         }
@@ -10770,18 +10726,16 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2368,
+          "capability_id": "1_quickwins_billing_alarms_for_anomaly_detection",
+          "capability_name": "Billing alarms for anomaly detection",
+          "domain": "logging_monitoring",
+          "score": 0.234,
           "matched_terms": [
             "account",
             "aws",
-            "infrastructure",
-            "instances",
-            "security",
-            "software",
-            "vulnerable"
+            "ec2",
+            "instance",
+            "security"
           ],
           "matched_phrases": []
         }
@@ -10843,22 +10797,6 @@
       "service": "ec2",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3087,
-          "matched_terms": [
-            "exposure",
-            "infrastructure",
-            "instances",
-            "management",
-            "point",
-            "security",
-            "system"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -10883,6 +10821,21 @@
             "availability",
             "infrastructure",
             "many"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.2927,
+          "matched_terms": [
+            "access",
+            "data",
+            "exposure",
+            "management",
+            "no",
+            "security"
           ],
           "matched_phrases": []
         }
@@ -11089,19 +11042,19 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2393,
+          "capability_id": "2_foundational_data_backups",
+          "capability_name": "Data Backups",
+          "domain": "data_protection",
+          "score": 0.2362,
           "matched_terms": [
+            "access",
+            "allow",
             "applications",
-            "exposure",
+            "data",
+            "ec2",
             "infrastructure",
             "instances",
-            "real",
-            "security",
-            "time",
-            "which"
+            "time"
           ],
           "matched_phrases": []
         }
@@ -11253,25 +11206,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2466,
-          "matched_terms": [
-            "exposure",
-            "external",
-            "infrastructure",
-            "instances",
-            "number",
-            "often",
-            "other",
-            "perform",
-            "security",
-            "system"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_data_backups",
           "capability_name": "Data Backups",
           "domain": "data_protection",
@@ -11286,6 +11220,23 @@
             "malicious",
             "service",
             "up"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_evaluate_resilience_posture_aws_resilience_hub",
+          "capability_name": "Evaluate Resilience Posture - AWS Resilience Hub",
+          "domain": "data_protection",
+          "score": 0.2365,
+          "matched_terms": [
+            "activities",
+            "allow",
+            "data",
+            "infrastructure",
+            "often",
+            "other",
+            "security",
+            "service"
           ],
           "matched_phrases": []
         }
@@ -11335,19 +11286,19 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
           "score": 0.2413,
           "matched_terms": [
-            "applications",
+            "access",
+            "allows",
+            "data",
+            "database",
             "exposure",
-            "infrastructure",
-            "instances",
-            "often",
-            "security",
-            "vulnerable",
-            "web"
+            "instance",
+            "may",
+            "no"
           ],
           "matched_phrases": []
         }
@@ -12477,21 +12428,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.303,
-          "matched_terms": [
-            "cloud",
-            "exposure",
-            "network",
-            "security",
-            "they",
-            "virtual"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -12503,6 +12439,21 @@
             "no",
             "private",
             "they"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
+          "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
+          "domain": "resilience",
+          "score": 0.2996,
+          "matched_terms": [
+            "access",
+            "associated",
+            "cloud",
+            "generate",
+            "they",
+            "unused"
           ],
           "matched_phrases": []
         }
@@ -14642,27 +14593,6 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3411,
-          "matched_terms": [
-            "amazon",
-            "aws",
-            "best",
-            "exposure",
-            "foundational",
-            "point",
-            "practices",
-            "security",
-            "software",
-            "system",
-            "they",
-            "vulnerabilities"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -14680,6 +14610,27 @@
             "practices",
             "read",
             "sensitive"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub",
+          "domain": "identity_access",
+          "score": 0.3382,
+          "matched_terms": [
+            "access",
+            "amazon",
+            "aws",
+            "best",
+            "checks",
+            "configuration",
+            "could",
+            "instead",
+            "non",
+            "point",
+            "practices",
+            "read"
           ],
           "matched_phrases": []
         }
@@ -14856,23 +14807,21 @@
           ]
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.338,
+          "capability_id": "1_quickwins_audit_api_calls",
+          "capability_name": "Audit API calls",
+          "domain": "identity_access",
+          "score": 0.3305,
           "matched_terms": [
             "amazon",
             "aws",
-            "best",
-            "foundational",
-            "point",
-            "practices",
+            "configuration",
+            "destruction",
+            "enabled",
+            "incidents",
+            "policy",
             "security",
-            "software",
-            "system",
-            "systems",
-            "time",
-            "where"
+            "where",
+            "without"
           ],
           "matched_phrases": []
         }
@@ -14982,21 +14931,18 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "1_quickwins_identity_federation_centralized_user_repository",
+          "capability_name": "Identity Federation - Centralized user repository",
           "domain": "resilience",
-          "score": 0.3254,
+          "score": 0.3121,
           "matched_terms": [
-            "amazon",
+            "access",
             "aws",
-            "best",
-            "more",
-            "multi",
-            "practices",
             "security",
-            "software",
+            "service",
+            "single",
             "system",
-            "systems"
+            "through"
           ],
           "matched_phrases": []
         }
@@ -15517,19 +15463,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2111,
-          "matched_terms": [
-            "due",
-            "other",
-            "security",
-            "vulnerabilities"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_data_encryption_at_rest",
           "capability_name": "Data Encryption at rest",
           "domain": "data_protection",
@@ -15537,6 +15470,18 @@
           "matched_terms": [
             "cluster",
             "clusters",
+            "other",
+            "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_billing_alarms_for_anomaly_detection",
+          "capability_name": "Billing alarms for anomaly detection",
+          "domain": "logging_monitoring",
+          "score": 0.2108,
+          "matched_terms": [
+            "need",
             "other",
             "security"
           ],
@@ -15573,13 +15518,13 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
+          "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
-          "score": 0.2758,
+          "score": 0.2745,
           "matched_terms": [
             "application",
-            "other"
+            "significant"
           ],
           "matched_phrases": []
         }
@@ -15901,21 +15846,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3051,
-          "matched_terms": [
-            "application",
-            "aws",
-            "best",
-            "practices",
-            "security",
-            "software"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
           "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
@@ -15928,6 +15858,20 @@
             "environments",
             "may",
             "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
+          "domain": "resilience",
+          "score": 0.2975,
+          "matched_terms": [
+            "application",
+            "aws",
+            "best",
+            "may",
+            "practices"
           ],
           "matched_phrases": []
         }
@@ -15995,24 +15939,6 @@
       "service": "elb",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2408,
-          "matched_terms": [
-            "application",
-            "aws",
-            "best",
-            "instances",
-            "network",
-            "practices",
-            "security",
-            "software",
-            "useful"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_encryption_in_transit",
           "capability_name": "Encryption in transit",
           "domain": "data_protection",
@@ -16039,6 +15965,19 @@
             "enabled",
             "particularly",
             "practices",
+            "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_zero_trust_access_risk_based_access_control",
+          "capability_name": "Zero Trust Access: Risk-Based Access Control",
+          "domain": "identity_access",
+          "score": 0.2269,
+          "matched_terms": [
+            "aws",
+            "network",
+            "open",
             "security"
           ],
           "matched_phrases": []
@@ -16075,13 +16014,13 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
           "score": 0.2745,
           "matched_terms": [
             "application",
-            "resources"
+            "may"
           ],
           "matched_phrases": []
         }
@@ -16111,22 +16050,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2449,
-          "matched_terms": [
-            "applications",
-            "attacks",
-            "aws",
-            "configured",
-            "mitigation",
-            "such",
-            "which"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "1_quickwins_evaluate_cloud_security_posture_aws_security_hub",
           "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub",
           "domain": "identity_access",
@@ -16143,6 +16066,20 @@
             "security",
             "such",
             "which"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_zero_trust_access_risk_based_access_control",
+          "capability_name": "Zero Trust Access: Risk-Based Access Control",
+          "domain": "identity_access",
+          "score": 0.2433,
+          "matched_terms": [
+            "applications",
+            "aws",
+            "control",
+            "security",
+            "such"
           ],
           "matched_phrases": []
         }
@@ -16459,18 +16396,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2815,
-          "matched_terms": [
-            "application",
-            "network",
-            "resources"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
           "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
@@ -16481,6 +16406,17 @@
             "resources"
           ],
           "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
+          "domain": "resilience",
+          "score": 0.2743,
+          "matched_terms": [
+            "application",
+            "may"
+          ],
+          "matched_phrases": []
         }
       ]
     },
@@ -16488,20 +16424,6 @@
       "check_id": "elbv2_deletion_protection",
       "service": "elbv2",
       "top_candidates": [
-        {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2233,
-          "matched_terms": [
-            "against",
-            "elastic",
-            "enabled",
-            "protected",
-            "protection"
-          ],
-          "matched_phrases": []
-        },
         {
           "capability_id": "3_efficient_encryption_in_transit",
           "capability_name": "Encryption in transit",
@@ -16525,6 +16447,18 @@
             "resource"
           ],
           "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest",
+          "domain": "data_protection",
+          "score": 0.2051,
+          "matched_terms": [
+            "against",
+            "check",
+            "data"
+          ],
+          "matched_phrases": []
         }
       ]
     },
@@ -16532,21 +16466,6 @@
       "check_id": "elbv2_desync_mitigation_mode",
       "service": "elbv2",
       "top_candidates": [
-        {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.239,
-          "matched_terms": [
-            "applications",
-            "configured",
-            "make",
-            "mitigation",
-            "protection",
-            "which"
-          ],
-          "matched_phrases": []
-        },
         {
           "capability_id": "3_efficient_encryption_in_transit",
           "capability_name": "Encryption in transit",
@@ -16570,6 +16489,19 @@
             "application",
             "least",
             "which"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions",
+          "domain": "identity_access",
+          "score": 0.2122,
+          "matched_terms": [
+            "application",
+            "credential",
+            "protection",
+            "unauthorized"
           ],
           "matched_phrases": []
         }
@@ -16690,19 +16622,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2883,
-          "matched_terms": [
-            "application",
-            "network",
-            "point",
-            "services"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
           "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
@@ -16711,6 +16630,18 @@
             "application",
             "case",
             "least"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.2765,
+          "matched_terms": [
+            "least",
+            "risk",
+            "services"
           ],
           "matched_phrases": []
         }
@@ -16938,19 +16869,14 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_applications",
-          "capability_name": "Manage vulnerabilities in your applications",
+          "capability_id": "1_quickwins_cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions",
           "domain": "identity_access",
-          "score": 0.2397,
+          "score": 0.2236,
           "matched_terms": [
             "access",
             "application",
-            "attacks",
-            "check",
-            "risk",
-            "security",
-            "waf",
-            "web"
+            "infrastructure"
           ],
           "matched_phrases": []
         }
@@ -16988,13 +16914,13 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2674,
+          "capability_id": "2_foundational_data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest",
+          "domain": "data_protection",
+          "score": 0.2669,
           "matched_terms": [
-            "account",
-            "enabled"
+            "cluster",
+            "clusters"
           ],
           "matched_phrases": []
         }
@@ -17448,24 +17374,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2474,
-          "matched_terms": [
-            "amazon",
-            "management",
-            "more",
-            "resources",
-            "software",
-            "system",
-            "systems",
-            "volumes",
-            "vulnerabilities"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_use_infrastructure_as_code",
           "capability_name": "Use infrastructure as code",
           "domain": "data_protection",
@@ -17477,6 +17385,21 @@
             "governance",
             "management",
             "resources"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_form_a_vulnerability_management_team",
+          "capability_name": "Form a Vulnerability Management Team",
+          "domain": "general",
+          "score": 0.2401,
+          "matched_terms": [
+            "configured",
+            "could",
+            "management",
+            "more",
+            "processes",
+            "vulnerabilities"
           ],
           "matched_phrases": []
         }
@@ -17961,6 +17884,23 @@
           "matched_phrases": []
         },
         {
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
+          "domain": "data_protection",
+          "score": 0.3146,
+          "matched_terms": [
+            "amazon",
+            "aws",
+            "enabled",
+            "encrypt",
+            "information",
+            "jobs",
+            "sensitive",
+            "storage"
+          ],
+          "matched_phrases": []
+        },
+        {
           "capability_id": "2_foundational_data_encryption_at_rest",
           "capability_name": "Data Encryption at rest",
           "domain": "data_protection",
@@ -17972,20 +17912,6 @@
             "checks",
             "encrypt",
             "rest"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "3_efficient_use_infrastructure_as_code",
-          "capability_name": "Use infrastructure as code",
-          "domain": "data_protection",
-          "score": 0.3056,
-          "matched_terms": [
-            "amazon",
-            "aws",
-            "enabled",
-            "encrypt",
-            "storage"
           ],
           "matched_phrases": []
         }
@@ -21507,15 +21433,13 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.219,
+          "capability_id": "3_efficient_encryption_in_transit",
+          "capability_name": "Encryption in transit",
+          "domain": "data_protection",
+          "score": 0.2165,
           "matched_terms": [
-            "additional",
-            "attacks",
-            "enabled",
-            "layer",
+            "tls",
+            "within",
             "without"
           ],
           "matched_phrases": []
@@ -21715,19 +21639,19 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
           "score": 0.323,
           "matched_terms": [
-            "applications",
             "aws",
             "best",
-            "especially",
+            "case",
+            "data",
             "foundational",
+            "may",
+            "period",
             "practices",
-            "security",
-            "software",
             "they"
           ],
           "matched_phrases": []
@@ -22366,21 +22290,6 @@
       "service": "memorydb",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.226,
-          "matched_terms": [
-            "available",
-            "often",
-            "patch",
-            "security",
-            "therefore",
-            "vulnerabilities"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_data_encryption_at_rest",
           "capability_name": "Data Encryption at rest",
           "domain": "data_protection",
@@ -22404,6 +22313,19 @@
             "auto",
             "feature",
             "often",
+            "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_audit_api_calls",
+          "capability_name": "Audit API calls",
+          "domain": "identity_access",
+          "score": 0.2138,
+          "matched_terms": [
+            "automatically",
+            "available",
+            "enabled",
             "security"
           ],
           "matched_phrases": []
@@ -22443,14 +22365,13 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
-          "score": 0.2819,
+          "score": 0.2745,
           "matched_terms": [
             "amazon",
-            "lack",
-            "software"
+            "data"
           ],
           "matched_phrases": []
         }
@@ -22675,24 +22596,6 @@
       "service": "neptune",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3201,
-          "matched_terms": [
-            "aws",
-            "best",
-            "foundational",
-            "more",
-            "point",
-            "practices",
-            "security",
-            "software",
-            "time"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_achieve_redundancy_using_multiple_availability_zones",
           "capability_name": "Achieve redundancy using multiple Availability Zones",
           "domain": "resilience",
@@ -22717,6 +22620,23 @@
             "compliance",
             "more",
             "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
+          "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
+          "domain": "resilience",
+          "score": 0.3094,
+          "matched_terms": [
+            "aws",
+            "best",
+            "minimum",
+            "more",
+            "period",
+            "practices",
+            "required",
+            "time"
           ],
           "matched_phrases": []
         }
@@ -23003,21 +22923,19 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
+          "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
-          "score": 0.321,
+          "score": 0.3086,
           "matched_terms": [
             "amazon",
             "aws",
             "best",
+            "cause",
             "foundational",
-            "instances",
-            "multi",
-            "point",
             "practices",
-            "security",
-            "software"
+            "read",
+            "service"
           ],
           "matched_phrases": []
         }
@@ -24551,16 +24469,17 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
-          "score": 0.2963,
+          "score": 0.2942,
           "matched_terms": [
             "amazon",
-            "point",
-            "quickly",
+            "data",
+            "errors",
+            "help",
+            "need",
             "such",
-            "time",
             "where"
           ],
           "matched_phrases": []
@@ -24571,21 +24490,6 @@
       "check_id": "rds_cluster_copy_tags_to_snapshots",
       "service": "rds",
       "top_candidates": [
-        {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3032,
-          "matched_terms": [
-            "instances",
-            "management",
-            "resources",
-            "scan",
-            "such",
-            "those"
-          ],
-          "matched_phrases": []
-        },
         {
           "capability_id": "3_efficient_tagging_strategy",
           "capability_name": "Tagging Strategy",
@@ -24611,6 +24515,17 @@
             "check",
             "instance",
             "such",
+            "those"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_achieve_redundancy_using_multiple_availability_zones",
+          "capability_name": "Achieve redundancy using multiple Availability Zones",
+          "domain": "resilience",
+          "score": 0.2877,
+          "matched_terms": [
+            "so",
             "those"
           ],
           "matched_phrases": []
@@ -24748,23 +24663,22 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.1977,
-          "matched_terms": [
-            "enabled",
-            "protection"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_use_infrastructure_as_code",
           "capability_name": "Use infrastructure as code",
           "domain": "data_protection",
           "score": 0.1926,
           "matched_terms": [
             "enabled"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions",
+          "domain": "identity_access",
+          "score": 0.1899,
+          "matched_terms": [
+            "protection"
           ],
           "matched_phrases": []
         }
@@ -25108,15 +25022,15 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_data_backups",
-          "capability_name": "Data Backups",
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
           "domain": "data_protection",
-          "score": 0.2901,
+          "score": 0.2933,
           "matched_terms": [
+            "enabled",
             "encrypt",
             "information",
-            "protected",
-            "rds",
+            "sensitive",
             "storage"
           ],
           "matched_phrases": []
@@ -25243,20 +25157,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2973,
-          "matched_terms": [
-            "instances",
-            "management",
-            "resources",
-            "such",
-            "they"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -25264,6 +25164,20 @@
           "matched_terms": [
             "check",
             "instance",
+            "such",
+            "they"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.2888,
+          "matched_terms": [
+            "environment",
+            "management",
+            "resources",
             "such",
             "they"
           ],
@@ -25404,17 +25318,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.1977,
-          "matched_terms": [
-            "enabled",
-            "protection"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -25422,6 +25325,17 @@
           "matched_terms": [
             "check",
             "instance"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_data_backups",
+          "capability_name": "Data Backups",
+          "domain": "data_protection",
+          "score": 0.1962,
+          "matched_terms": [
+            "instances",
+            "rds"
           ],
           "matched_phrases": []
         }
@@ -25444,18 +25358,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2046,
-          "matched_terms": [
-            "instances",
-            "security",
-            "vulnerable"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_don_t_store_secrets_in_code_remove_secrets_from_code",
           "capability_name": "Don't store secrets in code - Remove secrets from code",
           "domain": "resilience",
@@ -25464,6 +25366,17 @@
             "check",
             "instance",
             "may"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_automate_deviation_correction_in_configurations",
+          "capability_name": "Automate deviation correction in configurations",
+          "domain": "identity_access",
+          "score": 0.2045,
+          "matched_terms": [
+            "may",
+            "security"
           ],
           "matched_phrases": []
         }
@@ -26050,14 +25963,16 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_data_encryption_at_rest",
-          "capability_name": "Data Encryption at rest",
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
           "domain": "data_protection",
-          "score": 0.2903,
+          "score": 0.2933,
           "matched_terms": [
-            "check",
+            "enabled",
             "encrypt",
-            "rest"
+            "information",
+            "sensitive",
+            "storage"
           ],
           "matched_phrases": []
         }
@@ -26332,18 +26247,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2055,
-          "matched_terms": [
-            "automatic",
-            "enabled",
-            "without"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_data_encryption_at_rest",
           "capability_name": "Data Encryption at rest",
           "domain": "data_protection",
@@ -26352,6 +26255,17 @@
             "check",
             "cluster",
             "critical"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "1_quickwins_audit_api_calls",
+          "capability_name": "Audit API calls",
+          "domain": "identity_access",
+          "score": 0.1985,
+          "matched_terms": [
+            "enabled",
+            "without"
           ],
           "matched_phrases": []
         }
@@ -26563,19 +26477,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2901,
-          "matched_terms": [
-            "amazon",
-            "multi",
-            "operating",
-            "supports"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_automate_evidence_gathering_for_compliance_audit_reports",
           "capability_name": "Automate evidence gathering for compliance audit reports",
           "domain": "resilience",
@@ -26583,6 +26484,19 @@
           "matched_terms": [
             "amazon",
             "multiple"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.2832,
+          "matched_terms": [
+            "amazon",
+            "control",
+            "data",
+            "multi"
           ],
           "matched_phrases": []
         }
@@ -26844,19 +26758,6 @@
       "service": "route53",
       "top_candidates": [
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2138,
-          "matched_terms": [
-            "domain",
-            "enabled",
-            "protection",
-            "without"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "2_foundational_inventory_configurations_monitoring",
           "capability_name": "Inventory & Configurations Monitoring",
           "domain": "logging_monitoring",
@@ -26876,6 +26777,17 @@
           "matched_terms": [
             "information",
             "other"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_automate_deviation_correction_in_configurations",
+          "capability_name": "Automate deviation correction in configurations",
+          "domain": "identity_access",
+          "score": 0.2048,
+          "matched_terms": [
+            "other",
+            "without"
           ],
           "matched_phrases": []
         }
@@ -26898,18 +26810,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_advanced_ddos_mitigation_layer_7_aws_shield",
-          "capability_name": "Advanced DDoS Mitigation (Layer 7) - AWS Shield",
-          "domain": "network_security",
-          "score": 0.2053,
-          "matched_terms": [
-            "domain",
-            "enabled",
-            "without"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_automate_deviation_correction_in_configurations",
           "capability_name": "Automate deviation correction in configurations",
           "domain": "identity_access",
@@ -26917,6 +26817,17 @@
           "matched_terms": [
             "other",
             "without"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "3_efficient_use_infrastructure_as_code",
+          "capability_name": "Use infrastructure as code",
+          "domain": "data_protection",
+          "score": 0.2035,
+          "matched_terms": [
+            "could",
+            "enabled"
           ],
           "matched_phrases": []
         }
@@ -27153,6 +27064,26 @@
           ]
         },
         {
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
+          "domain": "data_protection",
+          "score": 0.3702,
+          "matched_terms": [
+            "access",
+            "account",
+            "accounts",
+            "allowing",
+            "aws",
+            "data",
+            "encrypt",
+            "insider",
+            "policy",
+            "sensitive",
+            "storage"
+          ],
+          "matched_phrases": []
+        },
+        {
           "capability_id": "2_foundational_set_up_multi_account_management_with_aws_control_tower",
           "capability_name": "Set up multi-account management with AWS Control Tower",
           "domain": "data_protection",
@@ -27162,23 +27093,6 @@
             "accounts",
             "aws",
             "limits",
-            "policy",
-            "storage"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "2_foundational_data_backups",
-          "capability_name": "Data Backups",
-          "domain": "data_protection",
-          "score": 0.3442,
-          "matched_terms": [
-            "access",
-            "account",
-            "attacks",
-            "aws",
-            "data",
-            "encrypt",
             "policy",
             "storage"
           ],
@@ -27652,14 +27566,14 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_disaster_recovery_plan",
-          "capability_name": "Disaster Recovery Plan",
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
           "domain": "data_protection",
-          "score": 0.2424,
+          "score": 0.2451,
           "matched_terms": [
-            "both",
             "data",
-            "recover"
+            "enabled",
+            "storage"
           ],
           "matched_phrases": []
         }
@@ -27924,19 +27838,21 @@
           ]
         },
         {
-          "capability_id": "4_optimized_multi_region_disaster_recovery_automation",
-          "capability_name": "Multi-Region Disaster Recovery Automation",
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
           "domain": "data_protection",
-          "score": 0.3527,
+          "score": 0.3533,
           "matched_terms": [
             "data",
             "encrypt",
+            "enforced",
+            "https",
             "information",
-            "over"
+            "policy",
+            "sensitive",
+            "storage"
           ],
-          "matched_phrases": [
-            "encryption in transit"
-          ]
+          "matched_phrases": []
         }
       ]
     },
@@ -28131,26 +28047,6 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.3359,
-          "matched_terms": [
-            "amazon",
-            "aws",
-            "best",
-            "due",
-            "especially",
-            "instances",
-            "other",
-            "point",
-            "practices",
-            "security",
-            "software"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
           "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
@@ -28163,6 +28059,23 @@
             "least",
             "practices",
             "production"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
+          "domain": "resilience",
+          "score": 0.3031,
+          "matched_terms": [
+            "amazon",
+            "aws",
+            "configuration",
+            "control",
+            "least",
+            "one",
+            "other",
+            "security"
           ],
           "matched_phrases": []
         }
@@ -28691,6 +28604,23 @@
           ]
         },
         {
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
+          "domain": "data_protection",
+          "score": 0.3776,
+          "matched_terms": [
+            "aws",
+            "information",
+            "policy",
+            "public",
+            "security",
+            "sensitive"
+          ],
+          "matched_phrases": [
+            "public access"
+          ]
+        },
+        {
           "capability_id": "4_optimized_automate_deviation_correction_in_configurations",
           "capability_name": "Automate deviation correction in configurations",
           "domain": "identity_access",
@@ -28702,20 +28632,6 @@
             "manager",
             "policy",
             "resource",
-            "security"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "4_optimized_zero_trust_access_risk_based_access_control",
-          "capability_name": "Zero Trust Access: Risk-Based Access Control",
-          "domain": "identity_access",
-          "score": 0.3385,
-          "matched_terms": [
-            "aws",
-            "control",
-            "information",
-            "risk",
             "security"
           ],
           "matched_phrases": []
@@ -29354,6 +29270,19 @@
       "service": "sns",
       "top_candidates": [
         {
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
+          "domain": "data_protection",
+          "score": 0.2848,
+          "matched_terms": [
+            "enabled",
+            "encrypt",
+            "information",
+            "sensitive"
+          ],
+          "matched_phrases": []
+        },
+        {
           "capability_id": "3_efficient_encryption_in_transit",
           "capability_name": "Encryption in transit",
           "domain": "data_protection",
@@ -29372,18 +29301,6 @@
           "matched_terms": [
             "enabled",
             "encrypt"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "2_foundational_data_backups",
-          "capability_name": "Data Backups",
-          "domain": "data_protection",
-          "score": 0.2741,
-          "matched_terms": [
-            "encrypt",
-            "information",
-            "protected"
           ],
           "matched_phrases": []
         }
@@ -29438,6 +29355,18 @@
       "service": "sqs",
       "top_candidates": [
         {
+          "capability_id": "2_foundational_discover_sensitive_data_with_amazon_macie",
+          "capability_name": "Discover sensitive data with Amazon Macie",
+          "domain": "identity_access",
+          "score": 0.2898,
+          "matched_terms": [
+            "information",
+            "sensitive",
+            "set"
+          ],
+          "matched_phrases": []
+        },
+        {
           "capability_id": "1_quickwins_keep_your_security_contact_details_up_to_date",
           "capability_name": "Keep your security contact details up to date",
           "domain": "identity_access",
@@ -29456,17 +29385,6 @@
           "score": 0.278,
           "matched_terms": [
             "information"
-          ],
-          "matched_phrases": []
-        },
-        {
-          "capability_id": "2_foundational_use_temporary_credentials",
-          "capability_name": "Use Temporary Credentials",
-          "domain": "identity_access",
-          "score": 0.2743,
-          "matched_terms": [
-            "exposure",
-            "sensitive"
           ],
           "matched_phrases": []
         }
@@ -29502,13 +29420,15 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "3_efficient_use_infrastructure_as_code",
-          "capability_name": "Use infrastructure as code",
+          "capability_id": "1_quickwins_analyze_data_security_posture",
+          "capability_name": "Analyze data security posture",
           "domain": "data_protection",
-          "score": 0.2745,
+          "score": 0.2846,
           "matched_terms": [
             "enabled",
-            "encrypt"
+            "encrypt",
+            "information",
+            "sensitive"
           ],
           "matched_phrases": []
         }
@@ -29605,27 +29525,6 @@
       "service": "ssm",
       "top_candidates": [
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2809,
-          "matched_terms": [
-            "best",
-            "exposure",
-            "instances",
-            "management",
-            "manager",
-            "organizations",
-            "patch",
-            "patching",
-            "security",
-            "software",
-            "ssm",
-            "system"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "1_quickwins_cleanup_risky_open_admin_ports_in_security_groups",
           "capability_name": "Cleanup risky open admin ports in Security Groups",
           "domain": "identity_access",
@@ -29661,6 +29560,24 @@
             "security",
             "systems",
             "threat"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_data_backups",
+          "capability_name": "Data Backups",
+          "domain": "data_protection",
+          "score": 0.2408,
+          "matched_terms": [
+            "attacks",
+            "data",
+            "ec2",
+            "instances",
+            "managed",
+            "management",
+            "ransomware",
+            "requirements",
+            "systems"
           ],
           "matched_phrases": []
         }
@@ -29865,18 +29782,17 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "3_efficient_least_privilege_review_set_up_right_size_permissions_in_roles",
+          "capability_name": "Least Privilege Review: Set up right-size permissions in roles",
           "domain": "resilience",
-          "score": 0.3105,
+          "score": 0.2998,
           "matched_terms": [
+            "access",
             "application",
-            "applications",
-            "available",
             "aws",
             "based",
-            "other",
-            "point"
+            "environment",
+            "require"
           ],
           "matched_phrases": []
         }
@@ -30200,16 +30116,16 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
-          "score": 0.3017,
+          "score": 0.2927,
           "matched_terms": [
             "amazon",
+            "may",
             "more",
             "multi",
-            "network",
-            "same",
+            "one",
             "services"
           ],
           "matched_phrases": []
@@ -30391,13 +30307,13 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
+          "capability_id": "4_optimized_iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access",
           "domain": "resilience",
-          "score": 0.2853,
+          "score": 0.2789,
           "matched_terms": [
-            "infrastructure",
             "more",
+            "one",
             "security"
           ],
           "matched_phrases": []
@@ -31264,26 +31180,25 @@
           "matched_phrases": []
         },
         {
-          "capability_id": "2_foundational_manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
-          "capability_name": "Manage vulnerabilities in your infrastructure and perform pentesting",
-          "domain": "resilience",
-          "score": 0.2198,
-          "matched_terms": [
-            "best",
-            "network",
-            "practices",
-            "security",
-            "segmentation"
-          ],
-          "matched_phrases": []
-        },
-        {
           "capability_id": "4_optimized_zero_trust_access_risk_based_access_control",
           "capability_name": "Zero Trust Access: Risk-Based Access Control",
           "domain": "identity_access",
           "score": 0.2122,
           "matched_terms": [
             "network",
+            "security"
+          ],
+          "matched_phrases": []
+        },
+        {
+          "capability_id": "2_foundational_set_up_multi_account_management_with_aws_control_tower",
+          "capability_name": "Set up multi-account management with AWS Control Tower",
+          "domain": "data_protection",
+          "score": 0.2101,
+          "matched_terms": [
+            "best",
+            "following",
+            "practices",
             "security"
           ],
           "matched_phrases": []

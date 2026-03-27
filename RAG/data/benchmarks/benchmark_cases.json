@@ -1,0 +1,643 @@
+{
+  "version": "2.0",
+  "description": "Comprehensive benchmark test cases for RAG retrieval evaluation. Covers 6 AWS services with exact, paraphrase, risk, and semantic_hard categories.",
+  "check_cases": [
+    {
+      "case_id": "s3_exact_1",
+      "category": "exact",
+      "service": "s3",
+      "query": "s3_bucket_level_public_access_block",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_exact_2",
+      "category": "exact",
+      "service": "s3",
+      "query": "s3_account_level_public_access_blocks",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_exact_3",
+      "category": "exact",
+      "service": "s3",
+      "query": "s3_bucket_default_encryption",
+      "expected_doc_id": "check:s3_bucket_default_encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_exact_4",
+      "category": "exact",
+      "service": "s3",
+      "query": "s3_bucket_secure_transport_policy",
+      "expected_doc_id": "check:s3_bucket_secure_transport_policy",
+      "expected_capability_id": "encryption_in_transit",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_exact_5",
+      "category": "exact",
+      "service": "s3",
+      "query": "s3_bucket_policy_public_write_access",
+      "expected_doc_id": "check:s3_bucket_policy_public_write_access",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_paraphrase_1",
+      "category": "paraphrase",
+      "service": "s3",
+      "query": "how to prevent an s3 bucket from being publicly exposed",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_paraphrase_2",
+      "category": "paraphrase",
+      "service": "s3",
+      "query": "stop public access to aws object storage",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "s3_risk_1",
+      "category": "risk",
+      "service": "s3",
+      "query": "misconfiguration that allows public reads on cloud storage",
+      "expected_doc_id": "check:s3_bucket_level_public_access_block",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "s3_risk_2",
+      "category": "risk",
+      "service": "s3",
+      "query": "s3 bucket encryption not enabled risk of data exposure",
+      "expected_doc_id": "check:s3_bucket_default_encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "s3_semantic_hard_1",
+      "category": "semantic_hard",
+      "service": "s3",
+      "query": "make object storage private by default",
+      "expected_doc_id": "check:s3_account_level_public_access_blocks",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "s3",
+      "min_confidence": "low"
+    },
+
+    {
+      "case_id": "iam_exact_1",
+      "category": "exact",
+      "service": "iam",
+      "query": "iam_root_hardware_mfa_enabled",
+      "expected_doc_id": "check:iam_root_hardware_mfa_enabled",
+      "expected_capability_id": "keep_your_security_contact_details_up_to_date",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "iam_exact_2",
+      "category": "exact",
+      "service": "iam",
+      "query": "iam_no_root_access_key",
+      "expected_doc_id": "check:iam_no_root_access_key",
+      "expected_capability_id": "temporary_elevated_access_management",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "iam_exact_3",
+      "category": "exact",
+      "service": "iam",
+      "query": "iam_password_policy_minimum_length_14",
+      "expected_doc_id": "check:iam_password_policy_minimum_length_14",
+      "expected_capability_id": "automate_deviation_correction_in_configurations",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "iam_paraphrase_1",
+      "category": "paraphrase",
+      "service": "iam",
+      "query": "ensure root account has hardware MFA enabled",
+      "expected_doc_id": "check:iam_root_hardware_mfa_enabled",
+      "expected_capability_id": "keep_your_security_contact_details_up_to_date",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "iam_paraphrase_2",
+      "category": "paraphrase",
+      "service": "iam",
+      "query": "remove access keys from the root account",
+      "expected_doc_id": "check:iam_no_root_access_key",
+      "expected_capability_id": "temporary_elevated_access_management",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "iam_risk_1",
+      "category": "risk",
+      "service": "iam",
+      "query": "risk of using root account without multi-factor authentication",
+      "expected_doc_id": "check:iam_root_mfa_enabled",
+      "expected_capability_id": "keep_your_security_contact_details_up_to_date",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "iam_semantic_hard_1",
+      "category": "semantic_hard",
+      "service": "iam",
+      "query": "protect the most privileged aws credentials from unauthorized use",
+      "expected_doc_id": "check:iam_avoid_root_usage",
+      "expected_capability_id": "root_account_protection",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "iam_semantic_hard_2",
+      "category": "semantic_hard",
+      "service": "iam",
+      "query": "enforce strong password requirements for console users",
+      "expected_doc_id": "check:iam_password_policy_minimum_length_14",
+      "expected_capability_id": "automate_deviation_correction_in_configurations",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "low"
+    },
+
+    {
+      "case_id": "ec2_exact_1",
+      "category": "exact",
+      "service": "ec2",
+      "query": "ec2_ebs_default_encryption",
+      "expected_doc_id": "check:ec2_ebs_default_encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "ec2_exact_2",
+      "category": "exact",
+      "service": "ec2",
+      "query": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "ec2_exact_3",
+      "category": "exact",
+      "service": "ec2",
+      "query": "ec2_launch_template_imdsv2_required",
+      "expected_doc_id": "check:ec2_launch_template_imdsv2_required",
+      "expected_capability_id": "instance_metadata_service_imds_v2",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "ec2_paraphrase_1",
+      "category": "paraphrase",
+      "service": "ec2",
+      "query": "enable default encryption for ebs volumes",
+      "expected_doc_id": "check:ec2_ebs_default_encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "ec2_paraphrase_2",
+      "category": "paraphrase",
+      "service": "ec2",
+      "query": "block ssh access from the internet in security groups",
+      "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "ec2_risk_1",
+      "category": "risk",
+      "service": "ec2",
+      "query": "security group allows rdp port 3389 open to the internet",
+      "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389",
+      "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "ec2_semantic_hard_1",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "query": "prevent credential theft via instance metadata endpoint",
+      "expected_doc_id": "check:ec2_launch_template_imdsv2_required",
+      "expected_capability_id": "instance_metadata_service_imds_v2",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "ec2_semantic_hard_2",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "query": "close dangerous administrative ports exposed to the world",
+      "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_all_ports",
+      "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "low"
+    },
+
+    {
+      "case_id": "rds_exact_1",
+      "category": "exact",
+      "service": "rds",
+      "query": "rds_instance_no_public_access",
+      "expected_doc_id": "check:rds_instance_no_public_access",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "rds",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "rds_exact_2",
+      "category": "exact",
+      "service": "rds",
+      "query": "rds_cluster_storage_encrypted",
+      "expected_doc_id": "check:rds_cluster_storage_encrypted",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "rds",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "rds_paraphrase_1",
+      "category": "paraphrase",
+      "service": "rds",
+      "query": "make rds database instances not publicly accessible",
+      "expected_doc_id": "check:rds_instance_no_public_access",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "rds",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "rds_risk_1",
+      "category": "risk",
+      "service": "rds",
+      "query": "database snapshot publicly shared exposing sensitive data",
+      "expected_doc_id": "check:rds_snapshots_public_access",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "rds",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "rds_semantic_hard_1",
+      "category": "semantic_hard",
+      "service": "rds",
+      "query": "keep relational databases isolated from direct internet connections",
+      "expected_doc_id": "check:rds_instance_no_public_access",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "rds",
+      "min_confidence": "low"
+    },
+
+    {
+      "case_id": "cloudtrail_exact_1",
+      "category": "exact",
+      "service": "cloudtrail",
+      "query": "cloudtrail_multi_region_enabled",
+      "expected_doc_id": "check:cloudtrail_multi_region_enabled",
+      "expected_capability_id": "inventory_configurations_monitoring",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "cloudtrail",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "cloudtrail_exact_2",
+      "category": "exact",
+      "service": "cloudtrail",
+      "query": "cloudtrail_kms_encryption_enabled",
+      "expected_doc_id": "check:cloudtrail_kms_encryption_enabled",
+      "expected_capability_id": "inventory_configurations_monitoring",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "cloudtrail",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "cloudtrail_paraphrase_1",
+      "category": "paraphrase",
+      "service": "cloudtrail",
+      "query": "enable cloudtrail logging across all aws regions",
+      "expected_doc_id": "check:cloudtrail_multi_region_enabled",
+      "expected_capability_id": "inventory_configurations_monitoring",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "cloudtrail",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "cloudtrail_risk_1",
+      "category": "risk",
+      "service": "cloudtrail",
+      "query": "cloudtrail logs stored in publicly accessible s3 bucket",
+      "expected_doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "cloudtrail",
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "cloudtrail_semantic_hard_1",
+      "category": "semantic_hard",
+      "service": "cloudtrail",
+      "query": "track api activity and changes across the entire cloud environment",
+      "expected_doc_id": "check:cloudtrail_multi_region_enabled_logging_management_events",
+      "expected_capability_id": "inventory_configurations_monitoring",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "cloudtrail",
+      "min_confidence": "low"
+    },
+
+    {
+      "case_id": "kms_exact_1",
+      "category": "exact",
+      "service": "kms",
+      "query": "kms_cmk_rotation_enabled",
+      "expected_doc_id": "check:kms_cmk_rotation_enabled",
+      "expected_capability_id": "encryption_in_transit",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "kms",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "kms_exact_2",
+      "category": "exact",
+      "service": "kms",
+      "query": "kms_key_not_publicly_accessible",
+      "expected_doc_id": "check:kms_key_not_publicly_accessible",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "kms",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "kms_paraphrase_1",
+      "category": "paraphrase",
+      "service": "kms",
+      "query": "enable automatic rotation for customer managed encryption keys",
+      "expected_doc_id": "check:kms_cmk_rotation_enabled",
+      "expected_capability_id": "encryption_in_transit",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "kms",
+      "min_confidence": "low"
+    },
+
+    {
+      "case_id": "cross_exact_1",
+      "category": "exact",
+      "service": "ec2",
+      "query": "ec2_instance_secrets_user_data",
+      "expected_doc_id": "check:ec2_instance_secrets_user_data",
+      "expected_capability_id": "use_temporary_credentials",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "ec2",
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "cross_semantic_1",
+      "category": "semantic_hard",
+      "service": "iam",
+      "query": "avoid long-lived credentials and use temporary session tokens",
+      "expected_doc_id": "check:iam_user_with_temporary_credentials",
+      "expected_capability_id": "use_temporary_credentials",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "expected_service": "iam",
+      "min_confidence": "low"
+    }
+  ],
+  "maturity_cases": [
+    {
+      "case_id": "maturity_exact_1",
+      "category": "exact",
+      "service": null,
+      "query": "block_public_access",
+      "expected_capability_id": "block_public_access",
+      "expected_doc_id": "capability:block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_exact_2",
+      "category": "exact",
+      "service": null,
+      "query": "audit_api_calls",
+      "expected_capability_id": "audit_api_calls",
+      "expected_doc_id": "capability:audit_api_calls",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_exact_3",
+      "category": "exact",
+      "service": null,
+      "query": "data_backups",
+      "expected_capability_id": "data_backups",
+      "expected_doc_id": "capability:data_backups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_exact_4",
+      "category": "exact",
+      "service": null,
+      "query": "data_encryption_at_rest",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_doc_id": "capability:data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_exact_5",
+      "category": "exact",
+      "service": null,
+      "query": "root_account_protection",
+      "expected_capability_id": "root_account_protection",
+      "expected_doc_id": "capability:root_account_protection",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_exact_6",
+      "category": "exact",
+      "service": null,
+      "query": "multi_factor_authentication",
+      "expected_capability_id": "multi_factor_authentication",
+      "expected_doc_id": "capability:multi_factor_authentication",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_exact_7",
+      "category": "exact",
+      "service": null,
+      "query": "encryption_in_transit",
+      "expected_capability_id": "encryption_in_transit",
+      "expected_doc_id": "capability:encryption_in_transit",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "medium"
+    },
+    {
+      "case_id": "maturity_paraphrase_1",
+      "category": "paraphrase",
+      "service": null,
+      "query": "practice to stop public access to resources",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_paraphrase_2",
+      "category": "paraphrase",
+      "service": null,
+      "query": "ability to record and monitor api activity",
+      "expected_capability_id": "audit_api_calls",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_paraphrase_3",
+      "category": "paraphrase",
+      "service": null,
+      "query": "capability for recovering data from backups",
+      "expected_capability_id": "data_backups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_paraphrase_4",
+      "category": "paraphrase",
+      "service": null,
+      "query": "protect stored data with encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_paraphrase_5",
+      "category": "paraphrase",
+      "service": null,
+      "query": "require second authentication factor for user logins",
+      "expected_capability_id": "multi_factor_authentication",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_paraphrase_6",
+      "category": "paraphrase",
+      "service": null,
+      "query": "secure network communications with tls encryption",
+      "expected_capability_id": "encryption_in_transit",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_semantic_hard_1",
+      "category": "semantic_hard",
+      "service": null,
+      "query": "control internet-facing access to storage services",
+      "expected_capability_id": "block_public_access",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_semantic_hard_2",
+      "category": "semantic_hard",
+      "service": null,
+      "query": "know who called cloud apis and when",
+      "expected_capability_id": "audit_api_calls",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_semantic_hard_3",
+      "category": "semantic_hard",
+      "service": null,
+      "query": "restore critical information after loss or corruption",
+      "expected_capability_id": "data_backups",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_semantic_hard_4",
+      "category": "semantic_hard",
+      "service": null,
+      "query": "make stolen storage media unreadable",
+      "expected_capability_id": "data_encryption_at_rest",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_semantic_hard_5",
+      "category": "semantic_hard",
+      "service": null,
+      "query": "protect the highest privilege account from compromise",
+      "expected_capability_id": "root_account_protection",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    },
+    {
+      "case_id": "maturity_semantic_hard_6",
+      "category": "semantic_hard",
+      "service": null,
+      "query": "prevent man-in-the-middle attacks on data transfers",
+      "expected_capability_id": "encryption_in_transit",
+      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "min_confidence": "low"
+    }
+  ]
+}

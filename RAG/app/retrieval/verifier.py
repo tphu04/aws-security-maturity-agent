@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from app.core.config import load_scoring_config
+
 
 def _safe_score(value: Any) -> float:
     try:
@@ -120,13 +122,17 @@ def verify_retrieval(
     ):
         warnings.append("mapping_missing")
 
+    verification_cfg = load_scoring_config()["verification"]
+
     if len(results) > 1:
         top2_score = _safe_score(results[1].get("score", 0.0))
         diagnostics["top2_score"] = top2_score
-        if abs(top1_score - top2_score) < 0.03:
+        # Only flag ambiguity for exact-lookup queries; natural-language
+        # queries normally produce tight RRF score clusters.
+        if requires_exact and abs(top1_score - top2_score) < verification_cfg["ambiguity_threshold"]:
             warnings.append("ambiguous_top_results")
 
-    if top1_score < 0.20:
+    if top1_score < verification_cfg["low_score_threshold"]:
         warnings.append("low_score_top1")
 
     return {
