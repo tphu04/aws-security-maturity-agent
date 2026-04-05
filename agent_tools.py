@@ -774,9 +774,9 @@ def lookup_security_knowledge(query: str, mode: str = "both"):
     - 'both': Lấy cả hai.
     Dùng tool này khi người dùng hỏi 'Tại sao', 'Rủi ro là gì' hoặc 'Sửa thế nào'.
     """
-    url = "http://localhost:8111/retrieve"
+    from config import RAG_API_URL
+    url = f"{RAG_API_URL}/v1/retrieve/checks"
     try:
-        # Gọi API Port 8111 bạn vừa test thành công
         resp = requests.post(url, json={"query": query, "mode": mode, "top_k": 2})
         if resp.status_code == 200:
             return resp.json()

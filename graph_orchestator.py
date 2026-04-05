@@ -19,22 +19,26 @@ from agents.monitoring_agent import MonitoringAgent
 from agents.risk_evaluation_agent import RiskEvaluationAgent
 from agents.remediate_planner_agent import RemediationPlannerAgent
 from agents.execution_agent import ExecutionAgent
-from agents.scanner_agent import ScannerModule
+from agents.scanner_agent import ScannerAgent
 from agents.rescan_agent import RescanAgent
 from agents.analysis_agent import AnalysisAgent
 from agents.report_agent import ReportAgent
 from agents.shared.normalizer import normalize_results
+from agents.shared.rag_client import RAGClient
 
 from agent_tools import ALL_TOOLS  # Import danh sách tool gốc
+from config import (
+    RAG_API_URL,
+    SCANNER_API_URL,
+    OLLAMA_BASE_URL,
+    OLLAMA_MODEL,
+    OLLAMA_API_KEY,
+)
 
 # Tạo một Dictionary để tra cứu nhanh: { "tên_tool": tool_object }
 TOOLS_MAP = {t.name: t for t in ALL_TOOLS}
 
 load_dotenv()
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
-OLLAMA_BASE_URL = "http://localhost:11434"
-OLLAMA_API_KEY = "ollama"
-RETRIEVAL_API_URL = "http://localhost:8111/retrieve"
 
 
 # ==============================================================================
@@ -126,40 +130,66 @@ def environment_node(state: PDCAState):
 
     print(f"   AWS Context: Account {ctx.get('account_id')}, Region {ctx.get('region')}")
 
+    # RAG Health Check (SLICE-0.3)
+    rag_client = RAGClient(base_url=RAG_API_URL, timeout=3.0)
+    rag_available = rag_client.is_healthy()
+    if rag_available:
+        print("   RAG Service: Available")
+    else:
+        print("   RAG Service: Unavailable — pipeline will run in degraded mode")
+
     metrics = update_metrics(metrics, "step_duration", "environment_setup", timer())
-    return {"aws_context": ctx, "performance_metrics": metrics}
+    return {"aws_context": ctx, "rag_available": rag_available, "performance_metrics": metrics}
 
 
 def planning_node(state: PDCAState):
     """
-    Node lập kế hoạch: Nhận yêu cầu từ user -> Gọi PlanningAgent -> Trả về danh sách checks
+    Node lập kế hoạch (V2): RAG-first, LLM-conditional.
+    Nhận yêu cầu từ user → PlanningAgent → assessment plan cho scanning_node.
     """
     user_request = state["user_request"]
-    print(f"\n[Node: Planning] 📝 Đang lập kế hoạch thực thi cho: {user_request}")
+    print(f"\n [Node: Planning] Analyzing: {user_request}")
+    metrics = state.get(
+        "performance_metrics",
+        {"step_duration": {}, "llm_latency": {}, "system_info": {}},
+    )
 
-    try:
-        # Khởi tạo PlanningAgent 
-        # (Lúc này Agent đã được sửa để gọi API nội bộ ở port 8111)
-        agent = PlanningAgent(
-            model_name=OLLAMA_MODEL,
-            api_key=OLLAMA_API_KEY,
-            base_url=OLLAMA_BASE_URL
-        )
+    # Chỉ tạo RAGClient nếu RAG service available (từ environment_node)
+    rag_client = None
+    if state.get("rag_available", False):
+        rag_client = RAGClient(base_url=RAG_API_URL)
+    else:
+        print("   RAG unavailable — planning in degraded mode")
 
-        # Chạy Agent để lấy bản kế hoạch (Plan)
+    agent = PlanningAgent(
+        model_name=OLLAMA_MODEL,
+        api_key=OLLAMA_API_KEY,
+        base_url=OLLAMA_BASE_URL,
+        rag_client=rag_client,
+    )
+
+    with measure_time() as timer:
         plan_result = agent.run(user_request)
 
-        # Cập nhật State của Graph
-        return {
-            "assessment_plan": plan_result,
-            "next_step": "execute", # Hoặc bước tiếp theo trong logic của bạn
-            "logs": [f"PlanningAgent đã chọn {len(plan_result.get('checks_to_scan', []))} mã kiểm tra."]
-        }
-    except Exception as e:
-        print(f"❌ Lỗi tại Planning Node: {e}")
-        return {"error": str(e), "next_step": "end"}
+    # Handle V2 explicit errors (no silent S3 default)
+    if plan_result.get("error"):
+        print(f"   Planning WARNING: {plan_result['error']}")
 
-def scanning_node(state: PDCAState): # Đừng quên đổi tên import: from agents.scanner_agent import ScannerModule
+    checks_count = len(plan_result.get("checks_to_scan", []))
+    groups_count = len(plan_result.get("groups_to_scan", []))
+    print(f"   Result: {checks_count} checks, {groups_count} groups")
+
+    # Save config cho RescanAgent (verification phase)
+    save_scan_configuration(plan_result)
+
+    metrics = update_metrics(metrics, "step_duration", "planning_node", timer())
+
+    return {
+        "assessment_plan": plan_result,
+        "performance_metrics": metrics,
+    }
+
+def scanning_node(state: PDCAState):
     plan = state.get("assessment_plan", {})
     target_groups = plan.get("groups_to_scan", [])
     checks_to_scan = plan.get("checks_to_scan", [])
@@ -167,8 +197,7 @@ def scanning_node(state: PDCAState): # Đừng quên đổi tên import: from ag
     print(f"\n [Node: Scanning] Triggering scans: groups={target_groups}, checks={checks_to_scan}")
     metrics = state.get("performance_metrics", {})
 
-    # 1. KHỞI TẠO SCANNER MỚI (Bỏ qua các biến cấu hình của AI)
-    scanner = ScannerModule()
+    scanner = ScannerAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
 
     with measure_time() as timer:
         job_ids = scanner.run_batch(
@@ -223,8 +252,9 @@ def risk_evaluation_node(state: PDCAState):
     print("\n [Node: Risk Eval] Analyzing risks...")
     metrics = state.get("performance_metrics", {})
 
-    # Init agent
-    risk_agent = RiskEvaluationAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
+    # Init shared RAGClient (SLICE-2.1)
+    rag_client = RAGClient(base_url=RAG_API_URL)
+    risk_agent = RiskEvaluationAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL, rag_client=rag_client)
 
     # 1. Đo tổng thời gian Node
     with measure_time() as timer:

@@ -10,7 +10,9 @@ class AWSEnvironment(TypedDict):
 
 
 class AssessmentPlan(TypedDict):
-    target_services: List[str]
+    groups_to_scan: List[str]
+    target_services: List[str]    # alias of groups_to_scan for verification/report nodes
+    checks_to_scan: List[str]
     reasoning: str
 
 
@@ -36,6 +38,9 @@ class PDCAState(TypedDict):
     user_request: str
     aws_context: Optional[AWSEnvironment]
     cycle_iteration: int
+
+    # RAG System availability (set by environment_node)
+    rag_available: bool
 
     # Plan
     assessment_plan: Optional[AssessmentPlan]

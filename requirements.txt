@@ -1,10 +1,42 @@
+# Web framework
 fastapi
 uvicorn
+
+# LLM & AI
+openai
 ollama
-requests
-python-dotenv
-pydantic
-langchain 
-langchain-core 
-langchain-ollama 
+langchain
+langchain-core
+langchain-ollama
 langgraph
+
+# AWS
+boto3
+botocore
+
+# Data processing
+beautifulsoup4
+numpy
+nltk
+pyyaml
+
+# RAG / Vector store
+chromadb
+sentence-transformers
+
+# HTTP
+requests
+urllib3
+
+# Validation & config
+pydantic
+python-dotenv
+
+# Templates & reports
+jinja2
+markdown2
+matplotlib
+pdfkit
+
+# Testing
+pytest

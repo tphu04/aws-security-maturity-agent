@@ -6,8 +6,12 @@ from agents.shared.normalizer import normalize_results
 
 class RescanAgent:
 
-    def __init__(self, config_path="data/initial_scan_config.json"):
+    def __init__(self, config_path="data/initial_scan_config.json", scanner_base_url: str = None):
         self.config_path = config_path
+        if scanner_base_url is None:
+            from config import SCANNER_API_URL
+            scanner_base_url = SCANNER_API_URL
+        self.scanner_base_url = scanner_base_url
 
     def load_initial_config(self):
         try:
@@ -19,7 +23,7 @@ class RescanAgent:
     def start_job(self, group):
         """Khởi tạo job scan theo Group (VD: s3, iam)"""
         try:
-            url = f"http://localhost:8000/scan/check?group={group}"
+            url = f"{self.scanner_base_url}/scan/check?group={group}"
             resp = requests.get(url).json()
             return resp.get("job_id")
         except Exception as e:
@@ -32,7 +36,7 @@ class RescanAgent:
             # Chuyển list thành chuỗi cách nhau bởi dấu phẩy
             # VD: ['check_1', 'check_2'] -> 'check_1,check_2'
             ids_str = ",".join(check_ids_list)
-            url = f"http://localhost:8000/scan/specific?check_ids={ids_str}"
+            url = f"{self.scanner_base_url}/scan/specific?check_ids={ids_str}"
             resp = requests.get(url).json()
             return resp.get("job_id")
         except Exception as e:
@@ -40,7 +44,7 @@ class RescanAgent:
             return None
 
     def poll(self, job_id):
-        url = f"http://localhost:8000/job/status?job_id={job_id}"
+        url = f"{self.scanner_base_url}/job/status?job_id={job_id}"
         while True:
             try:
                 job = requests.get(url).json()
