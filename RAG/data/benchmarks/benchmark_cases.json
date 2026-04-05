@@ -9,9 +9,33 @@
       "query": "s3_bucket_level_public_access_block",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_access_point_public_access_block",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_cross_account_access"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_level_public_access_block": 3,
+        "check:s3_account_level_public_access_blocks": 2,
+        "check:s3_access_point_public_access_block": 2,
+        "check:s3_multi_region_access_point_public_access_block": 2,
+        "check:s3_bucket_public_access": 2,
+        "check:s3_bucket_public_list_acl": 1,
+        "check:s3_bucket_public_write_acl": 1,
+        "check:s3_bucket_policy_public_write_access": 2,
+        "check:s3_bucket_cross_account_access": 1
+      }
     },
     {
       "case_id": "s3_exact_2",
@@ -20,9 +44,29 @@
       "query": "s3_account_level_public_access_blocks",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_access_point_public_access_block",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_cross_account_access",
+        "check:s3_bucket_policy_public_write_access"
+      ],
+      "relevance_grades": {
+        "check:s3_account_level_public_access_blocks": 3,
+        "check:s3_bucket_level_public_access_block": 2,
+        "check:s3_access_point_public_access_block": 1,
+        "check:s3_multi_region_access_point_public_access_block": 1,
+        "check:s3_bucket_public_access": 1,
+        "check:s3_bucket_cross_account_access": 1,
+        "check:s3_bucket_policy_public_write_access": 1
+      }
     },
     {
       "case_id": "s3_exact_3",
@@ -31,9 +75,19 @@
       "query": "s3_bucket_default_encryption",
       "expected_doc_id": "check:s3_bucket_default_encryption",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_default_encryption",
+        "check:s3_bucket_kms_encryption"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_default_encryption": 3,
+        "check:s3_bucket_kms_encryption": 2
+      }
     },
     {
       "case_id": "s3_exact_4",
@@ -42,9 +96,19 @@
       "query": "s3_bucket_secure_transport_policy",
       "expected_doc_id": "check:s3_bucket_secure_transport_policy",
       "expected_capability_id": "encryption_in_transit",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_secure_transport_policy",
+        "check:s3_bucket_policy_public_write_access"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_secure_transport_policy": 3,
+        "check:s3_bucket_policy_public_write_access": 1
+      }
     },
     {
       "case_id": "s3_exact_5",
@@ -53,9 +117,33 @@
       "query": "s3_bucket_policy_public_write_access",
       "expected_doc_id": "check:s3_bucket_policy_public_write_access",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_cross_account_access",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_secure_transport_policy",
+        "check:s3_access_point_public_access_block",
+        "check:s3_multi_region_access_point_public_access_block"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_policy_public_write_access": 3,
+        "check:s3_bucket_public_write_acl": 2,
+        "check:s3_bucket_level_public_access_block": 2,
+        "check:s3_bucket_cross_account_access": 1,
+        "check:s3_account_level_public_access_blocks": 1,
+        "check:s3_bucket_public_access": 2,
+        "check:s3_bucket_secure_transport_policy": 1,
+        "check:s3_access_point_public_access_block": 1,
+        "check:s3_multi_region_access_point_public_access_block": 1
+      }
     },
     {
       "case_id": "s3_paraphrase_1",
@@ -64,9 +152,33 @@
       "query": "how to prevent an s3 bucket from being publicly exposed",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_public_list_acl",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_access_point_public_access_block",
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_cross_account_access",
+        "check:s3_multi_region_access_point_public_access_block"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_level_public_access_block": 3,
+        "check:s3_bucket_public_write_acl": 1,
+        "check:s3_bucket_public_access": 2,
+        "check:s3_bucket_public_list_acl": 1,
+        "check:s3_account_level_public_access_blocks": 2,
+        "check:s3_access_point_public_access_block": 2,
+        "check:s3_bucket_policy_public_write_access": 2,
+        "check:s3_bucket_cross_account_access": 1,
+        "check:s3_multi_region_access_point_public_access_block": 2
+      }
     },
     {
       "case_id": "s3_paraphrase_2",
@@ -75,9 +187,29 @@
       "query": "stop public access to aws object storage",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:s3_access_point_public_access_block",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_cross_account_access",
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_policy_public_write_access"
+      ],
+      "relevance_grades": {
+        "check:s3_access_point_public_access_block": 1,
+        "check:s3_account_level_public_access_blocks": 3,
+        "check:s3_multi_region_access_point_public_access_block": 1,
+        "check:s3_bucket_public_access": 1,
+        "check:s3_bucket_cross_account_access": 1,
+        "check:s3_bucket_level_public_access_block": 2,
+        "check:s3_bucket_policy_public_write_access": 1
+      }
     },
     {
       "case_id": "s3_risk_1",
@@ -86,9 +218,33 @@
       "query": "misconfiguration that allows public reads on cloud storage",
       "expected_doc_id": "check:s3_bucket_level_public_access_block",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_level_public_access_block",
+        "check:s3_bucket_cross_account_access",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_public_write_acl",
+        "check:s3_access_point_public_access_block",
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_public_list_acl"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_level_public_access_block": 3,
+        "check:s3_bucket_cross_account_access": 1,
+        "check:s3_bucket_public_access": 2,
+        "check:s3_bucket_public_write_acl": 1,
+        "check:s3_access_point_public_access_block": 2,
+        "check:s3_bucket_policy_public_write_access": 2,
+        "check:s3_account_level_public_access_blocks": 2,
+        "check:s3_multi_region_access_point_public_access_block": 2,
+        "check:s3_bucket_public_list_acl": 1
+      }
     },
     {
       "case_id": "s3_risk_2",
@@ -97,9 +253,19 @@
       "query": "s3 bucket encryption not enabled risk of data exposure",
       "expected_doc_id": "check:s3_bucket_default_encryption",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:s3_bucket_default_encryption",
+        "check:s3_bucket_kms_encryption"
+      ],
+      "relevance_grades": {
+        "check:s3_bucket_default_encryption": 3,
+        "check:s3_bucket_kms_encryption": 2
+      }
     },
     {
       "case_id": "s3_semantic_hard_1",
@@ -108,11 +274,28 @@
       "query": "make object storage private by default",
       "expected_doc_id": "check:s3_account_level_public_access_blocks",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "s3",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:s3_account_level_public_access_blocks",
+        "check:s3_access_point_public_access_block",
+        "check:s3_multi_region_access_point_public_access_block",
+        "check:s3_bucket_policy_public_write_access",
+        "check:s3_bucket_public_access",
+        "check:s3_bucket_level_public_access_block"
+      ],
+      "relevance_grades": {
+        "check:s3_account_level_public_access_blocks": 3,
+        "check:s3_access_point_public_access_block": 1,
+        "check:s3_multi_region_access_point_public_access_block": 1,
+        "check:s3_bucket_policy_public_write_access": 1,
+        "check:s3_bucket_public_access": 1,
+        "check:s3_bucket_level_public_access_block": 2
+      }
     },
-
     {
       "case_id": "iam_exact_1",
       "category": "exact",
@@ -120,9 +303,25 @@
       "query": "iam_root_hardware_mfa_enabled",
       "expected_doc_id": "check:iam_root_hardware_mfa_enabled",
       "expected_capability_id": "keep_your_security_contact_details_up_to_date",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:iam_root_hardware_mfa_enabled",
+        "check:iam_root_mfa_enabled",
+        "check:iam_user_hardware_mfa_enabled",
+        "check:iam_user_mfa_enabled_console_access",
+        "check:iam_root_credentials_management_enabled"
+      ],
+      "relevance_grades": {
+        "check:iam_root_hardware_mfa_enabled": 3,
+        "check:iam_root_mfa_enabled": 2,
+        "check:iam_user_hardware_mfa_enabled": 2,
+        "check:iam_user_mfa_enabled_console_access": 1,
+        "check:iam_root_credentials_management_enabled": 1
+      }
     },
     {
       "case_id": "iam_exact_2",
@@ -131,9 +330,23 @@
       "query": "iam_no_root_access_key",
       "expected_doc_id": "check:iam_no_root_access_key",
       "expected_capability_id": "temporary_elevated_access_management",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:iam_no_root_access_key",
+        "check:iam_user_no_setup_initial_access_key",
+        "check:iam_user_two_active_access_key",
+        "check:iam_rotate_access_key_90_days"
+      ],
+      "relevance_grades": {
+        "check:iam_no_root_access_key": 3,
+        "check:iam_user_no_setup_initial_access_key": 2,
+        "check:iam_user_two_active_access_key": 1,
+        "check:iam_rotate_access_key_90_days": 1
+      }
     },
     {
       "case_id": "iam_exact_3",
@@ -142,9 +355,29 @@
       "query": "iam_password_policy_minimum_length_14",
       "expected_doc_id": "check:iam_password_policy_minimum_length_14",
       "expected_capability_id": "automate_deviation_correction_in_configurations",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:iam_password_policy_minimum_length_14",
+        "check:iam_password_policy_uppercase",
+        "check:iam_password_policy_reuse_24",
+        "check:iam_password_policy_lowercase",
+        "check:iam_password_policy_expires_passwords_within_90_days_or_less",
+        "check:iam_password_policy_number",
+        "check:iam_password_policy_symbol"
+      ],
+      "relevance_grades": {
+        "check:iam_password_policy_minimum_length_14": 3,
+        "check:iam_password_policy_uppercase": 1,
+        "check:iam_password_policy_reuse_24": 1,
+        "check:iam_password_policy_lowercase": 1,
+        "check:iam_password_policy_expires_passwords_within_90_days_or_less": 1,
+        "check:iam_password_policy_number": 1,
+        "check:iam_password_policy_symbol": 1
+      }
     },
     {
       "case_id": "iam_paraphrase_1",
@@ -153,9 +386,25 @@
       "query": "ensure root account has hardware MFA enabled",
       "expected_doc_id": "check:iam_root_hardware_mfa_enabled",
       "expected_capability_id": "keep_your_security_contact_details_up_to_date",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:iam_root_hardware_mfa_enabled",
+        "check:iam_root_mfa_enabled",
+        "check:iam_user_mfa_enabled_console_access",
+        "check:iam_root_credentials_management_enabled",
+        "check:iam_user_hardware_mfa_enabled"
+      ],
+      "relevance_grades": {
+        "check:iam_root_hardware_mfa_enabled": 3,
+        "check:iam_root_mfa_enabled": 2,
+        "check:iam_user_mfa_enabled_console_access": 1,
+        "check:iam_root_credentials_management_enabled": 1,
+        "check:iam_user_hardware_mfa_enabled": 2
+      }
     },
     {
       "case_id": "iam_paraphrase_2",
@@ -164,9 +413,19 @@
       "query": "remove access keys from the root account",
       "expected_doc_id": "check:iam_no_root_access_key",
       "expected_capability_id": "temporary_elevated_access_management",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:iam_no_root_access_key",
+        "check:iam_user_no_setup_initial_access_key"
+      ],
+      "relevance_grades": {
+        "check:iam_no_root_access_key": 3,
+        "check:iam_user_no_setup_initial_access_key": 2
+      }
     },
     {
       "case_id": "iam_risk_1",
@@ -175,9 +434,23 @@
       "query": "risk of using root account without multi-factor authentication",
       "expected_doc_id": "check:iam_root_mfa_enabled",
       "expected_capability_id": "keep_your_security_contact_details_up_to_date",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:iam_root_credentials_management_enabled",
+        "check:iam_root_mfa_enabled",
+        "check:iam_root_hardware_mfa_enabled",
+        "check:iam_user_mfa_enabled_console_access"
+      ],
+      "relevance_grades": {
+        "check:iam_root_credentials_management_enabled": 2,
+        "check:iam_root_mfa_enabled": 3,
+        "check:iam_root_hardware_mfa_enabled": 2,
+        "check:iam_user_mfa_enabled_console_access": 2
+      }
     },
     {
       "case_id": "iam_semantic_hard_1",
@@ -186,9 +459,17 @@
       "query": "protect the most privileged aws credentials from unauthorized use",
       "expected_doc_id": "check:iam_avoid_root_usage",
       "expected_capability_id": "root_account_protection",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:iam_avoid_root_usage"
+      ],
+      "relevance_grades": {
+        "check:iam_avoid_root_usage": 3
+      }
     },
     {
       "case_id": "iam_semantic_hard_2",
@@ -197,11 +478,28 @@
       "query": "enforce strong password requirements for console users",
       "expected_doc_id": "check:iam_password_policy_minimum_length_14",
       "expected_capability_id": "automate_deviation_correction_in_configurations",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:iam_password_policy_minimum_length_14",
+        "check:iam_password_policy_symbol",
+        "check:iam_password_policy_reuse_24",
+        "check:iam_password_policy_number",
+        "check:iam_password_policy_lowercase",
+        "check:iam_password_policy_uppercase"
+      ],
+      "relevance_grades": {
+        "check:iam_password_policy_symbol": 1,
+        "check:iam_password_policy_reuse_24": 1,
+        "check:iam_password_policy_number": 1,
+        "check:iam_password_policy_lowercase": 1,
+        "check:iam_password_policy_uppercase": 1,
+        "check:iam_password_policy_minimum_length_14": 3
+      }
     },
-
     {
       "case_id": "ec2_exact_1",
       "category": "exact",
@@ -209,9 +507,19 @@
       "query": "ec2_ebs_default_encryption",
       "expected_doc_id": "check:ec2_ebs_default_encryption",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:ec2_ebs_default_encryption",
+        "check:ec2_ebs_volume_encryption"
+      ],
+      "relevance_grades": {
+        "check:ec2_ebs_default_encryption": 3,
+        "check:ec2_ebs_volume_encryption": 2
+      }
     },
     {
       "case_id": "ec2_exact_2",
@@ -220,9 +528,31 @@
       "query": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
       "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
       "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_telnet_23",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_ftp_20_21",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mongodb_27017_27018",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_postgres_5432",
+        "check:ec2_networkacl_allow_ingress_tcp_port_22",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_high_risk_tcp_ports"
+      ],
+      "relevance_grades": {
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22": 3,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_telnet_23": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_ftp_20_21": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mongodb_27017_27018": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_postgres_5432": 2,
+        "check:ec2_networkacl_allow_ingress_tcp_port_22": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_high_risk_tcp_ports": 2
+      }
     },
     {
       "case_id": "ec2_exact_3",
@@ -231,9 +561,21 @@
       "query": "ec2_launch_template_imdsv2_required",
       "expected_doc_id": "check:ec2_launch_template_imdsv2_required",
       "expected_capability_id": "instance_metadata_service_imds_v2",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:ec2_launch_template_imdsv2_required",
+        "check:ec2_launch_template_no_public_ip",
+        "check:ec2_launch_template_no_secrets"
+      ],
+      "relevance_grades": {
+        "check:ec2_launch_template_imdsv2_required": 3,
+        "check:ec2_launch_template_no_public_ip": 1,
+        "check:ec2_launch_template_no_secrets": 1
+      }
     },
     {
       "case_id": "ec2_paraphrase_1",
@@ -242,9 +584,19 @@
       "query": "enable default encryption for ebs volumes",
       "expected_doc_id": "check:ec2_ebs_default_encryption",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:ec2_ebs_volume_encryption",
+        "check:ec2_ebs_default_encryption"
+      ],
+      "relevance_grades": {
+        "check:ec2_ebs_volume_encryption": 2,
+        "check:ec2_ebs_default_encryption": 3
+      }
     },
     {
       "case_id": "ec2_paraphrase_2",
@@ -253,9 +605,31 @@
       "query": "block ssh access from the internet in security groups",
       "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
       "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_all_ports",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_oracle_1521_2483",
+        "check:ec2_networkacl_allow_ingress_tcp_port_22",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mysql_3306",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_cassandra_7199_9160_8888"
+      ],
+      "relevance_grades": {
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22": 3,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_any_port": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_all_ports": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_oracle_1521_2483": 2,
+        "check:ec2_networkacl_allow_ingress_tcp_port_22": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mysql_3306": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_cassandra_7199_9160_8888": 2
+      }
     },
     {
       "case_id": "ec2_risk_1",
@@ -264,9 +638,31 @@
       "query": "security group allows rdp port 3389 open to the internet",
       "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389",
       "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389",
+        "check:ec2_networkacl_allow_ingress_tcp_port_3389",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_redis_6379",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_cassandra_7199_9160_8888",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_kafka_9092",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_postgres_5432",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mysql_3306",
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_memcached_11211"
+      ],
+      "relevance_grades": {
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389": 3,
+        "check:ec2_networkacl_allow_ingress_tcp_port_3389": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_redis_6379": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_cassandra_7199_9160_8888": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_kafka_9092": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_postgres_5432": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mysql_3306": 2,
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_memcached_11211": 2
+      }
     },
     {
       "case_id": "ec2_semantic_hard_1",
@@ -275,9 +671,17 @@
       "query": "prevent credential theft via instance metadata endpoint",
       "expected_doc_id": "check:ec2_launch_template_imdsv2_required",
       "expected_capability_id": "instance_metadata_service_imds_v2",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:ec2_launch_template_imdsv2_required"
+      ],
+      "relevance_grades": {
+        "check:ec2_launch_template_imdsv2_required": 3
+      }
     },
     {
       "case_id": "ec2_semantic_hard_2",
@@ -286,11 +690,18 @@
       "query": "close dangerous administrative ports exposed to the world",
       "expected_doc_id": "check:ec2_securitygroup_allow_ingress_from_internet_to_all_ports",
       "expected_capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_all_ports"
+      ],
+      "relevance_grades": {
+        "check:ec2_securitygroup_allow_ingress_from_internet_to_all_ports": 3
+      }
     },
-
     {
       "case_id": "rds_exact_1",
       "category": "exact",
@@ -298,9 +709,19 @@
       "query": "rds_instance_no_public_access",
       "expected_doc_id": "check:rds_instance_no_public_access",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "rds",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:rds_instance_no_public_access",
+        "check:rds_snapshots_public_access"
+      ],
+      "relevance_grades": {
+        "check:rds_instance_no_public_access": 3,
+        "check:rds_snapshots_public_access": 1
+      }
     },
     {
       "case_id": "rds_exact_2",
@@ -309,9 +730,19 @@
       "query": "rds_cluster_storage_encrypted",
       "expected_doc_id": "check:rds_cluster_storage_encrypted",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "rds",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:rds_cluster_storage_encrypted",
+        "check:rds_instance_storage_encrypted"
+      ],
+      "relevance_grades": {
+        "check:rds_cluster_storage_encrypted": 3,
+        "check:rds_instance_storage_encrypted": 2
+      }
     },
     {
       "case_id": "rds_paraphrase_1",
@@ -320,9 +751,19 @@
       "query": "make rds database instances not publicly accessible",
       "expected_doc_id": "check:rds_instance_no_public_access",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "rds",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:rds_instance_no_public_access",
+        "check:rds_snapshots_public_access"
+      ],
+      "relevance_grades": {
+        "check:rds_instance_no_public_access": 3,
+        "check:rds_snapshots_public_access": 1
+      }
     },
     {
       "case_id": "rds_risk_1",
@@ -331,9 +772,19 @@
       "query": "database snapshot publicly shared exposing sensitive data",
       "expected_doc_id": "check:rds_snapshots_public_access",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "rds",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:rds_snapshots_public_access",
+        "check:rds_instance_no_public_access"
+      ],
+      "relevance_grades": {
+        "check:rds_snapshots_public_access": 3,
+        "check:rds_instance_no_public_access": 2
+      }
     },
     {
       "case_id": "rds_semantic_hard_1",
@@ -342,11 +793,18 @@
       "query": "keep relational databases isolated from direct internet connections",
       "expected_doc_id": "check:rds_instance_no_public_access",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "rds",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:rds_instance_no_public_access"
+      ],
+      "relevance_grades": {
+        "check:rds_instance_no_public_access": 3
+      }
     },
-
     {
       "case_id": "cloudtrail_exact_1",
       "category": "exact",
@@ -354,9 +812,19 @@
       "query": "cloudtrail_multi_region_enabled",
       "expected_doc_id": "check:cloudtrail_multi_region_enabled",
       "expected_capability_id": "inventory_configurations_monitoring",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "cloudtrail",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:cloudtrail_multi_region_enabled",
+        "check:cloudtrail_multi_region_enabled_logging_management_events"
+      ],
+      "relevance_grades": {
+        "check:cloudtrail_multi_region_enabled": 3,
+        "check:cloudtrail_multi_region_enabled_logging_management_events": 2
+      }
     },
     {
       "case_id": "cloudtrail_exact_2",
@@ -365,9 +833,17 @@
       "query": "cloudtrail_kms_encryption_enabled",
       "expected_doc_id": "check:cloudtrail_kms_encryption_enabled",
       "expected_capability_id": "inventory_configurations_monitoring",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "cloudtrail",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:cloudtrail_kms_encryption_enabled"
+      ],
+      "relevance_grades": {
+        "check:cloudtrail_kms_encryption_enabled": 3
+      }
     },
     {
       "case_id": "cloudtrail_paraphrase_1",
@@ -376,9 +852,19 @@
       "query": "enable cloudtrail logging across all aws regions",
       "expected_doc_id": "check:cloudtrail_multi_region_enabled",
       "expected_capability_id": "inventory_configurations_monitoring",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "cloudtrail",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:cloudtrail_multi_region_enabled_logging_management_events",
+        "check:cloudtrail_multi_region_enabled"
+      ],
+      "relevance_grades": {
+        "check:cloudtrail_multi_region_enabled_logging_management_events": 2,
+        "check:cloudtrail_multi_region_enabled": 3
+      }
     },
     {
       "case_id": "cloudtrail_risk_1",
@@ -387,9 +873,17 @@
       "query": "cloudtrail logs stored in publicly accessible s3 bucket",
       "expected_doc_id": "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "cloudtrail",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible"
+      ],
+      "relevance_grades": {
+        "check:cloudtrail_logs_s3_bucket_is_not_publicly_accessible": 3
+      }
     },
     {
       "case_id": "cloudtrail_semantic_hard_1",
@@ -398,11 +892,18 @@
       "query": "track api activity and changes across the entire cloud environment",
       "expected_doc_id": "check:cloudtrail_multi_region_enabled_logging_management_events",
       "expected_capability_id": "inventory_configurations_monitoring",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "cloudtrail",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:cloudtrail_multi_region_enabled_logging_management_events"
+      ],
+      "relevance_grades": {
+        "check:cloudtrail_multi_region_enabled_logging_management_events": 3
+      }
     },
-
     {
       "case_id": "kms_exact_1",
       "category": "exact",
@@ -410,9 +911,17 @@
       "query": "kms_cmk_rotation_enabled",
       "expected_doc_id": "check:kms_cmk_rotation_enabled",
       "expected_capability_id": "encryption_in_transit",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "kms",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:kms_cmk_rotation_enabled"
+      ],
+      "relevance_grades": {
+        "check:kms_cmk_rotation_enabled": 3
+      }
     },
     {
       "case_id": "kms_exact_2",
@@ -421,9 +930,17 @@
       "query": "kms_key_not_publicly_accessible",
       "expected_doc_id": "check:kms_key_not_publicly_accessible",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "kms",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:kms_key_not_publicly_accessible"
+      ],
+      "relevance_grades": {
+        "check:kms_key_not_publicly_accessible": 3
+      }
     },
     {
       "case_id": "kms_paraphrase_1",
@@ -432,11 +949,18 @@
       "query": "enable automatic rotation for customer managed encryption keys",
       "expected_doc_id": "check:kms_cmk_rotation_enabled",
       "expected_capability_id": "encryption_in_transit",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "kms",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:kms_cmk_rotation_enabled"
+      ],
+      "relevance_grades": {
+        "check:kms_cmk_rotation_enabled": 3
+      }
     },
-
     {
       "case_id": "cross_exact_1",
       "category": "exact",
@@ -444,9 +968,17 @@
       "query": "ec2_instance_secrets_user_data",
       "expected_doc_id": "check:ec2_instance_secrets_user_data",
       "expected_capability_id": "use_temporary_credentials",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "ec2",
-      "min_confidence": "medium"
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "check:ec2_instance_secrets_user_data"
+      ],
+      "relevance_grades": {
+        "check:ec2_instance_secrets_user_data": 3
+      }
     },
     {
       "case_id": "cross_semantic_1",
@@ -455,9 +987,17 @@
       "query": "avoid long-lived credentials and use temporary session tokens",
       "expected_doc_id": "check:iam_user_with_temporary_credentials",
       "expected_capability_id": "use_temporary_credentials",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
       "expected_service": "iam",
-      "min_confidence": "low"
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "check:iam_user_with_temporary_credentials"
+      ],
+      "relevance_grades": {
+        "check:iam_user_with_temporary_credentials": 3
+      }
     }
   ],
   "maturity_cases": [
@@ -468,8 +1008,16 @@
       "query": "block_public_access",
       "expected_capability_id": "block_public_access",
       "expected_doc_id": "capability:block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:block_public_access"
+      ],
+      "relevance_grades": {
+        "capability:block_public_access": 3
+      }
     },
     {
       "case_id": "maturity_exact_2",
@@ -478,8 +1026,16 @@
       "query": "audit_api_calls",
       "expected_capability_id": "audit_api_calls",
       "expected_doc_id": "capability:audit_api_calls",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:audit_api_calls"
+      ],
+      "relevance_grades": {
+        "capability:audit_api_calls": 3
+      }
     },
     {
       "case_id": "maturity_exact_3",
@@ -488,8 +1044,16 @@
       "query": "data_backups",
       "expected_capability_id": "data_backups",
       "expected_doc_id": "capability:data_backups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:data_backups"
+      ],
+      "relevance_grades": {
+        "capability:data_backups": 3
+      }
     },
     {
       "case_id": "maturity_exact_4",
@@ -498,8 +1062,16 @@
       "query": "data_encryption_at_rest",
       "expected_capability_id": "data_encryption_at_rest",
       "expected_doc_id": "capability:data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:data_encryption_at_rest"
+      ],
+      "relevance_grades": {
+        "capability:data_encryption_at_rest": 3
+      }
     },
     {
       "case_id": "maturity_exact_5",
@@ -508,8 +1080,16 @@
       "query": "root_account_protection",
       "expected_capability_id": "root_account_protection",
       "expected_doc_id": "capability:root_account_protection",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:root_account_protection"
+      ],
+      "relevance_grades": {
+        "capability:root_account_protection": 3
+      }
     },
     {
       "case_id": "maturity_exact_6",
@@ -518,8 +1098,16 @@
       "query": "multi_factor_authentication",
       "expected_capability_id": "multi_factor_authentication",
       "expected_doc_id": "capability:multi_factor_authentication",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:multi_factor_authentication"
+      ],
+      "relevance_grades": {
+        "capability:multi_factor_authentication": 3
+      }
     },
     {
       "case_id": "maturity_exact_7",
@@ -528,8 +1116,16 @@
       "query": "encryption_in_transit",
       "expected_capability_id": "encryption_in_transit",
       "expected_doc_id": "capability:encryption_in_transit",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "medium"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "medium",
+      "all_relevant_doc_ids": [
+        "capability:encryption_in_transit"
+      ],
+      "relevance_grades": {
+        "capability:encryption_in_transit": 3
+      }
     },
     {
       "case_id": "maturity_paraphrase_1",
@@ -537,8 +1133,16 @@
       "service": null,
       "query": "practice to stop public access to resources",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "block_public_access"
+      ],
+      "relevance_grades": {
+        "block_public_access": 3
+      }
     },
     {
       "case_id": "maturity_paraphrase_2",
@@ -546,8 +1150,16 @@
       "service": null,
       "query": "ability to record and monitor api activity",
       "expected_capability_id": "audit_api_calls",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "audit_api_calls"
+      ],
+      "relevance_grades": {
+        "audit_api_calls": 3
+      }
     },
     {
       "case_id": "maturity_paraphrase_3",
@@ -555,8 +1167,16 @@
       "service": null,
       "query": "capability for recovering data from backups",
       "expected_capability_id": "data_backups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "data_backups"
+      ],
+      "relevance_grades": {
+        "data_backups": 3
+      }
     },
     {
       "case_id": "maturity_paraphrase_4",
@@ -564,8 +1184,16 @@
       "service": null,
       "query": "protect stored data with encryption",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "data_encryption_at_rest"
+      ],
+      "relevance_grades": {
+        "data_encryption_at_rest": 3
+      }
     },
     {
       "case_id": "maturity_paraphrase_5",
@@ -573,8 +1201,16 @@
       "service": null,
       "query": "require second authentication factor for user logins",
       "expected_capability_id": "multi_factor_authentication",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "multi_factor_authentication"
+      ],
+      "relevance_grades": {
+        "multi_factor_authentication": 3
+      }
     },
     {
       "case_id": "maturity_paraphrase_6",
@@ -582,8 +1218,16 @@
       "service": null,
       "query": "secure network communications with tls encryption",
       "expected_capability_id": "encryption_in_transit",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "encryption_in_transit"
+      ],
+      "relevance_grades": {
+        "encryption_in_transit": 3
+      }
     },
     {
       "case_id": "maturity_semantic_hard_1",
@@ -591,8 +1235,16 @@
       "service": null,
       "query": "control internet-facing access to storage services",
       "expected_capability_id": "block_public_access",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "block_public_access"
+      ],
+      "relevance_grades": {
+        "block_public_access": 3
+      }
     },
     {
       "case_id": "maturity_semantic_hard_2",
@@ -600,8 +1252,16 @@
       "service": null,
       "query": "know who called cloud apis and when",
       "expected_capability_id": "audit_api_calls",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "audit_api_calls"
+      ],
+      "relevance_grades": {
+        "audit_api_calls": 3
+      }
     },
     {
       "case_id": "maturity_semantic_hard_3",
@@ -609,8 +1269,16 @@
       "service": null,
       "query": "restore critical information after loss or corruption",
       "expected_capability_id": "data_backups",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "data_backups"
+      ],
+      "relevance_grades": {
+        "data_backups": 3
+      }
     },
     {
       "case_id": "maturity_semantic_hard_4",
@@ -618,8 +1286,16 @@
       "service": null,
       "query": "make stolen storage media unreadable",
       "expected_capability_id": "data_encryption_at_rest",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "data_encryption_at_rest"
+      ],
+      "relevance_grades": {
+        "data_encryption_at_rest": 3
+      }
     },
     {
       "case_id": "maturity_semantic_hard_5",
@@ -627,8 +1303,16 @@
       "service": null,
       "query": "protect the highest privilege account from compromise",
       "expected_capability_id": "root_account_protection",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "root_account_protection"
+      ],
+      "relevance_grades": {
+        "root_account_protection": 3
+      }
     },
     {
       "case_id": "maturity_semantic_hard_6",
@@ -636,8 +1320,16 @@
       "service": null,
       "query": "prevent man-in-the-middle attacks on data transfers",
       "expected_capability_id": "encryption_in_transit",
-      "forbidden_capability_ids": ["generative_ai_data_protection_with_amazon_bedrock"],
-      "min_confidence": "low"
+      "forbidden_capability_ids": [
+        "generative_ai_data_protection_with_amazon_bedrock"
+      ],
+      "min_confidence": "low",
+      "all_relevant_doc_ids": [
+        "encryption_in_transit"
+      ],
+      "relevance_grades": {
+        "encryption_in_transit": 3
+      }
     }
   ]
 }

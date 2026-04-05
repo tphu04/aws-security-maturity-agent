@@ -297,10 +297,12 @@ class RetrievalPipeline:
 
         if retrieval_mode == "lexical":
             merged_results = self._hydrate_results(lexical_results[:top_k])
+            reranker_diag = {}
         elif retrieval_mode == "vector":
             merged_results = self._hydrate_results(vector_results[:top_k])
+            reranker_diag = {}
         else:
-            merged_results = self._merge_results(
+            merged_results, reranker_diag = self._merge_results(
                 lexical_results=lexical_results,
                 vector_results=vector_results,
                 top_k=top_k,
@@ -342,6 +344,7 @@ class RetrievalPipeline:
                 "used_vector": len(vector_results) > 0,
                 "used_hybrid": retrieval_mode == "hybrid" and len(vector_results) > 0,
                 "vector_error": vector_error,
+                **reranker_diag,
             },
         )
 
@@ -595,7 +598,7 @@ class RetrievalPipeline:
         query: str,
         preferred_service: Optional[str] = None,
         preferred_domain: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Merge lexical + vector candidates via RRF, then cross-encoder rerank.
 
         Flow:
@@ -606,6 +609,9 @@ class RetrievalPipeline:
         5. Cross-encoder rerank non-exact candidates
         6. Add metadata bonus on top of cross-encoder scores
         7. Prepend exact matches, truncate to top_k
+
+        Returns:
+            Tuple of (merged results, reranker diagnostics dict).
         """
         # ---- Step 1: RRF merge ----
         merged: Dict[str, Dict[str, Any]] = {}
@@ -697,6 +703,11 @@ class RetrievalPipeline:
 
         # ---- Step 5: Cross-encoder rerank ----
         reranker_cfg = self._scoring.get("reranker", {})
+        reranker_diag: Dict[str, Any] = {}
+
+        # Capture pre-rerank order (RRF order before CrossEncoder)
+        pre_rerank_ids = [c.get("doc_id", "") for c in semantic_candidates[:top_k]]
+
         if reranker_cfg.get("enabled", False) and semantic_candidates:
             model_name = reranker_cfg.get(
                 "model", "cross-encoder/ms-marco-MiniLM-L-6-v2"
@@ -710,6 +721,7 @@ class RetrievalPipeline:
                     candidates=semantic_candidates,
                     top_n=rerank_top_n,
                 )
+                reranker_diag["reranker_applied"] = True
             except Exception as exc:
                 logger.warning(
                     "Cross-encoder rerank failed, falling back to RRF: %s", exc
@@ -718,11 +730,20 @@ class RetrievalPipeline:
                 semantic_candidates.sort(
                     key=lambda x: x.get("score", 0.0), reverse=True
                 )
+                reranker_diag["reranker_applied"] = False
+                reranker_diag["reranker_error"] = str(exc)
         else:
             # Reranker disabled — sort by pure RRF score
             semantic_candidates.sort(
                 key=lambda x: x.get("score", 0.0), reverse=True
             )
+            reranker_diag["reranker_applied"] = False
+
+        # Capture post-rerank order
+        post_rerank_ids = [c.get("doc_id", "") for c in semantic_candidates[:top_k]]
+
+        reranker_diag["reranker_pre_order"] = pre_rerank_ids
+        reranker_diag["reranker_post_order"] = post_rerank_ids
 
         # ---- Step 6: Metadata bonus ----
         for item in semantic_candidates:
@@ -734,7 +755,7 @@ class RetrievalPipeline:
 
         # ---- Step 7: Combine and truncate ----
         final = exact_results + semantic_candidates
-        return final[:top_k]
+        return final[:top_k], reranker_diag
 
     # ----------------------------
     # Mapping support

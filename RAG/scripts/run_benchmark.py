@@ -29,6 +29,11 @@ _project_root = str(Path(__file__).resolve().parent.parent)
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
+from app.evaluation.metrics import (
+    compute_confidence_calibration,
+    compute_latency_percentiles,
+    compute_robustness_gap,
+)
 from data.benchmarks.benchmark_retrieval import (
     _load_cases_from_file,
     evaluate_cases,
@@ -95,6 +100,31 @@ def evaluate_release_criteria(
     )
     avg_latency = checks_summary.get("average_latency_ms", 0.0) or 0.0
 
+    # New metrics (Phase 1/3/5) — computed from sub-report summaries
+    # because this function is called before build_combined_report()
+    total = checks_total + maturity_total
+    checks_mrr = checks_summary.get("mrr", 0.0) or 0.0
+    maturity_mrr = maturity_summary.get("mrr", 0.0) or 0.0
+    combined_mrr = (
+        (checks_mrr * checks_total + maturity_mrr * maturity_total) / total
+        if total > 0 else 0.0
+    )
+    checks_ndcg = checks_summary.get("ndcg@5", 0.0) or 0.0
+    maturity_ndcg = maturity_summary.get("ndcg@5", 0.0) or 0.0
+    combined_ndcg5 = (
+        (checks_ndcg * checks_total + maturity_ndcg * maturity_total) / total
+        if total > 0 else 0.0
+    )
+    latency_p90 = (
+        (checks_summary.get("latency_percentiles") or {}).get("p90_ms", 0.0) or 0.0
+    )
+    robustness_gap_pp = (
+        (checks_summary.get("robustness_gap") or {}).get("gap_pp", 0.0) or 0.0
+    )
+    confidence_ece = (
+        (checks_summary.get("confidence_calibration") or {}).get("ece", 0.0) or 0.0
+    )
+
     # Map criteria keys to actual values
     actual_values = {
         "checks_top1_accuracy_min": checks_top1_rate,
@@ -105,6 +135,11 @@ def evaluate_release_criteria(
         "empty_bundle_rate_max": 0.0,  # Not yet measured
         "service_precision_min": service_precision,
         "average_latency_ms_max": avg_latency,
+        "combined_mrr_min": combined_mrr,
+        "combined_ndcg5_min": combined_ndcg5,
+        "latency_p90_ms_max": latency_p90,
+        "robustness_gap_pp_max": robustness_gap_pp,
+        "confidence_ece_max": confidence_ece,
     }
 
     results: List[Dict[str, Any]] = []
@@ -171,6 +206,50 @@ def build_combined_report(
         + maturity_summary.get("hit_expected_in_top5", 0)
     )
 
+    # Weighted-mean helper for combining sub-report metrics
+    def _weighted_mean(val_a: float, val_b: float, n_a: int, n_b: int) -> float:
+        if n_a + n_b == 0:
+            return 0.0
+        return round((val_a * n_a + val_b * n_b) / (n_a + n_b), 4)
+
+    checks_mrr = checks_summary.get("mrr", 0.0) or 0.0
+    maturity_mrr = maturity_summary.get("mrr", 0.0) or 0.0
+    checks_ndcg = checks_summary.get("ndcg@5", 0.0) or 0.0
+    maturity_ndcg = maturity_summary.get("ndcg@5", 0.0) or 0.0
+    checks_map = checks_summary.get("map@5", 0.0) or 0.0
+    maturity_map = maturity_summary.get("map@5", 0.0) or 0.0
+
+    # Combine latencies from both suites for percentile calculation
+    all_latencies = (
+        [c["latency_ms"] for c in checks_report.get("cases", [])]
+        + [c["latency_ms"] for c in maturity_report.get("cases", [])]
+    )
+
+    # Robustness gap — use checks by_category (maturity has different categories)
+    checks_by_category = checks_summary.get("by_category", {})
+
+    # Confidence calibration — combine cases from both suites
+    all_cases = (
+        checks_report.get("cases", []) + maturity_report.get("cases", [])
+    )
+    combined_calibration_cases = [
+        {"confidence": c["confidence"], "hit_top1": c["hit_top1"]}
+        for c in all_cases
+        if c.get("confidence") is not None
+    ]
+    combined_calibration = compute_confidence_calibration(combined_calibration_cases)
+
+    # Per-route calibration (Task 5.2) — uses route_type inferred from endpoint
+    calibration_by_route: Dict[str, Any] = {}
+    for route_key in ("check_search", "maturity_search"):
+        route_cases = [
+            {"confidence": c["confidence"], "hit_top1": c["hit_top1"]}
+            for c in all_cases
+            if c.get("confidence") is not None
+            and c.get("route_type") == route_key
+        ]
+        calibration_by_route[route_key] = compute_confidence_calibration(route_cases)
+
     return {
         "report_type": "unified_benchmark",
         "timestamp": now.isoformat(),
@@ -194,6 +273,13 @@ def build_combined_report(
             "maturity_top5_rate": round(
                 maturity_summary.get("hit_expected_in_top5", 0) / total_maturity, 4
             ) if total_maturity > 0 else 0.0,
+            "combined_mrr": _weighted_mean(checks_mrr, maturity_mrr, total_checks, total_maturity),
+            "combined_ndcg@5": _weighted_mean(checks_ndcg, maturity_ndcg, total_checks, total_maturity),
+            "combined_map@5": _weighted_mean(checks_map, maturity_map, total_checks, total_maturity),
+            "latency_percentiles": compute_latency_percentiles(all_latencies),
+            "robustness_gap": compute_robustness_gap(checks_by_category, metric_key="top1_rate"),
+            "confidence_calibration": combined_calibration,
+            "confidence_calibration_by_route": calibration_by_route,
             "forbidden_capability_rate_pct": checks_summary.get("forbidden_capability_rate_pct", 0.0),
             "service_precision_pct": checks_summary.get("service_precision_pct"),
             "average_latency_ms": checks_summary.get("average_latency_ms"),
@@ -225,6 +311,40 @@ def print_combined_summary(report: Dict[str, Any]) -> None:
     print(f"Checks Top-5           : {summary['checks_top5_rate']*100:.1f}%")
     print(f"Maturity Top-1         : {summary['maturity_top1_rate']*100:.1f}%")
     print(f"Maturity Top-5         : {summary['maturity_top5_rate']*100:.1f}%")
+    # Retrieval quality metrics
+    print(f"Combined MRR           : {summary.get('combined_mrr', 'N/A')}")
+    print(f"Combined NDCG@5        : {summary.get('combined_ndcg@5', 'N/A')}")
+    print(f"Combined MAP@5         : {summary.get('combined_map@5', 'N/A')}")
+
+    lat_p = summary.get("latency_percentiles", {})
+    if lat_p:
+        print(f"Latency P50/P90/P99    : {lat_p.get('p50_ms')} / {lat_p.get('p90_ms')} / {lat_p.get('p99_ms')} ms")
+
+    gap = summary.get("robustness_gap", {})
+    if gap and gap.get("best_category"):
+        print(f"Robustness gap         : {gap['gap_pp']} pp"
+              f" (best={gap['best_category']} {gap['best_value']:.2f},"
+              f" worst={gap['worst_category']} {gap['worst_value']:.2f})")
+
+    # Confidence calibration
+    cal = summary.get("confidence_calibration", {})
+    if cal and cal.get("total_cases", 0) > 0:
+        print(f"Confidence ECE         : {cal.get('ece', '?')}"
+              f"  (overall_calibrated={cal.get('overall_calibrated', 'N/A')})")
+
+    # Per-route calibration (Task 5.2)
+    by_route = summary.get("confidence_calibration_by_route", {})
+    if by_route:
+        route_parts = []
+        for route, rcal in by_route.items():
+            if rcal.get("total_cases", 0) > 0:
+                route_parts.append(
+                    f"{route}: ECE={rcal.get('ece', '?')}"
+                    f" calibrated={rcal.get('overall_calibrated', 'N/A')}"
+                )
+        if route_parts:
+            print(f"Calibration by route   : {' | '.join(route_parts)}")
+
     print(f"Forbidden cap. rate    : {summary['forbidden_capability_rate_pct']}%")
     if summary['service_precision_pct'] is not None:
         print(f"Service precision      : {summary['service_precision_pct']}%")

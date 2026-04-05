@@ -15,8 +15,61 @@
     "top1_correct_service": null,
     "vector_visible_cases": 12,
     "hybrid_visible_cases": 12,
-    "average_latency_ms": 2888.82,
-    "median_latency_ms": 3079.93,
+    "average_latency_ms": 2768.02,
+    "median_latency_ms": 3070.31,
+    "mrr": 0.9053,
+    "ndcg@5": 0.9151,
+    "ndcg@5_graded": 0.9151,
+    "map@5": 0.9053,
+    "latency_percentiles": {
+      "p50_ms": 3070.31,
+      "p90_ms": 3278.19,
+      "p99_ms": 3471.78,
+      "mean_ms": 2768.02
+    },
+    "robustness_gap": {
+      "gap_pp": 33.3,
+      "best_category": "exact",
+      "best_value": 1.0,
+      "worst_category": "semantic_hard",
+      "worst_value": 0.6667
+    },
+    "reranker_lift": {
+      "mrr_before": 0.0,
+      "mrr_after": 0.0,
+      "mrr_lift": 0.0,
+      "ndcg_before": 0.0,
+      "ndcg_after": 0.0,
+      "ndcg_lift": 0.0,
+      "cases_with_data": 12,
+      "cases_improved": 0,
+      "cases_degraded": 0,
+      "cases_unchanged": 12
+    },
+    "confidence_calibration": {
+      "high": {
+        "count": 12,
+        "actual_accuracy": 1.0,
+        "calibrated": true,
+        "expected_min": 0.8
+      },
+      "medium": {
+        "count": 1,
+        "actual_accuracy": 1.0,
+        "calibrated": false,
+        "expected_min": 0.5,
+        "expected_max": 0.8
+      },
+      "low": {
+        "count": 6,
+        "actual_accuracy": 0.6667,
+        "calibrated": false,
+        "expected_max": 0.5
+      },
+      "ece": 0.2132,
+      "overall_calibrated": false,
+      "total_cases": 19
+    },
     "forbidden_capability_rate_pct": 0.0,
     "service_precision_pct": null,
     "by_category": {
@@ -28,7 +81,10 @@
         "vector": 0,
         "hybrid": 0,
         "forbidden_violations": 0,
-        "avg_latency_ms": 2050.95
+        "avg_latency_ms": 2059.34,
+        "top1_rate": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0
       },
       "paraphrase": {
         "total": 6,
@@ -38,7 +94,10 @@
         "vector": 6,
         "hybrid": 6,
         "forbidden_violations": 0,
-        "avg_latency_ms": 3355.45
+        "avg_latency_ms": 3159.08,
+        "top1_rate": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0
       },
       "semantic_hard": {
         "total": 6,
@@ -48,7 +107,10 @@
         "vector": 6,
         "hybrid": 6,
         "forbidden_violations": 0,
-        "avg_latency_ms": 3399.71
+        "avg_latency_ms": 3203.75,
+        "top1_rate": 0.6667,
+        "mrr": 0.7,
+        "ndcg@5": 0.7312
       }
     },
     "by_service": {
@@ -112,12 +174,13 @@
     {
       "case_index": 1,
       "case_id": "maturity_exact_1",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "block_public_access",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2040.58,
+      "latency_ms": 2057.93,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -140,6 +203,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -155,7 +229,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "f5d42871-3123-4b25-90f1-44def4284f42",
+        "request_id": "9d6a7dd8-8a62-418e-9b2f-7a77ea185123",
         "status": "success",
         "data": {
           "results": [
@@ -273,12 +347,13 @@
     {
       "case_index": 2,
       "case_id": "maturity_exact_2",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "audit_api_calls",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2044.41,
+      "latency_ms": 2051.79,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -301,6 +376,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -316,7 +402,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "147747eb-b6b7-42de-8833-a1060922a998",
+        "request_id": "006671e0-fc5b-4a79-a6cf-3bc66a55752a",
         "status": "success",
         "data": {
           "results": [
@@ -436,12 +522,13 @@
     {
       "case_index": 3,
       "case_id": "maturity_exact_3",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "data_backups",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2040.65,
+      "latency_ms": 2045.15,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -464,6 +551,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -479,7 +577,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "eab138a7-8cbe-4f3d-a9ff-0ed58f8ddcbd",
+        "request_id": "13ad55cf-281f-4146-9c2e-d207fe06d694",
         "status": "success",
         "data": {
           "results": [
@@ -599,12 +697,13 @@
     {
       "case_index": 4,
       "case_id": "maturity_exact_4",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "data_encryption_at_rest",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2049.78,
+      "latency_ms": 2048.93,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -627,6 +726,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -642,7 +752,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "91b600aa-22f0-4888-a1d2-df0fa6a9708d",
+        "request_id": "919e15f3-c344-45dd-8cb5-2e6e909acbe1",
         "status": "success",
         "data": {
           "results": [
@@ -762,12 +872,13 @@
     {
       "case_index": 5,
       "case_id": "maturity_exact_5",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "root_account_protection",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2051.43,
+      "latency_ms": 2072.05,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -790,6 +901,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -805,7 +927,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "4a983ade-3da7-4e84-9d2f-d458331cbfd4",
+        "request_id": "282ced80-3aba-4184-bbaa-a63c1deb20dc",
         "status": "success",
         "data": {
           "results": [
@@ -925,12 +1047,13 @@
     {
       "case_index": 6,
       "case_id": "maturity_exact_6",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "multi_factor_authentication",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2058.63,
+      "latency_ms": 2063.14,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -953,6 +1076,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -968,7 +1102,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "cf3b46ca-615f-4274-bef2-cb92d002c818",
+        "request_id": "115e5680-6157-42a7-a25c-20eef2a56bbc",
         "status": "success",
         "data": {
           "results": [
@@ -1088,12 +1222,13 @@
     {
       "case_index": 7,
       "case_id": "maturity_exact_7",
+      "route_type": "maturity_search",
       "category": "exact",
       "service": null,
       "query": "encryption_in_transit",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 2071.19,
+      "latency_ms": 2076.41,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -1116,6 +1251,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": false,
+      "reranker_mrr_before": null,
+      "reranker_mrr_after": null,
+      "reranker_ndcg_before": null,
+      "reranker_ndcg_after": null,
+      "reranker_mrr_lift": null,
+      "reranker_ndcg_lift": null,
       "diagnostics": {
         "retrieval_mode": "exact_maturity",
         "corpus": "maturity_capabilities",
@@ -1131,7 +1277,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "3e2749d5-f52d-425c-a163-69550b670187",
+        "request_id": "5120390d-0502-4a66-bcfc-9513b892913d",
         "status": "success",
         "data": {
           "results": [
@@ -1251,12 +1397,13 @@
     {
       "case_index": 8,
       "case_id": "maturity_paraphrase_1",
+      "route_type": "maturity_search",
       "category": "paraphrase",
       "service": null,
       "query": "practice to stop public access to resources",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3947.79,
+      "latency_ms": 3471.78,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -1283,6 +1430,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -1308,7 +1466,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "ffa8f57a-5b50-4f71-96ed-6cfba3d6fef7",
+        "request_id": "5ff0469c-7c94-482f-94dd-1d4df4a40cf5",
         "status": "success",
         "data": {
           "results": [
@@ -1608,7 +1766,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:block_public_access",
+              "capability:network_segmentation_vpcs_public_private_networks",
+              "capability:root_account_protection",
+              "capability:don_t_store_secrets_in_code_remove_secrets_from_code",
+              "capability:keep_your_security_contact_details_up_to_date"
+            ],
+            "reranker_post_order": [
+              "capability:block_public_access",
+              "capability:network_segmentation_vpcs_public_private_networks",
+              "capability:iam_data_perimeters_conditional_access",
+              "capability:root_account_protection",
+              "capability:temporary_elevated_access_management"
+            ]
           }
         },
         "errors": [
@@ -1623,12 +1796,13 @@
     {
       "case_index": 9,
       "case_id": "maturity_paraphrase_2",
+      "route_type": "maturity_search",
       "category": "paraphrase",
       "service": null,
       "query": "ability to record and monitor api activity",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3538.66,
+      "latency_ms": 3151.14,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -1655,6 +1829,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -1680,7 +1865,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "459f5f4d-c18e-4540-9470-06f5697b174e",
+        "request_id": "20c9438b-0f67-48a3-a21c-9b81a3809665",
         "status": "success",
         "data": {
           "results": [
@@ -1982,7 +2167,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:audit_api_calls",
+              "capability:data_backups",
+              "capability:anti_malware_edr_runtime_protection",
+              "capability:billing_alarms_for_anomaly_detection",
+              "capability:detect_common_threats"
+            ],
+            "reranker_post_order": [
+              "capability:audit_api_calls",
+              "capability:data_backups",
+              "capability:temporary_elevated_access_management",
+              "capability:inventory_configurations_monitoring",
+              "capability:detect_common_threats"
+            ]
           }
         },
         "errors": []
@@ -1991,12 +2191,13 @@
     {
       "case_index": 10,
       "case_id": "maturity_paraphrase_3",
+      "route_type": "maturity_search",
       "category": "paraphrase",
       "service": null,
       "query": "capability for recovering data from backups",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3038.3,
+      "latency_ms": 2922.61,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -2023,6 +2224,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -2048,7 +2260,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "21e05471-6a8b-4062-89b6-2de14805ddf4",
+        "request_id": "ee3b6cb0-714d-49ff-8b0c-08f6fccdf4dc",
         "status": "success",
         "data": {
           "results": [
@@ -2351,7 +2563,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:data_backups",
+              "capability:disaster_recovery_plan",
+              "capability:multi_region_disaster_recovery_automation",
+              "capability:sharing_security_tasks_and_responsibility_raci_matrix",
+              "capability:iam_data_perimeters_conditional_access"
+            ],
+            "reranker_post_order": [
+              "capability:data_backups",
+              "capability:disaster_recovery_plan",
+              "capability:multi_region_disaster_recovery_automation",
+              "capability:sharing_security_tasks_and_responsibility_raci_matrix",
+              "capability:data_encryption_at_rest"
+            ]
           }
         },
         "errors": []
@@ -2360,12 +2587,13 @@
     {
       "case_index": 11,
       "case_id": "maturity_paraphrase_4",
+      "route_type": "maturity_search",
       "category": "paraphrase",
       "service": null,
       "query": "protect stored data with encryption",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3023.84,
+      "latency_ms": 2982.94,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -2392,6 +2620,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -2417,7 +2656,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "f9be38e6-63bf-48a3-9cd0-e02a10325def",
+        "request_id": "e9ee9623-8520-4fc9-85a0-d8a284bbd159",
         "status": "success",
         "data": {
           "results": [
@@ -2720,7 +2959,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:data_encryption_at_rest",
+              "capability:data_backups",
+              "capability:analyze_data_security_posture",
+              "capability:disaster_recovery_plan",
+              "capability:encryption_in_transit"
+            ],
+            "reranker_post_order": [
+              "capability:data_encryption_at_rest",
+              "capability:encryption_in_transit",
+              "capability:don_t_store_secrets_in_code_remove_secrets_from_code",
+              "capability:analyze_data_security_posture",
+              "capability:data_backups"
+            ]
           }
         },
         "errors": []
@@ -2729,12 +2983,13 @@
     {
       "case_index": 12,
       "case_id": "maturity_paraphrase_5",
+      "route_type": "maturity_search",
       "category": "paraphrase",
       "service": null,
       "query": "require second authentication factor for user logins",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3297.97,
+      "latency_ms": 3203.37,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -2761,6 +3016,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -2786,7 +3052,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "e4afffca-abdc-4c7c-8bd3-befbe786ad9e",
+        "request_id": "1430da87-2435-4e22-ba46-f423f9a8123e",
         "status": "success",
         "data": {
           "results": [
@@ -3090,7 +3356,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:multi_factor_authentication",
+              "capability:customer_iam_security_of_your_customers",
+              "capability:root_account_protection",
+              "capability:zero_trust_access_risk_based_access_control",
+              "capability:secure_ec2_instances_management"
+            ],
+            "reranker_post_order": [
+              "capability:multi_factor_authentication",
+              "capability:secure_ec2_instances_management",
+              "capability:zero_trust_access_risk_based_access_control",
+              "capability:customer_iam_security_of_your_customers",
+              "capability:root_account_protection"
+            ]
           }
         },
         "errors": [
@@ -3105,12 +3386,13 @@
     {
       "case_index": 13,
       "case_id": "maturity_paraphrase_6",
+      "route_type": "maturity_search",
       "category": "paraphrase",
       "service": null,
       "query": "secure network communications with tls encryption",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3286.13,
+      "latency_ms": 3222.65,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -3137,6 +3419,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -3162,7 +3455,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "48aee999-9934-45e4-93e2-b4f60dc04b9a",
+        "request_id": "61c19559-4376-4021-8056-69725adf94a1",
         "status": "success",
         "data": {
           "results": [
@@ -3462,7 +3755,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:encryption_in_transit",
+              "capability:outbound_traffic_control",
+              "capability:security_orchestration_and_ticketing",
+              "capability:disaster_recovery_plan",
+              "capability:multi_region_disaster_recovery_automation"
+            ],
+            "reranker_post_order": [
+              "capability:encryption_in_transit",
+              "capability:data_encryption_at_rest",
+              "capability:disaster_recovery_plan",
+              "capability:secure_ec2_instances_management",
+              "capability:limit_network_access_using_security_groups"
+            ]
           }
         },
         "errors": []
@@ -3471,12 +3779,13 @@
     {
       "case_index": 14,
       "case_id": "maturity_semantic_hard_1",
+      "route_type": "maturity_search",
       "category": "semantic_hard",
       "service": null,
       "query": "control internet-facing access to storage services",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3079.93,
+      "latency_ms": 3070.31,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": false,
@@ -3503,6 +3812,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 0.0,
+      "ndcg@5": 0.0,
+      "ndcg@5_graded": 0.0,
+      "ap@5": 0.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -3528,7 +3848,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "41550f37-96d4-49fe-9b68-61faeca322f5",
+        "request_id": "259abc9b-e971-460a-8826-8795ca81e771",
         "status": "success",
         "data": {
           "results": [
@@ -3832,7 +4152,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:outbound_traffic_control",
+              "capability:data_backups",
+              "capability:set_up_multi_account_management_with_aws_control_tower",
+              "capability:construction_of_a_continuous_pipeline_for_golden_image_generation",
+              "capability:block_public_access"
+            ],
+            "reranker_post_order": [
+              "capability:outbound_traffic_control",
+              "capability:iam_data_perimeters_conditional_access",
+              "capability:data_backups",
+              "capability:set_up_multi_account_management_with_aws_control_tower",
+              "capability:limit_network_access_using_security_groups"
+            ]
           }
         },
         "errors": [
@@ -3847,12 +4182,13 @@
     {
       "case_index": 15,
       "case_id": "maturity_semantic_hard_2",
+      "route_type": "maturity_search",
       "category": "semantic_hard",
       "service": null,
       "query": "know who called cloud apis and when",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3326.57,
+      "latency_ms": 3198.5,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -3879,6 +4215,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -3904,7 +4251,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "707d7999-8055-4cee-9c38-fae5dacdf4fe",
+        "request_id": "01bd2722-b02c-4de4-b476-2638502d2a27",
         "status": "success",
         "data": {
           "results": [
@@ -4204,7 +4551,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:audit_api_calls",
+              "capability:cloud_security_training_plan",
+              "capability:evaluate_cloud_security_posture_aws_security_hub",
+              "capability:cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+              "capability:advanced_security_automations"
+            ],
+            "reranker_post_order": [
+              "capability:audit_api_calls",
+              "capability:cloud_security_training_plan",
+              "capability:evaluate_cloud_security_posture_aws_security_hub",
+              "capability:cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+              "capability:temporary_elevated_access_management"
+            ]
           }
         },
         "errors": []
@@ -4213,12 +4575,13 @@
     {
       "case_index": 16,
       "case_id": "maturity_semantic_hard_3",
+      "route_type": "maturity_search",
       "category": "semantic_hard",
       "service": null,
       "query": "restore critical information after loss or corruption",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3435.96,
+      "latency_ms": 3219.29,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -4245,6 +4608,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -4270,7 +4644,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "a47ef469-d2b6-48c8-9cf7-790dd1d10cfb",
+        "request_id": "794b2c84-ecbb-4f33-9271-27709d1bcbcf",
         "status": "success",
         "data": {
           "results": [
@@ -4572,7 +4946,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:data_backups",
+              "capability:sharing_security_tasks_and_responsibility_raci_matrix",
+              "capability:keep_your_security_contact_details_up_to_date",
+              "capability:inventory_configurations_monitoring",
+              "capability:act_on_critical_security_findings"
+            ],
+            "reranker_post_order": [
+              "capability:data_backups",
+              "capability:multi_region_disaster_recovery_automation",
+              "capability:act_on_critical_security_findings",
+              "capability:sharing_security_tasks_and_responsibility_raci_matrix",
+              "capability:iam_data_perimeters_conditional_access"
+            ]
           }
         },
         "errors": []
@@ -4581,12 +4970,13 @@
     {
       "case_index": 17,
       "case_id": "maturity_semantic_hard_4",
+      "route_type": "maturity_search",
       "category": "semantic_hard",
       "service": null,
       "query": "make stolen storage media unreadable",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3240.58,
+      "latency_ms": 3187.56,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -4613,6 +5003,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -4638,7 +5039,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "3b080937-fbfd-4f1d-840b-d446f0afe741",
+        "request_id": "fa07e954-9b3b-45bc-8a9b-aa71947e5776",
         "status": "success",
         "data": {
           "results": [
@@ -4939,7 +5340,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:data_encryption_at_rest",
+              "capability:data_backups",
+              "capability:set_up_multi_account_management_with_aws_control_tower",
+              "capability:sharing_security_tasks_and_responsibility_raci_matrix",
+              "capability:block_public_access"
+            ],
+            "reranker_post_order": [
+              "capability:data_encryption_at_rest",
+              "capability:data_backups",
+              "capability:cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+              "capability:iam_data_perimeters_conditional_access",
+              "capability:don_t_store_secrets_in_code_remove_secrets_from_code"
+            ]
           }
         },
         "errors": []
@@ -4948,12 +5364,13 @@
     {
       "case_index": 18,
       "case_id": "maturity_semantic_hard_5",
+      "route_type": "maturity_search",
       "category": "semantic_hard",
       "service": null,
       "query": "protect the highest privilege account from compromise",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 3277.6,
+      "latency_ms": 3278.19,
       "hit_top1": true,
       "hit_top3": true,
       "hit_top5": true,
@@ -4980,6 +5397,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 1.0,
+      "ndcg@5": 1.0,
+      "ndcg@5_graded": 1.0,
+      "ap@5": 1.0,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -5005,7 +5433,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "a16332f3-a880-4b60-aab2-65be0599b635",
+        "request_id": "8e77b9af-0867-4c3f-9c6f-c9fdef80f2ae",
         "status": "success",
         "data": {
           "results": [
@@ -5308,7 +5736,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:root_account_protection",
+              "capability:cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+              "capability:temporary_elevated_access_management",
+              "capability:least_privilege_review_set_up_right_size_permissions_in_roles",
+              "capability:identity_federation_centralized_user_repository"
+            ],
+            "reranker_post_order": [
+              "capability:root_account_protection",
+              "capability:temporary_elevated_access_management",
+              "capability:cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+              "capability:threat_intelligence",
+              "capability:least_privilege_review_set_up_right_size_permissions_in_roles"
+            ]
           }
         },
         "errors": [
@@ -5323,12 +5766,13 @@
     {
       "case_index": 19,
       "case_id": "maturity_semantic_hard_6",
+      "route_type": "maturity_search",
       "category": "semantic_hard",
       "service": null,
       "query": "prevent man-in-the-middle attacks on data transfers",
       "http_status": 200,
       "response_status": "success",
-      "latency_ms": 4037.63,
+      "latency_ms": 3268.66,
       "hit_top1": false,
       "hit_top3": false,
       "hit_top5": true,
@@ -5355,6 +5799,17 @@
       "warnings": [],
       "verification": {},
       "index_version": "rag-v2-2026-03-17",
+      "reciprocal_rank": 0.2,
+      "ndcg@5": 0.387,
+      "ndcg@5_graded": 0.387,
+      "ap@5": 0.2,
+      "reranker_applied": true,
+      "reranker_mrr_before": 0.0,
+      "reranker_mrr_after": 0.0,
+      "reranker_ndcg_before": 0.0,
+      "reranker_ndcg_after": 0.0,
+      "reranker_mrr_lift": 0.0,
+      "reranker_ndcg_lift": 0.0,
       "diagnostics": {
         "retrieval_mode": "hybrid",
         "corpus": "maturity_capabilities",
@@ -5380,7 +5835,7 @@
         "vector_error": null
       },
       "raw_response": {
-        "request_id": "f5d67b28-cffe-48ff-8c2f-2724b01ab54c",
+        "request_id": "1c83e3be-2066-4970-b616-a474e82ff1d7",
         "status": "success",
         "data": {
           "results": [
@@ -5682,7 +6137,22 @@
             ],
             "used_vector": true,
             "used_hybrid": true,
-            "vector_error": null
+            "vector_error": null,
+            "reranker_applied": true,
+            "reranker_pre_order": [
+              "capability:data_backups",
+              "capability:encryption_in_transit",
+              "capability:iam_data_perimeters_conditional_access",
+              "capability:block_public_access",
+              "capability:customer_iam_security_of_your_customers"
+            ],
+            "reranker_post_order": [
+              "capability:data_backups",
+              "capability:iam_data_perimeters_conditional_access",
+              "capability:network_segmentation_vpcs_public_private_networks",
+              "capability:anti_malware_edr_runtime_protection",
+              "capability:encryption_in_transit"
+            ]
           }
         },
         "errors": [

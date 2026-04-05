@@ -78,6 +78,10 @@ def extract_metrics(report: Dict[str, Any]) -> Dict[str, Any]:
         summary = report["combined_summary"]
         checks_summary = report.get("checks_report", {}).get("summary", {})
         maturity_summary = report.get("maturity_report", {}).get("summary", {})
+
+        lat_p = summary.get("latency_percentiles", {}) or {}
+        gap = summary.get("robustness_gap", {}) or {}
+
         return {
             "total_cases": summary.get("total_cases", 0),
             "combined_top1_rate": summary.get("combined_top1_rate", 0.0),
@@ -92,6 +96,24 @@ def extract_metrics(report: Dict[str, Any]) -> Dict[str, Any]:
             "maturity_top1_hits": maturity_summary.get("hit_expected_in_top1", 0),
             "maturity_top5_hits": maturity_summary.get("hit_expected_in_top5", 0),
             "maturity_total": maturity_summary.get("total_cases", 0),
+            "combined_mrr": summary.get("combined_mrr"),
+            "combined_ndcg@5": summary.get("combined_ndcg@5"),
+            "combined_map@5": summary.get("combined_map@5"),
+            "latency_percentiles.p50_ms": lat_p.get("p50_ms"),
+            "latency_percentiles.p90_ms": lat_p.get("p90_ms"),
+            "latency_percentiles.p99_ms": lat_p.get("p99_ms"),
+            "robustness_gap.gap_pp": gap.get("gap_pp"),
+            "confidence_calibration.ece": (
+                summary.get("confidence_calibration", {}) or {}
+            ).get("ece"),
+            "confidence_calibration.check_search.ece": (
+                (summary.get("confidence_calibration_by_route", {}) or {})
+                .get("check_search", {})
+            ).get("ece"),
+            "confidence_calibration.maturity_search.ece": (
+                (summary.get("confidence_calibration_by_route", {}) or {})
+                .get("maturity_search", {})
+            ).get("ece"),
             "forbidden_capability_rate_pct": summary.get("forbidden_capability_rate_pct", 0.0),
             "service_precision_pct": summary.get("service_precision_pct"),
             "average_latency_ms": summary.get("average_latency_ms"),
@@ -148,6 +170,7 @@ def compare_metrics(
 ) -> List[Dict[str, Any]]:
     """Build comparison rows between baseline and current metrics."""
     metrics_config = [
+        # (key, label, lower_is_better, is_latency)
         ("total_cases", "Total cases", False, False),
         ("combined_top1_rate", "Combined Top-1 rate", False, False),
         ("combined_top5_rate", "Combined Top-5 rate", False, False),
@@ -155,10 +178,19 @@ def compare_metrics(
         ("checks_top5_rate", "Checks Top-5 rate", False, False),
         ("maturity_top1_rate", "Maturity Top-1 rate", False, False),
         ("maturity_top5_rate", "Maturity Top-5 rate", False, False),
+        ("combined_mrr", "MRR", False, False),
+        ("combined_ndcg@5", "NDCG@5", False, False),
+        ("combined_map@5", "MAP@5", False, False),
         ("forbidden_capability_rate_pct", "Forbidden cap. rate %", True, True),
         ("service_precision_pct", "Service precision %", False, False),
         ("average_latency_ms", "Avg latency (ms)", True, True),
         ("median_latency_ms", "Median latency (ms)", True, True),
+        ("latency_percentiles.p90_ms", "Latency P90 (ms)", True, True),
+        ("latency_percentiles.p99_ms", "Latency P99 (ms)", True, True),
+        ("robustness_gap.gap_pp", "Robustness Gap (pp)", True, False),
+        ("confidence_calibration.ece", "Confidence ECE", True, False),
+        ("confidence_calibration.check_search.ece", "ECE (check_search)", True, False),
+        ("confidence_calibration.maturity_search.ece", "ECE (maturity_search)", True, False),
     ]
 
     rows = []
@@ -200,6 +232,17 @@ def evaluate_current_criteria(
             (current.get("service_precision_pct") or 0.0) / 100.0
         ),
         "average_latency_ms_max": current.get("average_latency_ms", 0.0) or 0.0,
+        "combined_mrr_min": current.get("combined_mrr", 0.0) or 0.0,
+        "combined_ndcg5_min": current.get("combined_ndcg@5", 0.0) or 0.0,
+        "latency_p90_ms_max": (
+            current.get("latency_percentiles.p90_ms", 0.0) or 0.0
+        ),
+        "robustness_gap_pp_max": (
+            current.get("robustness_gap.gap_pp", 0.0) or 0.0
+        ),
+        "confidence_ece_max": (
+            current.get("confidence_calibration.ece", 0.0) or 0.0
+        ),
     }
 
     results = []

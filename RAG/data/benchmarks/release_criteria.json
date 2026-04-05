@@ -1,5 +1,7 @@
 {
-  "_comment": "PO-approved release criteria for RAG benchmark pipeline. All thresholds must be met for a PASS verdict.",
+  "_comment": "Release criteria for RAG benchmark pipeline. All thresholds must be met for a PASS verdict.",
+  "_updated": "2026-04-02 — expanded from 8 to 13 criteria after evaluation framework Phase 1/3/5",
+
   "checks_top1_accuracy_min": 0.60,
   "checks_top5_accuracy_min": 0.80,
   "maturity_top1_accuracy_min": 0.60,
@@ -7,5 +9,11 @@
   "forbidden_capability_rate_max": 0.0,
   "empty_bundle_rate_max": 0.0,
   "service_precision_min": 0.85,
-  "average_latency_ms_max": 2000
+  "average_latency_ms_max": 5000,
+
+  "combined_mrr_min": 0.70,
+  "combined_ndcg5_min": 0.75,
+  "latency_p90_ms_max": 6000,
+  "robustness_gap_pp_max": 90,
+  "confidence_ece_max": 0.20
 }

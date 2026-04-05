@@ -19,6 +19,15 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
+from app.evaluation.metrics import (
+    compute_average_precision,
+    compute_confidence_calibration,
+    compute_latency_percentiles,
+    compute_ndcg,
+    compute_reciprocal_rank,
+    compute_robustness_gap,
+)
+
 BASE_URL = "http://localhost:8000"
 TOP_K = 5
 TIMEOUT = 30
@@ -187,12 +196,22 @@ def _check_forbidden_capabilities(
 # Evaluation
 # ---------------------------------------------------------------------------
 
+def _infer_route_type(endpoint: str) -> str:
+    """Infer route type from endpoint URL for calibration analysis."""
+    if "/checks" in endpoint:
+        return "check_search"
+    if "/maturity" in endpoint:
+        return "maturity_search"
+    return "unknown"
+
+
 def evaluate_cases(
     endpoint: str,
     cases: List[Dict[str, Any]],
     report_name: str,
 ) -> Dict[str, Any]:
     rows: List[Dict[str, Any]] = []
+    route_type = _infer_route_type(endpoint)
 
     for idx, case in enumerate(cases, start=1):
         case_id = case.get("case_id", case.get("id", f"case_{idx}"))
@@ -230,9 +249,45 @@ def evaluate_cases(
         # Forbidden capability check
         forbidden_result = _check_forbidden_capabilities(results, forbidden_ids)
 
+        # Per-query evaluation metrics (Task 1.2)
+        # Determine retrieved list & ground truth based on case type
+        if expected_doc_id:
+            _retrieved_for_metrics = top_ids
+            _relevant_for_metrics = [expected_doc_id]
+        elif expected_capability_id:
+            _retrieved_for_metrics = [
+                str((r.get("metadata") or {}).get("capability_id", ""))
+                for r in results[:TOP_K]
+            ]
+            _relevant_for_metrics = [expected_capability_id]
+        else:
+            _retrieved_for_metrics = top_ids
+            _relevant_for_metrics = []
+
+        _rr = compute_reciprocal_rank(_retrieved_for_metrics, _relevant_for_metrics)
+        _ndcg5 = compute_ndcg(_retrieved_for_metrics, _relevant_for_metrics, k=5)
+        _ap5 = compute_average_precision(_retrieved_for_metrics, _relevant_for_metrics, k=5)
+
+        # Reranker lift metrics (Task 3.2)
+        pre_order = diagnostics.get("reranker_pre_order", [])
+        post_order = diagnostics.get("reranker_post_order", [])
+        _reranker_applied = diagnostics.get("reranker_applied", False)
+
+        if pre_order and post_order and _relevant_for_metrics:
+            _reranker_mrr_before = compute_reciprocal_rank(pre_order, _relevant_for_metrics)
+            _reranker_mrr_after = compute_reciprocal_rank(post_order, _relevant_for_metrics)
+            _reranker_ndcg_before = compute_ndcg(pre_order, _relevant_for_metrics, k=5)
+            _reranker_ndcg_after = compute_ndcg(post_order, _relevant_for_metrics, k=5)
+        else:
+            _reranker_mrr_before = None
+            _reranker_mrr_after = None
+            _reranker_ndcg_before = None
+            _reranker_ndcg_after = None
+
         row = {
             "case_index": idx,
             "case_id": case_id,
+            "route_type": route_type,
             "category": case.get("category", "unknown"),
             "service": case.get("service"),
             "query": case["query"],
@@ -257,6 +312,22 @@ def evaluate_cases(
             "warnings": verification.get("warnings", []),
             "verification": verification,
             "index_version": _extract_index_version(body),
+            "reciprocal_rank": _rr,
+            "ndcg@5": _ndcg5,
+            "ap@5": _ap5,
+            "reranker_applied": _reranker_applied,
+            "reranker_mrr_before": _reranker_mrr_before,
+            "reranker_mrr_after": _reranker_mrr_after,
+            "reranker_ndcg_before": _reranker_ndcg_before,
+            "reranker_ndcg_after": _reranker_ndcg_after,
+            "reranker_mrr_lift": (
+                round(_reranker_mrr_after - _reranker_mrr_before, 4)
+                if _reranker_mrr_before is not None else None
+            ),
+            "reranker_ndcg_lift": (
+                round(_reranker_ndcg_after - _reranker_ndcg_before, 4)
+                if _reranker_ndcg_before is not None else None
+            ),
             "diagnostics": {
                 "retrieval_mode": diagnostics.get("retrieval_mode"),
                 "corpus": diagnostics.get("corpus"),
@@ -347,6 +418,8 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
                 "hybrid": 0,
                 "forbidden_violations": 0,
                 "avg_latency_ms": [],
+                "_rr_values": [],
+                "_ndcg5_values": [],
             },
         )
         bucket["total"] += 1
@@ -358,11 +431,26 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
         if row.get("has_forbidden_in_results"):
             bucket["forbidden_violations"] += 1
         bucket["avg_latency_ms"].append(row["latency_ms"])
+        bucket["_rr_values"].append(row["reciprocal_rank"])
+        bucket["_ndcg5_values"].append(row["ndcg@5"])
 
     for category, bucket in by_category.items():
         bucket["avg_latency_ms"] = round(
             statistics.mean(bucket["avg_latency_ms"]), 2
         ) if bucket["avg_latency_ms"] else None
+        # Per-category top1_rate, MRR, NDCG@5
+        bucket["top1_rate"] = round(
+            bucket["top1"] / bucket["total"], 4
+        ) if bucket["total"] else 0.0
+        bucket["mrr"] = round(
+            statistics.mean(bucket["_rr_values"]), 4
+        ) if bucket["_rr_values"] else 0.0
+        bucket["ndcg@5"] = round(
+            statistics.mean(bucket["_ndcg5_values"]), 4
+        ) if bucket["_ndcg5_values"] else 0.0
+        # Clean up temporary accumulators
+        del bucket["_rr_values"]
+        del bucket["_ndcg5_values"]
 
     # By service
     by_service: Dict[str, Dict[str, Any]] = {}
@@ -419,6 +507,52 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
         if row.get("has_forbidden_in_results")
     ]
 
+    # Aggregate retrieval metrics (Task 1.2)
+    rr_values = [row["reciprocal_rank"] for row in rows]
+    ndcg5_values = [row["ndcg@5"] for row in rows]
+    ap5_values = [row["ap@5"] for row in rows]
+
+    mrr = round(statistics.mean(rr_values), 4) if rr_values else 0.0
+    ndcg5 = round(statistics.mean(ndcg5_values), 4) if ndcg5_values else 0.0
+    map5 = round(statistics.mean(ap5_values), 4) if ap5_values else 0.0
+    latency_percentiles = compute_latency_percentiles(latencies)
+    robustness_gap = compute_robustness_gap(by_category, metric_key="top1_rate")
+
+    # Aggregate reranker lift (Task 3.2)
+    rows_with_reranker = [r for r in rows if r.get("reranker_mrr_before") is not None]
+    if rows_with_reranker:
+        reranker_lift = {
+            "mrr_before": round(statistics.mean(
+                r["reranker_mrr_before"] for r in rows_with_reranker), 4),
+            "mrr_after": round(statistics.mean(
+                r["reranker_mrr_after"] for r in rows_with_reranker), 4),
+            "mrr_lift": round(statistics.mean(
+                r["reranker_mrr_lift"] for r in rows_with_reranker), 4),
+            "ndcg_before": round(statistics.mean(
+                r["reranker_ndcg_before"] for r in rows_with_reranker), 4),
+            "ndcg_after": round(statistics.mean(
+                r["reranker_ndcg_after"] for r in rows_with_reranker), 4),
+            "ndcg_lift": round(statistics.mean(
+                r["reranker_ndcg_lift"] for r in rows_with_reranker), 4),
+            "cases_with_data": len(rows_with_reranker),
+            "cases_improved": sum(
+                1 for r in rows_with_reranker if r["reranker_mrr_lift"] > 0),
+            "cases_degraded": sum(
+                1 for r in rows_with_reranker if r["reranker_mrr_lift"] < 0),
+            "cases_unchanged": sum(
+                1 for r in rows_with_reranker if r["reranker_mrr_lift"] == 0),
+        }
+    else:
+        reranker_lift = None
+
+    # Confidence calibration (Task 5.1)
+    calibration_cases = [
+        {"confidence": row["confidence"], "hit_top1": row["hit_top1"]}
+        for row in rows
+        if row.get("confidence") is not None
+    ]
+    confidence_calibration = compute_confidence_calibration(calibration_cases)
+
     summary = {
         "report_name": report_name,
         "total_cases": total,
@@ -433,6 +567,13 @@ def summarize_rows(rows: List[Dict[str, Any]], report_name: str) -> Dict[str, An
         "hybrid_visible_cases": hybrid_visible,
         "average_latency_ms": round(statistics.mean(latencies), 2) if latencies else None,
         "median_latency_ms": round(statistics.median(latencies), 2) if latencies else None,
+        "mrr": mrr,
+        "ndcg@5": ndcg5,
+        "map@5": map5,
+        "latency_percentiles": latency_percentiles,
+        "robustness_gap": robustness_gap,
+        "reranker_lift": reranker_lift,
+        "confidence_calibration": confidence_calibration,
         "forbidden_capability_rate_pct": forbidden_capability_rate,
         "service_precision_pct": service_precision,
         "by_category": by_category,
@@ -466,7 +607,54 @@ def print_report(report: Dict[str, Any]) -> None:
     print(f"Average latency        : {summary['average_latency_ms']} ms")
     print(f"Median latency         : {summary['median_latency_ms']} ms")
 
-    # New metrics
+    # Retrieval quality metrics
+    print(f"MRR                    : {summary.get('mrr', 'N/A')}")
+    print(f"NDCG@5                 : {summary.get('ndcg@5', 'N/A')}")
+    print(f"MAP@5                  : {summary.get('map@5', 'N/A')}")
+
+    lat_p = summary.get("latency_percentiles", {})
+    if lat_p:
+        print(f"Latency P50/P90/P99    : {lat_p.get('p50_ms')} / {lat_p.get('p90_ms')} / {lat_p.get('p99_ms')} ms")
+
+    gap = summary.get("robustness_gap", {})
+    if gap and gap.get("best_category"):
+        print(f"Robustness gap         : {gap['gap_pp']} pp"
+              f" (best={gap['best_category']} {gap['best_value']:.2f},"
+              f" worst={gap['worst_category']} {gap['worst_value']:.2f})")
+
+    # Reranker lift
+    rl = summary.get("reranker_lift")
+    if rl:
+        print(f"\nReranker Lift ({rl['cases_with_data']} cases):")
+        print(f"  MRR  : {rl['mrr_before']:.4f} -> {rl['mrr_after']:.4f}"
+              f"  (lift {rl['mrr_lift']:+.4f})")
+        print(f"  NDCG : {rl['ndcg_before']:.4f} -> {rl['ndcg_after']:.4f}"
+              f"  (lift {rl['ndcg_lift']:+.4f})")
+        print(f"  Cases: {rl['cases_improved']} improved,"
+              f" {rl['cases_degraded']} degraded,"
+              f" {rl['cases_unchanged']} unchanged")
+
+    # Confidence calibration
+    cal = summary.get("confidence_calibration", {})
+    if cal and cal.get("total_cases", 0) > 0:
+        print(f"\nConfidence Calibration (ECE: {cal.get('ece', '?')}):")
+        print(f"  {'Level':<10} {'Count':>6} {'Accuracy':>10} {'Expected':>16} {'Calibrated':>12}")
+        print(f"  {'-' * 54}")
+        for level in ("high", "medium", "low"):
+            b = cal.get(level, {})
+            cnt = b.get("count", 0)
+            acc = f"{b['actual_accuracy']:.2%}" if b.get("actual_accuracy") is not None else "—"
+            if level == "high":
+                exp = f">= {b.get('expected_min', 0.8):.0%}"
+            elif level == "medium":
+                exp = f"{b.get('expected_min', 0.5):.0%}-{b.get('expected_max', 0.8):.0%}"
+            else:
+                exp = f"< {b.get('expected_max', 0.5):.0%}"
+            cal_flag = {True: "Yes", False: "NO", None: "N/A"}.get(b.get("calibrated"), "N/A")
+            print(f"  {level:<10} {cnt:>6} {acc:>10} {exp:>16} {cal_flag:>12}")
+        print(f"  Overall calibrated   : {cal.get('overall_calibrated', 'N/A')}")
+
+    # Forbidden / service metrics
     print(f"Forbidden cap. rate    : {summary['forbidden_capability_rate_pct']}%"
           f" (target: 0%)")
     if summary["service_precision_pct"] is not None:
@@ -476,11 +664,13 @@ def print_report(report: Dict[str, Any]) -> None:
     print("\nBy category:")
     for category, bucket in summary["by_category"].items():
         forbidden_str = f" forbidden={bucket['forbidden_violations']}" if bucket["forbidden_violations"] else ""
+        mrr_str = f" mrr={bucket.get('mrr', 'N/A')}"
+        ndcg_str = f" ndcg@5={bucket.get('ndcg@5', 'N/A')}"
         print(
             f"  - {category:<14} total={bucket['total']:<2} "
             f"top1={bucket['top1']:<2} top3={bucket['top3']:<2} top5={bucket['top5']:<2} "
             f"vector={bucket['vector']:<2} hybrid={bucket['hybrid']:<2} "
-            f"avg_latency={bucket['avg_latency_ms']} ms{forbidden_str}"
+            f"avg_latency={bucket['avg_latency_ms']} ms{mrr_str}{ndcg_str}{forbidden_str}"
         )
 
     print("\nBy service:")

@@ -1,8 +1,8 @@
 {
   "report_type": "unified_benchmark",
-  "timestamp": "2026-04-03T02:27:04.853480+00:00",
-  "timestamp_unix": 1775183224,
-  "tag": null,
+  "timestamp": "2026-04-02T09:37:34.085179+00:00",
+  "timestamp_unix": 1775122654,
+  "tag": "post-evaluation-framework",
   "combined_summary": {
     "total_cases": 60,
     "combined_top1_hits": 43,
@@ -13,14 +13,14 @@
     "checks_top5_rate": 0.8049,
     "maturity_top1_rate": 0.8947,
     "maturity_top5_rate": 0.9474,
-    "combined_mrr": 0.8033,
-    "combined_ndcg@5": 0.7751,
-    "combined_map@5": 0.7404,
+    "combined_mrr": 0.7728,
+    "combined_ndcg@5": 0.7924,
+    "combined_map@5": 0.7728,
     "latency_percentiles": {
-      "p50_ms": 2922.61,
-      "p90_ms": 3326.23,
-      "p99_ms": 4898.91,
-      "mean_ms": 2878.91
+      "p50_ms": 2803.72,
+      "p90_ms": 4639.54,
+      "p99_ms": 5611.4,
+      "mean_ms": 3064.69
     },
     "robustness_gap": {
       "gap_pp": 87.5,
@@ -105,11 +105,11 @@
     },
     "forbidden_capability_rate_pct": 0.0,
     "service_precision_pct": 90.2,
-    "average_latency_ms": 2930.29,
-    "median_latency_ms": 2799.77
+    "average_latency_ms": 2773.34,
+    "median_latency_ms": 2753.59
   },
   "release_criteria": {
-    "verdict": "PASS",
+    "verdict": "FAIL",
     "checks": [
       {
         "criterion": "checks_top1_accuracy_min",
@@ -155,39 +155,9 @@
       },
       {
         "criterion": "average_latency_ms_max",
-        "threshold": 5000,
-        "actual": 2930.29,
-        "passed": true
-      },
-      {
-        "criterion": "combined_mrr_min",
-        "threshold": 0.7,
-        "actual": 0.8033,
-        "passed": true
-      },
-      {
-        "criterion": "combined_ndcg5_min",
-        "threshold": 0.75,
-        "actual": 0.7751,
-        "passed": true
-      },
-      {
-        "criterion": "latency_p90_ms_max",
-        "threshold": 6000,
-        "actual": 3326.23,
-        "passed": true
-      },
-      {
-        "criterion": "robustness_gap_pp_max",
-        "threshold": 90,
-        "actual": 87.5,
-        "passed": true
-      },
-      {
-        "criterion": "confidence_ece_max",
-        "threshold": 0.2,
-        "actual": 0.1866,
-        "passed": true
+        "threshold": 2000,
+        "actual": 2773.34,
+        "passed": false
       }
     ]
   },
@@ -208,17 +178,16 @@
       "top1_correct_service": 37,
       "vector_visible_cases": 41,
       "hybrid_visible_cases": 41,
-      "average_latency_ms": 2930.29,
-      "median_latency_ms": 2799.77,
-      "mrr": 0.7561,
-      "ndcg@5": 0.7102,
-      "ndcg@5_graded": 0.7091,
-      "map@5": 0.664,
+      "average_latency_ms": 2773.34,
+      "median_latency_ms": 2753.59,
+      "mrr": 0.7114,
+      "ndcg@5": 0.7355,
+      "map@5": 0.7114,
       "latency_percentiles": {
-        "p50_ms": 2799.77,
-        "p90_ms": 3326.23,
-        "p99_ms": 4898.91,
-        "mean_ms": 2930.29
+        "p50_ms": 2753.59,
+        "p90_ms": 3082.67,
+        "p99_ms": 3279.02,
+        "mean_ms": 2773.34
       },
       "robustness_gap": {
         "gap_pp": 87.5,
@@ -228,16 +197,16 @@
         "worst_value": 0.125
       },
       "reranker_lift": {
-        "mrr_before": 0.6045,
-        "mrr_after": 0.6179,
-        "mrr_lift": 0.0134,
-        "ndcg_before": 0.4994,
-        "ndcg_after": 0.5242,
-        "ndcg_lift": 0.0249,
+        "mrr_before": 0.2549,
+        "mrr_after": 0.2724,
+        "mrr_lift": 0.0175,
+        "ndcg_before": 0.2888,
+        "ndcg_after": 0.2965,
+        "ndcg_lift": 0.0076,
         "cases_with_data": 41,
-        "cases_improved": 6,
-        "cases_degraded": 5,
-        "cases_unchanged": 30
+        "cases_improved": 4,
+        "cases_degraded": 3,
+        "cases_unchanged": 34
       },
       "confidence_calibration": {
         "high": {
@@ -274,10 +243,10 @@
           "vector": 18,
           "hybrid": 18,
           "forbidden_violations": 0,
-          "avg_latency_ms": 2826.47,
+          "avg_latency_ms": 2551.28,
           "top1_rate": 1.0,
           "mrr": 1.0,
-          "ndcg@5": 0.9468
+          "ndcg@5": 1.0
         },
         "paraphrase": {
           "total": 9,
@@ -287,10 +256,10 @@
           "vector": 9,
           "hybrid": 9,
           "forbidden_violations": 0,
-          "avg_latency_ms": 2935.04,
+          "avg_latency_ms": 2920.99,
           "top1_rate": 0.5556,
-          "mrr": 0.9444,
-          "ndcg@5": 0.8691
+          "mrr": 0.7593,
+          "ndcg@5": 0.8214
         },
         "risk": {
           "total": 6,
@@ -300,10 +269,10 @@
           "vector": 6,
           "hybrid": 6,
           "forbidden_violations": 0,
-          "avg_latency_ms": 2996.88,
+          "avg_latency_ms": 2924.99,
           "top1_rate": 0.3333,
-          "mrr": 0.5,
-          "ndcg@5": 0.4588
+          "mrr": 0.4722,
+          "ndcg@5": 0.5218
         },
         "semantic_hard": {
           "total": 8,
@@ -313,10 +282,10 @@
           "vector": 8,
           "hybrid": 8,
           "forbidden_violations": 0,
-          "avg_latency_ms": 3108.63,
+          "avg_latency_ms": 2993.15,
           "top1_rate": 0.125,
           "mrr": 0.1875,
-          "ndcg@5": 0.1875
+          "ndcg@5": 0.2039
         }
       },
       "by_service": {
@@ -727,7 +696,7 @@
         "query": "s3_bucket_level_public_access_block",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 4672.87,
+        "latency_ms": 2753.59,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -756,13 +725,12 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 1.0,
-        "reranker_ndcg_after": 1.0,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -786,7 +754,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "a91a983a-68fb-48e9-a9bb-36af20bac916",
+          "request_id": "bc0ba0dc-a138-4a9d-b7ba-2874ec8fc1df",
           "status": "success",
           "data": {
             "results": [
@@ -1269,7 +1237,7 @@
         "query": "s3_account_level_public_access_blocks",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 4898.91,
+        "latency_ms": 2763.01,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -1298,15 +1266,14 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.616,
-        "reranker_ndcg_after": 0.869,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.253,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -1328,7 +1295,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "9365c989-b638-478b-a242-fa035c84ffe9",
+          "request_id": "527f237a-e1e4-4ccb-bc31-6a8b1a7f1f37",
           "status": "success",
           "data": {
             "results": [
@@ -1811,7 +1778,7 @@
         "query": "s3_bucket_default_encryption",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3153.7,
+        "latency_ms": 2715.38,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -1840,13 +1807,12 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.613,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -1870,7 +1836,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "2d412181-8df6-4f91-a957-5cc077b42aa1",
+          "request_id": "7c722930-6cb9-4398-97e4-4d28f3e635dc",
           "status": "success",
           "data": {
             "results": [
@@ -2277,7 +2243,7 @@
         "query": "s3_bucket_secure_transport_policy",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2799.77,
+        "latency_ms": 2693.3,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -2305,16 +2271,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.92,
-        "ndcg@5_graded": 0.983,
-        "ap@5": 0.833,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 0.5,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.387,
-        "reranker_mrr_lift": -0.5,
-        "reranker_ndcg_lift": -0.226,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -2336,7 +2301,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "0db048a1-a5f2-4cac-a25c-8809d5e113fb",
+          "request_id": "c14fb4be-5bee-4b52-a195-afd994081b98",
           "status": "success",
           "data": {
             "results": [
@@ -2776,7 +2741,7 @@
         "query": "s3_bucket_policy_public_write_access",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2755.53,
+        "latency_ms": 2699.74,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -2804,16 +2769,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.83,
-        "ndcg@5_graded": 0.876,
-        "ap@5": 0.71,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 1.0,
-        "reranker_ndcg_after": 0.786,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": -0.214,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -2835,7 +2799,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "2dfee637-86aa-42c6-8808-de9302bf84af",
+          "request_id": "ce5bc009-1871-4a29-a581-91608a77a62d",
           "status": "success",
           "data": {
             "results": [
@@ -3336,7 +3300,7 @@
         "query": "how to prevent an s3 bucket from being publicly exposed",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2773.38,
+        "latency_ms": 2803.72,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -3365,7 +3329,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 0.835,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
@@ -3399,7 +3362,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "838137be-6492-478c-92f1-2a201b3a231e",
+          "request_id": "ccc6df03-39cf-4ff7-9bc8-37a038da9ffe",
           "status": "success",
           "data": {
             "results": [
@@ -3951,7 +3914,7 @@
         "query": "stop public access to aws object storage",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3058.98,
+        "latency_ms": 2979.61,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -3978,17 +3941,16 @@
         "warnings": [],
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
-        "reciprocal_rank": 1.0,
-        "ndcg@5": 0.854,
-        "ndcg@5_graded": 0.617,
-        "ap@5": 0.76,
+        "reciprocal_rank": 0.5,
+        "ndcg@5": 0.631,
+        "ap@5": 0.5,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.786,
-        "reranker_ndcg_after": 0.854,
-        "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.068,
+        "reranker_mrr_after": 0.5,
+        "reranker_ndcg_before": 1.0,
+        "reranker_ndcg_after": 0.631,
+        "reranker_mrr_lift": -0.5,
+        "reranker_ndcg_lift": -0.369,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -4014,7 +3976,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "e2d9a051-7b92-45b8-8a57-316e766f45b7",
+          "request_id": "fa1ce24f-aa4b-45cd-8169-2eec5f8dfecd",
           "status": "success",
           "data": {
             "results": [
@@ -4501,7 +4463,7 @@
         "query": "misconfiguration that allows public reads on cloud storage",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3395.56,
+        "latency_ms": 3082.67,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -4530,7 +4492,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 0.835,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
@@ -4564,7 +4525,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "4dea53f7-969b-412a-b918-28b734870243",
+          "request_id": "700b7fb8-2595-4091-b18c-ebc4136e2efa",
           "status": "success",
           "data": {
             "results": [
@@ -5059,7 +5020,7 @@
         "query": "s3 bucket encryption not enabled risk of data exposure",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3034.77,
+        "latency_ms": 2935.88,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -5088,15 +5049,14 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
+        "reranker_mrr_before": 0.5,
         "reranker_mrr_after": 0.0,
-        "reranker_ndcg_before": 1.0,
+        "reranker_ndcg_before": 0.631,
         "reranker_ndcg_after": 0.0,
-        "reranker_mrr_lift": -1.0,
-        "reranker_ndcg_lift": -1.0,
+        "reranker_mrr_lift": -0.5,
+        "reranker_ndcg_lift": -0.631,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -5122,7 +5082,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "ed444edd-0f6e-4f25-a587-eb450f67eddc",
+          "request_id": "4ee7d3d5-6bbe-4f37-a405-d47926026dd6",
           "status": "success",
           "data": {
             "results": [
@@ -5577,7 +5537,7 @@
         "query": "make object storage private by default",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3347.21,
+        "latency_ms": 2917.73,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -5605,16 +5565,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.869,
-        "ndcg@5_graded": 0.839,
-        "ap@5": 0.8,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
         "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.616,
-        "reranker_ndcg_after": 0.869,
+        "reranker_ndcg_before": 1.0,
+        "reranker_ndcg_after": 1.0,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.253,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -5640,7 +5599,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "38c65611-deec-4977-be4a-fb48f79f6c23",
+          "request_id": "25891cae-6ab5-44b2-a21f-5ad64105ca91",
           "status": "success",
           "data": {
             "results": [
@@ -6110,7 +6069,7 @@
         "query": "iam_root_hardware_mfa_enabled",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2505.99,
+        "latency_ms": 2480.73,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -6139,15 +6098,14 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.854,
-        "reranker_ndcg_after": 0.869,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.015,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -6169,7 +6127,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "7965de36-7760-49d8-868d-933062e4ec16",
+          "request_id": "85037a68-83d3-41ff-ad50-b231f56cf0c8",
           "status": "success",
           "data": {
             "results": [
@@ -6507,7 +6465,7 @@
         "query": "iam_no_root_access_key",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2547.39,
+        "latency_ms": 2475.86,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -6535,16 +6493,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.805,
-        "ndcg@5_graded": 0.949,
-        "ap@5": 0.688,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 0.5,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.414,
-        "reranker_ndcg_after": 0.586,
-        "reranker_mrr_lift": 0.5,
-        "reranker_ndcg_lift": 0.172,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -6566,7 +6523,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "b347f9bd-bd5a-480a-ba9a-6141298c20e0",
+          "request_id": "cc400f77-869a-4656-ac08-e4dfb396812b",
           "status": "success",
           "data": {
             "results": [
@@ -6906,7 +6863,7 @@
         "query": "iam_password_policy_minimum_length_14",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2440.61,
+        "latency_ms": 2419.25,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -6935,13 +6892,12 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 1.0,
-        "reranker_ndcg_after": 1.0,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -6965,7 +6921,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "02133610-a78a-410c-a382-7a71fede0b02",
+          "request_id": "0519ec73-c57f-43a6-b248-d2923e013625",
           "status": "success",
           "data": {
             "results": [
@@ -7313,7 +7269,7 @@
         "query": "ensure root account has hardware MFA enabled",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2678.52,
+        "latency_ms": 2657.87,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -7341,16 +7297,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.854,
-        "ndcg@5_graded": 0.872,
-        "ap@5": 0.76,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
         "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.869,
-        "reranker_ndcg_after": 0.854,
+        "reranker_ndcg_before": 1.0,
+        "reranker_ndcg_after": 1.0,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": -0.015,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -7376,7 +7331,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "96382483-dd92-4677-ae95-4ab90661aded",
+          "request_id": "11f1d83b-935a-4893-9a54-f21696c48d12",
           "status": "success",
           "data": {
             "results": [
@@ -7720,7 +7675,7 @@
         "query": "remove access keys from the root account",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2799.08,
+        "latency_ms": 2789.94,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -7748,14 +7703,13 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.613,
-        "ndcg@5_graded": 0.787,
-        "ap@5": 0.5,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
         "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.613,
+        "reranker_ndcg_before": 1.0,
+        "reranker_ndcg_after": 1.0,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -7783,7 +7737,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "26ca0ff6-f345-470c-b0e2-c15d26f5b95b",
+          "request_id": "171bb89e-b938-4820-a471-e9ab43e47fe3",
           "status": "success",
           "data": {
             "results": [
@@ -8127,7 +8081,7 @@
         "query": "risk of using root account without multi-factor authentication",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2872.16,
+        "latency_ms": 2854.43,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -8154,17 +8108,16 @@
         "warnings": [],
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
-        "reciprocal_rank": 0.5,
-        "ndcg@5": 0.61,
-        "ndcg@5_graded": 0.572,
-        "ap@5": 0.479,
+        "reciprocal_rank": 0.3333333333333333,
+        "ndcg@5": 0.5,
+        "ap@5": 0.333,
         "reranker_applied": true,
-        "reranker_mrr_before": 0.5,
-        "reranker_mrr_after": 0.5,
-        "reranker_ndcg_before": 0.397,
-        "reranker_ndcg_after": 0.61,
-        "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.213,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.3333333333333333,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.5,
+        "reranker_mrr_lift": 0.3333,
+        "reranker_ndcg_lift": 0.5,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -8190,7 +8143,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "2e1869f2-e8d8-417a-ba6f-f6b7479bb1f0",
+          "request_id": "8e46c684-42fe-42a0-948c-f97f8978b5fd",
           "status": "success",
           "data": {
             "results": [
@@ -8534,7 +8487,7 @@
         "query": "protect the most privileged aws credentials from unauthorized use",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3094.71,
+        "latency_ms": 3026.66,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -8563,7 +8516,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -8597,7 +8549,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "1dffe5a3-2202-48c8-81b3-3ec91b5a9d9b",
+          "request_id": "efa77ea3-264a-48b0-8002-9cee783763bc",
           "status": "success",
           "data": {
             "results": [
@@ -8937,7 +8889,7 @@
         "query": "enforce strong password requirements for console users",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2563.05,
+        "latency_ms": 2641.0,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -8966,7 +8918,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -9000,7 +8951,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "6018721a-96a8-4f08-8b96-223b1ecef225",
+          "request_id": "9db917ed-17b9-49bd-b69b-1a559e016cb0",
           "status": "success",
           "data": {
             "results": [
@@ -9348,7 +9299,7 @@
         "query": "ec2_ebs_default_encryption",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2625.37,
+        "latency_ms": 2593.66,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -9377,13 +9328,12 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.613,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -9407,7 +9357,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "4873638c-1548-44b2-86f9-369ee253d4ea",
+          "request_id": "7e3ccb0c-9c5e-4ee7-affb-ddf9e5063957",
           "status": "success",
           "data": {
             "results": [
@@ -9755,7 +9705,7 @@
         "query": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2637.91,
+        "latency_ms": 2661.89,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -9783,16 +9733,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.723,
-        "ndcg@5_graded": 0.809,
-        "ap@5": 0.6,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 0.5,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.36,
-        "reranker_ndcg_after": 0.684,
-        "reranker_mrr_lift": 0.5,
-        "reranker_ndcg_lift": 0.324,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -9814,7 +9763,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "cd1b3cf7-df94-4a16-a9a4-99dbcd13e9a6",
+          "request_id": "50b48977-ae55-4912-ac44-ad76242c9726",
           "status": "success",
           "data": {
             "results": [
@@ -10162,7 +10111,7 @@
         "query": "ec2_launch_template_imdsv2_required",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2665.27,
+        "latency_ms": 2596.75,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -10190,16 +10139,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.967,
-        "ndcg@5_graded": 0.991,
-        "ap@5": 0.917,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 0.5,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.478,
-        "reranker_ndcg_after": 0.704,
-        "reranker_mrr_lift": 0.5,
-        "reranker_ndcg_lift": 0.226,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -10221,7 +10169,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "83c1a957-85fd-4de6-b96a-d5a077bf325a",
+          "request_id": "5214ac66-f916-4498-b82e-13c87cd47a59",
           "status": "success",
           "data": {
             "results": [
@@ -10565,7 +10513,7 @@
         "query": "enable default encryption for ebs volumes",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3088.38,
+        "latency_ms": 2918.48,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -10592,15 +10540,14 @@
         "warnings": [],
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
-        "reciprocal_rank": 1.0,
-        "ndcg@5": 0.92,
-        "ndcg@5_graded": 0.731,
-        "ap@5": 0.833,
+        "reciprocal_rank": 0.3333333333333333,
+        "ndcg@5": 0.5,
+        "ap@5": 0.333,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.92,
-        "reranker_ndcg_after": 0.92,
+        "reranker_mrr_before": 0.3333333333333333,
+        "reranker_mrr_after": 0.3333333333333333,
+        "reranker_ndcg_before": 0.5,
+        "reranker_ndcg_after": 0.5,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -10628,7 +10575,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "3d298a4f-7782-4090-8deb-b6b8b1e5ed65",
+          "request_id": "0ee8eac9-9506-401a-90aa-3a9451d85dac",
           "status": "success",
           "data": {
             "results": [
@@ -10983,7 +10930,7 @@
         "query": "block ssh access from the internet in security groups",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3172.94,
+        "latency_ms": 3278.67,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -11011,16 +10958,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.5,
-        "ndcg@5": 0.661,
-        "ndcg@5_graded": 0.652,
-        "ap@5": 0.543,
+        "ndcg@5": 0.631,
+        "ap@5": 0.5,
         "reranker_applied": true,
         "reranker_mrr_before": 0.5,
         "reranker_mrr_after": 0.5,
-        "reranker_ndcg_before": 0.384,
-        "reranker_ndcg_after": 0.661,
+        "reranker_ndcg_before": 0.631,
+        "reranker_ndcg_after": 0.631,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.277,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -11046,7 +10992,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "4e145688-a6d0-4964-8997-fbe1744fd2e6",
+          "request_id": "c88a5108-a549-4ea6-bcfd-92af301f1054",
           "status": "success",
           "data": {
             "results": [
@@ -11401,7 +11347,7 @@
         "query": "security group allows rdp port 3389 open to the internet",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3051.26,
+        "latency_ms": 3002.73,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -11429,16 +11375,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.5,
-        "ndcg@5": 0.53,
-        "ndcg@5_graded": 0.561,
-        "ap@5": 0.383,
+        "ndcg@5": 0.631,
+        "ap@5": 0.5,
         "reranker_applied": true,
-        "reranker_mrr_before": 0.5,
+        "reranker_mrr_before": 0.3333333333333333,
         "reranker_mrr_after": 0.5,
-        "reranker_ndcg_before": 0.384,
-        "reranker_ndcg_after": 0.53,
-        "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.146,
+        "reranker_ndcg_before": 0.5,
+        "reranker_ndcg_after": 0.631,
+        "reranker_mrr_lift": 0.1667,
+        "reranker_ndcg_lift": 0.131,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -11464,7 +11409,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "f1c337d6-b732-4742-8a57-4f3bc1f8929e",
+          "request_id": "b4cb2187-9a90-45eb-8a7a-c406602733dc",
           "status": "success",
           "data": {
             "results": [
@@ -11818,7 +11763,7 @@
         "query": "prevent credential theft via instance metadata endpoint",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3304.98,
+        "latency_ms": 3047.45,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -11847,7 +11792,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.25,
@@ -11881,7 +11825,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "4d0a8324-e65a-4286-b9de-51a2cb4fdf85",
+          "request_id": "9755baa2-e3d3-49ca-bfce-a263748e4991",
           "status": "success",
           "data": {
             "results": [
@@ -12236,7 +12180,7 @@
         "query": "close dangerous administrative ports exposed to the world",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3299.22,
+        "latency_ms": 3279.02,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -12265,7 +12209,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -12299,7 +12242,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "ac78c9bf-6b62-42d6-9cb1-f1ea7a19258e",
+          "request_id": "83d304f2-5d1d-47d2-b6c9-802998363ade",
           "status": "success",
           "data": {
             "results": [
@@ -12656,7 +12599,7 @@
         "query": "rds_instance_no_public_access",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2495.45,
+        "latency_ms": 2463.5,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -12684,16 +12627,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.877,
-        "ndcg@5_graded": 0.974,
-        "ap@5": 0.75,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 0.3333333333333333,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.307,
-        "reranker_mrr_lift": -0.6667,
-        "reranker_ndcg_lift": -0.306,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -12715,7 +12657,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "b551447c-ad75-4d0d-8fba-50bd302642cb",
+          "request_id": "1fb35257-e053-4b46-a4d1-5287aa3621d0",
           "status": "success",
           "data": {
             "results": [
@@ -13063,7 +13005,7 @@
         "query": "rds_cluster_storage_encrypted",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2557.54,
+        "latency_ms": 2564.56,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -13091,16 +13033,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.92,
-        "ndcg@5_graded": 0.956,
-        "ap@5": 0.833,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 0.5,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.387,
-        "reranker_mrr_lift": -0.5,
-        "reranker_ndcg_lift": -0.226,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -13122,7 +13063,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "932cbd93-a8ec-467f-a10a-b6afcbbc60be",
+          "request_id": "0067d457-6300-4e29-9a16-e67b767bf601",
           "status": "success",
           "data": {
             "results": [
@@ -13464,7 +13405,7 @@
         "query": "make rds database instances not publicly accessible",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3194.36,
+        "latency_ms": 3152.74,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -13492,16 +13433,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.92,
-        "ndcg@5_graded": 0.983,
-        "ap@5": 0.833,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 1.0,
         "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.92,
+        "reranker_ndcg_before": 1.0,
+        "reranker_ndcg_after": 1.0,
         "reranker_mrr_lift": 0.0,
-        "reranker_ndcg_lift": 0.307,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -13527,7 +13467,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "689c4110-82fb-4b29-9c84-dac1e6b2be19",
+          "request_id": "ee2ae8d2-3b8b-495c-9b75-d15bf7ad46b0",
           "status": "success",
           "data": {
             "results": [
@@ -13882,7 +13822,7 @@
         "query": "database snapshot publicly shared exposing sensitive data",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2751.05,
+        "latency_ms": 2745.32,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -13910,16 +13850,15 @@
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
-        "ndcg@5": 0.613,
-        "ndcg@5_graded": 0.787,
-        "ap@5": 0.5,
+        "ndcg@5": 1.0,
+        "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.2,
         "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.237,
-        "reranker_ndcg_after": 0.613,
+        "reranker_ndcg_before": 0.387,
+        "reranker_ndcg_after": 1.0,
         "reranker_mrr_lift": 0.8,
-        "reranker_ndcg_lift": 0.376,
+        "reranker_ndcg_lift": 0.613,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -13945,7 +13884,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "359657f6-5e54-4595-b5da-7ad979dc36ac",
+          "request_id": "2ea9bed3-2c23-4ad6-a2e3-fc9a563aa0c4",
           "status": "success",
           "data": {
             "results": [
@@ -14309,7 +14248,7 @@
         "query": "keep relational databases isolated from direct internet connections",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2966.98,
+        "latency_ms": 2877.31,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -14338,7 +14277,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -14372,7 +14310,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "f7fb80c8-2e20-4079-a13d-457c1e1a1d3b",
+          "request_id": "90fc26db-6efa-48a6-b37a-4fc8881b982b",
           "status": "success",
           "data": {
             "results": [
@@ -14732,7 +14670,7 @@
         "query": "cloudtrail_multi_region_enabled",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2618.08,
+        "latency_ms": 2651.06,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -14761,13 +14699,12 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
-        "reranker_mrr_before": 1.0,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.613,
-        "reranker_ndcg_after": 0.613,
+        "reranker_mrr_before": 0.0,
+        "reranker_mrr_after": 0.0,
+        "reranker_ndcg_before": 0.0,
+        "reranker_ndcg_after": 0.0,
         "reranker_mrr_lift": 0.0,
         "reranker_ndcg_lift": 0.0,
         "diagnostics": {
@@ -14791,7 +14728,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "473dac26-adff-4565-9f7b-bd2927913102",
+          "request_id": "e6f2a2a0-badd-4f9d-a67b-a695eeabcddc",
           "status": "success",
           "data": {
             "results": [
@@ -15144,7 +15081,7 @@
         "query": "cloudtrail_kms_encryption_enabled",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2685.39,
+        "latency_ms": 2666.21,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -15173,7 +15110,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -15203,7 +15139,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "db4384bf-5dac-479d-96fa-9f7b18ed1f6e",
+          "request_id": "0baf23c1-6f0a-42d1-a767-4605396729fc",
           "status": "success",
           "data": {
             "results": [
@@ -15558,7 +15494,7 @@
         "query": "enable cloudtrail logging across all aws regions",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2720.96,
+        "latency_ms": 2736.16,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -15585,17 +15521,16 @@
         "warnings": [],
         "verification": {},
         "index_version": "rag-v2-2026-03-17",
-        "reciprocal_rank": 1.0,
-        "ndcg@5": 1.0,
-        "ndcg@5_graded": 0.834,
-        "ap@5": 1.0,
+        "reciprocal_rank": 0.5,
+        "ndcg@5": 0.631,
+        "ap@5": 0.5,
         "reranker_applied": true,
         "reranker_mrr_before": 0.5,
-        "reranker_mrr_after": 1.0,
-        "reranker_ndcg_before": 0.693,
-        "reranker_ndcg_after": 1.0,
-        "reranker_mrr_lift": 0.5,
-        "reranker_ndcg_lift": 0.307,
+        "reranker_mrr_after": 0.5,
+        "reranker_ndcg_before": 0.631,
+        "reranker_ndcg_after": 0.631,
+        "reranker_mrr_lift": 0.0,
+        "reranker_ndcg_lift": 0.0,
         "diagnostics": {
           "retrieval_mode": "hybrid",
           "corpus": "prowler_checks",
@@ -15621,7 +15556,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "f170b7b3-05ce-453f-be11-4547509d0a66",
+          "request_id": "8ef8699f-3137-46fd-b258-0c0decbe5933",
           "status": "success",
           "data": {
             "results": [
@@ -15987,7 +15922,7 @@
         "query": "cloudtrail logs stored in publicly accessible s3 bucket",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2876.45,
+        "latency_ms": 2928.92,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -16016,7 +15951,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -16050,7 +15984,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "6e2c4d00-3167-4a47-b743-4ec97a71a5a7",
+          "request_id": "fba3dabc-3d7f-429a-bfd0-44c8430c22a9",
           "status": "success",
           "data": {
             "results": [
@@ -16568,7 +16502,7 @@
         "query": "track api activity and changes across the entire cloud environment",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3326.23,
+        "latency_ms": 3278.67,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -16597,7 +16531,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -16631,7 +16564,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "dc79e2bb-555b-4bf6-8679-cd9dac6c89a0",
+          "request_id": "2e4c8f90-f8c0-4873-a170-a9a336a17204",
           "status": "success",
           "data": {
             "results": [
@@ -16981,7 +16914,7 @@
         "query": "kms_cmk_rotation_enabled",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2179.71,
+        "latency_ms": 2115.93,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -17010,7 +16943,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -17040,7 +16972,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "315fa511-a7db-4c60-a312-775eb9f012eb",
+          "request_id": "2c64b694-8e6d-4660-b2be-2a83b191d8c5",
           "status": "success",
           "data": {
             "results": [
@@ -17389,7 +17321,7 @@
         "query": "kms_key_not_publicly_accessible",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2152.26,
+        "latency_ms": 2139.8,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -17418,7 +17350,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -17448,7 +17379,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "140523ff-6e8b-4800-879c-94bb89afbef8",
+          "request_id": "1d8542b4-9388-4f2a-8343-c0e8959a5078",
           "status": "success",
           "data": {
             "results": [
@@ -17797,7 +17728,7 @@
         "query": "enable automatic rotation for customer managed encryption keys",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2928.79,
+        "latency_ms": 2971.68,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -17826,7 +17757,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.3333333333333333,
@@ -17860,7 +17790,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "bbcd496f-c98f-47aa-9806-d90e4d0090a1",
+          "request_id": "95fd3c94-ee77-4241-9f16-461f2607e61f",
           "status": "success",
           "data": {
             "results": [
@@ -18210,7 +18140,7 @@
         "query": "ec2_instance_secrets_user_data",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2484.62,
+        "latency_ms": 2468.85,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -18239,7 +18169,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -18269,7 +18198,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "cd6b6cf7-8339-4be6-ada0-9879442c2df5",
+          "request_id": "f4da8375-761d-438a-a676-70b3b2530e00",
           "status": "success",
           "data": {
             "results": [
@@ -18615,7 +18544,7 @@
         "query": "avoid long-lived credentials and use temporary session tokens",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2966.66,
+        "latency_ms": 2877.38,
         "hit_top1": false,
         "hit_top3": true,
         "hit_top5": true,
@@ -18644,7 +18573,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.5,
         "ndcg@5": 0.631,
-        "ndcg@5_graded": 0.631,
         "ap@5": 0.5,
         "reranker_applied": true,
         "reranker_mrr_before": 0.5,
@@ -18678,7 +18606,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "82fd3a48-e7d6-420e-8b9d-f2beb31ca043",
+          "request_id": "cb75cb17-4530-492b-a6a5-f71632c92478",
           "status": "success",
           "data": {
             "results": [
@@ -19034,17 +18962,16 @@
       "top1_correct_service": null,
       "vector_visible_cases": 12,
       "hybrid_visible_cases": 12,
-      "average_latency_ms": 2768.02,
-      "median_latency_ms": 3070.31,
+      "average_latency_ms": 3693.39,
+      "median_latency_ms": 4203.24,
       "mrr": 0.9053,
       "ndcg@5": 0.9151,
-      "ndcg@5_graded": 0.9151,
       "map@5": 0.9053,
       "latency_percentiles": {
-        "p50_ms": 3070.31,
-        "p90_ms": 3278.19,
-        "p99_ms": 3471.78,
-        "mean_ms": 2768.02
+        "p50_ms": 4203.24,
+        "p90_ms": 5335.77,
+        "p99_ms": 5611.4,
+        "mean_ms": 3693.39
       },
       "robustness_gap": {
         "gap_pp": 33.3,
@@ -19100,7 +19027,7 @@
           "vector": 0,
           "hybrid": 0,
           "forbidden_violations": 0,
-          "avg_latency_ms": 2059.34,
+          "avg_latency_ms": 2042.85,
           "top1_rate": 1.0,
           "mrr": 1.0,
           "ndcg@5": 1.0
@@ -19113,7 +19040,7 @@
           "vector": 6,
           "hybrid": 6,
           "forbidden_violations": 0,
-          "avg_latency_ms": 3159.08,
+          "avg_latency_ms": 4910.12,
           "top1_rate": 1.0,
           "mrr": 1.0,
           "ndcg@5": 1.0
@@ -19126,7 +19053,7 @@
           "vector": 6,
           "hybrid": 6,
           "forbidden_violations": 0,
-          "avg_latency_ms": 3203.75,
+          "avg_latency_ms": 4402.3,
           "top1_rate": 0.6667,
           "mrr": 0.7,
           "ndcg@5": 0.7312
@@ -19199,7 +19126,7 @@
         "query": "block_public_access",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2057.93,
+        "latency_ms": 2074.72,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -19224,7 +19151,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -19248,7 +19174,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "9d6a7dd8-8a62-418e-9b2f-7a77ea185123",
+          "request_id": "db9c9574-91c9-471e-92c6-270ccbe9ccb4",
           "status": "success",
           "data": {
             "results": [
@@ -19372,7 +19298,7 @@
         "query": "audit_api_calls",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2051.79,
+        "latency_ms": 2026.61,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -19397,7 +19323,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -19421,7 +19346,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "006671e0-fc5b-4a79-a6cf-3bc66a55752a",
+          "request_id": "bfcee2c1-adf0-4d96-973a-395c4a1fb194",
           "status": "success",
           "data": {
             "results": [
@@ -19547,7 +19472,7 @@
         "query": "data_backups",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2045.15,
+        "latency_ms": 2032.92,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -19572,7 +19497,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -19596,7 +19520,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "13ad55cf-281f-4146-9c2e-d207fe06d694",
+          "request_id": "ede515e8-4c85-44b0-85bb-d61cff1a772c",
           "status": "success",
           "data": {
             "results": [
@@ -19722,7 +19646,7 @@
         "query": "data_encryption_at_rest",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2048.93,
+        "latency_ms": 2034.52,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -19747,7 +19671,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -19771,7 +19694,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "919e15f3-c344-45dd-8cb5-2e6e909acbe1",
+          "request_id": "2011f1d8-436e-4b96-8644-090622ed8722",
           "status": "success",
           "data": {
             "results": [
@@ -19897,7 +19820,7 @@
         "query": "root_account_protection",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2072.05,
+        "latency_ms": 2031.67,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -19922,7 +19845,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -19946,7 +19868,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "282ced80-3aba-4184-bbaa-a63c1deb20dc",
+          "request_id": "e1e5c413-4eeb-4646-80af-97ae781d1682",
           "status": "success",
           "data": {
             "results": [
@@ -20072,7 +19994,7 @@
         "query": "multi_factor_authentication",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2063.14,
+        "latency_ms": 2049.92,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -20097,7 +20019,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -20121,7 +20042,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "115e5680-6157-42a7-a25c-20eef2a56bbc",
+          "request_id": "ebe0f09a-3468-452b-8d01-066f8ec51c9d",
           "status": "success",
           "data": {
             "results": [
@@ -20247,7 +20168,7 @@
         "query": "encryption_in_transit",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2076.41,
+        "latency_ms": 2049.59,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -20272,7 +20193,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": false,
         "reranker_mrr_before": null,
@@ -20296,7 +20216,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "5120390d-0502-4a66-bcfc-9513b892913d",
+          "request_id": "b44ca067-7fe2-400b-bd6b-3378993d0474",
           "status": "success",
           "data": {
             "results": [
@@ -20422,7 +20342,7 @@
         "query": "practice to stop public access to resources",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3471.78,
+        "latency_ms": 5611.4,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -20451,7 +20371,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -20485,7 +20404,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "5ff0469c-7c94-482f-94dd-1d4df4a40cf5",
+          "request_id": "ae8c8c4d-a067-4a1d-8111-7341c04403f8",
           "status": "success",
           "data": {
             "results": [
@@ -20821,7 +20740,7 @@
         "query": "ability to record and monitor api activity",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3151.14,
+        "latency_ms": 5289.49,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -20850,7 +20769,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -20884,7 +20802,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "20c9438b-0f67-48a3-a21c-9b81a3809665",
+          "request_id": "9d67d84c-ad64-4d63-82c7-30d94077fd47",
           "status": "success",
           "data": {
             "results": [
@@ -21216,7 +21134,7 @@
         "query": "capability for recovering data from backups",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2922.61,
+        "latency_ms": 4639.54,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -21245,7 +21163,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -21279,7 +21196,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "ee3b6cb0-714d-49ff-8b0c-08f6fccdf4dc",
+          "request_id": "0326626f-f3c1-41ca-b959-ca6ac8c379d0",
           "status": "success",
           "data": {
             "results": [
@@ -21612,7 +21529,7 @@
         "query": "protect stored data with encryption",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 2982.94,
+        "latency_ms": 3372.34,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -21641,7 +21558,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -21675,7 +21591,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "e9ee9623-8520-4fc9-85a0-d8a284bbd159",
+          "request_id": "a4261d08-ed99-4b85-a09d-3f6932b8ba4b",
           "status": "success",
           "data": {
             "results": [
@@ -22008,7 +21924,7 @@
         "query": "require second authentication factor for user logins",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3203.37,
+        "latency_ms": 5212.16,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -22037,7 +21953,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -22071,7 +21986,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "1430da87-2435-4e22-ba46-f423f9a8123e",
+          "request_id": "b426232c-7ac7-4a44-b53a-c6b669675bd1",
           "status": "success",
           "data": {
             "results": [
@@ -22411,7 +22326,7 @@
         "query": "secure network communications with tls encryption",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3222.65,
+        "latency_ms": 5335.77,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -22440,7 +22355,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -22474,7 +22388,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "61c19559-4376-4021-8056-69725adf94a1",
+          "request_id": "88627508-d855-45e0-a45f-32835ff00228",
           "status": "success",
           "data": {
             "results": [
@@ -22804,7 +22718,7 @@
         "query": "control internet-facing access to storage services",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3070.31,
+        "latency_ms": 4988.62,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": false,
@@ -22833,7 +22747,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.0,
         "ndcg@5": 0.0,
-        "ndcg@5_graded": 0.0,
         "ap@5": 0.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -22867,7 +22780,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "259abc9b-e971-460a-8826-8795ca81e771",
+          "request_id": "877a9134-4198-49ac-b5f8-6f93df3bc442",
           "status": "success",
           "data": {
             "results": [
@@ -23207,7 +23120,7 @@
         "query": "know who called cloud apis and when",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3198.5,
+        "latency_ms": 4250.66,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -23236,7 +23149,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -23270,7 +23182,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "01bd2722-b02c-4de4-b476-2638502d2a27",
+          "request_id": "80aaa47e-7c72-4228-9917-6194812ad36a",
           "status": "success",
           "data": {
             "results": [
@@ -23600,7 +23512,7 @@
         "query": "restore critical information after loss or corruption",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3219.29,
+        "latency_ms": 4501.53,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -23629,7 +23541,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -23663,7 +23574,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "794b2c84-ecbb-4f33-9271-27709d1bcbcf",
+          "request_id": "3d844b83-6270-4881-b835-e58f489bfaaa",
           "status": "success",
           "data": {
             "results": [
@@ -23995,7 +23906,7 @@
         "query": "make stolen storage media unreadable",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3187.56,
+        "latency_ms": 4203.24,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -24024,7 +23935,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -24058,7 +23968,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "fa07e954-9b3b-45bc-8a9b-aa71947e5776",
+          "request_id": "490bd23d-55b3-44b0-b4c2-91a6bde9778e",
           "status": "success",
           "data": {
             "results": [
@@ -24389,7 +24299,7 @@
         "query": "protect the highest privilege account from compromise",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3278.19,
+        "latency_ms": 4003.01,
         "hit_top1": true,
         "hit_top3": true,
         "hit_top5": true,
@@ -24418,7 +24328,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 1.0,
         "ndcg@5": 1.0,
-        "ndcg@5_graded": 1.0,
         "ap@5": 1.0,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -24452,7 +24361,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "8e77b9af-0867-4c3f-9c6f-c9fdef80f2ae",
+          "request_id": "d7fe4c41-2896-4cc5-bc4e-8d7827f2566f",
           "status": "success",
           "data": {
             "results": [
@@ -24791,7 +24700,7 @@
         "query": "prevent man-in-the-middle attacks on data transfers",
         "http_status": 200,
         "response_status": "success",
-        "latency_ms": 3268.66,
+        "latency_ms": 4466.73,
         "hit_top1": false,
         "hit_top3": false,
         "hit_top5": true,
@@ -24820,7 +24729,6 @@
         "index_version": "rag-v2-2026-03-17",
         "reciprocal_rank": 0.2,
         "ndcg@5": 0.387,
-        "ndcg@5_graded": 0.387,
         "ap@5": 0.2,
         "reranker_applied": true,
         "reranker_mrr_before": 0.0,
@@ -24854,7 +24762,7 @@
           "vector_error": null
         },
         "raw_response": {
-          "request_id": "1c83e3be-2066-4970-b616-a474e82ff1d7",
+          "request_id": "92411c02-22ba-4db6-bb88-a09fe01bacc8",
           "status": "success",
           "data": {
             "results": [

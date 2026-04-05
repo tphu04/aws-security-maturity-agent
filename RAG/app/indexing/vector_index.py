@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -52,9 +54,30 @@ class VectorIndex:
         self.persist_dir.mkdir(parents=True, exist_ok=True)
 
         self.embedding_model = embedding_model or EMBEDDING_MODEL
+        # Suppress noisy model-loading logs (progress bar, LOAD REPORT)
+        _loggers_to_quiet = [
+            "sentence_transformers",
+            "transformers",
+            "transformers.utils.loading_report",
+            "torch",
+        ]
+        _prev_levels = {n: logging.getLogger(n).level for n in _loggers_to_quiet}
+        for n in _loggers_to_quiet:
+            logging.getLogger(n).setLevel(logging.ERROR)
+        _prev_tqdm = os.environ.get("TQDM_DISABLE")
+        os.environ["TQDM_DISABLE"] = "1"
+
         self._embedding_fn = SentenceTransformerEmbeddingFunction(
             model_name=self.embedding_model
         )
+
+        # Restore original log levels and tqdm state
+        for n, lvl in _prev_levels.items():
+            logging.getLogger(n).setLevel(lvl)
+        if _prev_tqdm is None:
+            os.environ.pop("TQDM_DISABLE", None)
+        else:
+            os.environ["TQDM_DISABLE"] = _prev_tqdm
         self.client = chromadb.PersistentClient(path=str(self.persist_dir))
 
     # ----------------------------
