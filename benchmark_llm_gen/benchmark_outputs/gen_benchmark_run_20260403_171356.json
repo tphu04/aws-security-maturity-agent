@@ -1,0 +1,2078 @@
+{
+  "report_type": "generation_benchmark",
+  "timestamp": "2026-04-03T10:13:51.881165+00:00",
+  "total_cases": 30,
+  "structure": {
+    "json_parse_rate": 1.0,
+    "schema_compliance_rate": 0.9667,
+    "internal_consistency_rate": 0.9333
+  },
+  "faithfulness": {
+    "mean": 0.9333
+  },
+  "correctness": {
+    "severity_accuracy": 0.8,
+    "severity_qwk": 0.9387
+  },
+  "completeness": {
+    "evidence_coverage_mean": 0.6056
+  },
+  "by_category": {
+    "exact": {
+      "total": 8,
+      "severity_accuracy": 0.875,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 0.5833
+    },
+    "paraphrase": {
+      "total": 8,
+      "severity_accuracy": 0.75,
+      "faithfulness_mean": 0.8125,
+      "completeness_mean": 0.6875
+    },
+    "semantic_hard": {
+      "total": 7,
+      "severity_accuracy": 0.7143,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 0.5714
+    },
+    "risk": {
+      "total": 7,
+      "severity_accuracy": 0.8571,
+      "faithfulness_mean": 0.9286,
+      "completeness_mean": 0.5714
+    }
+  },
+  "by_service": {
+    "s3": {
+      "total": 8,
+      "severity_accuracy": 0.875
+    },
+    "iam": {
+      "total": 8,
+      "severity_accuracy": 0.75
+    },
+    "ec2": {
+      "total": 5,
+      "severity_accuracy": 0.6
+    },
+    "rds": {
+      "total": 4,
+      "severity_accuracy": 1.0
+    },
+    "cloudtrail": {
+      "total": 3,
+      "severity_accuracy": 0.6667
+    },
+    "kms": {
+      "total": 2,
+      "severity_accuracy": 1.0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "risk_s3_exact_001",
+      "category": "exact",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_level_public_access_block",
+        "input_description": "S3 Bucket Level Public Access Block is not configured for bucket my-public-bucket",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "block_public_access",
+          "block_public_access",
+          "block_public_access"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này không vượt quá mức official (medium) do thiếu bằng chứng cụ thể về việc truy cập công khai dữ liệu nhạy cảm mà không cần sự đồng ý của người dùng.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public access hoac truy cap cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public access",
+              "truy cap cong khai"
+            ]
+          },
+          {
+            "evidence": "CIS hoac compliance",
+            "found": false,
+            "alternatives_checked": [
+              "cis",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_exact_002",
+      "category": "exact",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_default_encryption",
+        "input_description": "S3 Bucket data-bucket does not have default encryption enabled",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "data_encryption_at_rest",
+          "data_encryption_at_rest"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này có thể được đánh giá cao hơn do tính chất quan trọng của việc bảo mật dữ liệu trong S3 Bucket. Tuy nhiên, vẫn cần lưu ý rằng không có mã hóa mặc định được bật có thể gây ra rủi ro c",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "encryption hoac ma hoa",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa"
+            ]
+          },
+          {
+            "evidence": "CIS hoac compliance",
+            "found": false,
+            "alternatives_checked": [
+              "cis",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_exact_001",
+      "category": "exact",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_root_mfa_enabled",
+        "input_description": "MFA is not enabled for the root account",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "temporary_elevated_access_management",
+          "keep_your_security_contact_details_up_to_date",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mã hóa MFA không được bật cho tài khoản gốc, điều này làm tăng nguy cơ bị tấn công và mất dữ liệu. Theo Prowler Knowledge Base, mức độ nghiêm trọng chính thức là Critical, phù hợp với mô tả lỗ hổng.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.6667,
+        "covered": 2,
+        "total": 3,
+        "details": [
+          {
+            "evidence": "MFA hoac multi-factor",
+            "found": true,
+            "alternatives_checked": [
+              "mfa",
+              "multi-factor"
+            ]
+          },
+          {
+            "evidence": "root account hoac tai khoan goc",
+            "found": true,
+            "alternatives_checked": [
+              "root account",
+              "tai khoan goc"
+            ]
+          },
+          {
+            "evidence": "CIS hoac PCI hoac compliance",
+            "found": false,
+            "alternatives_checked": [
+              "cis",
+              "pci",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_exact_001",
+      "category": "exact",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+        "input_description": "Security group sg-0abc123def456 has ingress rules allowing access from 0.0.0.0/0 to all ports",
+        "rag_severity": "high",
+        "rag_mappings": [],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ Prowler (rag_official_severity = high). Ghi chú thêm rằng, mặc dù mô tả lỗ hổng cho thấy mức nguy hiểm cao, nhưng mức độ chính thức từ Prowler cũn",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "security group hoac nhom bao mat",
+            "found": false,
+            "alternatives_checked": [
+              "security group",
+              "nhom bao mat"
+            ]
+          },
+          {
+            "evidence": "internet hoac 0.0.0.0 hoac public",
+            "found": false,
+            "alternatives_checked": [
+              "internet",
+              "0.0.0.0",
+              "public"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_exact_001",
+      "category": "exact",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_instance_no_public_access",
+        "input_description": "RDS Instance prod-db has public access enabled",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access",
+          "block_public_access"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (rag_official_severity = critical). Ghi chú: Mức độ nguy hiểm của lỗ hổng này cao do quyền truy cập công khai được bật trên RDS In",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public access hoac truy cap cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public access",
+              "truy cap cong khai"
+            ]
+          },
+          {
+            "evidence": "RDS hoac database hoac co so du lieu",
+            "found": true,
+            "alternatives_checked": [
+              "rds",
+              "database",
+              "co so du lieu"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_exact_001",
+      "category": "exact",
+      "service": "cloudtrail",
+      "debug": {
+        "input_check": "cloudtrail_multi_region_enabled",
+        "input_description": "CloudTrail multi-region trail is not enabled",
+        "rag_severity": "low",
+        "rag_mappings": [],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này có thể được hạ xuống do không có bằng chứng cụ thể về việc dữ liệu CloudTrail bị lộ cho các khu vực khác nhau của tổ chức. Tuy nhiên, vẫn cần phải kích hoạt CloudTrail multi-region ",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "CloudTrail hoac audit hoac logging",
+            "found": true,
+            "alternatives_checked": [
+              "cloudtrail",
+              "audit",
+              "logging"
+            ]
+          },
+          {
+            "evidence": "multi-region hoac nhieu vung",
+            "found": true,
+            "alternatives_checked": [
+              "multi-region",
+              "nhieu vung"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_kms_exact_001",
+      "category": "exact",
+      "service": "kms",
+      "debug": {
+        "input_check": "kms_cmk_rotation_enabled",
+        "input_description": "KMS CMK key rotation is not enabled for key abc-123",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "data_encryption_at_rest",
+          "data_encryption_at_rest"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng không vượt quá mức official (medium) vì CMK key rotation được bật mặc dù không có mã hóa cho CMK. Ghi chú thêm rằng mục tiêu chính là đảm bảo dữ liệu nhạy cảm được bảo vệ, nhưng tro",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "rotation hoac xoay khoa",
+            "found": true,
+            "alternatives_checked": [
+              "rotation",
+              "xoay khoa"
+            ]
+          },
+          {
+            "evidence": "KMS hoac key hoac khoa",
+            "found": true,
+            "alternatives_checked": [
+              "kms",
+              "key",
+              "khoa"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_exact_002",
+      "category": "exact",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_no_root_access_key",
+        "input_description": "Root account has active access keys",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "use_temporary_credentials",
+          "temporary_elevated_access_management",
+          "temporary_elevated_access_management"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng tương ứng với mức độ chính thức từ Prowler (rag_official_severity = critical). Ghi chú: Mức độ nguy hiểm cao do khả năng mất dữ liệu hoặc thực hiện hành động không mong muốn nếu có ",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "root hoac tai khoan goc hoac tai khoan",
+            "found": false,
+            "alternatives_checked": [
+              "root",
+              "tai khoan goc",
+              "tai khoan"
+            ]
+          },
+          {
+            "evidence": "access key hoac khoa truy cap hoac quyen truy cap",
+            "found": false,
+            "alternatives_checked": [
+              "access key",
+              "khoa truy cap",
+              "quyen truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_001",
+      "category": "paraphrase",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_public_access",
+        "input_description": "S3 bucket webapp-assets allows public access through bucket policy",
+        "rag_severity": "critical",
+        "rag_mappings": [],
+        "agent_severity": null,
+        "agent_score": null,
+        "agent_reasoning": "",
+        "expected_severity": "Critical",
+        "inference_error": "'NoneType' object has no attribute 'get'"
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": false,
+        "score_valid": false,
+        "reasoning_nonempty": false,
+        "severity_score_consistent": false,
+        "schema_valid": false
+      },
+      "faithfulness": {
+        "score": 0.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": null,
+        "expected_severity": "Critical",
+        "score_in_range": null,
+        "error": "invalid predicted severity: None"
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public hoac cong khai",
+            "found": false,
+            "alternatives_checked": [
+              "public",
+              "cong khai"
+            ]
+          },
+          {
+            "evidence": "bucket policy hoac chinh sach hoac policy",
+            "found": false,
+            "alternatives_checked": [
+              "bucket policy",
+              "chinh sach",
+              "policy"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_002",
+      "category": "paraphrase",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_secure_transport_policy",
+        "input_description": "S3 bucket logs-bucket does not enforce SSL/TLS for data in transit",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "iam_data_perimeters_conditional_access"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này thấp hơn so với mức official (medium) do không có bằng chứng cụ thể về rủi ro truy cập trái phép. Tuy nhiên, việc không áp dụng chính sách SSL/TLS cho dữ liệu trong giao tiếp vẫn là",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SSL hoac TLS hoac transport hoac truyen tai",
+            "found": true,
+            "alternatives_checked": [
+              "ssl",
+              "tls",
+              "transport",
+              "truyen tai"
+            ]
+          },
+          {
+            "evidence": "encryption hoac ma hoa hoac bao mat",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa",
+              "bao mat"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_paraphrase_001",
+      "category": "paraphrase",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_user_mfa_enabled_console_access",
+        "input_description": "IAM user admin-user has console access without MFA enabled",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "keep_your_security_contact_details_up_to_date",
+          "keep_your_security_contact_details_up_to_date",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ Prowler (high), nhưng lý do bảo mật vẫn quan trọng vì kết nối không được mã hóa bằng MFA có thể gây ra rủi ro nếu tài khoản bị đánh cắp.",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "MFA hoac multi-factor",
+            "found": true,
+            "alternatives_checked": [
+              "mfa",
+              "multi-factor"
+            ]
+          },
+          {
+            "evidence": "console access hoac truy cap hoac console",
+            "found": false,
+            "alternatives_checked": [
+              "console access",
+              "truy cap",
+              "console"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_paraphrase_001",
+      "category": "paraphrase",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_instance_imdsv2_enabled",
+        "input_description": "EC2 instance i-0abc123def456 is not configured to use IMDSv2",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "instance_metadata_service_imds_v2"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ Prowler (high), vì nó liên quan đến việc không cấu hình IMDSv2 cho EC2 instance, điều này có thể gây ra rủi ro cho dữ liệu nhạy cảm và bảo mật.",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "IMDSv2 hoac metadata hoac IMDS",
+            "found": true,
+            "alternatives_checked": [
+              "imdsv2",
+              "metadata",
+              "imds"
+            ]
+          },
+          {
+            "evidence": "instance hoac may chu",
+            "found": true,
+            "alternatives_checked": [
+              "instance",
+              "may chu"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_paraphrase_001",
+      "category": "paraphrase",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_instance_transport_encrypted",
+        "input_description": "RDS instance api-db does not have encryption in transit enabled",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "encryption_in_transit",
+          "data_encryption_at_rest"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, RDS instance không có mã hóa trong giao tiếp được bật, điều này làm tăng nguy cơ dữ liệu bị truy cập trái phép. Ghi chú: Mức độ nghiêm trọng chính thức từ AWS/Prowler là High, phù hợp với mô tả lỗ hổng.",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "encryption hoac ma hoa hoac bao mat",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa",
+              "bao mat"
+            ]
+          },
+          {
+            "evidence": "transit hoac truyen tai hoac transport",
+            "found": false,
+            "alternatives_checked": [
+              "transit",
+              "truyen tai",
+              "transport"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_paraphrase_001",
+      "category": "paraphrase",
+      "service": "cloudtrail",
+      "debug": {
+        "input_check": "cloudtrail_log_file_validation_enabled",
+        "input_description": "CloudTrail trail does not have log file integrity validation enabled",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "inventory_configurations_monitoring",
+          "inventory_configurations_monitoring",
+          "inventory_configurations_monitoring"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 3,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng severity của CloudTrail Log File Validation được điều chỉnh xuống Low vì mô tả không cho thấy mức nguy hiểm vượt quá official (Medium). Ghi chú: Mặc dù không có Log File Integrity Validation được bật cho CloudT",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "log file hoac tap tin nhat ky hoac file log hoac log",
+            "found": true,
+            "alternatives_checked": [
+              "log file",
+              "tap tin nhat ky",
+              "file log",
+              "log"
+            ]
+          },
+          {
+            "evidence": "validation hoac integrity hoac toan ven",
+            "found": true,
+            "alternatives_checked": [
+              "validation",
+              "integrity",
+              "toan ven"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_003",
+      "category": "paraphrase",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_lifecycle_enabled",
+        "input_description": "S3 bucket archive-data does not have lifecycle policy configured",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "block_public_access",
+          "audit_api_calls",
+          "data_backups"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng tương ứng với mức official (Low) do chính sách vòng đời không được cấu hình hóa có thể gây ra vấn đề về bảo mật và quản lý dữ liệu trong thời gian dài.",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "lifecycle hoac vong doi",
+            "found": true,
+            "alternatives_checked": [
+              "lifecycle",
+              "vong doi"
+            ]
+          },
+          {
+            "evidence": "bucket hoac S3",
+            "found": false,
+            "alternatives_checked": [
+              "bucket",
+              "s3"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_paraphrase_002",
+      "category": "paraphrase",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_check_saml_providers_sts",
+        "input_description": "SAML provider external-idp has not been validated for STS trust",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_risky_open_admin_ports_in_security_groups"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 3,
+        "agent_reasoning": "Dựa trên draft_reasoning, mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này thấp hơn so với mức official (low) vì mặc dù SAML provider external-idp không được xác minh cho dịch vụ STS nhưng điều này không phải là một vấn đề nghiêm trọng nếu được giải quyết đúng các",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 0.5,
+        "severity_contradicted": true,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SAML hoac identity provider hoac nha cung cap",
+            "found": true,
+            "alternatives_checked": [
+              "saml",
+              "identity provider",
+              "nha cung cap"
+            ]
+          },
+          {
+            "evidence": "STS hoac trust hoac tin cay",
+            "found": true,
+            "alternatives_checked": [
+              "sts",
+              "trust",
+              "tin cay"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_policy_public_write_access",
+        "input_description": "S3 bucket config-bucket allows public write access through bucket policy",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "iam_data_perimeters_conditional_access"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (Critical). Ghi chú rằng việc cho phép truy cập viết công khai vào S3 bucket có thể gây ra rủi ro về bảo mật và quyền truy cập không đ",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "write hoac ghi",
+            "found": true,
+            "alternatives_checked": [
+              "write",
+              "ghi"
+            ]
+          },
+          {
+            "evidence": "public hoac cong khai hoac internet hoac truy cap",
+            "found": true,
+            "alternatives_checked": [
+              "public",
+              "cong khai",
+              "internet",
+              "truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_inline_policy_no_administrative_privileges",
+        "input_description": "IAM user contractor has inline policies granting full administrative privileges",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "root_account_protection",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, lỗ hổng này là một vấn đề bảo mật nghiêm trọng vì IAM user contractor có quyền admin. Tuy nhiên, mức độ nguy hiểm của lỗ hổng này không vượt quá mức official (high). Ghi chú: Mặc dù lỗ hổng này nghiêm trọng nhưng Prowler chỉ đánh giá nó ở mức high do không có bằng chứng cụ ",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "admin hoac quan tri hoac privilege",
+            "found": true,
+            "alternatives_checked": [
+              "admin",
+              "quan tri",
+              "privilege"
+            ]
+          },
+          {
+            "evidence": "inline policy hoac chinh sach hoac policy",
+            "found": true,
+            "alternatives_checked": [
+              "inline policy",
+              "chinh sach",
+              "policy"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+        "input_description": "Security group allows SSH access from 0.0.0.0/0 on port 22",
+        "rag_severity": "high",
+        "rag_mappings": [],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (high). Ghi chú rằng mặc dù mô tả lỗ hổng cho thấy mức nguy hiểm cao nhưng vẫn cần kiểm soát đúng cách để tránh rủi ro.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SSH hoac port 22",
+            "found": false,
+            "alternatives_checked": [
+              "ssh",
+              "port 22"
+            ]
+          },
+          {
+            "evidence": "internet hoac 0.0.0.0 hoac public",
+            "found": false,
+            "alternatives_checked": [
+              "internet",
+              "0.0.0.0",
+              "public"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_snapshots_public_access",
+        "input_description": "RDS snapshot prod-snapshot is publicly accessible",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access",
+          "block_public_access"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (rag_official_severity = critical). Public Access vào dữ liệu nhạy cảm (RDS snapshot) được bật, có thể gây ra rủi ro về bảo mật và quy",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "snapshot hoac ban sao",
+            "found": true,
+            "alternatives_checked": [
+              "snapshot",
+              "ban sao"
+            ]
+          },
+          {
+            "evidence": "public hoac cong khai hoac truy cap",
+            "found": true,
+            "alternatives_checked": [
+              "public",
+              "cong khai",
+              "truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_semantic_hard_002",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_ebs_public_snapshot",
+        "input_description": "EBS snapshot snap-0abc123def456 is shared publicly",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (rag_official_severity = critical). Tuy nhiên, do mô tả lỗ hổng cho thấy việc truy cập không được phép hoặc lộ thông tin nhạy cảm có t",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "EBS hoac snapshot",
+            "found": false,
+            "alternatives_checked": [
+              "ebs",
+              "snapshot"
+            ]
+          },
+          {
+            "evidence": "public hoac shared hoac chia se hoac cong khai",
+            "found": false,
+            "alternatives_checked": [
+              "public",
+              "shared",
+              "chia se",
+              "cong khai"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_semantic_hard_002",
+      "category": "semantic_hard",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_policy_attached_only_to_group_or_roles",
+        "input_description": "IAM policy is directly attached to user dev-intern instead of group or role",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm thấp hơn so với official (Medium) do chính sách IAM được thiết kế để kiểm soát quyền truy cập một cách hiệu quả. Tuy nhiên, vẫn cần lưu ý đến rủi ro về quyền truy cập không kiểm soát được nếu c",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "policy hoac quyen",
+            "found": true,
+            "alternatives_checked": [
+              "policy",
+              "quyen"
+            ]
+          },
+          {
+            "evidence": "group hoac role hoac nhom hoac vai tro",
+            "found": false,
+            "alternatives_checked": [
+              "group",
+              "role",
+              "nhom",
+              "vai tro"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_kms_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "kms",
+      "debug": {
+        "input_check": "kms_cmk_not_deleted_unintentionally",
+        "input_description": "KMS CMK key def-456 is scheduled for deletion",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "set_up_multi_account_management_with_aws_control_tower",
+          "advanced_security_automations"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng cao hơn so với official (Critical) do khả năng mất dữ liệu hoặc truy cập trái phép nếu CMK không được xóa đúng cách.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "KMS hoac key hoac khoa",
+            "found": false,
+            "alternatives_checked": [
+              "kms",
+              "key",
+              "khoa"
+            ]
+          },
+          {
+            "evidence": "deletion hoac xoa hoac delete",
+            "found": true,
+            "alternatives_checked": [
+              "deletion",
+              "xoa",
+              "delete"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_risk_001",
+      "category": "risk",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_public_write_acl",
+        "input_description": "S3 bucket uploads-bucket has ACL granting public write access",
+        "rag_severity": "critical",
+        "rag_mappings": [],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (Critical). Ghi chú rằng việc cho phép truy cập viết công khai cho S3 bucket có thể gây ra rủi ro nghiêm trọng về bảo mật và quyền tru",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "write hoac ghi hoac viet",
+            "found": true,
+            "alternatives_checked": [
+              "write",
+              "ghi",
+              "viet"
+            ]
+          },
+          {
+            "evidence": "ACL hoac access control hoac kiem soat truy cap",
+            "found": false,
+            "alternatives_checked": [
+              "acl",
+              "access control",
+              "kiem soat truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_risk_001",
+      "category": "risk",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_policy_allows_privilege_escalation",
+        "input_description": "IAM policy dev-policy allows actions that could lead to privilege escalation",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "security_investigations_root_cause_analysis_with_amazon_detective",
+          "root_account_protection",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Dựa trên draft_reasoning, Public Access vào dữ liệu nhạy cảm được cho phép thông qua IAM policy dev-policy, có khả năng dẫn đến quyền Admin không an toàn và mất dữ liệu. Theo Prowler Knowledge Base, \"high\" là mức độ nghiêm trọng chính thức từ AWS/Prowler, và mô tả lỗ hổng phù hợp với mức này. Ghi ch",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "privilege escalation hoac leo thang quyen hoac tang quyen",
+            "found": false,
+            "alternatives_checked": [
+              "privilege escalation",
+              "leo thang quyen",
+              "tang quyen"
+            ]
+          },
+          {
+            "evidence": "policy hoac chinh sach hoac quyen",
+            "found": true,
+            "alternatives_checked": [
+              "policy",
+              "chinh sach",
+              "quyen"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_risk_001",
+      "category": "risk",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_ami_public",
+        "input_description": "EC2 AMI ami-0abc123def456 is publicly shared",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của AMI công khai được chia sẻ trên internet thực sự rất cao vì nó cho phép truy cập trực tiếp từ người ngoài. Do đó, AI sẽ giữ nguyên mức độ nghiêm trọng Critical.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "AMI hoac image hoac hinh anh",
+            "found": true,
+            "alternatives_checked": [
+              "ami",
+              "image",
+              "hinh anh"
+            ]
+          },
+          {
+            "evidence": "public hoac shared hoac chia se hoac cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public",
+              "shared",
+              "chia se",
+              "cong khai"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_risk_001",
+      "category": "risk",
+      "service": "cloudtrail",
+      "debug": {
+        "input_check": "cloudtrail_cloudwatch_logging_enabled",
+        "input_description": "CloudTrail trail is not configured to send logs to CloudWatch Logs",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "vpc_flow_logs_analysis",
+          "vpc_flow_logs_analysis",
+          "inventory_configurations_monitoring"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mặc dù CloudTrail không được cấu hình để gửi nhật ký đến CloudWatch Logs, nhưng thông tin từ Prowler cho thấy CloudTrail đã giao tiếp với CloudWatch Logs trong vòng 24 giờ qua, điều này có thể làm giảm mức độ n",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "CloudWatch hoac monitoring hoac giam sat",
+            "found": true,
+            "alternatives_checked": [
+              "cloudwatch",
+              "monitoring",
+              "giam sat"
+            ]
+          },
+          {
+            "evidence": "CloudTrail hoac log hoac nhat ky",
+            "found": true,
+            "alternatives_checked": [
+              "cloudtrail",
+              "log",
+              "nhat ky"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_risk_001",
+      "category": "risk",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_instance_inside_vpc",
+        "input_description": "RDS instance legacy-db is not deployed inside a VPC",
+        "rag_severity": "high",
+        "rag_mappings": [],
+        "agent_severity": "High",
+        "agent_score": 6,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này thấp hơn so với mức official (Critical) vì mặc dù RDS instance không được triển khai trong một VPC, nhưng điều này có thể được giải quyết dễ dàng bằng cách triển khai lại trong một ",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": false,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "VPC hoac virtual private",
+            "found": true,
+            "alternatives_checked": [
+              "vpc",
+              "virtual private"
+            ]
+          },
+          {
+            "evidence": "RDS hoac database hoac co so du lieu",
+            "found": true,
+            "alternatives_checked": [
+              "rds",
+              "database",
+              "co so du lieu"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_risk_002",
+      "category": "risk",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_securityaudit_role_created",
+        "input_description": "No SecurityAudit role has been created for security monitoring",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "use_temporary_credentials",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng không vượt quá mức official (low) do mô tả không cho thấy rủi ro cao hơn. Ghi chú: Mức độ nguy hiểm có thể được điều chỉnh nếu có bằng chứng cụ thể cho thấy rủi ro cao hơn.",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 0.5,
+        "severity_contradicted": true,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SecurityAudit hoac audit hoac kiem toan",
+            "found": false,
+            "alternatives_checked": [
+              "securityaudit",
+              "audit",
+              "kiem toan"
+            ]
+          },
+          {
+            "evidence": "role hoac vai tro",
+            "found": false,
+            "alternatives_checked": [
+              "role",
+              "vai tro"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_risk_002",
+      "category": "risk",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_object_lock",
+        "input_description": "S3 bucket backup-data does not have Object Lock configured for immutable backups",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "data_encryption_at_rest",
+          "data_backups",
+          "data_backups"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng không vượt quá mức official (Low) do không có bằng chứng cho thấy dữ liệu bị truy cập trái phép.\nGhi chú: Mức độ nguy hiểm của lỗ hổng này có thể tăng lên nếu có bằng chứng cho thấy",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "object lock hoac khoa doi tuong hoac immutable",
+            "found": false,
+            "alternatives_checked": [
+              "object lock",
+              "khoa doi tuong",
+              "immutable"
+            ]
+          },
+          {
+            "evidence": "backup hoac sao luu",
+            "found": false,
+            "alternatives_checked": [
+              "backup",
+              "sao luu"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "release_criteria": {
+    "verdict": "PASS",
+    "checks": [
+      {
+        "criterion": "json_parse_rate_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "schema_compliance_rate_min",
+        "threshold": 0.95,
+        "actual": 0.9667,
+        "passed": true
+      },
+      {
+        "criterion": "faithfulness_mean_min",
+        "threshold": 0.8,
+        "actual": 0.9333,
+        "passed": true
+      },
+      {
+        "criterion": "severity_accuracy_min",
+        "threshold": 0.5,
+        "actual": 0.8,
+        "passed": true
+      },
+      {
+        "criterion": "severity_qwk_min",
+        "threshold": 0.45,
+        "actual": 0.9387,
+        "passed": true
+      },
+      {
+        "criterion": "evidence_completeness_mean_min",
+        "threshold": 0.45,
+        "actual": 0.6056,
+        "passed": true
+      }
+    ]
+  }
+}

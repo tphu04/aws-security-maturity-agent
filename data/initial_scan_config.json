@@ -2,5 +2,6 @@
   "groups_to_scan": [
     "s3"
   ],
-  "files_to_scan": []
+  "checks_to_scan": [],
+  "reasoning": "Pure group scan intent"
 }

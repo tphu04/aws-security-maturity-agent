@@ -1,0 +1,10 @@
+{
+  "_comment": "Internal thresholds — Phase 2. Dieu chinh dua tren baseline benchmark 30 cases (2026-04-03).",
+  "_note_severity": "LLM co xu huong danh gia severity cao hon ground truth (overestimate). Accuracy 53-60% la baseline hien tai.",
+  "json_parse_rate_min": 1.00,
+  "schema_compliance_rate_min": 0.95,
+  "faithfulness_mean_min": 0.80,
+  "severity_accuracy_min": 0.50,
+  "severity_qwk_min": 0.45,
+  "evidence_completeness_mean_min": 0.45
+}

@@ -1,0 +1,2077 @@
+{
+  "report_type": "generation_benchmark",
+  "timestamp": "2026-04-03T08:28:41.048312+00:00",
+  "total_cases": 30,
+  "structure": {
+    "json_parse_rate": 1.0,
+    "schema_compliance_rate": 1.0,
+    "internal_consistency_rate": 1.0
+  },
+  "faithfulness": {
+    "mean": 0.9833
+  },
+  "correctness": {
+    "severity_accuracy": 0.2667,
+    "severity_qwk": 0.3724
+  },
+  "completeness": {
+    "evidence_coverage_mean": 0.55
+  },
+  "by_category": {
+    "exact": {
+      "total": 8,
+      "severity_accuracy": 0.25,
+      "faithfulness_mean": 0.9375,
+      "completeness_mean": 0.875
+    },
+    "paraphrase": {
+      "total": 8,
+      "severity_accuracy": 0.75,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 0.875
+    },
+    "semantic_hard": {
+      "total": 7,
+      "severity_accuracy": 0.0,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 0.3571
+    },
+    "risk": {
+      "total": 7,
+      "severity_accuracy": 0.0,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 0.0
+    }
+  },
+  "by_service": {
+    "s3": {
+      "total": 8,
+      "severity_accuracy": 0.25
+    },
+    "iam": {
+      "total": 8,
+      "severity_accuracy": 0.25
+    },
+    "ec2": {
+      "total": 5,
+      "severity_accuracy": 0.2
+    },
+    "rds": {
+      "total": 4,
+      "severity_accuracy": 0.25
+    },
+    "cloudtrail": {
+      "total": 3,
+      "severity_accuracy": 0.3333
+    },
+    "kms": {
+      "total": 2,
+      "severity_accuracy": 0.5
+    }
+  },
+  "cases": [
+    {
+      "case_id": "risk_s3_exact_001",
+      "category": "exact",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_level_public_access_block",
+        "input_description": "S3 Bucket Level Public Access Block is not configured for bucket my-public-bucket",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "block_public_access",
+          "block_public_access",
+          "block_public_access"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "S3 bucket lacks public access blocking configuration, exposing data to internet (High severity per original assessment). No compliance mapping provided, but misconfiguration directly impacts security.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public access hoac truy cap cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public access",
+              "truy cap cong khai"
+            ]
+          },
+          {
+            "evidence": "CIS hoac compliance",
+            "found": true,
+            "alternatives_checked": [
+              "cis",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_exact_002",
+      "category": "exact",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_default_encryption",
+        "input_description": "S3 Bucket data-bucket does not have default encryption enabled",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "data_encryption_at_rest",
+          "data_encryption_at_rest"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Thiếu mã hóa mặc định cho bucket S3 là rủi ro nghiêm trọng (High) vì dữ liệu không được bảo vệ, phù hợp với tiêu chí 'thiếu mã hóa dữ liệu' trong rubric. Mặc dù original_severity là Medium, nhưng đây là lỗ hổng cốt lõi về bảo mật dữ liệu.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "encryption hoac ma hoa",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa"
+            ]
+          },
+          {
+            "evidence": "CIS hoac compliance",
+            "found": false,
+            "alternatives_checked": [
+              "cis",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_exact_001",
+      "category": "exact",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_root_mfa_enabled",
+        "input_description": "MFA is not enabled for the root account",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "temporary_elevated_access_management",
+          "keep_your_security_contact_details_up_to_date",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "MFA not enabled on root account is a severe configuration issue that could lead to root account compromise, aligning with High severity. Compliance mappings are empty, but the risk is significant due to potential full access exposure.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 3,
+        "total": 3,
+        "details": [
+          {
+            "evidence": "MFA hoac multi-factor",
+            "found": true,
+            "alternatives_checked": [
+              "mfa",
+              "multi-factor"
+            ]
+          },
+          {
+            "evidence": "root account hoac tai khoan goc",
+            "found": true,
+            "alternatives_checked": [
+              "root account",
+              "tai khoan goc"
+            ]
+          },
+          {
+            "evidence": "CIS hoac PCI hoac compliance",
+            "found": true,
+            "alternatives_checked": [
+              "cis",
+              "pci",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_exact_001",
+      "category": "exact",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+        "input_description": "Security group sg-0abc123def456 has ingress rules allowing access from 0.0.0.0/0 to all ports",
+        "rag_severity": "high",
+        "rag_mappings": [],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Security group allows unrestricted ingress from internet to all ports, which is a high-risk misconfiguration exposing services to potential attacks. Original severity is high, and no compliance mappings indicate this is a critical vulnerability without encryption or access control issues.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "security group hoac nhom bao mat",
+            "found": true,
+            "alternatives_checked": [
+              "security group",
+              "nhom bao mat"
+            ]
+          },
+          {
+            "evidence": "internet hoac 0.0.0.0 hoac public",
+            "found": true,
+            "alternatives_checked": [
+              "internet",
+              "0.0.0.0",
+              "public"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_exact_001",
+      "category": "exact",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_instance_no_public_access",
+        "input_description": "RDS Instance prod-db has public access enabled",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access",
+          "block_public_access"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "RDS instance has public access enabled, which exposes the service to internet (High severity per rubric). Original severity was critical, but official_severity is unknown. Public access is a severe misconfiguration affecting security.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public access hoac truy cap cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public access",
+              "truy cap cong khai"
+            ]
+          },
+          {
+            "evidence": "RDS hoac database hoac co so du lieu",
+            "found": true,
+            "alternatives_checked": [
+              "rds",
+              "database",
+              "co so du lieu"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_exact_001",
+      "category": "exact",
+      "service": "cloudtrail",
+      "debug": {
+        "input_check": "cloudtrail_multi_region_enabled",
+        "input_description": "CloudTrail multi-region trail is not enabled",
+        "rag_severity": "low",
+        "rag_mappings": [],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Không kích hoạt CloudTrail multi-region có thể làm giảm khả năng theo dõi toàn diện, ảnh hưởng đến bảo mật và tuân thủ. Tuy nhiên, thiếu thông tin compliance cụ thể nên đánh giá dựa trên mức độ nghiêm trọng ban đầu.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 0.5,
+        "severity_contradicted": true,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "CloudTrail hoac audit hoac logging",
+            "found": true,
+            "alternatives_checked": [
+              "cloudtrail",
+              "audit",
+              "logging"
+            ]
+          },
+          {
+            "evidence": "multi-region hoac nhieu vung",
+            "found": true,
+            "alternatives_checked": [
+              "multi-region",
+              "nhieu vung"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_kms_exact_001",
+      "category": "exact",
+      "service": "kms",
+      "debug": {
+        "input_check": "kms_cmk_rotation_enabled",
+        "input_description": "KMS CMK key rotation is not enabled for key abc-123",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "data_encryption_at_rest",
+          "data_encryption_at_rest"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "Thiếu rotation CMK là vi phạm best practice bảo mật, nhưng không tạo attack vector trực tiếp. Không có thông tin compliance mapping để điều chỉnh mức độ rủi ro.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "rotation hoac xoay khoa",
+            "found": true,
+            "alternatives_checked": [
+              "rotation",
+              "xoay khoa"
+            ]
+          },
+          {
+            "evidence": "KMS hoac key hoac khoa",
+            "found": false,
+            "alternatives_checked": [
+              "kms",
+              "key",
+              "khoa"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_exact_002",
+      "category": "exact",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_no_root_access_key",
+        "input_description": "Root account has active access keys",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "use_temporary_credentials",
+          "temporary_elevated_access_management",
+          "temporary_elevated_access_management"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Root account access keys are active, granting full administrative privileges which could lead to complete system compromise. This matches the Critical severity as per original_severity and aligns with AWS best practices prohibiting root key usage.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "root hoac tai khoan goc hoac tai khoan",
+            "found": true,
+            "alternatives_checked": [
+              "root",
+              "tai khoan goc",
+              "tai khoan"
+            ]
+          },
+          {
+            "evidence": "access key hoac khoa truy cap hoac quyen truy cap",
+            "found": true,
+            "alternatives_checked": [
+              "access key",
+              "khoa truy cap",
+              "quyen truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_001",
+      "category": "paraphrase",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_public_access",
+        "input_description": "S3 bucket webapp-assets allows public access through bucket policy",
+        "rag_severity": "critical",
+        "rag_mappings": [],
+        "agent_severity": "Critical",
+        "agent_score": 10,
+        "agent_reasoning": "Lỗ hổng cho phép public access đến bucket S3 là mức rủi ro Critical theo rubric, vì đây là trường hợp dữ liệu nhạy cảm bị phơi bày ra internet mà không có mã hóa hoặc kiểm soát truy cập.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public hoac cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public",
+              "cong khai"
+            ]
+          },
+          {
+            "evidence": "bucket policy hoac chinh sach hoac policy",
+            "found": false,
+            "alternatives_checked": [
+              "bucket policy",
+              "chinh sach",
+              "policy"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_002",
+      "category": "paraphrase",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_secure_transport_policy",
+        "input_description": "S3 bucket logs-bucket does not enforce SSL/TLS for data in transit",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "iam_data_perimeters_conditional_access"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Không yêu cầu SSL/TLS cho dữ liệu trong quá trình truyền tải là lỗi cấu hình nghiêm trọng, ảnh hưởng đến bảo mật. Đây thuộc mức High theo rubric vì thiếu mã hóa dữ liệu trong chuyển tải.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SSL hoac TLS hoac transport hoac truyen tai",
+            "found": true,
+            "alternatives_checked": [
+              "ssl",
+              "tls",
+              "transport",
+              "truyen tai"
+            ]
+          },
+          {
+            "evidence": "encryption hoac ma hoa hoac bao mat",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa",
+              "bao mat"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_paraphrase_001",
+      "category": "paraphrase",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_user_mfa_enabled_console_access",
+        "input_description": "IAM user admin-user has console access without MFA enabled",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "keep_your_security_contact_details_up_to_date",
+          "keep_your_security_contact_details_up_to_date",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "IAM user has console access without MFA enabled (non-root user), which falls under Medium risk per rubric. No compliance mapping or official severity provided to adjust this finding.",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "MFA hoac multi-factor",
+            "found": true,
+            "alternatives_checked": [
+              "mfa",
+              "multi-factor"
+            ]
+          },
+          {
+            "evidence": "console access hoac truy cap hoac console",
+            "found": true,
+            "alternatives_checked": [
+              "console access",
+              "truy cap",
+              "console"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_paraphrase_001",
+      "category": "paraphrase",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_instance_imdsv2_enabled",
+        "input_description": "EC2 instance i-0abc123def456 is not configured to use IMDSv2",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "instance_metadata_service_imds_v2"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "EC2 instance is missing IMDSv2 configuration, which could expose metadata to unauthorized access. Original severity is high, and no compliance mappings or official severity override is available.",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "IMDSv2 hoac metadata hoac IMDS",
+            "found": true,
+            "alternatives_checked": [
+              "imdsv2",
+              "metadata",
+              "imds"
+            ]
+          },
+          {
+            "evidence": "instance hoac may chu",
+            "found": true,
+            "alternatives_checked": [
+              "instance",
+              "may chu"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_paraphrase_001",
+      "category": "paraphrase",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_instance_transport_encrypted",
+        "input_description": "RDS instance api-db does not have encryption in transit enabled",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "encryption_in_transit",
+          "data_encryption_at_rest"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Thiếu mã hóa dữ liệu trong quá trình truyền (encryption in transit) là lỗi nghiêm trọng ảnh hưởng đến bảo mật, phù hợp với mức High theo original_severity. Không có compliance mapping để điều chỉnh mức độ rủi ro.",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "encryption hoac ma hoa hoac bao mat",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa",
+              "bao mat"
+            ]
+          },
+          {
+            "evidence": "transit hoac truyen tai hoac transport",
+            "found": true,
+            "alternatives_checked": [
+              "transit",
+              "truyen tai",
+              "transport"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_paraphrase_001",
+      "category": "paraphrase",
+      "service": "cloudtrail",
+      "debug": {
+        "input_check": "cloudtrail_log_file_validation_enabled",
+        "input_description": "CloudTrail trail does not have log file integrity validation enabled",
+        "rag_severity": "medium",
+        "rag_mappings": [
+          "inventory_configurations_monitoring",
+          "inventory_configurations_monitoring",
+          "inventory_configurations_monitoring"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 6,
+        "agent_reasoning": "Thiếu xác thực tính toàn vẹn tệp log CloudTrail (vi phạm compliance) nhưng không tạo attack vector trực tiếp, thuộc mức trung bình theo rubric.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "log file hoac tap tin nhat ky hoac file log hoac log",
+            "found": true,
+            "alternatives_checked": [
+              "log file",
+              "tap tin nhat ky",
+              "file log",
+              "log"
+            ]
+          },
+          {
+            "evidence": "validation hoac integrity hoac toan ven",
+            "found": true,
+            "alternatives_checked": [
+              "validation",
+              "integrity",
+              "toan ven"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_003",
+      "category": "paraphrase",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_lifecycle_enabled",
+        "input_description": "S3 bucket archive-data does not have lifecycle policy configured",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "block_public_access",
+          "audit_api_calls",
+          "data_backups"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 3,
+        "agent_reasoning": "Thiếu chính sách lifecycle trên bucket S3 là lỗi cấu hình nhỏ, không tạo attack vector trực tiếp và không vi phạm compliance cụ thể.",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "lifecycle hoac vong doi",
+            "found": true,
+            "alternatives_checked": [
+              "lifecycle",
+              "vong doi"
+            ]
+          },
+          {
+            "evidence": "bucket hoac S3",
+            "found": true,
+            "alternatives_checked": [
+              "bucket",
+              "s3"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_paraphrase_002",
+      "category": "paraphrase",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_check_saml_providers_sts",
+        "input_description": "SAML provider external-idp has not been validated for STS trust",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_risky_open_admin_ports_in_security_groups"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "Lỗi cấu hình liên quan đến SAML provider không ảnh hưởng trực tiếp đến dữ liệu nhạy cảm hoặc quyền truy cập, không có mapping compliance, mức độ rủi ro thấp theo original_severity.",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SAML hoac identity provider hoac nha cung cap",
+            "found": true,
+            "alternatives_checked": [
+              "saml",
+              "identity provider",
+              "nha cung cap"
+            ]
+          },
+          {
+            "evidence": "STS hoac trust hoac tin cay",
+            "found": false,
+            "alternatives_checked": [
+              "sts",
+              "trust",
+              "tin cay"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_policy_public_write_access",
+        "input_description": "S3 bucket config-bucket allows public write access through bucket policy",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "iam_data_perimeters_conditional_access"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Cấu hình S3 bucket cho phép public write access là lỗi nghiêm trọng ảnh hưởng đến bảo mật, có thể dẫn đến việc bất kỳ ai cũng có thể thêm dữ liệu vào bucket. Mức severity tham chiếu là Unknown, nhưng dựa trên mô tả, đây thuộc trường hợp 'High' theo rubric do ảnh hưởng nghiêm trọng đến bảo mật.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "write hoac ghi",
+            "found": true,
+            "alternatives_checked": [
+              "write",
+              "ghi"
+            ]
+          },
+          {
+            "evidence": "public hoac cong khai hoac internet hoac truy cap",
+            "found": true,
+            "alternatives_checked": [
+              "public",
+              "cong khai",
+              "internet",
+              "truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_inline_policy_no_administrative_privileges",
+        "input_description": "IAM user contractor has inline policies granting full administrative privileges",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "root_account_protection",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "IAM user has full administrative privileges, creating a high-risk attack vector for unauthorized system control. This aligns with original severity 'high' as it directly impacts security posture without explicit compliance mapping references.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.5,
+        "covered": 1,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "admin hoac quan tri hoac privilege",
+            "found": true,
+            "alternatives_checked": [
+              "admin",
+              "quan tri",
+              "privilege"
+            ]
+          },
+          {
+            "evidence": "inline policy hoac chinh sach hoac policy",
+            "found": false,
+            "alternatives_checked": [
+              "inline policy",
+              "chinh sach",
+              "policy"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+        "input_description": "Security group allows SSH access from 0.0.0.0/0 on port 22",
+        "rag_severity": "high",
+        "rag_mappings": [],
+        "agent_severity": "High",
+        "agent_score": 8,
+        "agent_reasoning": "Cấu hình cho phép SSH từ internet (0.0.0.0/0) là lỗ hổng nghiêm trọng, tạo điều kiện cho tấn công brute force. Đây thuộc mức High theo rubric do dịch vụ quan trọng bị phơi bày ra internet, không tuân thủ best practice bảo mật.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "High",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SSH hoac port 22",
+            "found": true,
+            "alternatives_checked": [
+              "ssh",
+              "port 22"
+            ]
+          },
+          {
+            "evidence": "internet hoac 0.0.0.0 hoac public",
+            "found": true,
+            "alternatives_checked": [
+              "internet",
+              "0.0.0.0",
+              "public"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_snapshots_public_access",
+        "input_description": "RDS snapshot prod-snapshot is publicly accessible",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access",
+          "block_public_access"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": "Medium",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "snapshot hoac ban sao",
+            "found": false,
+            "alternatives_checked": [
+              "snapshot",
+              "ban sao"
+            ]
+          },
+          {
+            "evidence": "public hoac cong khai hoac truy cap",
+            "found": false,
+            "alternatives_checked": [
+              "public",
+              "cong khai",
+              "truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_semantic_hard_002",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_ebs_public_snapshot",
+        "input_description": "EBS snapshot snap-0abc123def456 is shared publicly",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": "Medium",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "EBS hoac snapshot",
+            "found": false,
+            "alternatives_checked": [
+              "ebs",
+              "snapshot"
+            ]
+          },
+          {
+            "evidence": "public hoac shared hoac chia se hoac cong khai",
+            "found": false,
+            "alternatives_checked": [
+              "public",
+              "shared",
+              "chia se",
+              "cong khai"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_semantic_hard_002",
+      "category": "semantic_hard",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_policy_attached_only_to_group_or_roles",
+        "input_description": "IAM policy is directly attached to user dev-intern instead of group or role",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "policy hoac quyen",
+            "found": false,
+            "alternatives_checked": [
+              "policy",
+              "quyen"
+            ]
+          },
+          {
+            "evidence": "group hoac role hoac nhom hoac vai tro",
+            "found": false,
+            "alternatives_checked": [
+              "group",
+              "role",
+              "nhom",
+              "vai tro"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_kms_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "kms",
+      "debug": {
+        "input_check": "kms_cmk_not_deleted_unintentionally",
+        "input_description": "KMS CMK key def-456 is scheduled for deletion",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "set_up_multi_account_management_with_aws_control_tower",
+          "advanced_security_automations"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": "Medium",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "KMS hoac key hoac khoa",
+            "found": false,
+            "alternatives_checked": [
+              "kms",
+              "key",
+              "khoa"
+            ]
+          },
+          {
+            "evidence": "deletion hoac xoa hoac delete",
+            "found": false,
+            "alternatives_checked": [
+              "deletion",
+              "xoa",
+              "delete"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_risk_001",
+      "category": "risk",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_public_write_acl",
+        "input_description": "S3 bucket uploads-bucket has ACL granting public write access",
+        "rag_severity": "critical",
+        "rag_mappings": [],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": "Medium",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "write hoac ghi hoac viet",
+            "found": false,
+            "alternatives_checked": [
+              "write",
+              "ghi",
+              "viet"
+            ]
+          },
+          {
+            "evidence": "ACL hoac access control hoac kiem soat truy cap",
+            "found": false,
+            "alternatives_checked": [
+              "acl",
+              "access control",
+              "kiem soat truy cap"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_risk_001",
+      "category": "risk",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_policy_allows_privilege_escalation",
+        "input_description": "IAM policy dev-policy allows actions that could lead to privilege escalation",
+        "rag_severity": "high",
+        "rag_mappings": [
+          "security_investigations_root_cause_analysis_with_amazon_detective",
+          "root_account_protection",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": "Medium",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "privilege escalation hoac leo thang quyen hoac tang quyen",
+            "found": false,
+            "alternatives_checked": [
+              "privilege escalation",
+              "leo thang quyen",
+              "tang quyen"
+            ]
+          },
+          {
+            "evidence": "policy hoac chinh sach hoac quyen",
+            "found": false,
+            "alternatives_checked": [
+              "policy",
+              "chinh sach",
+              "quyen"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_risk_001",
+      "category": "risk",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_ami_public",
+        "input_description": "EC2 AMI ami-0abc123def456 is publicly shared",
+        "rag_severity": "critical",
+        "rag_mappings": [
+          "block_public_access"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": false,
+        "predicted_severity": "Medium",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "AMI hoac image hoac hinh anh",
+            "found": false,
+            "alternatives_checked": [
+              "ami",
+              "image",
+              "hinh anh"
+            ]
+          },
+          {
+            "evidence": "public hoac shared hoac chia se hoac cong khai",
+            "found": false,
+            "alternatives_checked": [
+              "public",
+              "shared",
+              "chia se",
+              "cong khai"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_risk_001",
+      "category": "risk",
+      "service": "cloudtrail",
+      "debug": {
+        "input_check": "cloudtrail_cloudwatch_logging_enabled",
+        "input_description": "CloudTrail trail is not configured to send logs to CloudWatch Logs",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "vpc_flow_logs_analysis",
+          "vpc_flow_logs_analysis",
+          "inventory_configurations_monitoring"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "CloudWatch hoac monitoring hoac giam sat",
+            "found": false,
+            "alternatives_checked": [
+              "cloudwatch",
+              "monitoring",
+              "giam sat"
+            ]
+          },
+          {
+            "evidence": "CloudTrail hoac log hoac nhat ky",
+            "found": false,
+            "alternatives_checked": [
+              "cloudtrail",
+              "log",
+              "nhat ky"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_risk_001",
+      "category": "risk",
+      "service": "rds",
+      "debug": {
+        "input_check": "rds_instance_inside_vpc",
+        "input_description": "RDS instance legacy-db is not deployed inside a VPC",
+        "rag_severity": "high",
+        "rag_mappings": [],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "High",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "High",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "VPC hoac virtual private",
+            "found": false,
+            "alternatives_checked": [
+              "vpc",
+              "virtual private"
+            ]
+          },
+          {
+            "evidence": "RDS hoac database hoac co so du lieu",
+            "found": false,
+            "alternatives_checked": [
+              "rds",
+              "database",
+              "co so du lieu"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_risk_002",
+      "category": "risk",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_securityaudit_role_created",
+        "input_description": "No SecurityAudit role has been created for security monitoring",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "use_temporary_credentials",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "SecurityAudit hoac audit hoac kiem toan",
+            "found": false,
+            "alternatives_checked": [
+              "securityaudit",
+              "audit",
+              "kiem toan"
+            ]
+          },
+          {
+            "evidence": "role hoac vai tro",
+            "found": false,
+            "alternatives_checked": [
+              "role",
+              "vai tro"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_risk_002",
+      "category": "risk",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_object_lock",
+        "input_description": "S3 bucket backup-data does not have Object Lock configured for immutable backups",
+        "rag_severity": "low",
+        "rag_mappings": [
+          "data_encryption_at_rest",
+          "data_backups",
+          "data_backups"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "Parse Error",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": false,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 0.0,
+        "covered": 0,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "object lock hoac khoa doi tuong hoac immutable",
+            "found": false,
+            "alternatives_checked": [
+              "object lock",
+              "khoa doi tuong",
+              "immutable"
+            ]
+          },
+          {
+            "evidence": "backup hoac sao luu",
+            "found": false,
+            "alternatives_checked": [
+              "backup",
+              "sao luu"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "release_criteria": {
+    "verdict": "FAIL",
+    "checks": [
+      {
+        "criterion": "json_parse_rate_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "schema_compliance_rate_min",
+        "threshold": 0.95,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "faithfulness_mean_min",
+        "threshold": 0.8,
+        "actual": 0.9833,
+        "passed": true
+      },
+      {
+        "criterion": "severity_accuracy_min",
+        "threshold": 0.5,
+        "actual": 0.2667,
+        "passed": false
+      },
+      {
+        "criterion": "severity_qwk_min",
+        "threshold": 0.45,
+        "actual": 0.3724,
+        "passed": false
+      },
+      {
+        "criterion": "evidence_completeness_mean_min",
+        "threshold": 0.45,
+        "actual": 0.55,
+        "passed": true
+      }
+    ]
+  }
+}

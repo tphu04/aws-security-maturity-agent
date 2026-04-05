@@ -1,0 +1,625 @@
+{
+  "version": "2.0-mini",
+  "description": "Mini benchmark (15 cases) for faster iteration. Covers all 4 categories and 4 severity levels.",
+  "distribution": {
+    "by_category": {
+      "exact": 4,
+      "paraphrase": 4,
+      "semantic_hard": 4,
+      "risk": 3
+    },
+    "by_severity": {
+      "Critical": 7,
+      "High": 2,
+      "Medium": 3,
+      "Low": 3
+    }
+  },
+  "risk_cases": [
+    {
+      "case_id": "risk_s3_exact_001",
+      "category": "exact",
+      "service": "s3",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "s3_bucket_level_public_access_block",
+          "service": "s3",
+          "resource_id": "arn:aws:s3:::my-public-bucket",
+          "region": "us-east-1",
+          "description": "S3 Bucket Level Public Access Block is not configured for bucket my-public-bucket",
+          "severity": "high"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "medium",
+        "check_title": "Check S3 Bucket Level Public Access Block.",
+        "compliance_mappings": [
+          "block_public_access",
+          "block_public_access",
+          "block_public_access"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "block_public_access",
+            "capability_name": "Block Public Access"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Medium",
+        "required_evidence": [
+          "public access hoac truy cap cong khai",
+          "CIS hoac compliance"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_exact_001",
+      "category": "exact",
+      "service": "iam",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "iam_root_mfa_enabled",
+          "service": "iam",
+          "resource_id": "arn:aws:iam::123456789012:root",
+          "region": "us-east-1",
+          "description": "MFA is not enabled for the root account",
+          "severity": "critical"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "critical",
+        "check_title": "Ensure MFA is enabled for the root account",
+        "compliance_mappings": [
+          "temporary_elevated_access_management",
+          "keep_your_security_contact_details_up_to_date",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "keep_your_security_contact_details_up_to_date",
+            "capability_name": "Keep your security contact details up to date"
+          },
+          {
+            "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+            "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+          },
+          {
+            "capability_id": "temporary_elevated_access_management",
+            "capability_name": "Temporary Elevated Access Management"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "MFA hoac multi-factor",
+          "root account hoac tai khoan goc",
+          "CIS hoac PCI hoac compliance"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_exact_001",
+      "category": "exact",
+      "service": "rds",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "rds_instance_no_public_access",
+          "service": "rds",
+          "resource_id": "arn:aws:rds:us-east-1:123456789012:db:prod-db",
+          "region": "us-east-1",
+          "description": "RDS Instance prod-db has public access enabled",
+          "severity": "critical"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "critical",
+        "check_title": "Ensure there are no Public Accessible RDS instances.",
+        "compliance_mappings": [
+          "block_public_access",
+          "block_public_access"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "block_public_access",
+            "capability_name": "Block Public Access"
+          },
+          {
+            "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+            "capability_name": "Cleanup risky open admin ports in Security Groups"
+          },
+          {
+            "capability_id": "advanced_threat_detection",
+            "capability_name": "Advanced Threat Detection"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "public access hoac truy cap cong khai",
+          "RDS hoac database hoac co so du lieu"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_kms_exact_001",
+      "category": "exact",
+      "service": "kms",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "kms_cmk_rotation_enabled",
+          "service": "kms",
+          "resource_id": "arn:aws:kms:us-east-1:123456789012:key/abc-123",
+          "region": "us-east-1",
+          "description": "KMS CMK key rotation is not enabled for key abc-123",
+          "severity": "medium"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "medium",
+        "check_title": "Ensure rotation for customer created KMS CMKs is enabled.",
+        "compliance_mappings": [
+          "data_encryption_at_rest",
+          "data_encryption_at_rest"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "data_encryption_at_rest",
+            "capability_name": "Data Encryption at rest"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Medium",
+        "required_evidence": [
+          "rotation hoac xoay khoa",
+          "KMS hoac key hoac khoa"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_001",
+      "category": "paraphrase",
+      "service": "s3",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "s3_bucket_public_access",
+          "service": "s3",
+          "resource_id": "arn:aws:s3:::webapp-assets",
+          "region": "us-east-1",
+          "description": "S3 bucket webapp-assets allows public access through bucket policy",
+          "severity": "critical"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "low",
+        "compliance_mappings": [],
+        "official_severity": "critical",
+        "check_title": "Ensure S3 bucket does not have public access enabled"
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "public hoac cong khai",
+          "bucket policy hoac chinh sach hoac policy"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_paraphrase_001",
+      "category": "paraphrase",
+      "service": "iam",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "iam_user_mfa_enabled_console_access",
+          "service": "iam",
+          "resource_id": "arn:aws:iam::123456789012:user/admin-user",
+          "region": "us-east-1",
+          "description": "IAM user admin-user has console access without MFA enabled",
+          "severity": "high"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "high",
+        "check_title": "Ensure multi-factor authentication (MFA) is enabled for all IAM users that have a console password.",
+        "compliance_mappings": [
+          "keep_your_security_contact_details_up_to_date",
+          "keep_your_security_contact_details_up_to_date",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+            "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+          },
+          {
+            "capability_id": "keep_your_security_contact_details_up_to_date",
+            "capability_name": "Keep your security contact details up to date"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "High",
+        "required_evidence": [
+          "MFA hoac multi-factor",
+          "console access hoac truy cap hoac console"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_paraphrase_001",
+      "category": "paraphrase",
+      "service": "cloudtrail",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "cloudtrail_log_file_validation_enabled",
+          "service": "cloudtrail",
+          "resource_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/main-trail",
+          "region": "us-east-1",
+          "description": "CloudTrail trail does not have log file integrity validation enabled",
+          "severity": "medium"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "medium",
+        "check_title": "CloudTrail trail has log file validation enabled",
+        "compliance_mappings": [
+          "inventory_configurations_monitoring",
+          "inventory_configurations_monitoring",
+          "inventory_configurations_monitoring"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "inventory_configurations_monitoring",
+            "capability_name": "Inventory & Configurations Monitoring"
+          },
+          {
+            "capability_id": "audit_api_calls",
+            "capability_name": "Audit API calls"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Medium",
+        "required_evidence": [
+          "log file hoac tap tin nhat ky hoac file log hoac log",
+          "validation hoac integrity hoac toan ven"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_paraphrase_003",
+      "category": "paraphrase",
+      "service": "s3",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "s3_bucket_lifecycle_enabled",
+          "service": "s3",
+          "resource_id": "arn:aws:s3:::archive-data",
+          "region": "us-east-1",
+          "description": "S3 bucket archive-data does not have lifecycle policy configured",
+          "severity": "low"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "low",
+        "check_title": "Check if S3 buckets have a Lifecycle configuration enabled",
+        "compliance_mappings": [
+          "block_public_access",
+          "audit_api_calls",
+          "data_backups"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "data_backups",
+            "capability_name": "Data Backups"
+          },
+          {
+            "capability_id": "audit_api_calls",
+            "capability_name": "Audit API calls"
+          },
+          {
+            "capability_id": "block_public_access",
+            "capability_name": "Block Public Access"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Low",
+        "required_evidence": [
+          "lifecycle hoac vong doi",
+          "bucket hoac S3"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "s3",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "s3_bucket_policy_public_write_access",
+          "service": "s3",
+          "resource_id": "arn:aws:s3:::config-bucket",
+          "region": "us-east-1",
+          "description": "S3 bucket config-bucket allows public write access through bucket policy",
+          "severity": "critical"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "critical",
+        "check_title": "Check if S3 buckets have policies which allow WRITE access.",
+        "compliance_mappings": [
+          "iam_data_perimeters_conditional_access"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "iam_data_perimeters_conditional_access",
+            "capability_name": "IAM Data Perimeters: Conditional Access"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "write hoac ghi",
+          "public hoac cong khai hoac internet hoac truy cap"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+          "service": "ec2",
+          "resource_id": "sg-0def789abc123",
+          "region": "us-east-1",
+          "description": "Security group allows SSH access from 0.0.0.0/0 on port 22",
+          "severity": "high"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "high",
+        "check_title": "Ensure no security groups allow ingress from 0.0.0.0/0 or ::/0 to SSH port 22.",
+        "compliance_mappings": [],
+        "maturity_context": [
+          {
+            "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+            "capability_name": "Cleanup risky open admin ports in Security Groups"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "SSH hoac port 22",
+          "internet hoac 0.0.0.0 hoac public"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_semantic_hard_002",
+      "category": "semantic_hard",
+      "service": "iam",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "iam_policy_attached_only_to_group_or_roles",
+          "service": "iam",
+          "resource_id": "arn:aws:iam::123456789012:user/dev-intern",
+          "region": "us-east-1",
+          "description": "IAM policy is directly attached to user dev-intern instead of group or role",
+          "severity": "low"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "low",
+        "check_title": "Ensure IAM policies are attached only to groups or roles",
+        "compliance_mappings": [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+            "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Low",
+        "required_evidence": [
+          "policy hoac quyen",
+          "group hoac role hoac nhom hoac vai tro"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_kms_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "kms",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "kms_cmk_not_deleted_unintentionally",
+          "service": "kms",
+          "resource_id": "arn:aws:kms:us-east-1:123456789012:key/def-456",
+          "region": "us-east-1",
+          "description": "KMS CMK key def-456 is scheduled for deletion",
+          "severity": "critical"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "critical",
+        "check_title": "AWS KMS keys should not be deleted unintentionally",
+        "compliance_mappings": [
+          "set_up_multi_account_management_with_aws_control_tower",
+          "advanced_security_automations"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "data_encryption_at_rest",
+            "capability_name": "Data Encryption at rest"
+          },
+          {
+            "capability_id": "advanced_security_automations",
+            "capability_name": "Advanced security automations"
+          },
+          {
+            "capability_id": "set_up_multi_account_management_with_aws_control_tower",
+            "capability_name": "Set up multi-account management with AWS Control Tower"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "KMS hoac key hoac khoa",
+          "deletion hoac xoa hoac delete"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_risk_001",
+      "category": "risk",
+      "service": "s3",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "s3_bucket_public_write_acl",
+          "service": "s3",
+          "resource_id": "arn:aws:s3:::uploads-bucket",
+          "region": "us-east-1",
+          "description": "S3 bucket uploads-bucket has ACL granting public write access",
+          "severity": "critical"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "critical",
+        "check_title": "Ensure there are no S3 buckets writable by Everyone or Any AWS customer.",
+        "compliance_mappings": []
+      },
+      "expected": {
+        "ai_severity": "Critical",
+        "required_evidence": [
+          "write hoac ghi hoac viet",
+          "ACL hoac access control hoac kiem soat truy cap"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_cloudtrail_risk_001",
+      "category": "risk",
+      "service": "cloudtrail",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "cloudtrail_cloudwatch_logging_enabled",
+          "service": "cloudtrail",
+          "resource_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/main-trail",
+          "region": "us-east-1",
+          "description": "CloudTrail trail is not configured to send logs to CloudWatch Logs",
+          "severity": "low"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "low",
+        "check_title": "CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours",
+        "compliance_mappings": [
+          "vpc_flow_logs_analysis",
+          "vpc_flow_logs_analysis",
+          "inventory_configurations_monitoring"
+        ],
+        "maturity_context": [
+          {
+            "capability_id": "inventory_configurations_monitoring",
+            "capability_name": "Inventory & Configurations Monitoring"
+          },
+          {
+            "capability_id": "vpc_flow_logs_analysis",
+            "capability_name": "VPC Flow Logs Analysis"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "Low",
+        "required_evidence": [
+          "CloudWatch hoac monitoring hoac giam sat",
+          "CloudTrail hoac log hoac nhat ky"
+        ]
+      }
+    },
+    {
+      "case_id": "risk_rds_risk_001",
+      "category": "risk",
+      "service": "rds",
+      "input": {
+        "finding": {
+          "status": "FAIL",
+          "event_code": "rds_instance_inside_vpc",
+          "service": "rds",
+          "resource_id": "arn:aws:rds:us-east-1:123456789012:db:legacy-db",
+          "region": "us-east-1",
+          "description": "RDS instance legacy-db is not deployed inside a VPC",
+          "severity": "high"
+        }
+      },
+      "rag_context_snapshot": {
+        "confidence": "medium",
+        "official_severity": "high",
+        "check_title": "Check if RDS instances are deployed within a VPC.",
+        "compliance_mappings": [],
+        "maturity_context": [
+          {
+            "capability_id": "advanced_threat_detection",
+            "capability_name": "Advanced Threat Detection"
+          },
+          {
+            "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+            "capability_name": "Cleanup risky open admin ports in Security Groups"
+          },
+          {
+            "capability_id": "inventory_configurations_monitoring",
+            "capability_name": "Inventory & Configurations Monitoring"
+          }
+        ]
+      },
+      "expected": {
+        "ai_severity": "High",
+        "required_evidence": [
+          "VPC hoac virtual private",
+          "RDS hoac database hoac co so du lieu"
+        ]
+      }
+    }
+  ]
+}

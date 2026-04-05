@@ -1,0 +1,666 @@
+[
+  {
+    "case_id": "risk_s3_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:21:36.431260+00:00",
+    "latency_ms": 43559.3,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "S3 bucket is publicly accessible without restrictions, allowing unauthorized data exposure and potential modification of sensitive content.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "Check S3 Bucket Level Public Access Block.",
+      "compliance_mappings": [
+        "block_public_access",
+        "block_public_access",
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 43.5559,
+      "call_history": [
+        43.5559
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:22:08.445532+00:00",
+    "latency_ms": 30392.7,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Root account MFA disabled allows potential admin access and data breaches, matching Critical criteria for high-risk security exposure.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure MFA is enabled for the root account",
+      "compliance_mappings": [
+        "temporary_elevated_access_management",
+        "keep_your_security_contact_details_up_to_date",
+        "keep_your_security_contact_details_up_to_date"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "capability_name": "Keep your security contact details up to date"
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+        },
+        {
+          "capability_id": "temporary_elevated_access_management",
+          "capability_name": "Temporary Elevated Access Management"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 30.3907,
+      "call_history": [
+        30.3907
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_rds_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:22:45.384744+00:00",
+    "latency_ms": 35742.4,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "RDS instance có quyền truy cập công khai cho phép truy cập dữ liệu nhạy cảm từ internet, gây nguy cơ rò rỉ dữ liệu và chiếm quyền admin.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure there are no Public Accessible RDS instances.",
+      "compliance_mappings": [
+        "block_public_access",
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        },
+        {
+          "capability_id": "advanced_threat_detection",
+          "capability_name": "Advanced Threat Detection"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 35.7401,
+      "call_history": [
+        35.7401
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_kms_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:23:35.683674+00:00",
+    "latency_ms": 47584.7,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Parse Error",
+      "compliance": [],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "Ensure rotation for customer created KMS CMKs is enabled.",
+      "compliance_mappings": [
+        "data_encryption_at_rest",
+        "data_encryption_at_rest"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 47.5829,
+      "call_history": [
+        47.5829
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:24:07.671219+00:00",
+    "latency_ms": 30681.4,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "S3 bucket public access exposes sensitive data to unauthorized users, violating data confidentiality and risking data breaches.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "low",
+      "compliance_mappings": [],
+      "official_severity": "critical",
+      "check_title": "Ensure S3 bucket does not have public access enabled"
+    },
+    "llm_metrics": {
+      "total_latency": 30.6799,
+      "call_history": [
+        30.6799
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:24:56.611845+00:00",
+    "latency_ms": 47566.8,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "IAM user has console access without MFA enabled, which falls under Medium risk per the rubric for missing MFA.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure multi-factor authentication (MFA) is enabled for all IAM users that have a console password.",
+      "compliance_mappings": [
+        "keep_your_security_contact_details_up_to_date",
+        "keep_your_security_contact_details_up_to_date",
+        "evaluate_cloud_security_posture_aws_security_hub"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "capability_name": "Keep your security contact details up to date"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 47.5655,
+      "call_history": [
+        47.5655
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_cloudtrail_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:25:40.860566+00:00",
+    "latency_ms": 42501.3,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Parse Error",
+      "compliance": [],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "CloudTrail trail has log file validation enabled",
+      "compliance_mappings": [
+        "inventory_configurations_monitoring",
+        "inventory_configurations_monitoring",
+        "inventory_configurations_monitoring"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "capability_name": "Audit API calls"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 42.5002,
+      "call_history": [
+        42.5002
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_paraphrase_003",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:26:21.029076+00:00",
+    "latency_ms": 38914.2,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Parse Error",
+      "compliance": [],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Check if S3 buckets have a Lifecycle configuration enabled",
+      "compliance_mappings": [
+        "block_public_access",
+        "audit_api_calls",
+        "data_backups"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_backups",
+          "capability_name": "Data Backups"
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "capability_name": "Audit API calls"
+        },
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 38.9129,
+      "call_history": [
+        38.9129
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:26:47.732351+00:00",
+    "latency_ms": 25480.2,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Public write access to S3 bucket allows unauthorized modification/deletion of sensitive configuration data, leading to potential data loss and security breaches.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Check if S3 buckets have policies which allow WRITE access.",
+      "compliance_mappings": [
+        "iam_data_perimeters_conditional_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 25.4794,
+      "call_history": [
+        25.4794
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:27:15.366365+00:00",
+    "latency_ms": 26422.8,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Cấu hình Security Group cho phép truy cập SSH từ toàn bộ internet (0.0.0.0/0) tạo điều kiện cho tấn công brute force và chiếm quyền truy cập, thuộc mức rủi ro cao.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure no security groups allow ingress from 0.0.0.0/0 or ::/0 to SSH port 22.",
+      "compliance_mappings": [],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 26.4217,
+      "call_history": [
+        26.4217
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_semantic_hard_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:28:02.062957+00:00",
+    "latency_ms": 45468.4,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "IAM policies attached directly to users instead of groups/roles represent a severe misconfiguration that can lead to privilege escalation and difficulty in managing permissions at scale.",
+      "compliance": [],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Ensure IAM policies are attached only to groups or roles",
+      "compliance_mappings": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 45.4671,
+      "call_history": [
+        45.4671
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_kms_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:28:42.426009+00:00",
+    "latency_ms": 38663.6,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Parse Error",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "AWS KMS keys should not be deleted unintentionally",
+      "compliance_mappings": [
+        "set_up_multi_account_management_with_aws_control_tower",
+        "advanced_security_automations"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest"
+        },
+        {
+          "capability_id": "advanced_security_automations",
+          "capability_name": "Advanced security automations"
+        },
+        {
+          "capability_id": "set_up_multi_account_management_with_aws_control_tower",
+          "capability_name": "Set up multi-account management with AWS Control Tower"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 38.6622,
+      "call_history": [
+        38.6622
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:29:08.723528+00:00",
+    "latency_ms": 24626.5,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "S3 bucket có ACL cho phép người dùng công khai ghi dữ liệu, tạo điều kiện cho tấn công chiếm quyền hoặc thay đổi dữ liệu nhạy cảm.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure there are no S3 buckets writable by Everyone or Any AWS customer.",
+      "compliance_mappings": []
+    },
+    "llm_metrics": {
+      "total_latency": 24.6254,
+      "call_history": [
+        24.6254
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_cloudtrail_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:29:38.623807+00:00",
+    "latency_ms": 28461.0,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Thiếu tích hợp log giữa CloudTrail và CloudWatch Logs làm giảm khả năng giám sát và phân tích hoạt động, vi phạm yêu cầu monitoring nhưng chưa gây rủi ro tức thì.",
+      "compliance": [],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours",
+      "compliance_mappings": [
+        "vpc_flow_logs_analysis",
+        "vpc_flow_logs_analysis",
+        "inventory_configurations_monitoring"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        },
+        {
+          "capability_id": "vpc_flow_logs_analysis",
+          "capability_name": "VPC Flow Logs Analysis"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 28.4601,
+      "call_history": [
+        28.4601
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_rds_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T14:30:16.977988+00:00",
+    "latency_ms": 36912.8,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Parse Error",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Check if RDS instances are deployed within a VPC.",
+      "compliance_mappings": [],
+      "maturity_context": [
+        {
+          "capability_id": "advanced_threat_detection",
+          "capability_name": "Advanced Threat Detection"
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 36.9115,
+      "call_history": [
+        36.9115
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  }
+]

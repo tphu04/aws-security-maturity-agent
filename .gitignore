@@ -4,3 +4,16 @@ __pycache__/
 .vscode/
 .env
 prowler/
+
+# Claude Code
+.claude/
+PROMPT.md
+
+# Logs
+*.log
+RAG/uvicorn_stderr.log
+RAG/uvicorn_stdout.log
+
+# Generated data
+RAG/data/indexes/chroma/
+RAG/.coverage

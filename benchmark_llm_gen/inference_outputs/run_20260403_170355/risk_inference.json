@@ -1,0 +1,1397 @@
+[
+  {
+    "case_id": "risk_s3_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:04:22.785612+00:00",
+    "latency_ms": 12606.9,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 6,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này không vượt quá mức official (medium) do thiếu bằng chứng cụ thể về việc truy cập công khai dữ liệu nhạy cảm mà không cần sự đồng ý của người dùng.",
+      "compliance": [
+        "block_public_access"
+      ],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "Check S3 Bucket Level Public Access Block.",
+      "compliance_mappings": [
+        "block_public_access",
+        "block_public_access",
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 11.9444,
+      "call_history": [
+        7.1651,
+        4.7794
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_exact_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:04:36.279616+00:00",
+    "latency_ms": 12432.9,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 6,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này có thể được đánh giá cao hơn do tính chất quan trọng của việc bảo mật dữ liệu trong S3 Bucket. Tuy nhiên, vẫn cần lưu ý rằng không có mã hóa mặc định được bật có thể gây ra rủi ro cho dữ liệu. Ghi chú: Rag_official_severity là Medium, nhưng draft_severity là Medium, nên không cần điều chỉnh.",
+      "compliance": [
+        "data_encryption_at_rest"
+      ],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "Check if S3 buckets have default encryption (SSE) enabled or use a bucket policy to enforce it.",
+      "compliance_mappings": [
+        "data_encryption_at_rest",
+        "data_encryption_at_rest"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 9.8436,
+      "call_history": [
+        3.1802,
+        6.6634
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:04:47.604271+00:00",
+    "latency_ms": 10283.8,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mã hóa MFA không được bật cho tài khoản gốc, điều này làm tăng nguy cơ bị tấn công và mất dữ liệu. Theo Prowler Knowledge Base, mức độ nghiêm trọng chính thức là Critical, phù hợp với mô tả lỗ hổng.",
+      "compliance": [
+        "keep_your_security_contact_details_up_to_date"
+      ],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure MFA is enabled for the root account",
+      "compliance_mappings": [
+        "temporary_elevated_access_management",
+        "keep_your_security_contact_details_up_to_date",
+        "keep_your_security_contact_details_up_to_date"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "capability_name": "Keep your security contact details up to date"
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+        },
+        {
+          "capability_id": "temporary_elevated_access_management",
+          "capability_name": "Temporary Elevated Access Management"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 7.6699,
+      "call_history": [
+        2.6545,
+        5.0153
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:05:01.530136+00:00",
+    "latency_ms": 12822.8,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ Prowler (rag_official_severity = high). Ghi chú thêm rằng, mặc dù mô tả lỗ hổng cho thấy mức nguy hiểm cao, nhưng mức độ chính thức từ Prowler cũng là High. Do đó, không cần điều chỉnh mức độ nguy hiểm.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure no security groups allow ingress from 0.0.0.0/0 or ::/0 to any port.",
+      "compliance_mappings": [],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 10.1163,
+      "call_history": [
+        4.0814,
+        6.0349
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_rds_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:05:13.312796+00:00",
+    "latency_ms": 10706.4,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (rag_official_severity = critical). Ghi chú: Mức độ nguy hiểm của lỗ hổng này cao do quyền truy cập công khai được bật trên RDS Instance prod-db, điều này có thể gây ra rủi ro cho dữ liệu nhạy cảm.",
+      "compliance": [
+        "block_public_access"
+      ],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure there are no Public Accessible RDS instances.",
+      "compliance_mappings": [
+        "block_public_access",
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        },
+        {
+          "capability_id": "advanced_threat_detection",
+          "capability_name": "Advanced Threat Detection"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 8.1976,
+      "call_history": [
+        2.468,
+        5.7297
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_cloudtrail_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:05:25.901258+00:00",
+    "latency_ms": 11514.7,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 6,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này có thể được hạ xuống do không có bằng chứng cụ thể về việc dữ liệu CloudTrail bị lộ cho các khu vực khác nhau của tổ chức. Tuy nhiên, vẫn cần phải kích hoạt CloudTrail multi-region trail để đảm bảo an toàn bảo mật và truy cập.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "CloudTrail trail logs management events for read and write operations",
+      "compliance_mappings": []
+    },
+    "llm_metrics": {
+      "total_latency": 8.9304,
+      "call_history": [
+        3.7151,
+        5.2154
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_kms_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:05:40.410664+00:00",
+    "latency_ms": 13426.2,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng không vượt quá mức official (medium) vì CMK key rotation được bật mặc dù không có mã hóa cho CMK. Ghi chú thêm rằng mục tiêu chính là đảm bảo dữ liệu nhạy cảm được bảo vệ, nhưng trong trường hợp này, điều đó đã xảy ra.",
+      "compliance": [],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "Ensure rotation for customer created KMS CMKs is enabled.",
+      "compliance_mappings": [
+        "data_encryption_at_rest",
+        "data_encryption_at_rest"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 10.9993,
+      "call_history": [
+        3.3279,
+        7.6714
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_exact_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:06:06.064326+00:00",
+    "latency_ms": 23317.1,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng tương ứng với mức độ chính thức từ Prowler (rag_official_severity = critical). Ghi chú: Mức độ nguy hiểm cao do khả năng mất dữ liệu hoặc thực hiện hành động không mong muốn nếu có quyền Admin.",
+      "compliance": [
+        "temporary_elevated_access_management"
+      ],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure no root account access key exists",
+      "compliance_mappings": [
+        "use_temporary_credentials",
+        "temporary_elevated_access_management",
+        "temporary_elevated_access_management"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "temporary_elevated_access_management",
+          "capability_name": "Temporary Elevated Access Management"
+        },
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions"
+        },
+        {
+          "capability_id": "use_temporary_credentials",
+          "capability_name": "Use Temporary Credentials"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.0002,
+      "call_history": [
+        5.8298,
+        8.1703
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:06:12.367232+00:00",
+    "latency_ms": 4539.7,
+    "agent_output": {
+      "severity": null,
+      "risk_score": null,
+      "reasoning": "",
+      "compliance": [],
+      "prowler_severity": null
+    },
+    "rag_context_used": {
+      "confidence": "low",
+      "compliance_mappings": [],
+      "official_severity": "critical",
+      "check_title": "Ensure S3 bucket does not have public access enabled"
+    },
+    "llm_metrics": {
+      "total_latency": 0.0,
+      "call_history": [],
+      "call_count": 0,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "low"
+      }
+    },
+    "error": "'NoneType' object has no attribute 'get'"
+  },
+  {
+    "case_id": "risk_s3_paraphrase_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:06:33.733567+00:00",
+    "latency_ms": 19102.9,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 6,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này thấp hơn so với mức official (medium) do không có bằng chứng cụ thể về rủi ro truy cập trái phép. Tuy nhiên, việc không áp dụng chính sách SSL/TLS cho dữ liệu trong giao tiếp vẫn là một vấn đề bảo mật cần được giải quyết.",
+      "compliance": [],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "Check if S3 buckets have secure transport policy.",
+      "compliance_mappings": [
+        "iam_data_perimeters_conditional_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 13.5863,
+      "call_history": [
+        5.399,
+        8.1873
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:06:54.013462+00:00",
+    "latency_ms": 18558.5,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ Prowler (high), nhưng lý do bảo mật vẫn quan trọng vì kết nối không được mã hóa bằng MFA có thể gây ra rủi ro nếu tài khoản bị đánh cắp.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure multi-factor authentication (MFA) is enabled for all IAM users that have a console password.",
+      "compliance_mappings": [
+        "keep_your_security_contact_details_up_to_date",
+        "keep_your_security_contact_details_up_to_date",
+        "evaluate_cloud_security_posture_aws_security_hub"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "capability_name": "Keep your security contact details up to date"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.1309,
+      "call_history": [
+        5.1227,
+        9.0082
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:07:15.531167+00:00",
+    "latency_ms": 19233.4,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ Prowler (high), vì nó liên quan đến việc không cấu hình IMDSv2 cho EC2 instance, điều này có thể gây ra rủi ro cho dữ liệu nhạy cảm và bảo mật.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Check if EC2 Instance Metadata Service Version 2 (IMDSv2) is Enabled and Required.",
+      "compliance_mappings": [
+        "instance_metadata_service_imds_v2"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "instance_metadata_service_imds_v2",
+          "capability_name": "Instance Metadata Service (IMDS) v2"
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.5535,
+      "call_history": [
+        5.4887,
+        9.0647
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_rds_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:07:32.938597+00:00",
+    "latency_ms": 15081.4,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, RDS instance không có mã hóa trong giao tiếp được bật, điều này làm tăng nguy cơ dữ liệu bị truy cập trái phép. Ghi chú: Mức độ nghiêm trọng chính thức từ AWS/Prowler là High, phù hợp với mô tả lỗ hổng.",
+      "compliance": [
+        "encryption_in_transit"
+      ],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Check if RDS instances enforce SSL/TLS encryption for client connections (Microsoft SQL Server, PostgreSQL, MySQL, MariaDB, Aurora PostgreSQL, and Aurora MySQL).",
+      "compliance_mappings": [
+        "encryption_in_transit",
+        "data_encryption_at_rest"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "encryption_in_transit",
+          "capability_name": "Encryption in transit"
+        },
+        {
+          "capability_id": "data_backups",
+          "capability_name": "Data Backups"
+        },
+        {
+          "capability_id": "data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 11.1199,
+      "call_history": [
+        5.4292,
+        5.6907
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_cloudtrail_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:07:53.701590+00:00",
+    "latency_ms": 18382.2,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 3,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng severity của CloudTrail Log File Validation được điều chỉnh xuống Low vì mô tả không cho thấy mức nguy hiểm vượt quá official (Medium). Ghi chú: Mặc dù không có Log File Integrity Validation được bật cho CloudTrail, nhưng điều này không phải là một lỗ hổng nghiêm trọng và có thể được khắc phục dễ dàng.",
+      "compliance": [
+        "inventory_configurations_monitoring"
+      ],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "medium",
+      "check_title": "CloudTrail trail has log file validation enabled",
+      "compliance_mappings": [
+        "inventory_configurations_monitoring",
+        "inventory_configurations_monitoring",
+        "inventory_configurations_monitoring"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "capability_name": "Audit API calls"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.2791,
+      "call_history": [
+        5.3325,
+        8.9465
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_paraphrase_003",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:08:12.258009+00:00",
+    "latency_ms": 16804.3,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 2,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng tương ứng với mức official (Low) do chính sách vòng đời không được cấu hình hóa có thể gây ra vấn đề về bảo mật và quản lý dữ liệu trong thời gian dài.",
+      "compliance": [
+        "data_backups"
+      ],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Check if S3 buckets have a Lifecycle configuration enabled",
+      "compliance_mappings": [
+        "block_public_access",
+        "audit_api_calls",
+        "data_backups"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_backups",
+          "capability_name": "Data Backups"
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "capability_name": "Audit API calls"
+        },
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 12.3662,
+      "call_history": [
+        5.2826,
+        7.0836
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_paraphrase_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:08:32.640617+00:00",
+    "latency_ms": 17995.0,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 3,
+      "reasoning": "Dựa trên draft_reasoning, mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này thấp hơn so với mức official (low) vì mặc dù SAML provider external-idp không được xác minh cho dịch vụ STS nhưng điều này không phải là một vấn đề nghiêm trọng nếu được giải quyết đúng cách.",
+      "compliance": [],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Check if there are SAML Providers then STS can be used",
+      "compliance_mappings": [
+        "evaluate_cloud_security_posture_aws_security_hub",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "cleanup_risky_open_admin_ports_in_security_groups"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "audit_api_calls",
+          "capability_name": "Audit API calls"
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        },
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "capability_name": "Automate deviation correction in configurations"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 12.8785,
+      "call_history": [
+        4.4215,
+        8.457
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:08:54.810223+00:00",
+    "latency_ms": 19888.7,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (Critical). Ghi chú rằng việc cho phép truy cập viết công khai vào S3 bucket có thể gây ra rủi ro về bảo mật và quyền truy cập không được kiểm soát.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Check if S3 buckets have policies which allow WRITE access.",
+      "compliance_mappings": [
+        "iam_data_perimeters_conditional_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "capability_name": "IAM Data Perimeters: Conditional Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 13.2854,
+      "call_history": [
+        5.0014,
+        8.284
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:09:18.837099+00:00",
+    "latency_ms": 21675.5,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, lỗ hổng này là một vấn đề bảo mật nghiêm trọng vì IAM user contractor có quyền admin. Tuy nhiên, mức độ nguy hiểm của lỗ hổng này không vượt quá mức official (high). Ghi chú: Mặc dù lỗ hổng này nghiêm trọng nhưng Prowler chỉ đánh giá nó ở mức high do không có bằng chứng cụ thể về việc mất dữ liệu. Do đó, chúng ta nên xem xét lại chính sách IAM để hạn chế quyền admin cho IAM user contractor.",
+      "compliance": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure IAM inline policies that allow full \"*:*\" administrative privileges are not associated to IAM identities",
+      "compliance_mappings": [
+        "root_account_protection",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions"
+        },
+        {
+          "capability_id": "root_account_protection",
+          "capability_name": "Root Account Protection"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.7244,
+      "call_history": [
+        5.4343,
+        9.2901
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:09:40.088492+00:00",
+    "latency_ms": 18837.4,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (high). Ghi chú rằng mặc dù mô tả lỗ hổng cho thấy mức nguy hiểm cao nhưng vẫn cần kiểm soát đúng cách để tránh rủi ro.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure no security groups allow ingress from 0.0.0.0/0 or ::/0 to SSH port 22.",
+      "compliance_mappings": [],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.6339,
+      "call_history": [
+        6.2791,
+        8.3549
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_rds_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:10:00.159417+00:00",
+    "latency_ms": 18242.8,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (rag_official_severity = critical). Public Access vào dữ liệu nhạy cảm (RDS snapshot) được bật, có thể gây ra rủi ro về bảo mật và quyền truy cập không được kiểm soát.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Check if RDS Snapshots and Cluster Snapshots are public.",
+      "compliance_mappings": [
+        "block_public_access",
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.0111,
+      "call_history": [
+        4.9413,
+        9.0699
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_semantic_hard_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:10:22.946656+00:00",
+    "latency_ms": 20256.4,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (rag_official_severity = critical). Tuy nhiên, do mô tả lỗ hổng cho thấy việc truy cập không được phép hoặc lộ thông tin nhạy cảm có thể xảy ra, nên vẫn giữ mức độ nguy hiểm cao. Ghi chú: Mặc dù rag_official_severity là ",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure there are no EBS Snapshots set as Public.",
+      "compliance_mappings": [
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 15.5658,
+      "call_history": [
+        5.4213,
+        10.1445
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_semantic_hard_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:10:51.427922+00:00",
+    "latency_ms": 25574.6,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 2,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm thấp hơn so với official (Medium) do chính sách IAM được thiết kế để kiểm soát quyền truy cập một cách hiệu quả. Tuy nhiên, vẫn cần lưu ý đến rủi ro về quyền truy cập không kiểm soát được nếu chính sách được sử dụng trực tiếp với người dùng.",
+      "compliance": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Ensure IAM policies are attached only to groups or roles",
+      "compliance_mappings": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 17.0921,
+      "call_history": [
+        6.0211,
+        11.0711
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_kms_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:11:14.857643+00:00",
+    "latency_ms": 21046.2,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng cao hơn so với official (Critical) do khả năng mất dữ liệu hoặc truy cập trái phép nếu CMK không được xóa đúng cách.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "AWS KMS keys should not be deleted unintentionally",
+      "compliance_mappings": [
+        "set_up_multi_account_management_with_aws_control_tower",
+        "advanced_security_automations"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_encryption_at_rest",
+          "capability_name": "Data Encryption at rest"
+        },
+        {
+          "capability_id": "advanced_security_automations",
+          "capability_name": "Advanced security automations"
+        },
+        {
+          "capability_id": "set_up_multi_account_management_with_aws_control_tower",
+          "capability_name": "Set up multi-account management with AWS Control Tower"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 13.2852,
+      "call_history": [
+        5.6194,
+        7.6658
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:11:42.880560+00:00",
+    "latency_ms": 25291.1,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này tương ứng với mức độ chính thức từ AWS/Prowler (Critical). Ghi chú rằng việc cho phép truy cập viết công khai cho S3 bucket có thể gây ra rủi ro nghiêm trọng về bảo mật và quyền truy cập không được kiểm soát. Do đó, AI đã giữ nguyên mức độ nguy hiểm là Critical.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure there are no S3 buckets writable by Everyone or Any AWS customer.",
+      "compliance_mappings": []
+    },
+    "llm_metrics": {
+      "total_latency": 18.8404,
+      "call_history": [
+        6.8302,
+        12.0101
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:12:07.994934+00:00",
+    "latency_ms": 22410.2,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 8,
+      "reasoning": "Dựa trên draft_reasoning, Public Access vào dữ liệu nhạy cảm được cho phép thông qua IAM policy dev-policy, có khả năng dẫn đến quyền Admin không an toàn và mất dữ liệu. Theo Prowler Knowledge Base, \"high\" là mức độ nghiêm trọng chính thức từ AWS/Prowler, và mô tả lỗ hổng phù hợp với mức này. Ghi chú: Đã hạ xuống severity so với draft vì mô tả lỗ hổng không cho thấy mức nguy hiểm vượt quá mức official.",
+      "compliance": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Ensure no Customer Managed IAM policies allow actions that may lead into Privilege Escalation",
+      "compliance_mappings": [
+        "security_investigations_root_cause_analysis_with_amazon_detective",
+        "root_account_protection",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "capability_name": "Cleanup unused and unintended external access using IAM Access Analyzer or CIEM solutions"
+        },
+        {
+          "capability_id": "security_investigations_root_cause_analysis_with_amazon_detective",
+          "capability_name": "Security investigations - Root cause analysis with Amazon Detective"
+        },
+        {
+          "capability_id": "root_account_protection",
+          "capability_name": "Root Account Protection"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 14.2064,
+      "call_history": [
+        4.84,
+        9.3664
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:12:26.521287+00:00",
+    "latency_ms": 16118.5,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của AMI công khai được chia sẻ trên internet thực sự rất cao vì nó cho phép truy cập trực tiếp từ người ngoài. Do đó, AI sẽ giữ nguyên mức độ nghiêm trọng Critical.",
+      "compliance": [
+        "block_public_access"
+      ],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "critical",
+      "check_title": "Ensure there are no EC2 AMIs set as Public.",
+      "compliance_mappings": [
+        "block_public_access"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        },
+        {
+          "capability_id": "billing_alarms_for_anomaly_detection",
+          "capability_name": "Billing alarms for anomaly detection"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 12.2033,
+      "call_history": [
+        4.8475,
+        7.3558
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_cloudtrail_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:12:47.004612+00:00",
+    "latency_ms": 18146.6,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 2,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mặc dù CloudTrail không được cấu hình để gửi nhật ký đến CloudWatch Logs, nhưng thông tin từ Prowler cho thấy CloudTrail đã giao tiếp với CloudWatch Logs trong vòng 24 giờ qua, điều này có thể làm giảm mức độ nguy hiểm của lỗ hổng.",
+      "compliance": [
+        "inventory_configurations_monitoring"
+      ],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours",
+      "compliance_mappings": [
+        "vpc_flow_logs_analysis",
+        "vpc_flow_logs_analysis",
+        "inventory_configurations_monitoring"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        },
+        {
+          "capability_id": "vpc_flow_logs_analysis",
+          "capability_name": "VPC Flow Logs Analysis"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 12.6092,
+      "call_history": [
+        4.886,
+        7.7232
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_rds_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:13:06.823449+00:00",
+    "latency_ms": 17316.5,
+    "agent_output": {
+      "severity": "High",
+      "risk_score": 6,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú: Mức độ nguy hiểm của lỗ hổng này thấp hơn so với mức official (Critical) vì mặc dù RDS instance không được triển khai trong một VPC, nhưng điều này có thể được giải quyết dễ dàng bằng cách triển khai lại trong một VPC. Tuy nhiên, vẫn cần lưu ý đến bảo mật và khả năng truy cập trái phép.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "high",
+      "check_title": "Check if RDS instances are deployed within a VPC.",
+      "compliance_mappings": [],
+      "maturity_context": [
+        {
+          "capability_id": "advanced_threat_detection",
+          "capability_name": "Advanced Threat Detection"
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "capability_name": "Cleanup risky open admin ports in Security Groups"
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "capability_name": "Inventory & Configurations Monitoring"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 12.9369,
+      "call_history": [
+        4.856,
+        8.081
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_risk_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:13:29.774175+00:00",
+    "latency_ms": 20501.8,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 2,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng không vượt quá mức official (low) do mô tả không cho thấy rủi ro cao hơn. Ghi chú: Mức độ nguy hiểm có thể được điều chỉnh nếu có bằng chứng cụ thể cho thấy rủi ro cao hơn.",
+      "compliance": [],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Ensure a Security Audit role has been created to conduct security audits",
+      "compliance_mappings": [
+        "use_temporary_credentials",
+        "evaluate_cloud_security_posture_aws_security_hub",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "capability_name": "Automate deviation correction in configurations"
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "capability_name": "Evaluate Cloud Security Posture - AWS Security Hub"
+        },
+        {
+          "capability_id": "use_temporary_credentials",
+          "capability_name": "Use Temporary Credentials"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 12.3067,
+      "call_history": [
+        4.3088,
+        7.9979
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_risk_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T10:13:51.810087+00:00",
+    "latency_ms": 19896.7,
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 2,
+      "reasoning": "Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú rằng mức độ nguy hiểm của lỗ hổng không vượt quá mức official (Low) do không có bằng chứng cho thấy dữ liệu bị truy cập trái phép.\nGhi chú: Mức độ nguy hiểm của lỗ hổng này có thể tăng lên nếu có bằng chứng cho thấy dữ liệu bị truy cập trái phép.",
+      "compliance": [
+        "data_backups"
+      ],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "confidence": "medium",
+      "official_severity": "low",
+      "check_title": "Check if S3 buckets have object lock enabled",
+      "compliance_mappings": [
+        "data_encryption_at_rest",
+        "data_backups",
+        "data_backups"
+      ],
+      "maturity_context": [
+        {
+          "capability_id": "data_backups",
+          "capability_name": "Data Backups"
+        },
+        {
+          "capability_id": "block_public_access",
+          "capability_name": "Block Public Access"
+        }
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 13.3582,
+      "call_history": [
+        5.1577,
+        8.2005
+      ],
+      "call_count": 2,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 1,
+        "hit_rate": 0.0,
+        "confidence": "medium"
+      }
+    },
+    "error": null
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-04-03T14:30:16.995555+00:00",
+  "total_cases": 15,
+  "agent": "risk_evaluation",
+  "ollama_model": "qwen3:8b-fast",
+  "rag_api_url": "http://localhost:8001"
+}

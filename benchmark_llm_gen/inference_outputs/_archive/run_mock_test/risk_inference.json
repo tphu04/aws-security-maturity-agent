@@ -1,0 +1,114 @@
+[
+  {
+    "case_id": "risk_s3_exact_001",
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 9,
+      "reasoning": "This is a critical risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+      "compliance": [
+        "CIS_AWS_2.1.2"
+      ],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "official_severity": "Critical",
+      "compliance_mappings": [
+        "CIS_AWS_2.1.2"
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "latency_ms": 1500.0,
+    "llm_metrics": {}
+  },
+  {
+    "case_id": "risk_s3_exact_002",
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "This is a medium risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+      "compliance": [
+        "CIS_AWS_2.1.1"
+      ],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "official_severity": "Medium",
+      "compliance_mappings": [
+        "CIS_AWS_2.1.1"
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "latency_ms": 1500.0,
+    "llm_metrics": {}
+  },
+  {
+    "case_id": "risk_iam_paraphrase_001",
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 9,
+      "reasoning": "This is a critical risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+      "compliance": [
+        "CIS_AWS_1.5",
+        "PCI_DSS_8.3"
+      ],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "official_severity": "Critical",
+      "compliance_mappings": [
+        "CIS_AWS_1.5",
+        "PCI_DSS_8.3"
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "latency_ms": 1500.0,
+    "llm_metrics": {}
+  },
+  {
+    "case_id": "risk_ec2_semantic_hard_001",
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 9,
+      "reasoning": "This is a critical risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+      "compliance": [
+        "CIS_AWS_5.2"
+      ],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "official_severity": "Critical",
+      "compliance_mappings": [
+        "CIS_AWS_5.2"
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "latency_ms": 1500.0,
+    "llm_metrics": {}
+  },
+  {
+    "case_id": "risk_iam_risk_001",
+    "agent_output": {
+      "severity": "Low",
+      "risk_score": 2,
+      "reasoning": "This is a low risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+      "compliance": [
+        "CIS_AWS_1.15"
+      ],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "official_severity": "Low",
+      "compliance_mappings": [
+        "CIS_AWS_1.15"
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "latency_ms": 1500.0,
+    "llm_metrics": {}
+  }
+]

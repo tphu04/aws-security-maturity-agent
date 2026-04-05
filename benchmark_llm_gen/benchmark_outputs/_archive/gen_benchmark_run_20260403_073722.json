@@ -1,0 +1,432 @@
+{
+  "report_type": "generation_benchmark",
+  "timestamp": "2026-04-03T00:37:20.114020+00:00",
+  "total_cases": 5,
+  "structure": {
+    "json_parse_rate": 1.0,
+    "schema_compliance_rate": 1.0,
+    "internal_consistency_rate": 1.0
+  },
+  "faithfulness": {
+    "mean": 1.0
+  },
+  "correctness": {
+    "severity_accuracy": 1.0,
+    "severity_qwk": 1.0
+  },
+  "completeness": {
+    "evidence_coverage_mean": 1.0
+  },
+  "by_category": {
+    "exact": {
+      "total": 2,
+      "severity_accuracy": 1.0,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 1.0
+    },
+    "paraphrase": {
+      "total": 1,
+      "severity_accuracy": 1.0,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 1.0
+    },
+    "semantic_hard": {
+      "total": 1,
+      "severity_accuracy": 1.0,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 1.0
+    },
+    "risk": {
+      "total": 1,
+      "severity_accuracy": 1.0,
+      "faithfulness_mean": 1.0,
+      "completeness_mean": 1.0
+    }
+  },
+  "by_service": {
+    "s3": {
+      "total": 2,
+      "severity_accuracy": 1.0
+    },
+    "iam": {
+      "total": 2,
+      "severity_accuracy": 1.0
+    },
+    "ec2": {
+      "total": 1,
+      "severity_accuracy": 1.0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "risk_s3_exact_001",
+      "category": "exact",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_level_public_access_block",
+        "input_description": "S3 Bucket Level Public Access Block is not configured for bucket my-public-bucket",
+        "rag_severity": "Critical",
+        "rag_mappings": [
+          "CIS_AWS_2.1.2"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 9,
+        "agent_reasoning": "This is a critical risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "public access hoac truy cap cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "public access",
+              "truy cap cong khai"
+            ]
+          },
+          {
+            "evidence": "CIS hoac compliance",
+            "found": true,
+            "alternatives_checked": [
+              "cis",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_s3_exact_002",
+      "category": "exact",
+      "service": "s3",
+      "debug": {
+        "input_check": "s3_bucket_default_encryption",
+        "input_description": "S3 Bucket data-bucket does not have default encryption enabled",
+        "rag_severity": "Medium",
+        "rag_mappings": [
+          "CIS_AWS_2.1.1"
+        ],
+        "agent_severity": "Medium",
+        "agent_score": 5,
+        "agent_reasoning": "This is a medium risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+        "expected_severity": "Medium",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Medium",
+        "expected_severity": "Medium",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "encryption hoac ma hoa",
+            "found": true,
+            "alternatives_checked": [
+              "encryption",
+              "ma hoa"
+            ]
+          },
+          {
+            "evidence": "CIS hoac compliance",
+            "found": true,
+            "alternatives_checked": [
+              "cis",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_paraphrase_001",
+      "category": "paraphrase",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_root_mfa_enabled",
+        "input_description": "MFA is not enabled for the root account",
+        "rag_severity": "Critical",
+        "rag_mappings": [
+          "CIS_AWS_1.5",
+          "PCI_DSS_8.3"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 9,
+        "agent_reasoning": "This is a critical risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 3,
+        "total": 3,
+        "details": [
+          {
+            "evidence": "MFA hoac multi-factor hoac xac thuc",
+            "found": true,
+            "alternatives_checked": [
+              "mfa",
+              "multi-factor",
+              "xac thuc"
+            ]
+          },
+          {
+            "evidence": "root account hoac tai khoan goc",
+            "found": true,
+            "alternatives_checked": [
+              "root account",
+              "tai khoan goc"
+            ]
+          },
+          {
+            "evidence": "CIS hoac PCI hoac compliance",
+            "found": true,
+            "alternatives_checked": [
+              "cis",
+              "pci",
+              "compliance"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_ec2_semantic_hard_001",
+      "category": "semantic_hard",
+      "service": "ec2",
+      "debug": {
+        "input_check": "ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+        "input_description": "Security group sg-0abc123def456 has ingress rules allowing access from 0.0.0.0/0 to all ports",
+        "rag_severity": "Critical",
+        "rag_mappings": [
+          "CIS_AWS_5.2"
+        ],
+        "agent_severity": "Critical",
+        "agent_score": 9,
+        "agent_reasoning": "This is a critical risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+        "expected_severity": "Critical",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Critical",
+        "expected_severity": "Critical",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "security group hoac nhom bao mat",
+            "found": true,
+            "alternatives_checked": [
+              "security group",
+              "nhom bao mat"
+            ]
+          },
+          {
+            "evidence": "internet hoac 0.0.0.0 hoac public hoac cong khai",
+            "found": true,
+            "alternatives_checked": [
+              "internet",
+              "0.0.0.0",
+              "public",
+              "cong khai"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "risk_iam_risk_001",
+      "category": "risk",
+      "service": "iam",
+      "debug": {
+        "input_check": "iam_policy_attached_only_to_group_or_roles",
+        "input_description": "IAM policy is directly attached to user dev-user instead of group or role",
+        "rag_severity": "Low",
+        "rag_mappings": [
+          "CIS_AWS_1.15"
+        ],
+        "agent_severity": "Low",
+        "agent_score": 2,
+        "agent_reasoning": "This is a low risk finding. The CIS compliance standard requires addressing this public access issue with encryption. Security group has internet exposure via 0.0.0.0/0. MFA and root account protection needed. Policy should be attached to group or role.",
+        "expected_severity": "Low",
+        "inference_error": null
+      },
+      "structure": {
+        "json_parseable": true,
+        "has_all_fields": true,
+        "severity_valid": true,
+        "score_valid": true,
+        "reasoning_nonempty": true,
+        "severity_score_consistent": true,
+        "schema_valid": true
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "severity_contradicted": false,
+        "hallucination_patterns_found": [],
+        "method": "rule_heuristic"
+      },
+      "correctness": {
+        "severity_match": true,
+        "severity_adjacent": true,
+        "predicted_severity": "Low",
+        "expected_severity": "Low",
+        "score_in_range": null
+      },
+      "completeness": {
+        "score": 1.0,
+        "covered": 2,
+        "total": 2,
+        "details": [
+          {
+            "evidence": "policy hoac quyen",
+            "found": true,
+            "alternatives_checked": [
+              "policy",
+              "quyen"
+            ]
+          },
+          {
+            "evidence": "group hoac role hoac nhom",
+            "found": true,
+            "alternatives_checked": [
+              "group",
+              "role",
+              "nhom"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "release_criteria": {
+    "verdict": "PASS",
+    "checks": [
+      {
+        "criterion": "json_parse_rate_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "schema_compliance_rate_min",
+        "threshold": 0.95,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "faithfulness_mean_min",
+        "threshold": 0.7,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "severity_accuracy_min",
+        "threshold": 0.6,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "severity_qwk_min",
+        "threshold": 0.5,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "evidence_completeness_mean_min",
+        "threshold": 0.6,
+        "actual": 1.0,
+        "passed": true
+      }
+    ]
+  }
+}

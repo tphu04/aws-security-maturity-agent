@@ -1,0 +1,168 @@
+[
+  {
+    "case_id": "risk_s3_exact_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T00:39:53.739128+00:00",
+    "latency_ms": 9625.9,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 5,
+      "reasoning": "Lỗ hổng này không nghiêm trọng tức thì, nhưng nó có thể gây ra vấn đề về bảo mật nếu không được giải quyết. Việc không có Public Access Block cho bucket S3 có thể cho phép truy cập không được ủy quyền vào dữ liệu của bucket đó.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "official_severity": "Critical",
+      "compliance_mappings": [
+        "CIS_AWS_2.1.2"
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 9.6214,
+      "call_history": [
+        9.6214
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_s3_exact_002",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T00:39:59.175522+00:00",
+    "latency_ms": 3788.5,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 4,
+      "reasoning": "S3 Bucket data-bucket không có mã hóa mặc định được bật, điều này có thể gây ra rủi ro cho dữ liệu nhạy cảm.",
+      "compliance": [],
+      "prowler_severity": "medium"
+    },
+    "rag_context_used": {
+      "official_severity": "Medium",
+      "compliance_mappings": [
+        "CIS_AWS_2.1.1"
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 3.7876,
+      "call_history": [
+        3.7876
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_paraphrase_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T00:40:05.264387+00:00",
+    "latency_ms": 4560.5,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 10,
+      "reasoning": "Lỗ hổng này là một vấn đề nghiêm trọng vì nó cho phép truy cập không xác định vào tài khoản AWS gốc. Việc không bật MFA cho tài khoản này làm tăng nguy cơ bị tấn công và mất dữ liệu.",
+      "compliance": [],
+      "prowler_severity": "critical"
+    },
+    "rag_context_used": {
+      "official_severity": "Critical",
+      "compliance_mappings": [
+        "CIS_AWS_1.5",
+        "PCI_DSS_8.3"
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 4.559,
+      "call_history": [
+        4.559
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_ec2_semantic_hard_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T00:40:14.389224+00:00",
+    "latency_ms": 7842.9,
+    "agent_output": {
+      "severity": "Critical",
+      "risk_score": 9,
+      "reasoning": "Lỗ hổng này cho phép truy cập từ internet vào tất cả các cổng trên máy chủ EC2, điều này có thể gây ra sự xâm nhập và ảnh hưởng đến dữ liệu nhạy cảm. Mặc dù đã có thông tin về lỗ hổng này, nhưng nó không được xác định là nghiêm trọng (high) theo chính sách của AWS. Do đó, chúng ta nên xem xét nó là lỗ hổng nghiêm trọng (critical) để đảm bảo an toàn cho tài nguyên của mình.",
+      "compliance": [],
+      "prowler_severity": "high"
+    },
+    "rag_context_used": {
+      "official_severity": "Critical",
+      "compliance_mappings": [
+        "CIS_AWS_5.2"
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 7.8418,
+      "call_history": [
+        7.8418
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  },
+  {
+    "case_id": "risk_iam_risk_001",
+    "agent": "risk_evaluation",
+    "timestamp": "2026-04-03T00:40:19.834605+00:00",
+    "latency_ms": 4176.8,
+    "agent_output": {
+      "severity": "Medium",
+      "risk_score": 4,
+      "reasoning": "Thiếu Logging/Monitoring, thiếu MFA, vi phạm Compliance không nguy hiểm tức thì. Lỗi IAM policy được thiết lập sai, nên nên thiết lập lại để đảm bảo an toàn cho tài khoản IAM.",
+      "compliance": [],
+      "prowler_severity": "low"
+    },
+    "rag_context_used": {
+      "official_severity": "Low",
+      "compliance_mappings": [
+        "CIS_AWS_1.15"
+      ]
+    },
+    "llm_metrics": {
+      "total_latency": 4.1754,
+      "call_history": [
+        4.1754
+      ],
+      "call_count": 1,
+      "rag_cache": {
+        "hits": 0,
+        "misses": 0,
+        "hit_rate": 0.0,
+        "confidence": "unknown"
+      }
+    },
+    "error": null
+  }
+]
