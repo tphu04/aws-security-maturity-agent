@@ -1,6 +1,6 @@
 # BÁO CÁO ĐÁNH GIÁ CHẤT LƯỢNG RAG SYSTEM
 
-> **Ngày:** 2026-03-26
+> **Ngày:** 2026-04-02 (cập nhật từ bản gốc 2026-03-26)
 > **Phiên bản Index:** `rag-v2-2026-03-17`
 > **Embedding Model:** `all-MiniLM-L6-v2`
 > **Benchmark Tag:** `slice-10-clean`
@@ -36,10 +36,11 @@ RAG System được thiết kế để cung cấp ngữ cảnh (context) cho cá
 ### 1.2 Tech Stack
 
 - **Framework:** FastAPI
-- **Vector DB:** ChromaDB (persistent)
-- **Lexical Index:** BM25 (rank-bm25, pickle serialized)
+- **Vector DB:** ChromaDB (persistent, explicit SentenceTransformerEmbeddingFunction)
+- **Lexical Index:** BM25 (custom implementation, Snowball stemming, pickle serialized)
 - **Embedding:** `all-MiniLM-L6-v2` (SentenceTransformers, 384 dims)
-- **Merge Strategy:** Reciprocal Rank Fusion (RRF, k=60)
+- **Reranker:** `cross-encoder/ms-marco-MiniLM-L-6-v2` (sigmoid scores [0,1])
+- **Merge Strategy:** Reciprocal Rank Fusion (RRF, k=60) + CrossEncoder rerank
 - **Language:** Python 3.x, Pydantic v2
 
 ### 1.3 API Endpoints
@@ -50,7 +51,9 @@ RAG System được thiết kế để cung cấp ngữ cảnh (context) cho cá
 | `POST /v1/retrieve/maturity` | Truy vấn Maturity capabilities |
 | `POST /v1/resolve/mapping` | Resolve mapping Check → Capability |
 | `POST /v1/context/build` | Build context bundle cho Agent |
-| `GET /health` | Health check |
+| `GET /health` | Health check cơ bản |
+| `GET /ready` | Readiness probe (lexical, vector, mapping, hybrid) |
+| `GET /build-info` | Build information và readiness details |
 
 ---
 
@@ -78,7 +81,8 @@ RAG System được thiết kế để cung cấp ngữ cảnh (context) cho cá
 │  ├─ BM25 Index    │ │  ├─ CoverageSelector                   │
 │  ├─ Vector Index  │ │  ├─ BundleFactory                      │
 │  ├─ RRF Merger    │ │  └─ PromptFormatter                    │
-│  ├─ Verifier      │ └─────────────────────────────────────────┘
+│  ├─ Reranker (CE) │ └─────────────────────────────────────────┘
+│  ├─ Verifier      │
 │  └─ Confidence    │
 └──────────┬────────┘
            │
@@ -135,14 +139,18 @@ RetrievalPipeline.retrieve()
     ├── [Exact Path] ──► Lookup by ID, score = 1.0
     │
     └── [Semantic Path]
-        ├── BM25 search ──► top_k × 3 candidates
-        ├── Chroma search ──► top_k × 3 candidates
+        ├── BM25 search ──┐
+        │                 ├── Parallel (ThreadPoolExecutor, 2 workers)
+        ├── Chroma search ┘   top_k × 3 candidates mỗi index (min 10)
         │
-        ├── RRF Merge + Scoring Adjustments:
-        │   ├── intent_bonus     (+0.18 / -0.18)
-        │   ├── check_id_boost   (0.12 ~ 0.30 cho public_access, encryption)
-        │   ├── product_penalty  (-0.20 cho mismatched entity)
-        │   └── metadata_bonus   (+0.03 service, +0.02 domain)
+        ├── Step 1: RRF Merge (k=60, pure rank fusion)
+        ├── Step 2: Separate exact matches (bonus = 2.0)
+        ├── Step 3: Product Gate filter (binary remove)
+        ├── Step 4: Hydrate candidates (load full doc content)
+        ├── Step 5: CrossEncoder Rerank (ms-marco-MiniLM-L-6-v2, top 20)
+        │           → sigmoid scores [0, 1]
+        ├── Step 6: Metadata bonus (+0.03 service, +0.02 domain)
+        ├── Step 7: Combine exact + reranked, truncate to top_k
         │
         ├── verify_retrieval() ──► warnings list
         └── calculate_confidence() ──► high | medium | low
@@ -221,9 +229,12 @@ Toàn bộ scoring parameters được tách ra `scoring_config.json`:
 ```json
 {
   "rrf": { "k": 60 },
-  "intent_bonus": 0.18,
-  "product_penalty": -0.20,
+  "exact_match_bonus": 2.0,
+  "metadata_bonus": { "service_match": 0.03, "domain_match": 0.02 },
+  "reranker": { "enabled": true, "model": "cross-encoder/ms-marco-MiniLM-L-6-v2", "top_n": 20 },
+  "product_gate": "filter",
   "confidence_thresholds": { ... },
+  "ambiguity": { ... },
   "verification": { ... }
 }
 ```
@@ -238,18 +249,26 @@ Toàn bộ scoring parameters được tách ra `scoring_config.json`:
 
 Hệ thống có **post-retrieval quality signals** đa tầng:
 
-**Verifier** phát hiện 6 loại warning:
+**Verifier** phát hiện 9 loại warning, chia thành 2 mức:
+
+*Severe (force confidence → low):*
 - `exact_lookup_miss` — Expected exact nhưng không tìm thấy
+- `exact_lookup_mismatch` — Tìm thấy nhưng doc_id không khớp
 - `mapping_missing` — Check không có mapping
-- `top1_doc_type_mismatch` — Sai document type
-- `service_mismatch_top1` — Service không khớp filter
-- `ambiguous_top_results` — Top-1 và Top-2 quá gần nhau
-- `low_score_top1` — Score dưới threshold
+- `top1_doc_type_mismatch` — Top-1 sai document type
+- `top1_filter_mismatch` — Top-1 không pass filters
+
+*Moderate (degrade confidence):*
+- `service_mismatch_top1` — Top-1 khác service so với query
+- `weak_domain_alignment` — Domain không phù hợp
+- `ambiguous_top_results` — Gap giữa top-1 và top-2 < 0.05
+- `low_score_top1` — Score < 0.15
 
 **Confidence** có threshold riêng theo query_type:
 - `mapping_resolution`: high ≥ 0.99 (rất strict)
-- `check_search`: high ≥ 0.45, medium ≥ 0.15
-- `maturity_search`: high ≥ 0.75, medium ≥ 0.45
+- `check_search`: high ≥ 0.70, medium ≥ 0.35
+- `maturity_search`: high ≥ 0.60, medium ≥ 0.30
+- `default`: high ≥ 0.65, medium ≥ 0.30
 
 **Tại sao đây là điểm mạnh:**
 - Agent có thể dựa vào `confidence` + `warnings` để quyết định có tin tưởng kết quả hay không
@@ -277,7 +296,7 @@ Module Context được thiết kế theo **Strategy Pattern** với 3 consumer 
 
 - **6 CONTROL_INTENT_CLUSTERS**: public_access, encryption_at_rest, encryption_in_transit, identity_access, logging_monitoring, resilience_backup
 - **11 PRODUCT_ENTITY_GATES**: bedrock, sagemaker, guardduty, macie, ...
-- **19 KNOWN_SERVICES**: s3, iam, ec2, rds, ...
+- **29 KNOWN_SERVICES**: s3, iam, ec2, rds, eks, lambda, vpc, guardduty, bedrock, ...
 
 **Tại sao đây là điểm mạnh:**
 - Một nơi duy nhất để cập nhật domain knowledge
@@ -331,10 +350,11 @@ Benchmark system bao gồm:
 | Maturity | 2,048ms |
 
 **Phân tích nguyên nhân:**
-- BM25 search + Vector search chạy **tuần tự** (không parallel)
+- BM25 search + Vector search đã chạy **song song** (ThreadPoolExecutor, 2 workers), nhưng vẫn chưa đủ nhanh
 - ChromaDB persistent mode có I/O overhead trên Windows
 - `search_top_k_multiplier = 3` → retrieve 3× top_k candidates từ mỗi index rồi merge
-- Scoring adjustments (intent detection, product penalty) thêm compute time
+- Cross-encoder reranking thêm ~100ms cho 20 candidates
+- ContextService gọi sequential per-check (N requests cho N check_ids) → tổng latency cộng dồn
 
 **Tác động:**
 - Đây là **chỉ tiêu duy nhất** khiến Release Criteria FAIL
@@ -364,13 +384,15 @@ Benchmark system bao gồm:
 ### 4.3 [MEDIUM] Auto-Generated Mappings Chưa Được Review
 
 **Hiện trạng:**
-- 502/502 mappings có `review_status: "draft"` (0% human reviewed)
-- Mappings được tạo tự động bởi `gen_maturity_mapping.py` dùng BM25 + heuristics
-- MappingService có logic fall-back: nếu không tìm thấy `approved/reviewed` → dùng tất cả với warning
+- **21 mappings curated** cho S3 có `review_status: "approved"` (từ `maturity_mappings_curated.json`)
+- **~481 mappings** còn lại có `review_status: "draft"` (auto-generated bởi `gen_maturity_mapping.py`)
+- Quality gate đã loại ~70 low-quality mappings (min_score=0.25, min_score_gap=0.05)
+- MappingService ranking: approved(10) > reviewed(5) > auto_high(2) > draft(1)
+- `filter_for_agent_context()` prefer approved/reviewed khi build context
 
 **Đã giải quyết một phần:**
 - Entity gating trong `constants.py` đã ngăn false positive rõ ràng (S3 → Bedrock)
-- `maturity_mappings_curated.json` đã có cho S3 (Phase 1)
+- `maturity_mappings_curated.json` đã có 21 approved S3 mappings
 - Forbidden capability rate = 0% trong benchmark
 
 **Tác động còn lại:**
@@ -378,25 +400,24 @@ Benchmark system bao gồm:
 - Agent có thể nhận mapping không chính xác cho IAM, EC2, RDS, CloudTrail, KMS
 - Confidence cho mapping_resolution phải ≥ 0.99 → rất ít mapping đạt "high" confidence
 
-### 4.4 [LOW] Scoring Heuristics Phức Tạp
+### 4.4 [LOW] Scoring Vẫn Dùng Một Số Heuristics
 
-**Hiện trạng:** Hệ thống có nhiều scoring adjustments:
+**Hiện trạng:** Scoring pipeline đã chuyển từ nhiều handcrafted bonuses sang **CrossEncoder Reranker** (ms-marco-MiniLM-L-6-v2), nhưng vẫn còn metadata bonuses:
 
 ```
-intent_bonus:           ±0.18
-check_id_intent_boost:  0.12 ~ 0.30 (4 intent patterns)
-product_penalty:        -0.20
-metadata_bonus:         0.03 (service) + 0.02 (domain)
+metadata_bonus:     +0.03 (service match) + 0.02 (domain match)
+exact_match_bonus:  2.0 (luôn đứng đầu kết quả)
 ```
 
 **Phân tích:**
-- Các giá trị được tune thủ công, không có empirical optimization
-- Tuy nhiên, việc externalize ra `scoring_config.json` đã giảm thiểu risk — thay đổi không cần code change
-- 6 CONTROL_INTENT_CLUSTERS và 11 PRODUCT_ENTITY_GATES cung cấp domain knowledge hữu ích
+- CrossEncoder đã thay thế phần lớn scoring heuristics cũ (intent_bonus, check_id_boost, product_penalty)
+- Metadata bonus chỉ là fine-tuning nhỏ trên top của cross-encoder scores
+- Product gate filtering vẫn dùng PRODUCT_ENTITY_GATES (binary filter, không phải scoring)
+- Scoring parameters externalized trong `scoring_config.json` → thay đổi không cần code change
 
 **Tác động:**
 - Khi thêm service mới hoặc intent mới, cần update constants.py + scoring_config.json
-- Khó predict impact của thay đổi scoring — cần benchmark sau mỗi lần tune
+- CrossEncoder có thể không optimal cho domain AWS security — nhưng hiện tại hoạt động tốt hơn heuristics
 - Đã được mitigate bằng benchmark framework (regression detection)
 
 ### 4.5 [LOW] Aliases Chưa Scale
@@ -516,23 +537,31 @@ Trong S3 Agent Readiness benchmark:
 
 **Mục tiêu:** Giảm average latency xuống < 2,000ms
 
-**Hành động đề xuất:**
-1. **Parallel search:** Chạy BM25 và Chroma search đồng thời (asyncio.gather hoặc ThreadPoolExecutor)
-2. **Giảm search_top_k_multiplier:** Từ 3 xuống 2 (giảm candidates cần merge)
-3. **Cache warming:** Pre-load BM25 indexes và Chroma collections khi server start
-4. **Index optimization:** Xem xét HNSW parameters cho ChromaDB (ef_search, M)
+**Đã implement:**
+- ✅ **Parallel search:** BM25 và Chroma search chạy đồng thời (ThreadPoolExecutor, 2 workers)
 
-**Dự kiến impact:** Parallel search alone có thể giảm 30-40% latency (từ ~2.1s xuống ~1.3-1.5s).
+**Hành động đề xuất (chưa implement):**
+1. **Batch context building:** ContextService gọi sequential per-check — chuyển sang batch retrieval
+2. **Giảm search_top_k_multiplier:** Từ 3 xuống 2 (giảm candidates cần merge/rerank)
+3. **Reduce reranker pool:** Từ top_n=20 xuống 10-15 (giảm cross-encoder compute)
+4. **Pre-warm models:** Load embedding + cross-encoder models during startup (hiện lazy load)
+5. **Cache warming:** Pre-load BM25 indexes và Chroma collections khi server start
+6. **Index optimization:** Xem xét HNSW parameters cho ChromaDB (ef_search, M)
+
+**Dự kiến impact:** Batch context + reduce reranker pool có thể giảm 20-30% latency.
 
 ### 6.3 Cải Thiện Semantic Hard & Risk Categories (Ưu tiên trung bình)
 
 **Mục tiêu:** Nâng Top-1 cho risk (16.7% → >50%) và semantic_hard (25% → >40%)
 
-**Hành động đề xuất:**
-1. **Thêm aliases/synonyms** cho top-20 checks quan trọng nhất (theo frequency trong scan results)
-2. **Expand benchmark cases** — thêm 10-15 risk/semantic_hard cases để có statistical significance
-3. **Xem xét cross-encoder reranking** cho top-10 candidates (ví dụ: `cross-encoder/ms-marco-MiniLM-L-6-v2`) — chỉ rerank, không thay đổi retrieval
-4. **Intent-aware query expansion** — detect risk intent → thêm keywords vào query trước khi search
+**Đã implement:**
+- ✅ **Cross-encoder reranking:** `cross-encoder/ms-marco-MiniLM-L-6-v2` rerank top-20 candidates — cải thiện ranking nhưng chưa đủ cho risk/semantic_hard
+
+**Hành động đề xuất (chưa implement):**
+1. **Upgrade embedding model:** Chuyển sang `bge-small-en-v1.5` hoặc `all-MiniLM-L12-v2` (semantic discrimination tốt hơn)
+2. **LLM-based query rewriting:** Rewrite risk queries thành technical queries trước khi search (ví dụ: "what if someone accesses my bucket publicly" → "s3 block public access")
+3. **Thêm aliases/synonyms** cho top-20 checks quan trọng nhất (theo frequency trong scan results)
+4. **Expand benchmark cases** — thêm 10-15 risk/semantic_hard cases để có statistical significance
 
 ### 6.4 Curate Mappings Cho Các Services Khác (Ưu tiên trung bình)
 
@@ -604,4 +633,4 @@ RAG System đã đạt được **mức chất lượng tốt** sau quá trình 
 
 ---
 
-*Báo cáo này dựa trên phân tích source code, benchmark data (60 test cases, 9 S3 agent readiness cases), và các tài liệu kỹ thuật của RAG System tính đến ngày 2026-03-26.*
+*Báo cáo này dựa trên phân tích source code, benchmark data (60 test cases, 9 S3 agent readiness cases), và các tài liệu kỹ thuật của RAG System. Cập nhật ngày 2026-04-02 từ bản gốc 2026-03-26.*
