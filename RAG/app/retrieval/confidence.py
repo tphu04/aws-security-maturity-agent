@@ -74,15 +74,23 @@ def calculate_confidence(
         else:
             base = Confidence.low
 
-    # Ambiguity penalty — only for exact-lookup queries where a clear
-    # winner is expected.  Natural-language queries produce inherently
-    # tight RRF score clusters; penalising that is counter-productive.
+    # Ambiguity penalty — exact-lookup queries use absolute gap,
+    # NL queries use ratio-based approach.
     if requires_exact:
         gap = top1 - top2
         if len(results) > 1 and gap < ambiguity["gap_high_to_medium"] and base == Confidence.high:
             base = Confidence.medium
         elif len(results) > 1 and gap < ambiguity["gap_to_low"]:
             base = Confidence.low
+    else:
+        # Ratio-based ambiguity for NL queries.
+        # Absolute gap is unreliable when reranker produces tight score clusters.
+        # Ratio (top2/top1) is scale-invariant: 0.98 means "top-2 is 98% of top-1".
+        nl_ratio_threshold = ambiguity.get("nl_ratio_high_to_medium", 0.98)
+        if len(results) > 1 and top1 > 0 and base == Confidence.high:
+            score_ratio = top2 / top1
+            if score_ratio >= nl_ratio_threshold:
+                base = Confidence.medium
 
     # Exact required but no exact hit
     if requires_exact and not exact_hit:

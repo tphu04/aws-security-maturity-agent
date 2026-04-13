@@ -7,6 +7,12 @@ from typing import Any, Dict, List, Optional
 
 from app.core.config import CHROMA_DIR, EMBEDDING_MODEL
 
+logger = logging.getLogger(__name__)
+
+# BGE models use an instruction prefix for query encoding (not for documents).
+# See: https://huggingface.co/BAAI/bge-base-en-v1.5#usage
+_BGE_QUERY_PREFIX = "Represent this sentence: "
+
 try:
     import chromadb
     from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
@@ -157,7 +163,7 @@ class VectorIndex:
             if not doc_id:
                 raise ValueError("missing doc_id in vector build doc")
 
-            text = str(doc.get("text", "") or "").strip()
+            text = str(doc.get("embedding_text") or doc.get("text") or "").strip()
             metadata = self._normalize_metadata(doc.get("metadata", {}))
 
             ids.append(str(doc_id))
@@ -196,11 +202,16 @@ class VectorIndex:
         if not query_text or not query_text.strip():
             return []
 
+        # BGE models expect an instruction prefix on queries (not documents).
+        effective_query = query_text
+        if "bge" in self.embedding_model.lower():
+            effective_query = f"{_BGE_QUERY_PREFIX}{query_text}"
+
         collection = self.get_collection(name)
         where = self._build_where(filters)
 
         raw = collection.query(
-            query_texts=[query_text],
+            query_texts=[effective_query],
             n_results=max(1, top_k),
             where=where,
         )

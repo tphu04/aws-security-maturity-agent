@@ -2,10 +2,30 @@
   "rrf": {
     "k": 60
   },
+  "fusion": {
+    "method": "rsf",
+    "alpha": 0.7
+  },
   "exact_match_bonus": 2.0,
   "metadata_bonus": {
     "service_match": 0.03,
     "domain_match": 0.02
+  },
+  "hyde": {
+    "enabled": false,
+    "model": "phi4-mini:latest",
+    "base_url": "http://localhost:11434"
+  },
+  "query_translation": {
+    "enabled": true,
+    "model": "phi4-mini:latest",
+    "base_url": "http://localhost:11434"
+  },
+  "query_rewrite": {
+    "enabled": false,
+    "model": "phi4-mini:latest",
+    "base_url": "http://localhost:11434",
+    "n_variants": 2
   },
   "reranker": {
     "enabled": true,
@@ -34,7 +54,8 @@
   },
   "ambiguity": {
     "gap_high_to_medium": 0.10,
-    "gap_to_low": 0.03
+    "gap_to_low": 0.03,
+    "nl_ratio_high_to_medium": 0.98
   },
   "verification": {
     "ambiguity_threshold": 0.05,

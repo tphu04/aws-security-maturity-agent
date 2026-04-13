@@ -146,10 +146,23 @@ def _fallback_build_text(doc: Dict[str, Any]) -> str:
 
 
 def _document_text(doc: Dict[str, Any]) -> str:
+    """Return text for BM25 indexing (full retrieval_text with aliases)."""
     retrieval_text = str(doc.get("retrieval_text", "") or "").strip()
     if retrieval_text:
         return retrieval_text
     return _fallback_build_text(doc)
+
+
+def _embedding_text(doc: Dict[str, Any]) -> str:
+    """Return text for dense vector embedding (clean, semantic-only).
+
+    Prefers ``embedding_text`` (title + description + risk) over the full
+    ``retrieval_text`` which includes noisy aliases and keywords.
+    """
+    embedding = str(doc.get("embedding_text", "") or "").strip()
+    if embedding:
+        return embedding
+    return _document_text(doc)
 
 
 def _to_index_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
@@ -160,6 +173,7 @@ def _to_index_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "doc_id": str(doc_id),
         "text": _document_text(doc),
+        "embedding_text": _embedding_text(doc),
         "metadata": {
             "doc_type": doc.get("doc_type"),
             "provider": doc.get("provider"),

@@ -28,6 +28,8 @@ class BaseDoc(BaseModel):
     tags: List[str]
     index_version: str
     retrieval_text: Optional[str] = None
+    embedding_text: Optional[str] = None
+    reranker_text: Optional[str] = None
 
 
 class MaturityCapabilityDoc(BaseDoc):

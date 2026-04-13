@@ -18,8 +18,10 @@ _stemmer = SnowballStemmer("english")
 _ENGLISH_STOPWORDS: frozenset[str] = frozenset(_nltk_stopwords.words("english"))
 _AWS_STOPWORDS: frozenset[str] = frozenset({
     "aws", "amazon", "service", "resource", "resources",
-    "configuration", "setting", "settings", "ensure",
-    "check", "checks", "account", "using",
+    "configuration", "setting", "settings",
+    "check", "checks", "using",
+    # "ensure" removed: carries intent in queries ("ensure encryption is enabled")
+    # "account" removed: discriminative for root-account vs general queries
 })
 _STOPWORDS: frozenset[str] = _ENGLISH_STOPWORDS | _AWS_STOPWORDS
 
@@ -89,6 +91,141 @@ def _slugify(text: str) -> str:
     text = re.sub(r"[^a-z0-9]+", "-", text)
     text = re.sub(r"-+", "-", text).strip("-")
     return text
+
+
+# ---------- Text cleaning for embedding quality ----------
+
+_URL_RE = re.compile(r"https?://[^\s,)}\]>]+", re.IGNORECASE)
+
+# Matches markdown inline formatting and preserves the inner content.
+# Groups capture the text *inside* each markup pair so the replacement
+# function can return the plain content.
+_MARKDOWN_INLINE_RE = re.compile(
+    r"\*\*(.+?)\*\*"           # **bold**
+    r"|__(.+?)__"              # __bold__
+    r"|\*([^*]+?)\*"           # *italic*  (exclude ** runs)
+    r"|`{1,3}([^`]+?)`{1,3}"  # `code` / ```code```
+)
+
+# Markdown block-level elements that should be stripped entirely.
+_MARKDOWN_BLOCK_RE = re.compile(
+    r"^#{1,6}\s+",             # heading markers
+    re.MULTILINE,
+)
+
+# Markdown links: [text](url) → keep text; images: ![alt](url) → remove.
+_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\]]*)\]\([^)]+\)")
+
+# camelCase / PascalCase boundary where a lowercase letter is immediately
+# followed by an uppercase letter, e.g. "pricingAs" → "pricing As".
+_CAMEL_BOUNDARY_RE = re.compile(r"([a-z])([A-Z])")
+
+# AWS compound names that must NOT be split by camelCase rules.
+_AWS_COMPOUND_NAMES: frozenset[str] = frozenset({
+    "CloudFront", "CloudTrail", "CloudWatch", "CloudFormation",
+    "CloudHSM", "CloudSearch", "CloudEndure",
+    "GuardDuty", "SecurityHub", "EventBridge", "AppSync",
+    "CodePipeline", "CodeBuild", "CodeDeploy", "CodeCommit",
+    "ElastiCache", "DynamoDB", "QuickSight", "LightSail",
+    "SageMaker", "DataSync", "MediaConnect", "WorkSpaces",
+    "GameLift", "WorkMail", "WorkDocs", "FinSpace",
+    "AccessAnalyzer", "QuickWins", "VpcFlowLogs", "S3OriginConfig",
+    "OriginGroups", "ViewerCertificate", "OriginAccessIdentity",
+    "BucketName", "DistributionConfig",
+})
+
+
+def _strip_markdown(text: str) -> str:
+    """Remove markdown formatting while preserving the content text.
+
+    Handles: **bold**, __bold__, *italic*, `code`, ```code```,
+    headings (# …), links [text](url), and images ![alt](url).
+    """
+    if not text:
+        return ""
+    # Inline formatting → keep inner text
+    def _inline_replace(m: re.Match) -> str:
+        for g in m.groups():
+            if g is not None:
+                return g
+        return ""
+    text = _MARKDOWN_INLINE_RE.sub(_inline_replace, text)
+    # Block-level markers → remove
+    text = _MARKDOWN_BLOCK_RE.sub("", text)
+    # Links → keep link text; images → remove entirely
+    def _link_replace(m: re.Match) -> str:
+        full = m.group(0)
+        if full.startswith("!"):
+            return ""
+        return m.group(1)
+    text = _MARKDOWN_LINK_RE.sub(_link_replace, text)
+    return text
+
+
+def _strip_urls(text: str) -> str:
+    """Remove HTTP/HTTPS URLs from text."""
+    if not text:
+        return ""
+    return _URL_RE.sub("", text)
+
+
+def _fix_html_concatenation(text: str) -> str:
+    """Fix words glued together from HTML-to-text conversion artifacts.
+
+    Common pattern: anchor/heading text is concatenated with surrounding
+    paragraph text during scraping, producing tokens like ``GuardDutyis``,
+    ``Policiesor``, ``pricingAs``.
+
+    Strategy:
+    1. Protect known AWS compound names (CloudFront, GuardDuty, …)
+    2. Split at camelCase boundaries (lowercase→uppercase)
+    3. Restore protected names
+    4. Split where a restored compound is immediately followed by lowercase
+       letters (e.g. ``GuardDutyis`` → ``GuardDuty is``)
+    """
+    if not text:
+        return ""
+    # 1. Protect known compounds from camelCase splitting
+    protected: dict[str, str] = {}
+    for name in _AWS_COMPOUND_NAMES:
+        if name in text:
+            ph = f"\x00CMP{len(protected)}\x00"
+            protected[ph] = name
+            text = text.replace(name, ph)
+    # 2. Split at camelCase boundaries
+    text = _CAMEL_BOUNDARY_RE.sub(r"\1 \2", text)
+    # 3. Restore protected compounds
+    for ph, original in protected.items():
+        text = text.replace(ph, original)
+    # 4. Insert space where a compound name is glued to a following
+    #    lowercase word (e.g. "GuardDutyis" → "GuardDuty is")
+    for name in _AWS_COMPOUND_NAMES:
+        if name in text:
+            text = re.sub(
+                re.escape(name) + r"(?=[a-z])",
+                name + " ",
+                text,
+            )
+    return text
+
+
+def _clean_for_embedding(text: str) -> str:
+    """Full cleaning pipeline for dense-embedding text.
+
+    Order:
+    1. Fix HTML concatenation artifacts (needs original casing)
+    2. Strip markdown formatting
+    3. Strip URLs (carry no semantic value, waste token budget)
+    4. Standard normalization (unicode, whitespace collapse)
+    5. Lowercase
+    """
+    if not text:
+        return ""
+    text = _fix_html_concatenation(text)
+    text = _strip_markdown(text)
+    text = _strip_urls(text)
+    text = _normalize_for_index(text)
+    return text.lower()
 
 
 def _capability_aliases(capability_id: str, capability_name: str) -> List[str]:
@@ -397,6 +534,62 @@ def build_retrieval_text_prefixed(fields: List[tuple]) -> str:
     return "\n".join(chunks)
 
 
+# Fields that carry semantic meaning for dense embedding.
+_EMBEDDING_FIELDS = frozenset({
+    "title", "description", "risk", "name", "summary",
+    "risk_explanation", "guidance",
+})
+
+# Fields suitable for cross-encoder reranking (structured, concise).
+_RERANKER_FIELDS = frozenset({
+    "title", "description", "risk", "name", "summary",
+})
+
+
+def build_embedding_text(fields: List[tuple], max_words: int = 200) -> str:
+    """Build text optimized for dense embedding.
+
+    Keeps only semantic-rich fields (title, description, risk, etc.).
+    Excludes aliases, keywords, check_id, resource_type, and remediation
+    which add noise to the embedding space.
+
+    Changes over v4:
+    - Uses ``_clean_for_embedding`` to strip markdown, URLs, and HTML
+      concatenation artifacts that pollute the vector space.
+    - Truncates to *max_words* (default 200 ≈ 256 tokens) so the text
+      fits within the BGE-base-en-v1.5 512-token context window without
+      silent tail truncation by the model.
+    - Field order in the caller's *fields* list determines priority when
+      text is truncated.
+    """
+    chunks: List[str] = []
+    for field_name, value in fields:
+        if field_name in _EMBEDDING_FIELDS:
+            text = _clean_for_embedding(value)
+            if text:
+                chunks.append(text)
+    combined = " ".join(chunks)
+    return _truncate_words(combined, max_words=max_words)
+
+
+def build_reranker_text(fields: List[tuple]) -> str:
+    """Build text optimized for cross-encoder reranking.
+
+    Uses structured ``field: value`` format to help the cross-encoder
+    distinguish between title, description, and risk content.
+
+    Uses ``_clean_for_embedding`` to strip markdown/URL noise so the
+    cross-encoder scores on clean semantic content.
+    """
+    chunks: List[str] = []
+    for field_name, value in fields:
+        if field_name in _RERANKER_FIELDS:
+            text = _clean_for_embedding(value)
+            if text:
+                chunks.append(f"{field_name}: {text}")
+    return "\n".join(chunks)
+
+
 def _extract_recommendation_text(remediation: Any) -> str:
     """Extract only human-readable recommendation text from Remediation,
     excluding CLI commands, Terraform code, CloudFormation YAML, and URLs."""
@@ -540,9 +733,15 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
 
     keywords = normalize_string_list(raw.get("keywords", []))
     tags = normalize_string_list(raw.get("tags", []))
-    summary = _normalize_for_index(raw.get("summary", ""))
-    risk_explanation = _normalize_for_index(raw.get("risk_explanation", ""))
-    guidance = _normalize_for_index(raw.get("guidance", ""))
+    # Apply HTML concatenation fix before standard normalization.
+    # Raw maturity data has scraping artifacts where anchor/heading text
+    # is glued to surrounding text (e.g. "GuardDutyis", "pricingAs").
+    # Fixing here benefits both retrieval_text (BM25) and embedding_text.
+    summary = _normalize_for_index(_fix_html_concatenation(raw.get("summary", "") or ""))
+    risk_explanation = _normalize_for_index(
+        _fix_html_concatenation(raw.get("risk_explanation", "") or "")
+    )
+    guidance = _normalize_for_index(_fix_html_concatenation(raw.get("guidance", "") or ""))
     how_to_check = _normalize_for_index(raw.get("how_to_check", ""))
 
     aliases = _capability_aliases(capability_id, capability_name)
@@ -564,6 +763,32 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
         rec_for_retrieval = rec_text_combined
 
     alias_text = " ".join(alias_inputs) if alias_inputs else ""
+
+    # --- retrieval_text fields (BM25): full detail ---
+    fields_list = [
+        ("capability", capability_id),
+        ("name", capability_name),
+        ("aliases", alias_text),
+        ("domain", raw.get("domain", "")),
+        ("summary", summary_for_retrieval),
+        ("risk", risk_explanation),
+        ("guidance", guidance),
+        ("keywords", " ".join(keywords)),
+        ("recommendations", rec_for_retrieval),
+    ]
+
+    # --- embedding_text fields: optimized order & length ---
+    # Priority: name (always) > risk_explanation (discriminative) >
+    # summary (truncated to leave room) > guidance (assessment questions).
+    # build_embedding_text() applies _clean_for_embedding + truncation
+    # at 200 words total, so field order = priority when text is cut.
+    summary_for_embedding = _truncate_words(summary, max_words=80)
+    embedding_fields = [
+        ("name", capability_name),
+        ("risk_explanation", risk_explanation),
+        ("summary", summary_for_embedding),
+        ("guidance", guidance),
+    ]
 
     doc = MaturityCapabilityDoc(
         doc_id=doc_id,
@@ -588,19 +813,9 @@ def normalize_maturity_doc(raw: dict) -> MaturityCapabilityDoc:
         how_to_check=how_to_check or None,
         recommended_practices=recommended_practices,
         keywords=keywords,
-        retrieval_text=build_retrieval_text_prefixed(
-            [
-                ("capability", capability_id),
-                ("name", capability_name),
-                ("aliases", alias_text),
-                ("domain", raw.get("domain", "")),
-                ("summary", summary_for_retrieval),
-                ("risk", risk_explanation),
-                ("guidance", guidance),
-                ("keywords", " ".join(keywords)),
-                ("recommendations", rec_for_retrieval),
-            ]
-        ),
+        retrieval_text=build_retrieval_text_prefixed(fields_list),
+        embedding_text=build_embedding_text(embedding_fields),
+        reranker_text=build_reranker_text(fields_list),
     )
     return doc
 
@@ -647,6 +862,38 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
 
     alias_text = " ".join(aliases) if aliases else ""
 
+    # --- retrieval_text fields (BM25): full detail, all aliases ---
+    fields_list = [
+        ("check", check_id),
+        ("service", service),
+        ("title", title),
+        ("description", description),
+        ("risk", risk),
+        ("recommendation", recommendation_text),
+        ("resource_type", raw.get("ResourceType", "")),
+        ("keywords", " ".join(enriched_keywords)),
+        ("aliases", alias_text),
+    ]
+
+    # --- embedding_text fields: semantic-only + top semantic aliases ---
+    # Select short, multi-word aliases (real paraphrases, not ID variants).
+    # These inject the handcrafted semantic expansions into the vector
+    # space so queries like "make storage private" can match via cosine
+    # similarity, not just BM25.
+    _MAX_EMBED_ALIASES = 5
+    semantic_aliases = [
+        a for a in aliases
+        if " " in a and len(a) < 60 and a != title.lower()
+    ][:_MAX_EMBED_ALIASES]
+    alias_summary = ". ".join(semantic_aliases) if semantic_aliases else ""
+
+    embedding_fields = [
+        ("title", title),
+        ("description", description),
+        ("risk", risk),
+        ("summary", alias_summary),
+    ]
+
     doc = ProwlerCheckDoc(
         doc_id=f"check:{check_id}",
         doc_type="prowler_check",
@@ -670,19 +917,9 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
         resource_type=_normalize_for_index(raw.get("ResourceType", "")) or None,
         keywords=keywords,
         synonyms=aliases,
-        retrieval_text=build_retrieval_text_prefixed(
-            [
-                ("check", check_id),
-                ("service", service),
-                ("title", title),
-                ("description", description),
-                ("risk", risk),
-                ("recommendation", recommendation_text),
-                ("resource_type", raw.get("ResourceType", "")),
-                ("keywords", " ".join(enriched_keywords)),
-                ("aliases", alias_text),
-            ]
-        ),
+        retrieval_text=build_retrieval_text_prefixed(fields_list),
+        embedding_text=build_embedding_text(embedding_fields),
+        reranker_text=build_reranker_text(fields_list),
     )
     return doc
 
@@ -752,5 +989,13 @@ def normalize_mapping_doc(
                 tags,
             ]
         ),
+        embedding_text=build_embedding_text([
+            ("name", capability_name),
+            ("description", mapping_reason),
+        ]),
+        reranker_text=build_reranker_text([
+            ("name", capability_name),
+            ("description", mapping_reason),
+        ]),
     )
     return doc

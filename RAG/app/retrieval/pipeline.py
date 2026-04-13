@@ -181,8 +181,14 @@ class RetrievalPipeline:
                 "retrieval pipeline is not ready: at least one lexical index is required"
             )
 
+        # --- Auto-translate non-English queries ---
+        from app.retrieval.query_translator import maybe_translate_query
+
+        effective_query, was_translated = maybe_translate_query(query)
+        original_query = query if was_translated else None
+
         route = self.router.route(
-            query=query,
+            query=effective_query,
             explicit_type=explicit_type,
             provider=provider,
             service=service,
@@ -272,25 +278,89 @@ class RetrievalPipeline:
                 },
             )
 
+        # ----- LLM query expansion (rewrite + HyDE) -----
+        hyde_text: Optional[str] = None
+        rewrite_variants: List[str] = []
+
+        if retrieval_mode in ("hybrid", "vector") and not route.requires_exact_lookup:
+            from app.retrieval.hyde import maybe_generate_hyde
+            from app.retrieval.query_rewriter import maybe_rewrite_query
+
+            # Launch rewrite + HyDE concurrently (both are LLM calls)
+            with ThreadPoolExecutor(max_workers=2) as exp_pool:
+                hyde_fut = exp_pool.submit(
+                    maybe_generate_hyde,
+                    query=route.normalized_query,
+                    requires_exact_lookup=route.requires_exact_lookup,
+                )
+                rw_fut = exp_pool.submit(
+                    maybe_rewrite_query,
+                    query=route.normalized_query,
+                    requires_exact_lookup=route.requires_exact_lookup,
+                )
+                hyde_text = hyde_fut.result()
+                rewrite_variants = rw_fut.result()
+
+        # ----- Multi-query BM25: original + rewrite variants -----
         if retrieval_mode == "hybrid":
-            with ThreadPoolExecutor(max_workers=2) as executor:
+            with ThreadPoolExecutor(max_workers=2 + len(rewrite_variants)) as executor:
+                # Original BM25 search
                 lex_future = executor.submit(
                     self._run_lexical, route=route, top_k=search_top_k
                 )
+                # Vector search (with HyDE override if available)
                 vec_future = executor.submit(
-                    self._run_vector, route=route, top_k=search_top_k
+                    self._run_vector,
+                    route=route,
+                    top_k=search_top_k,
+                    query_override=hyde_text,
                 )
+                # Additional BM25 searches for rewrite variants
+                rw_lex_futures = [
+                    executor.submit(
+                        self._run_lexical_with_query,
+                        route=route,
+                        query_text=variant,
+                        top_k=search_top_k,
+                    )
+                    for variant in rewrite_variants
+                ]
+
                 lexical_results = lex_future.result()
                 try:
                     vector_results = vec_future.result()
                 except Exception as exc:
                     vector_results = []
                     vector_error = f"{type(exc).__name__}: {exc}"
+
+                # Merge rewrite BM25 results into lexical_results
+                for rw_fut in rw_lex_futures:
+                    try:
+                        rw_results = rw_fut.result()
+                        lexical_results = self._merge_lexical_variants(
+                            lexical_results, rw_results
+                        )
+                    except Exception:
+                        pass
+
         elif retrieval_mode == "lexical":
             lexical_results = self._run_lexical(route=route, top_k=search_top_k)
+            # Also run rewrite variants for lexical-only mode
+            for variant in rewrite_variants:
+                try:
+                    rw_results = self._run_lexical_with_query(
+                        route=route, query_text=variant, top_k=search_top_k
+                    )
+                    lexical_results = self._merge_lexical_variants(
+                        lexical_results, rw_results
+                    )
+                except Exception:
+                    pass
         elif retrieval_mode == "vector":
             try:
-                vector_results = self._run_vector(route=route, top_k=search_top_k)
+                vector_results = self._run_vector(
+                    route=route, top_k=search_top_k, query_override=hyde_text,
+                )
             except Exception as exc:
                 vector_results = []
                 vector_error = f"{type(exc).__name__}: {exc}"
@@ -344,6 +414,9 @@ class RetrievalPipeline:
                 "used_vector": len(vector_results) > 0,
                 "used_hybrid": retrieval_mode == "hybrid" and len(vector_results) > 0,
                 "vector_error": vector_error,
+                "hyde_used": hyde_text is not None,
+                "rewrite_variants": rewrite_variants if rewrite_variants else None,
+                "translated_from": original_query,
                 **reranker_diag,
             },
         )
@@ -433,7 +506,52 @@ class RetrievalPipeline:
             exact_capability_id=exact_capability_id,
         )
 
-    def _run_vector(self, route: RouteDecision, top_k: int) -> List[Dict[str, Any]]:
+    def _run_lexical_with_query(
+        self, route: RouteDecision, query_text: str, top_k: int,
+    ) -> List[Dict[str, Any]]:
+        """Run BM25 search with an explicit query string (for rewrite variants)."""
+        corpus_name = self._corpus_for_route(route)
+        lexical_index = self.lexical_indexes.get(corpus_name)
+        if lexical_index is None:
+            return []
+        return lexical_index.query(
+            query_text=query_text,
+            top_k=top_k,
+            filters=route.filters,
+        )
+
+    @staticmethod
+    def _merge_lexical_variants(
+        primary: List[Dict[str, Any]],
+        additional: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        """Merge additional BM25 results into primary list.
+
+        Keeps the primary order intact.  Appends any new doc_ids from
+        *additional* that are not already in *primary*, with a small score
+        discount (×0.8) to rank them below primary hits for the same doc.
+        """
+        seen = {item["doc_id"] for item in primary if item.get("doc_id")}
+        for item in additional:
+            doc_id = item.get("doc_id")
+            if doc_id and doc_id not in seen:
+                seen.add(doc_id)
+                discounted = dict(item)
+                discounted["score"] = float(item.get("score", 0)) * 0.8
+                discounted.setdefault("matched_by", [])
+                if "bm25_rewrite" not in discounted["matched_by"]:
+                    discounted["matched_by"] = list(discounted["matched_by"]) + [
+                        "bm25_rewrite"
+                    ]
+                primary.append(discounted)
+        return primary
+
+    def _run_vector(
+        self,
+        route: RouteDecision,
+        top_k: int,
+        query_override: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         if self.vector_index is None:
             return []
 
@@ -441,10 +559,12 @@ class RetrievalPipeline:
         if not collection_name:
             return []
 
+        query_text = query_override or route.normalized_query
+
         try:
             return self.vector_index.query(
                 name=collection_name,
-                query_text=route.normalized_query,
+                query_text=query_text,
                 top_k=top_k,
                 filters=route.filters,
             )
@@ -513,6 +633,8 @@ class RetrievalPipeline:
             "source_type": doc.get("source_type"),
             "index_version": doc.get("index_version"),
             "retrieval_text": doc.get("retrieval_text"),
+            "embedding_text": doc.get("embedding_text"),
+            "reranker_text": doc.get("reranker_text"),
 
             # prowler_check
             "title": doc.get("title"),
@@ -599,10 +721,10 @@ class RetrievalPipeline:
         preferred_service: Optional[str] = None,
         preferred_domain: Optional[str] = None,
     ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
-        """Merge lexical + vector candidates via RRF, then cross-encoder rerank.
+        """Merge lexical + vector candidates via hybrid fusion, then cross-encoder rerank.
 
         Flow:
-        1. RRF merge (pure rank fusion)
+        1. Hybrid fusion — RRF (rank-only) or RSF (rank + normalized score)
         2. Separate exact matches (score = exact_match_bonus, skip reranking)
         3. Product gate filter (binary — remove violating candidates)
         4. Hydrate candidates (load retrieval_text for cross-encoder)
@@ -613,7 +735,7 @@ class RetrievalPipeline:
         Returns:
             Tuple of (merged results, reranker diagnostics dict).
         """
-        # ---- Step 1: RRF merge ----
+        # ---- Step 1: Hybrid fusion (RRF or RSF) ----
         merged: Dict[str, Dict[str, Any]] = {}
 
         lexical_rank_map = {
@@ -627,11 +749,33 @@ class RetrievalPipeline:
             if item.get("doc_id")
         }
 
+        # Build raw-score lookup for RSF
+        lexical_score_map = {
+            item["doc_id"]: float(item.get("score", 0))
+            for item in lexical_results
+            if item.get("doc_id")
+        }
+        vector_score_map = {
+            item["doc_id"]: float(item.get("score", 0))
+            for item in vector_results
+            if item.get("doc_id")
+        }
+
         all_doc_ids = list(
             dict.fromkeys(
                 list(lexical_rank_map.keys()) + list(vector_rank_map.keys())
             )
         )
+
+        # RSF: normalize BM25 scores to [0, 1] via min-max
+        fusion_cfg = self._scoring.get("fusion", {})
+        fusion_method = fusion_cfg.get("method", "rrf")
+        alpha = float(fusion_cfg.get("alpha", 0.7))
+
+        lex_scores = list(lexical_score_map.values())
+        lex_min = min(lex_scores) if lex_scores else 0.0
+        lex_max = max(lex_scores) if lex_scores else 1.0
+        lex_range = lex_max - lex_min if lex_max > lex_min else 1.0
 
         for doc_id in all_doc_ids:
             lexical_item = next(
@@ -658,6 +802,23 @@ class RetrievalPipeline:
             if doc_id in vector_rank_map:
                 rrf_score += self._rrf(vector_rank_map[doc_id])
 
+            # Compute final fusion score
+            if fusion_method == "rsf":
+                max_norm_score = 0.0
+                if doc_id in lexical_score_map:
+                    max_norm_score = max(
+                        max_norm_score,
+                        (lexical_score_map[doc_id] - lex_min) / lex_range,
+                    )
+                if doc_id in vector_score_map:
+                    # Vector scores are already in [0, 1]
+                    max_norm_score = max(
+                        max_norm_score, vector_score_map[doc_id]
+                    )
+                fusion_score = alpha * rrf_score + (1 - alpha) * max_norm_score
+            else:
+                fusion_score = rrf_score
+
             is_exact = False
             if lexical_item and self._has_exact_match(lexical_item):
                 is_exact = True
@@ -666,7 +827,7 @@ class RetrievalPipeline:
 
             merged[doc_id] = {
                 "doc_id": doc_id,
-                "score": rrf_score,
+                "score": fusion_score,
                 "metadata": metadata,
                 "matched_by": sorted(matched_by),
                 "_is_exact": is_exact,

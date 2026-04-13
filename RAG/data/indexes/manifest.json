@@ -1,7 +1,7 @@
 {
-  "index_version": "rag-v2-2026-03-17",
-  "built_at": "2026-03-26T08:59:34+00:00",
-  "embedding_model": "all-MiniLM-L6-v2",
+  "index_version": "rag-v5-2026-04-07",
+  "built_at": "2026-04-07T04:21:02+00:00",
+  "embedding_model": "BAAI/bge-base-en-v1.5",
   "storage_layout": "multi_corpus",
   "corpora": {
     "prowler_checks": {

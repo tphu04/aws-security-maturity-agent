@@ -78,9 +78,15 @@ class CrossEncoderReranker:
 
     @staticmethod
     def _extract_passage(candidate: Dict[str, Any]) -> str:
-        """Build the passage string the cross-encoder will score against."""
+        """Build the passage string the cross-encoder will score against.
+
+        Prefers ``reranker_text`` (concise, structured) over ``retrieval_text``
+        (full text with noisy aliases/keywords).
+        """
         meta = candidate.get("metadata") or {}
 
+        # Use full retrieval_text for cross-encoder (ms-marco needs more context).
+        # reranker_text is available but shorter text degrades ms-marco performance.
         retrieval_text = meta.get("retrieval_text")
         if retrieval_text and str(retrieval_text).strip():
             return str(retrieval_text).strip()

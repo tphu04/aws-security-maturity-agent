@@ -35,8 +35,8 @@ MAPPINGS_CURATED_PATH = RAW_DIR / "maturity_mappings_curated.json"
 # -------------------------------------------------------------------
 # Versioning / models
 # -------------------------------------------------------------------
-INDEX_VERSION = "rag-v2-2026-03-17"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+INDEX_VERSION = "rag-v5-2026-04-07"
+EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 # -------------------------------------------------------------------
@@ -141,10 +141,16 @@ def load_scoring_config() -> Dict[str, Any]:
 
     defaults: Dict[str, Any] = {
         "rrf": {"k": 60},
+        "fusion": {"method": "rrf", "alpha": 0.7},
         "exact_match_bonus": 2.0,
         "metadata_bonus": {
             "service_match": 0.03,
             "domain_match": 0.02,
+        },
+        "hyde": {
+            "enabled": False,
+            "model": "llama3.2:latest",
+            "base_url": "http://localhost:11434",
         },
         "reranker": {
             "enabled": True,
@@ -163,6 +169,7 @@ def load_scoring_config() -> Dict[str, Any]:
         "ambiguity": {
             "gap_high_to_medium": 0.10,
             "gap_to_low": 0.03,
+            "nl_ratio_high_to_medium": 0.98,
         },
         "verification": {
             "ambiguity_threshold": 0.05,

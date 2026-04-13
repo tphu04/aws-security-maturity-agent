@@ -3,7 +3,7 @@
     "dataset": "maturity_mappings",
     "source_prowler": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\raw\\prowler_checks.json",
     "source_maturity": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\raw\\maturity_capabilities.json",
-    "generated_at": "2026-03-26T08:58:22.993429+00:00",
+    "generated_at": "2026-04-07T04:18:42.208182+00:00",
     "generator": "scripts/generate_maturity_mappings.py",
     "item_count": 502,
     "top_k": 3,
