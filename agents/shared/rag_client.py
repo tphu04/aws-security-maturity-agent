@@ -73,19 +73,22 @@ class RAGClient:
             True nếu status 200 và status field là "ready".
             False nếu timeout/error hoặc service chưa ready.
         """
-        url = f"{self.base_url}/ready"
-        try:
-            resp = self._session.get(url, timeout=self.timeout)
-            if resp.status_code == 200:
-                data = resp.json()
-                is_ready = data.get("status") == "ready"
-                logger.debug("RAG health check: status=%s, ready=%s", data.get("status"), is_ready)
-                return is_ready
-            logger.warning("RAG health check failed: HTTP %d", resp.status_code)
-            return False
-        except Exception as e:
-            logger.warning("RAG health check error: %s", e)
-            return False
+        # Try /ready first, fall back to /health
+        for endpoint in ("/ready", "/health"):
+            url = f"{self.base_url}{endpoint}"
+            try:
+                resp = self._session.get(url, timeout=self.timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    # /ready returns {"status":"ready"}, /health returns {"status":"ok"}
+                    is_ready = data.get("status") in ("ready", "ok")
+                    logger.debug("RAG health check (%s): status=%s, ready=%s", endpoint, data.get("status"), is_ready)
+                    return is_ready
+                logger.warning("RAG health check failed (%s): HTTP %d", endpoint, resp.status_code)
+            except Exception:
+                continue
+        logger.warning("RAG health check: all endpoints failed")
+        return False
 
     # ------------------------------------------------------------------
     # Retrieve Checks

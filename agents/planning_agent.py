@@ -50,6 +50,11 @@ TOP_K_RESULTS = 5
 CONFIDENCE_SKIP_LLM = {"high", "medium"}
 MIN_TOP_SCORE_FOR_SKIP = 0.35
 
+# Score gap filter: drop candidates whose score falls below
+# (top_score * DROP_RATIO_THRESHOLD). Prevents returning irrelevant
+# candidates that happen to be in TOP_K.
+DROP_RATIO_THRESHOLD = 0.85  # keep candidates within 85% of top score
+
 # ---------------------------------------------------------------------------
 # INPUT CLASSIFICATION CONSTANTS
 # ---------------------------------------------------------------------------
@@ -65,11 +70,17 @@ _KNOWN_SERVICE_PREFIXES = (
     "sagemaker_",
 )
 
-_GROUP_SCAN_PATTERNS = re.compile(
-    r"\b(scan\s+all|full\s+scan|check\s+group|group\s+scan|scan\s+entire|"
-    r"all\s+checks?\s+for|complete\s+scan)\b",
-    re.IGNORECASE,
-)
+# Security-specific topic keywords (keys from _KEYWORD_SERVICE_MAP).
+# Used to distinguish "scan all S3" (no topic → group) from
+# "check S3 encryption" (has topic → specific).  Built once at import.
+_SECURITY_TOPIC_KEYWORDS: set = set()
+
+# Generic words that appear in requests but don't indicate a specific topic.
+_GENERIC_TOKENS = {
+    "scan", "check", "run", "assess", "verify", "control",
+    "security", "assessment", "audit", "review",
+    "all", "full", "complete", "entire", "everything",
+}
 
 ALLOWED_GROUPS = {
     "s3", "iam", "ec2", "rds", "cloudtrail", "eks", "vpc", "lambda", "kms",
@@ -102,6 +113,45 @@ _KEYWORD_SERVICE_MAP = {
     "registry": "ecr", "image": "ecr",
     "threat": "guardduty", "detection": "guardduty",
 }
+
+# Vietnamese -> English security keyword mapping for RAG query enhancement.
+# RAG documents are in English; Vietnamese queries get poor retrieval without translation.
+_VI_EN_SECURITY_KEYWORDS = {
+    # Actions
+    "kiểm tra": "check", "kiểm soát": "control", "xác minh": "verify",
+    "quét": "scan", "đánh giá": "assess", "chạy": "run",
+    # Security concepts
+    "mã hóa": "encryption", "mã hoá": "encryption",
+    "mật khẩu": "password", "quyền truy cập": "access",
+    "truy cập": "access", "công khai": "public",
+    "bảo mật": "security", "rủi ro": "risk",
+    "quyền": "permission", "xác thực": "authentication",
+    "nhật ký": "logging", "ghi log": "logging",
+    "sao lưu": "backup", "khóa": "key",
+    "tường lửa": "firewall", "mạng": "network",
+    "cơ sở dữ liệu": "database", "lưu trữ": "storage",
+    "người dùng": "user", "tài khoản": "account",
+    "vai trò": "role", "chính sách": "policy",
+    "tuân thủ": "compliance", "cấu hình": "configuration",
+    # States
+    "bật": "enabled", "tắt": "disabled",
+    "hết hạn": "expired", "không sử dụng": "unused",
+    "công cộng": "public", "riêng tư": "private",
+}
+
+# Build _SECURITY_TOPIC_KEYWORDS from existing domain knowledge.
+# These are the English security-concept words (keys of _KEYWORD_SERVICE_MAP
+# + translated values from _VI_EN_SECURITY_KEYWORDS) minus generic/action words.
+# A request that contains a service name but NONE of these → group scan intent.
+_SECURITY_TOPIC_KEYWORDS.update(
+    kw for kw in _KEYWORD_SERVICE_MAP if kw not in _GENERIC_TOKENS
+)
+_SECURITY_TOPIC_KEYWORDS.update(
+    en for en in _VI_EN_SECURITY_KEYWORDS.values() if en not in _GENERIC_TOKENS
+)
+# Remove service names themselves — they are not "topics"
+_SECURITY_TOPIC_KEYWORDS -= set(VALID_SERVICES)
+_SECURITY_TOPIC_KEYWORDS -= ALLOWED_GROUPS
 
 # ---------------------------------------------------------------------------
 # LLM REFINEMENT PROMPT (conditional — only used when confidence is low)
@@ -170,7 +220,18 @@ class PlanningAgent:
     # ------------------------------------------------------------------
 
     def run(self, user_request: str) -> Dict[str, Any]:
-        """Entry point: phân tích user request → trả về assessment plan."""
+        """Entry point: phân tích user request → trả về assessment plan.
+
+        Flow (Hybrid Validated FAST_TRACK):
+          1. Detect service + build enhanced (English) query
+          2. Extract candidate check IDs from request
+          3. Validate each ID against RAG via lexical lookup (check_id param)
+             - Valid IDs (found in RAG corpus)   → FAST_TRACK candidates
+             - Invalid IDs (not in RAG corpus)   → used as query hints only
+          4a. All IDs valid → FAST_TRACK (return immediately, no full retrieval)
+          4b. Some/no valid IDs → enrich query with valid hints → RETRIEVAL_PATH
+          5. Classify: GROUP_SCAN vs RETRIEVAL_PATH → retrieve → score → gate
+        """
         if not user_request or not isinstance(user_request, str) or not user_request.strip():
             return self._make_error_output("Empty or invalid user request.")
 
@@ -178,58 +239,184 @@ class PlanningAgent:
         logger.info("PlanningAgent V2: '%s'", request)
 
         try:
-            classification = self._classify_input(request)
-            path = classification["path"]
+            # Step 1: Detect service + translate to English
+            detected_service = self._detect_service(request)
+            enhanced_query = self._build_rag_query(request, detected_service)
 
-            if path == "FAST_TRACK":
-                logger.info("FAST TRACK: %d explicit check IDs", len(classification["check_ids"]))
-                return self._make_output(
-                    checks=classification["check_ids"],
-                    reasoning="Explicit check IDs detected in request.",
+            # Step 2: Extract candidate check IDs from request
+            candidate_ids = self._extract_check_ids(request)
+
+            if candidate_ids:
+                # Step 3: Validate each ID against RAG corpus (lexical — fast)
+                valid_ids, invalid_ids = self._validate_check_ids(candidate_ids)
+                logger.info(
+                    "ID validation: %d valid, %d invalid (of %d candidates)",
+                    len(valid_ids), len(invalid_ids), len(candidate_ids),
                 )
 
-            if path == "GROUP_SCAN":
-                logger.info("GROUP SCAN: %s", classification["service"])
+                if valid_ids and not invalid_ids:
+                    # Step 4a: All IDs confirmed valid → FAST_TRACK
+                    logger.info("FAST_TRACK (all valid): %s", valid_ids)
+                    return self._make_output(
+                        checks=valid_ids,
+                        reasoning=(
+                            f"Explicit check IDs verified in RAG corpus: {', '.join(valid_ids)}."
+                        ),
+                    )
+
+                # Step 4b: Some/all IDs invalid → enrich query with valid hints
+                hints = valid_ids or candidate_ids  # prefer valid, fallback to all as hints
+                hint_str = " ".join(hints)
+                enhanced_query = f"{enhanced_query} {hint_str}".strip()
+                if invalid_ids:
+                    logger.info(
+                        "Invalid IDs used as RAG hints: %s", invalid_ids
+                    )
+
+            # Step 5: Classify on enhanced query (language-independent)
+            if self._is_group_intent(enhanced_query, detected_service):
+                logger.info("GROUP SCAN: %s", detected_service)
                 return self._make_output(
-                    groups=[classification["service"]],
-                    reasoning=f"Group scan requested for {classification['service']}.",
+                    groups=[detected_service],
+                    reasoning=f"Group scan requested for {detected_service}.",
                 )
 
-            # RETRIEVAL_PATH
-            retrieval = self._retrieve(request)
-            scored = self._score_candidates(retrieval, classification.get("service"))
+            # Step 6: RETRIEVAL_PATH
+            retrieval = self._retrieve(enhanced_query)
+            scored = self._score_candidates(retrieval, detected_service)
             return self._apply_confidence_gate(request, scored, retrieval)
 
         except Exception as e:
             logger.error("PlanningAgent critical error: %s", e, exc_info=True)
             return self._make_error_output(f"Planning failed: {e}")
 
+    def _validate_check_ids(
+        self, candidate_ids: List[str]
+    ) -> tuple[List[str], List[str]]:
+        """
+        Validate extracted check IDs bằng cách query RAG với check_id param.
+        Dùng lexical mode — cực nhanh, không cần embedding.
+
+        Returns:
+            (valid_ids, invalid_ids) — chia IDs thành 2 nhóm.
+        """
+        if not self.rag_client:
+            # RAG unavailable — trust all IDs, fall back to old FAST_TRACK behavior
+            logger.warning("RAG unavailable for ID validation, trusting all candidate IDs")
+            return candidate_ids, []
+
+        valid, invalid = [], []
+        for cid in candidate_ids:
+            try:
+                result = self.rag_client.retrieve_checks(
+                    check_id=cid,
+                    top_k=1,
+                    retrieval_mode="lexical",
+                )
+                results_list = (result or {}).get("results", [])
+                if results_list:
+                    # RAG found the check ID in its corpus — it's real
+                    valid.append(cid)
+                    logger.debug("ID validated: %s", cid)
+                else:
+                    invalid.append(cid)
+                    logger.info("ID not found in RAG corpus (invalid): %s", cid)
+            except Exception as e:
+                # If lookup fails, be safe — treat as hint, not direct output
+                invalid.append(cid)
+                logger.warning("ID validation failed for %s: %s", cid, e)
+        return valid, invalid
+
+    # ------------------------------------------------------------------
+    # Step 0: RAG Query Enhancement (pure logic, no LLM)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _build_rag_query(request: str, detected_service: Optional[str] = None) -> str:
+        """Build English-enhanced query for RAG retrieval.
+
+        RAG documents are in English. Vietnamese queries get poor retrieval
+        because embedding similarity is low cross-language. This method:
+        1. Translates known Vietnamese security keywords → English
+        2. Prepends detected service name for better matching
+        3. Falls back to original request if no translation needed
+
+        Pure logic — no LLM call, no I/O.
+        """
+        lower = request.lower()
+
+        # Check if request contains Vietnamese characters
+        has_vietnamese = any(
+            "\u00c0" <= ch <= "\u01b0" or "\u1ea0" <= ch <= "\u1ef9"
+            for ch in request
+        )
+
+        if not has_vietnamese:
+            # English request — use as-is, optionally prepend service
+            if detected_service and detected_service not in lower:
+                return f"{detected_service} {request}"
+            return request
+
+        # Vietnamese request — translate keywords
+        translated_parts = []
+        if detected_service:
+            translated_parts.append(detected_service)
+
+        # Replace Vietnamese keywords with English equivalents
+        for vi_kw, en_kw in _VI_EN_SECURITY_KEYWORDS.items():
+            if vi_kw in lower:
+                translated_parts.append(en_kw)
+
+        # Keep English words already in the request (e.g. "RDS", "MFA", "S3")
+        # Filter out Vietnamese fragments that happen to be ASCII
+        _vi_fragments = {
+            "tra", "xem", "cho", "trong", "truy", "cac", "tat",
+            "dang", "duoc", "khong", "hay", "nao", "toan", "bat",
+        }
+        english_words = re.findall(r"\b[a-zA-Z][a-zA-Z0-9_]{2,}\b", request)
+        for word in english_words:
+            wl = word.lower()
+            if wl not in translated_parts and wl not in _vi_fragments:
+                translated_parts.append(wl)
+
+        if translated_parts:
+            enhanced = " ".join(dict.fromkeys(translated_parts))  # dedupe, preserve order
+            logger.info("RAG query enhanced: '%s' → '%s'", request[:60], enhanced)
+            return enhanced
+
+        return request
+
     # ------------------------------------------------------------------
     # Step 1: Input Classification (pure logic, no LLM, no I/O)
     # ------------------------------------------------------------------
 
-    def _classify_input(self, request: str) -> Dict[str, Any]:
+    @staticmethod
+    def _is_group_intent(enhanced_query: str, detected_service: Optional[str]) -> bool:
+        """Detect group-scan intent from the enhanced (English) query.
+
+        Logic: if we can identify a service but the query contains NO
+        security-specific topic keyword, the user wants a broad group scan
+        rather than checks for a specific concern.
+
+        Operates on the already-translated query → language-independent.
         """
-        Phân loại request thành 1 trong 3 paths.
+        if not detected_service or detected_service not in ALLOWED_GROUPS:
+            return False
 
-        Returns:
-            {"path": "FAST_TRACK"|"GROUP_SCAN"|"RETRIEVAL_PATH",
-             "check_ids": [...],  # only for FAST_TRACK
-             "service": "..."}    # detected service hoặc None
-        """
-        # 1. Check for explicit check IDs (strict pattern)
-        check_ids = self._extract_check_ids(request)
-        if check_ids:
-            return {"path": "FAST_TRACK", "check_ids": check_ids, "service": None}
+        # Tokenise the enhanced query and remove service names + generic words
+        tokens = set(re.findall(r"[a-zA-Z]{2,}", enhanced_query.lower()))
+        tokens -= _GENERIC_TOKENS
+        tokens -= set(VALID_SERVICES)
+        tokens -= ALLOWED_GROUPS
 
-        # 2. Check for group scan intent
-        detected_service = self._detect_service(request)
-        if _GROUP_SCAN_PATTERNS.search(request) and detected_service:
-            if detected_service in ALLOWED_GROUPS:
-                return {"path": "GROUP_SCAN", "service": detected_service}
-
-        # 3. Default: retrieval path
-        return {"path": "RETRIEVAL_PATH", "service": detected_service}
+        # If any remaining token is a known security topic → specific intent
+        has_specific_topic = bool(tokens & _SECURITY_TOPIC_KEYWORDS)
+        if not has_specific_topic:
+            logger.info(
+                "Group intent detected: service=%s, no specific topic in '%s'",
+                detected_service, enhanced_query,
+            )
+        return not has_specific_topic
 
     @staticmethod
     def _extract_check_ids(request: str) -> List[str]:
@@ -277,9 +464,12 @@ class PlanningAgent:
     def _retrieve(self, query: str) -> Dict[str, Any]:
         """
         Gọi RAG service. Fallback chain:
-          1. build_context(consumer="planning") → PlanningBundle
-          2. retrieve_checks() → basic results
+          1. build_context(consumer="planning") → PlanningBundle (rich, có maturity)
+          2. retrieve_checks() → basic results (có score chi tiết)
           3. empty result
+
+        Nếu build_context thành công nhưng thiếu score (score=None),
+        enrich bằng score từ retrieve_checks.
 
         Returns:
             {"candidates": [...], "maturity_context": str,
@@ -296,6 +486,12 @@ class PlanningAgent:
         # Attempt 1: build_context (PlanningBundle — rich)
         bundle = self._try_build_context(query)
         if bundle is not None:
+            # Enrich scores nếu PlanningBundle thiếu score (tất cả = 0.8 default)
+            needs_scores = any(
+                c.get("score") == 0.8 for c in bundle.get("candidates", [])
+            )
+            if needs_scores and bundle["candidates"]:
+                bundle = self._enrich_scores(query, bundle)
             return bundle
 
         # Attempt 2: retrieve_checks (basic fallback)
@@ -305,6 +501,35 @@ class PlanningAgent:
 
         logger.warning("All RAG retrieval attempts failed")
         return empty
+
+    def _enrich_scores(self, query: str, bundle: Dict[str, Any]) -> Dict[str, Any]:
+        """Enrich PlanningBundle candidates với scores từ retrieve_checks.
+
+        PlanningBundle có maturity context nhưng thiếu relevance score.
+        retrieve_checks có scores chi tiết. Kết hợp cả hai.
+        """
+        scores_data = self._try_retrieve_checks(query)
+        if scores_data is None:
+            return bundle
+
+        # Build score lookup
+        score_map = {}
+        for c in scores_data.get("candidates", []):
+            score_map[c["check_id"]] = c.get("score", 0.0)
+
+        # Enrich candidates
+        enriched = 0
+        for c in bundle["candidates"]:
+            real_score = score_map.get(c["check_id"])
+            if real_score is not None:
+                c["score"] = real_score
+                enriched += 1
+
+        if enriched:
+            logger.info("Enriched %d/%d candidates with retrieval scores",
+                        enriched, len(bundle["candidates"]))
+
+        return bundle
 
     def _try_build_context(self, query: str) -> Optional[Dict[str, Any]]:
         """Try build_context(consumer='planning'). Returns None on failure."""
@@ -469,7 +694,18 @@ class PlanningAgent:
         if (confidence in CONFIDENCE_SKIP_LLM
                 and scored
                 and top_score > MIN_TOP_SCORE_FOR_SKIP):
-            check_ids = [c["check_id"] for c in scored]
+            # Score gap filter: chỉ giữ candidates có score >= top * DROP_RATIO
+            cutoff = top_score * DROP_RATIO_THRESHOLD
+            filtered = [c for c in scored if c["final_score"] >= cutoff]
+            check_ids = [c["check_id"] for c in filtered]
+
+            dropped = len(scored) - len(filtered)
+            if dropped:
+                logger.info(
+                    "Score gap filter: dropped %d/%d candidates below %.3f (cutoff=%.1f%% of top)",
+                    dropped, len(scored), cutoff, DROP_RATIO_THRESHOLD * 100,
+                )
+
             logger.info(
                 "ConfidenceGate PASS: confidence=%s, top=%.3f → %d checks (no LLM)",
                 confidence, top_score, len(check_ids),
@@ -520,11 +756,18 @@ class PlanningAgent:
             logger.error("LLM refinement failed: %s", e)
             return self._make_error_output(f"LLM refinement failed: {e}")
 
-        # Parse LLM output
-        selected = [sanitize_check_id(i) for i in data.get("selected_ids", []) if i]
-        selected = [s for s in selected if s]
+        # Parse LLM output — constrain to candidate pool (LLM selects, not fabricates)
+        candidate_ids = {c["check_id"] for c in scored}
+        raw_selected = [sanitize_check_id(i) for i in data.get("selected_ids", []) if i]
+        selected = [s for s in raw_selected if s and s in candidate_ids]
         target_group = data.get("target_group", "").strip().lower()
         reasoning = data.get("reasoning", "LLM refinement.")
+
+        if raw_selected and not selected:
+            logger.warning(
+                "LLM fabricated %d IDs not in candidate pool: %s",
+                len(raw_selected), raw_selected[:3],
+            )
 
         if selected:
             logger.info("LLM refinement selected %d checks", len(selected))

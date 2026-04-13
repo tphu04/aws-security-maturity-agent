@@ -13,14 +13,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ---------------------------------------------------------------------------
-# RAG System (FastAPI — default port 8001)
+# RAG System (FastAPI — default port 8000)
 # ---------------------------------------------------------------------------
-RAG_API_URL: str = os.environ.get("RAG_API_URL", "http://localhost:8001")
+RAG_API_URL: str = os.environ.get("RAG_API_URL", "http://localhost:8000")
 
 # ---------------------------------------------------------------------------
-# Scanner API (Prowler — default port 8000)
+# Scanner API (Prowler — default port 8001)
 # ---------------------------------------------------------------------------
-SCANNER_API_URL: str = os.environ.get("SCANNER_API_URL", "http://localhost:8000")
+SCANNER_API_URL: str = os.environ.get("SCANNER_API_URL", "http://localhost:8001")
 
 # ---------------------------------------------------------------------------
 # LLM (Ollama — default port 11434)

@@ -1,26 +1,23 @@
-# ------------------------------------------------------------
-# exporters.py — FIXED VERSION
-# ------------------------------------------------------------
+# exporters.py — Rebuilt (Sprint 3)
+# - write_file: unchanged
+# - render_html: kept for backward compat (markdown → HTML)
+# - export_pdf: weasyprint first, wkhtmltopdf fallback, temp cleanup
 
 import os
-import pdfkit
-import markdown2
+import tempfile
 
 
-# ------------------------------------------------------------
-# WRITE FILE
-# ------------------------------------------------------------
-def write_file(path: str, content: str):
+def write_file(path: str, content: str) -> str:
+    """Write content to file, creating directories as needed."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
     return path
 
 
-# ------------------------------------------------------------
-# MARKDOWN → HTML (Markdown2)
-# ------------------------------------------------------------
-def render_html(markdown_text: str):
+def render_html(markdown_text: str) -> str:
+    """Markdown → HTML conversion. Kept for backward compat."""
+    import markdown2
     return markdown2.markdown(
         markdown_text,
         extras=[
@@ -33,77 +30,72 @@ def render_html(markdown_text: str):
     )
 
 
-# ------------------------------------------------------------
-# HTML → PDF (wkhtmltopdf)
-# ------------------------------------------------------------
-def export_pdf(html: str, path: str):
+def export_pdf(html: str, path: str) -> str | None:
     """
-    FIX:
-    - Remove unsupported fonts
-    - Ensure local file access enabled
-    - Ensure wkhtmltopdf found
+    HTML → PDF. Fallback chain:
+    1. weasyprint (pure Python, preferred)
+    2. wkhtmltopdf (fallback)
+    3. None (skip PDF)
     """
+    # Try weasyprint first
+    try:
+        from weasyprint import HTML
+        HTML(string=html).write_pdf(path)
+        print(f"[exporters] PDF exported (weasyprint): {path}")
+        return path
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"[exporters] weasyprint failed: {e}")
 
-    html_wrapper = f"""
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                padding: 25px;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-            }}
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 6px 8px;
-                font-size: 13px;
-            }}
-            th {{
-                background: #eee;
-                font-weight: bold;
-            }}
-        </style>
-    </head>
-    <body>
-        {html}
-    </body>
-    </html>
-    """
+    # Fallback: wkhtmltopdf
+    return _export_pdf_wkhtmltopdf(html, path)
 
-    tmp_html_path = "data/temp_report.html"
-    with open(tmp_html_path, "w", encoding="utf-8") as f:
-        f.write(html_wrapper)
 
-    # wkhtmltopdf search
-    possible_paths = [
-        r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe",
-        r"C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe",
-        r"/usr/local/bin/wkhtmltopdf",
-        r"/usr/bin/wkhtmltopdf",
-    ]
-
-    wk_path = next((p for p in possible_paths if os.path.exists(p)), None)
-    if wk_path is None:
-        print("❌ wkhtmltopdf not found — PDF skipped.")
+def _export_pdf_wkhtmltopdf(html: str, path: str) -> str | None:
+    """wkhtmltopdf fallback with proper temp file cleanup."""
+    try:
+        import pdfkit
+    except ImportError:
+        print("[exporters] No PDF library installed — PDF skipped.")
         return None
 
-    config = pdfkit.configuration(wkhtmltopdf=wk_path)
-
-    options = {
-        "enable-local-file-access": None,
-        "load-error-handling": "ignore",
-        "disable-external-links": None,
-    }
-
+    # Write to temp file (auto-cleanup via finally)
+    tmp_path = None
     try:
-        pdfkit.from_file(tmp_html_path, path, configuration=config, options=options)
-        print(f" PDF exported: {path}")
+        with tempfile.NamedTemporaryFile(
+            mode='w', suffix='.html', delete=False, encoding='utf-8'
+        ) as f:
+            f.write(html)
+            tmp_path = f.name
+
+        # Find wkhtmltopdf binary
+        possible = [
+            r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe",
+            r"C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe",
+            "/usr/local/bin/wkhtmltopdf",
+            "/usr/bin/wkhtmltopdf",
+        ]
+        wk = next((p for p in possible if os.path.exists(p)), None)
+        if not wk:
+            print("[exporters] wkhtmltopdf not found — PDF skipped.")
+            return None
+
+        config = pdfkit.configuration(wkhtmltopdf=wk)
+        pdfkit.from_file(
+            tmp_path, path,
+            configuration=config,
+            options={
+                "enable-local-file-access": None,
+                "load-error-handling": "ignore",
+            },
+        )
+        print(f"[exporters] PDF exported (wkhtmltopdf): {path}")
         return path
     except Exception as e:
-        print("❌ PDF EXPORT ERROR:", e)
+        print(f"[exporters] PDF export error: {e}")
         return None
+    finally:
+        # Always cleanup temp file
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)

@@ -502,49 +502,208 @@ def verification_node(state: PDCAState):
         rescan = RescanAgent()
         rescan.run()
 
-        # 2) Gom dữ liệu execution vào pipeline_context đầy đủ
+        # 2) Đọc file 1 LẦN DUY NHẤT
+        with open("data/pre_scan.json", "r", encoding="utf-8") as fp:
+            pre_scan = json.load(fp)
+        with open("data/post_scan.json", "r", encoding="utf-8") as fp:
+            post_scan = json.load(fp)
+
+        # 3) Gom dữ liệu execution vào pipeline_context đầy đủ
         pipeline_context = _aggregate_pipeline_data(state, state["pipeline_context"])
 
-        # 3) Tạo AnalysisAgent để tạo diff (before/after)
-        analyzer = AnalysisAgent("data/pre_scan.json", "data/post_scan.json")
-        diff = analyzer.run(pipeline_context=pipeline_context)
-
-        # 4) BỔ SUNG: build report_context từ pre/post/diff
-        report_context = analyzer.build_report_context(
-            pre_scan=json.load(open("data/pre_scan.json", "r", encoding="utf-8")),
-            post_scan=json.load(open("data/post_scan.json", "r", encoding="utf-8")),
-            diff_data=diff,
-            meta={
-                "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
-                "scan_group": state.get("assessment_plan", {}).get(
-                    "target_services", ["s3"]
-                ),
-            },
+        # 4) AnalysisAgent nhận data trực tiếp — không đọc file lại
+        analyzer = AnalysisAgent()
+        analysis_results = analyzer.run(
+            pre_scan=pre_scan,
+            post_scan=post_scan,
+            pipeline_context=pipeline_context,
         )
 
     metrics = update_metrics(metrics, "step_duration", "verification_node", timer())
-    # 5) Đưa vào state -> để report_node dùng
+
     return {
-        "verification_results": diff,
-        "report_context": report_context,
+        "verification_results": analysis_results.get("diff_result", []),
+        "analysis_results": analysis_results,
         "performance_metrics": metrics,
     }
+
+
+def build_report_data(analysis: dict, aws_context: dict,
+                      plan: dict, user_request: str) -> dict:
+    """
+    Hàm THUẦN TÚY — không side effect, không truy cập file.
+    NƠI DUY NHẤT biết "report cần gì, state có gì".
+    Testable: truyền mock data vào, verify output.
+
+    Maps:
+    - analysis  → pre/post stats, findings, table
+    - aws_context → environment info (account, region, buckets)
+    - plan → scan scope (target services)
+    - user_request → scope context
+    """
+    pre = analysis.get("pre_stats", {})
+    post_stats = analysis.get("post_stats", {})
+    rem = analysis.get("remediation_stats", {})
+
+    return {
+        # --- Số liệu (đã tính bởi AnalysisAgent, KHÔNG tính lại) ---
+        "pre": {
+            "total": pre.get("total", 0),
+            "pass": pre.get("pass", 0),
+            "fail": pre.get("fail", 0),
+            "severity": pre.get("severity", {"critical": 0, "high": 0, "medium": 0, "low": 0}),
+        },
+        "post": {
+            "initial_pass": pre.get("pass", 0),
+            "initial_fail": pre.get("fail", 0),
+            "final_pass": post_stats.get("pass", 0),
+            "final_fail": post_stats.get("fail", 0),
+            "fixed": rem.get("fixed", 0),
+            "failed": rem.get("failed", 0),
+            "manual": rem.get("manual", 0),
+        },
+
+        # --- Findings ---
+        "findings_table": analysis.get("findings_table", []),
+        "success_findings": analysis.get("success_findings", []),
+        "failed_findings": analysis.get("failed_findings", []),
+        "manual_findings": analysis.get("manual_findings", []),
+        "raw_pre_findings": analysis.get("raw_pre_findings", []),
+
+        # --- Environment (từ state, KHÔNG từ AnalysisAgent) ---
+        "environment": {
+            "account_id": aws_context.get("account_id", "Unknown"),
+            "region": aws_context.get("region", "us-east-1"),
+            "buckets": aws_context.get("buckets", []),
+        },
+
+        # --- Scope (từ state, KHÔNG từ AnalysisAgent) ---
+        "scope": {
+            "services": plan.get("target_services", ["s3"]),
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "user_request": user_request,
+        },
+    }
+
+
+def _fetch_rag_for_report(raw_pre_findings: list,
+                          rag_available: bool = False) -> dict:
+    """
+    Gọi RAG API lấy security knowledge cho report.
+    Graceful degradation: RAG down → return empty dict → report vẫn hoạt động.
+
+    Returns:
+        {
+            "key_findings":         [{check_id, title, severity, risk_summary}],
+            "control_themes":       [{capability_id, capability_name, summary_short}],
+            "recommended_practices": [str],
+            "confidence":           "high" | "medium" | "low" | None,
+        }
+        hoặc {} nếu RAG không khả dụng.
+    """
+    if not rag_available:
+        print("[report_node] RAG not available — report sẽ dùng LLM thuần")
+        return {}
+
+    try:
+        from agents.shared.rag_client import RAGClient
+        rag = RAGClient()
+
+        # Extract unique check_ids từ findings
+        check_ids = list({
+            f.get("event_code") or f.get("finding_id", "")
+            for f in raw_pre_findings
+        } - {""})
+
+        if not check_ids:
+            return {}
+
+        result = rag.build_context(
+            consumer="report",
+            check_ids=check_ids,
+            include_mappings=True,
+            include_maturity=True,
+            top_k=10,
+            retrieval_mode="hybrid",
+        )
+
+        if result is None:
+            print("[report_node] RAG build_context returned None")
+            return {}
+
+        # Extract report_bundle từ response
+        bundle = result.get("payload", {}).get("report_bundle", {})
+        confidence = result.get("_meta", {}).get("confidence")
+
+        context = {
+            "key_findings": bundle.get("key_findings", []),
+            "control_themes": bundle.get("control_themes", []),
+            "recommended_practices": bundle.get("recommended_practices", []),
+            "confidence": confidence,
+        }
+
+        finding_count = len(context["key_findings"])
+        theme_count = len(context["control_themes"])
+        print(f"[report_node] RAG context: {finding_count} findings, "
+              f"{theme_count} themes, confidence={confidence}")
+
+        return context
+
+    except Exception as e:
+        print(f"[report_node] RAG query failed: {e} — report sẽ dùng LLM thuần")
+        return {}
 
 
 def report_node(state: PDCAState):
     print("\n [Node: Report] Generating final report...")
     metrics = state.get("performance_metrics", {})
 
-    # Report context đã build từ AnalysisAgent
-    report_context = state.get("report_context")
-    if not report_context:
-        raise ValueError(" Missing report_context in PDCA state")
+    # Lấy analysis_results từ state (single source of truth)
+    analysis = state.get("analysis_results")
 
-    meta = {
-        "account_id": state.get("aws_context", {}).get("account_id", "Unknown"),
-        "scan_scope": state.get("assessment_plan", {}).get("target_services", ["s3"]),
-        "date": datetime.now().strftime("%Y-%m-%d"),
-    }
+    # Trường hợp no FAIL → skip verification → không có analysis_results
+    # Build analysis tối thiểu từ raw_findings đã có trong state (KHÔNG đọc file lại)
+    if not analysis:
+        pre_findings = state.get("raw_findings", [])
+        sev = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+        for f in pre_findings:
+            s = (f.get("severity") or "").lower()
+            if s in sev:
+                sev[s] += 1
+
+        pass_count = sum(1 for f in pre_findings if f.get("status") == "PASS")
+        fail_count = sum(1 for f in pre_findings if f.get("status") == "FAIL")
+
+        analysis = {
+            "pre_stats": {
+                "total": len(pre_findings),
+                "pass": pass_count,
+                "fail": fail_count,
+                "severity": sev,
+            },
+            "post_stats": {"pass": pass_count, "fail": fail_count},
+            "remediation_stats": {"fixed": 0, "failed": 0, "manual": 0},
+            "success_findings": [],
+            "failed_findings": [],
+            "manual_findings": [],
+            "findings_table": [],
+            "raw_pre_findings": pre_findings,
+        }
+
+    # Gom data 1 NƠI DUY NHẤT qua hàm thuần túy
+    report_data = build_report_data(
+        analysis=analysis,
+        aws_context=state.get("aws_context") or {},
+        plan=state.get("assessment_plan") or {},
+        user_request=state.get("user_request", ""),
+    )
+
+    # --- RAG Context: enrich report với security knowledge ---
+    rag_context = _fetch_rag_for_report(
+        report_data.get("raw_pre_findings", []),
+        rag_available=state.get("rag_available", False),
+    )
+    report_data["rag_context"] = rag_context
 
     agent = ReportAgent(
         OLLAMA_MODEL,
@@ -554,7 +713,7 @@ def report_node(state: PDCAState):
     )
 
     with measure_time() as timer:
-        path = agent.run(report_context=report_context, meta=meta)
+        path = agent.run(report_context=report_data)
 
     llm_metrics = agent.get_llm_metrics()
 

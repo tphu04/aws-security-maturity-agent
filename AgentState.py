@@ -67,6 +67,8 @@ class PDCAState(TypedDict):
     # Verification
     verification_results: Dict[str, Any]
 
-    report_context: Dict[str, Any]
+    # Analysis results (output of AnalysisAgent — single source of truth)
+    analysis_results: Dict[str, Any]
+
     # Report
     final_report: str

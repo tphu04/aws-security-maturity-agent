@@ -35,8 +35,26 @@ class AnalysisAgent:
             after = json.load(f).get("findings", [])
         return before, after
 
-    def run(self, pipeline_context: List[Dict] = None) -> List[Dict]:
-        before, after = self.load()
+    def run(self, pre_scan: dict = None, post_scan: dict = None,
+            pipeline_context: List[Dict] = None) -> dict:
+        """
+        Phân tích diff giữa pre-scan và post-scan.
+
+        Input:  raw scan data + execution context
+        Output: dict chứa ĐẦY ĐỦ kết quả phân tích (single source of truth)
+                Không chứa metadata (account_id, region...) — đó là việc của orchestrator.
+
+        Hỗ trợ 2 cách gọi:
+        - run(pre_scan, post_scan, pipeline_context)  ← MỚI (nhận data trực tiếp)
+        - run(pipeline_context=pipeline_context)       ← CŨ (đọc file từ path)
+        """
+        # Nếu không truyền pre_scan/post_scan, đọc từ file (backward compat)
+        if pre_scan is None or post_scan is None:
+            before, after = self.load()
+        else:
+            before = pre_scan.get("findings", [])
+            after = post_scan.get("findings", [])
+
         pipeline_context = pipeline_context or []
 
         print(f"\n[AnalysisAgent] 🤖 Aggregating data...")
@@ -83,8 +101,6 @@ class AnalysisAgent:
             entry["before_status"] = bf["status"]
             entry["remediation_actions"] = []
 
-            related_tasks = tasks_by_finding.get(uid, [])
-
             if related_tasks:
                 first = related_tasks[0]
 
@@ -92,8 +108,6 @@ class AnalysisAgent:
                 entry["execution_output"] = first.get("execution_output", {})
                 entry["tool_name"] = first.get("tool_name")
                 entry["tool_params"] = first.get("tool_params")
-
-                # ⬇⬇ NEW FIELDS FOR REPORT ⬇⬇
 
                 # Action mà tool đã làm (vd: Enable KMS Encryption)
                 entry["action"] = entry["execution_output"].get("action")
@@ -187,135 +201,95 @@ class AnalysisAgent:
         # 5. IN LOG THEO ĐÚNG MẪU YÊU CẦU
         self._print_custom_log(stats)
 
-        return diff_result
+        # 6. Phân loại findings
+        classified = self._normalize_and_classify(diff_result)
+
+        # 7. Format manual findings
+        manual_findings = self._format_manual_findings(classified.get("manual", []))
+
+        # 8. Build findings summary table
+        findings_table = self._build_findings_summary(before, after, diff_result)
+
+        # 9. Count severity
+        severity_pre = self._count_severity(before)
+
+        # ============================================================
+        # TRẢ VỀ ANALYSIS RESULTS ĐẦY ĐỦ — single source of truth
+        # Không chứa metadata (account_id, region...) — việc của orchestrator
+        # ============================================================
+        return {
+            "pre_stats": {
+                "total": len(before),
+                "pass": stats["pass_pre"],
+                "fail": stats["fail_pre"],
+                "severity": severity_pre,
+            },
+            "post_stats": {
+                "pass": stats["pass_post"],
+                "fail": stats["fail_post"],
+            },
+            "remediation_stats": {
+                "fixed": len(classified["fixed"]),
+                "failed": len(classified["failed"]),
+                "manual": len(manual_findings),
+            },
+            "success_findings": classified["fixed"],
+            "failed_findings": classified["failed"],
+            "manual_findings": manual_findings,
+            "findings_table": findings_table,
+            "raw_pre_findings": before,
+            # Giữ diff_result và stats cho backward compat (verification_results)
+            "diff_result": diff_result,
+            "stats": stats,
+        }
 
         # ==================================================================
 
-    # BUILD REPORT CONTEXT (TRẢ VỀ DỮ LIỆU CHUẨN ĐỂ REPORT_AGENT DÙNG)
     # ==================================================================
-    def build_report_context(self, pre_scan, post_scan, diff_data, meta=None):
-        """
-        Build toàn bộ dữ liệu dùng cho báo cáo.
-        Bao gồm số liệu, phân loại findings, bảng summary và metadata hệ thống.
-        """
+    # HELPER: COUNT SEVERITY
+    # ==================================================================
+    def _count_severity(self, findings: list) -> dict:
+        """Đếm số lượng findings theo severity level."""
+        result = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+        for f in findings:
+            sev = (f.get("severity") or "").lower()
+            if sev in result:
+                result[sev] += 1
+        return result
 
-        meta = meta or {}
-
-        # -----------------------------------------------
-        # 1) Extract từ pre_scan & post_scan
-        # -----------------------------------------------
-        pre_findings = pre_scan.get("findings", [])
-        post_findings = post_scan.get("findings", [])
-
-        total_pre = len(pre_findings)
-
-        pre_pass = sum(1 for f in pre_findings if f.get("status") == "PASS")
-        pre_fail = sum(1 for f in pre_findings if f.get("status") == "FAIL")
-
-        post_pass = sum(1 for f in post_findings if f.get("status") == "PASS")
-        post_fail = sum(1 for f in post_findings if f.get("status") == "FAIL")
-
-        severity_pre = {
-            "critical": sum(
-                1 for f in pre_findings if f.get("severity", "").lower() == "critical"
-            ),
-            "high": sum(
-                1 for f in pre_findings if f.get("severity", "").lower() == "high"
-            ),
-            "medium": sum(
-                1 for f in pre_findings if f.get("severity", "").lower() == "medium"
-            ),
-            "low": sum(
-                1 for f in pre_findings if f.get("severity", "").lower() == "low"
-            ),
-        }
-
-        # -----------------------------------------------
-        # 2) Classification từ diff
-        # -----------------------------------------------
-        classified = self._normalize_and_classify(diff_data)
-
-        success_findings = classified.get("fixed", [])
-        failed_findings = classified.get("failed", [])
-        manual_findings = []
-
-        for item in classified.get("manual", []):
+    # ==================================================================
+    # HELPER: FORMAT MANUAL FINDINGS
+    # ==================================================================
+    def _format_manual_findings(self, manual_items: list) -> list:
+        """Chuẩn hóa manual findings cho report."""
+        result = []
+        for item in manual_items:
             exec_out = item.get("execution_output", {}) or {}
-
-            manual_findings.append(
-                {
-                    # Identity
-                    "finding_uid": item.get("finding_uid"),
-                    "finding_id": item.get("finding_id"),
-                    "event_code": item.get("before", {}).get("event_code"),
-                    # Core finding info
-                    "description": item.get("description"),
-                    "severity": item.get("before", {}).get("severity"),
-                    "service": item.get("service"),
-                    "resource": (
-                        exec_out.get("resource")
-                        or item.get("resource")
-                        or item.get("before", {}).get("resource")
-                        or "Account-level / Multiple S3 buckets"
-                    ),
-                    # Manual flags
-                    "manual_required": True,
-                    # Reason & guidance
-                    "manual_reason": exec_out.get("reason")
-                    or "This finding requires manual remediation.",
-                    "remaining_actions": exec_out.get("remaining_actions", []),
-                    # Tool metadata
-                    "tool": {
-                        "name": item.get("tool_name"),
-                        "description": item.get("tool_description"),
-                    },
-                }
-            )
-
-        # -----------------------------------------------
-        # 3) Pre-remediation summary
-        # -----------------------------------------------
-        pre_remediation_data = {
-            "total": total_pre,
-            "pass": pre_pass,
-            "fail": pre_fail,
-            "severity": severity_pre,
-        }
-
-        # -----------------------------------------------
-        # 4) Findings Summary Table
-        # -----------------------------------------------
-        findings_summary = self._build_findings_summary(
-            pre_findings, post_findings, diff_data
-        )
-
-        # -----------------------------------------------
-        # 5) Post-remediation
-        # -----------------------------------------------
-        post_remediation_data = {
-            "initial_pass": pre_pass,
-            "initial_fail": pre_fail,
-            "final_pass": post_pass,
-            "final_fail": post_fail,
-            "fixed": len(success_findings),
-            "failed": len(failed_findings),
-            "manual": len(manual_findings),
-        }
-
-        # -----------------------------------------------
-        # RETURN VỀ REPORT AGENT
-        # -----------------------------------------------
-        return {
-            "pre_remediation_data": pre_remediation_data,
-            "post_remediation_data": post_remediation_data,
-            "findings_summary": findings_summary,
-            "success_findings": success_findings,
-            "failed_findings": failed_findings,
-            "manual_findings": manual_findings,
-            "raw_pre_findings": pre_findings,
-            "pre_findings": pre_findings,
-            "meta": meta,
-        }
+            result.append({
+                "finding_uid": item.get("finding_uid"),
+                "finding_id": item.get("finding_id"),
+                "event_code": item.get("before", {}).get("event_code"),
+                "description": item.get("description"),
+                "severity": item.get("before", {}).get("severity"),
+                "service": item.get("service"),
+                "resource": (
+                    exec_out.get("resource")
+                    or item.get("resource")
+                    or item.get("before", {}).get("resource")
+                    or "Account-level / Multiple S3 buckets"
+                ),
+                "manual_required": True,
+                "manual_reason": (
+                    exec_out.get("reason")
+                    or "This finding requires manual remediation."
+                ),
+                "remaining_actions": exec_out.get("remaining_actions", []),
+                "tool": {
+                    "name": item.get("tool_name"),
+                    "description": item.get("tool_description"),
+                },
+            })
+        return result
 
     # ==================================================================
     # HÀM PHÂN LOẠI DIFF
