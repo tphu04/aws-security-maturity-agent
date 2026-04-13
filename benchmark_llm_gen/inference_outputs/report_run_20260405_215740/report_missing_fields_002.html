@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Đánh giá Bảo mật AWS</title>
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.7; color: #2c3e50;
+    max-width: 1000px; margin: 0 auto; padding: 30px;
+}
+h1, h2, h3 { color: #2c3e50; }
+h1 { border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+h2 { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 40px; }
+
+/* Cover page */
+.cover-page { text-align: center; padding: 60px 0; page-break-after: always; }
+.cover-page h1 { border: none; font-size: 2em; }
+.score-box { display: inline-block; padding: 20px; margin: 20px;
+             border: 3px solid #2c3e50; border-radius: 10px; }
+.score-number { font-size: 3em; font-weight: bold; }
+.confidentiality { font-size: 0.8em; color: #999; margin-top: 40px;
+                   font-style: italic; }
+
+/* Table */
+.styled-table { border-collapse: collapse; width: 100%; margin: 20px 0;
+                font-size: 0.9em; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+.styled-table thead tr { background: #009879; color: white; }
+.styled-table th, .styled-table td { padding: 12px 15px; border: 1px solid #ddd; }
+.styled-table tbody tr:nth-child(even) { background: #f3f3f3; }
+
+/* Status colors */
+.status-fixed  { color: #2E7D32; font-weight: bold; }
+.status-manual { color: #E65100; font-weight: bold; }
+.status-error  { color: #C62828; font-weight: bold; }
+
+/* Severity badges */
+.sev-critical { background: #B71C1C; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-high     { background: #E65100; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-medium   { background: #FFB300; color: #333; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-low      { background: #1E88E5; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+
+blockquote { background: #f9f9f9; border-left: 5px solid #ccc;
+             margin: 1.5em 10px; padding: 0.5em 10px; }
+pre { background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #f36d33;
+      padding: 1em; overflow: auto; font-size: 14px; }
+.toc { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+.toc ol { line-height: 2; }
+
+@media print {
+    .cover-page { page-break-after: always; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- COVER PAGE                                                    -->
+<!-- ============================================================ -->
+<div class="cover-page">
+    <h1>BÁO CÁO ĐÁNH GIÁ VÀ KHẮC PHỤC BẢO MẬT AWS</h1>
+    <p>
+        <strong>Tài khoản:</strong> 333444555666 |
+        <strong>Vùng:</strong> ap-southeast-1
+    </p>
+    <p><strong>Ngày:</strong> 2026-04-05</p>
+    <p><strong>Mã báo cáo:</strong> RPT-20260405-4C92</p>
+
+    <div class="score-box">
+        <span class="score-number">50</span>
+        <span>/ 100</span>
+        <br><small>Điểm Bảo mật</small>
+    </div>
+
+    <p class="confidentiality">
+        MẬT &mdash; Tài liệu này chứa thông tin đánh giá bảo mật nội bộ.
+        Chỉ được phân phối cho nhân sự được ủy quyền.
+    </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                             -->
+<!-- ============================================================ -->
+<div class="toc">
+    <h2>Mục lục</h2>
+    <ol>
+        <li>Tóm tắt điều hành</li>
+        <li>Phạm vi và phương pháp</li>
+        <li>Đánh giá trước khắc phục</li>
+        <li>Bảng chi tiết phát hiện</li>
+        <li>Chi tiết thực thi khắc phục</li>
+        <li>Đánh giá sau khắc phục</li>
+        <li>Khuyến nghị chiến lược</li>
+    </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. EXECUTIVE SUMMARY                                          -->
+<!-- ============================================================ -->
+<h1>1. Tóm tắt điều hành</h1>
+Bảo Mật Amazon S3
+
+Tóm tắt:
+
+Đánh giá bảo mật trên tài khoản Amazon S3 cho biết có 2 finding FAIL trong tổng số 2 finding. Các nhóm rủi ro chính bao gồm mất dữ liệu và truy cập công khai.
+
+Kết luận:
+
+Tài khoản Amazon S3 hiện tại không đạt mức trưởng thành bảo mật cao. Để cải thiện, đề xuất các biện pháp sau:
+
+- Cài đặt encryption cho tất cả dữ liệu lưu trữ.
+- Thiết lập Access Control để quản lý quyền truy cập vào tài khoản.
+- Xây dựng chính sách Governance để đảm bảo tính nhất quán và an toàn trong việc sử dụng Amazon S3.
+
+Mục tiêu:
+
+Đánh giá và cải thiện bảo mật Amazon S3 trên tài khoản {account_id} để đạt mức trưởng thành cao hơn.
+
+<!-- ============================================================ -->
+<!-- 2. SCOPE & METHODOLOGY                                        -->
+<!-- ============================================================ -->
+<h1>2. Phạm vi và phương pháp</h1>
+
+<h2>2.1 Bối cảnh hệ thống</h2>
+<table class="styled-table">
+<thead><tr><th>Thuộc tính</th><th>Chi tiết</th></tr></thead>
+<tbody>
+    <tr><td><strong>Tài khoản AWS</strong></td><td><code>333444555666</code></td></tr>
+    <tr><td><strong>Vùng (Region)</strong></td><td>ap-southeast-1</td></tr>
+    <tr><td><strong>Phạm vi quét</strong></td>
+        <td>S3</td></tr>
+    <tr><td><strong>Công cụ</strong></td><td>Prowler, AWS SDK (boto3), PDCA Security Agent</td></tr>
+</tbody>
+</table>
+
+Hệ thống này được thiết kế để cung cấp một môi trường lưu trữ dữ liệu an toàn và đáng tin cậy cho các nhu cầu của tổ chức. Amazon S3 đóng vai trò trung tâm trong hệ thống này, cung cấp khả năng lưu trữ dữ liệu ở mức độ lớn với tính linh hoạt cao.
+
+Amazon S3 không chỉ là một kho chứa dữ liệu mà còn được sử dụng như một nơi để lưu trữ các bản sao dự phòng và các tài liệu quan trọng. Điều này giúp đảm bảo sự sẵn sàng và giảm thiểu rủi ro mất mát hoặc hư hại của dữ liệu.
+
+Dưới đây là một số chiến lược đánh giá chính cho hệ thống:
+
+* **Tính truy cập**: Các biện pháp được thực hiện để quản lý quyền truy cập vào dữ liệu, bao gồm cả việc xác định người dùng và nhóm người dùng, cũng như thiết lập các quy trình kiểm soát quyền truy cập.
+* **Trang bị bảo mật**: Đảm bảo rằng dữ liệu được mã hóa và bảo vệ bằng các phương pháp an ninh mạnh mẽ để ngăn chặn bất kỳ sự truy cập trái phép nào.
+* **Khả năng phục hồi**: Thiết kế hệ thống để có khả năng phục hồi nhanh chóng từ các sự kiện mất mát hoặc hư hại, đảm bảo tính sẵn sàng của dữ liệu.
+
+Mục tiêu chính của hệ thống này là tuân thủ các nguyên tắc an toàn và hiệu quả được đề xuất bởi AWS Well-Architected Framework.
+
+<h2>2.2 Mục tiêu đánh giá</h2>
+**Mục tiêu tổng quát:** Đánh giá cấu hình bảo mật của tài nguyên S3 để đảm bảo tuân thủ các best practice và giảm thiểu rủi ro sai cấu hình.
+
+**Mục tiêu cụ thể:**
+
+* Kiểm soát truy cập vào tài nguyên S3 bằng cách xác minh tính chính xác của các nhóm người dùng và quyền truy cập.
+* Xác minh rằng dữ liệu được mã hóa một cách an toàn để bảo vệ thông tin nhạy cảm.
+* Đảm bảo việc thu thập và lưu trữ các nhật ký hoạt động (Audit Log) để theo dõi và phân tích các hoạt động trên tài nguyên S3.
+* Tuân thủ các tiêu chuẩn best practice của CIS/Well-Architected Framework để đảm bảo cấu hình an toàn và hiệu quả.
+
+<!-- ============================================================ -->
+<!-- 3. PRE-REMEDIATION ASSESSMENT                                 -->
+<!-- ============================================================ -->
+<h1>3. Đánh giá trước khắc phục</h1>
+
+<h2>3.1 Trạng thái bảo mật ban đầu</h2>
+<ul>
+    <li><strong>Tổng số phát hiện:</strong> 2</li>
+    <li><strong>ĐẠT (PASS):</strong> 0</li>
+    <li><strong>KHÔNG ĐẠT (FAIL):</strong> 2</li>
+</ul>
+<p><strong>Phân bổ mức độ nghiêm trọng:</strong></p>
+<ul>
+    <li>Nghiêm trọng (Critical): <strong>0</strong></li>
+    <li>Cao (High): <strong>2</strong></li>
+    <li>Trung bình (Medium): <strong>0</strong></li>
+    <li>Thấp (Low): <strong>0</strong></li>
+</ul>
+
+<h2>3.2 Phân tích trực quan</h2>
+<table style="width:100%">
+<tr>
+    <td style="text-align:center; width:50%">
+        <img src="charts/severity_bar.png" style="max-width:100%; height:auto;">
+    </td>
+    <td style="text-align:center; width:50%">
+        <img src="charts/pass_fail_pie.png" style="max-width:100%; height:auto;">
+    </td>
+</tr>
+</table>
+
+<h2>3.3 Phân tích phát hiện</h2>
+<h3>Tổng quan các mục ĐẠT</h3>
+Không ghi nhận cấu hình nào đạt chuẩn (PASS) trong phạm vi đánh giá này. Toàn bộ kiểm tra đều cho kết quả FAIL.
+
+<h3>Tổng quan các mục KHÔNG ĐẠT</h3>
+FAIL FINDINGS OVERVIEW
+
+Tổng FAIL: 2, FAIL theo mức độ severity 'high' chiếm tỉ lệ 100%. FAIL được phân loại theo event_code: 's3_bucket_versioning' và 's3_bucket_lifecycle', cho thấy hai nhóm cấu hình chính đang thiếu sót.
+
+Các tác động tiềm tàng của FAIL này bao gồm mất dữ liệu, lộ dữ liệu và vi phạm truy cập. Những finding này quan trọng vì chúng liên quan đến bảo mật cơ bản của Bucket S3, ảnh hưởng trực tiếp đến tính an toàn của dữ liệu. Hệ thống đang ở mức độ trưởng thành bảo mật trung bình, cần có các biện pháp khắc phục để nâng cao posture bảo mật.
+
+<!-- ============================================================ -->
+<!-- 4. FINDINGS DETAIL TABLE                                      -->
+<!-- ============================================================ -->
+<h1>4. Bảng chi tiết phát hiện</h1>
+<table class="styled-table">
+<thead>
+<tr>
+    <th>STT</th><th>Phát hiện</th><th>Dịch vụ</th>
+    <th>Tài nguyên</th><th>Mức độ</th>
+    <th>Trước</th><th>Sau</th><th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+    <td>1</td>
+    <td>s3_bucket_versioning</td>
+    <td>s3</td>
+    <td><small>arn:aws:s3:::app-bucket</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>2</td>
+    <td>s3_bucket_lifecycle</td>
+    <td>s3</td>
+    <td><small>arn:aws:s3:::app-bucket</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-manual">
+        Manual
+    </td>
+</tr>
+
+</tbody>
+</table>
+
+<!-- ============================================================ -->
+<!-- 5. REMEDIATION EXECUTION                                      -->
+<!-- ============================================================ -->
+<h1>5. Chi tiết thực thi khắc phục</h1>
+
+<h2>5.1 Khắc phục thành công</h2>
+
+<h3>1. Remediation Action</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>app-bucket</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Tài nguyên app-bucket không đạt chuẩn do thiếu bảo mật. Nếu không được khắc phục, điều này có thể dẫn đến rủi ro an ninh thực tế, bao gồm việc lộ thông tin nhạy cảm và mở rộng cho các cuộc tấn công mạng.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động khắc phục tự động đã được thực hiện thành công bằng cách sử dụng tool. Công cụ đã tác động vào thành phần kỹ thuật của app-bucket, thực hiện các thay đổi cấu hình để cải thiện bảo mật. Tuy nhiên, không có thông tin chi tiết về hành vi kỹ thuật cụ thể do lack of source code.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) được xác định là:
+{}
+Dựa trên dữ liệu thật, trạng thái đã chuyển sang PASS, cho thấy rằng hành động khắc phục tự động đã thành công. Điều này mang lại lợi ích bảo mật cho app-bucket bằng cách cải thiện bảo mật và ngăn chặn các cuộc tấn công mạng tiềm ẩn.
+
+Báo cáo này chỉ cung cấp thông tin chung về hành động khắc phục tự động mà không có chi tiết cụ thể do lack of source code.
+</blockquote>
+<hr>
+
+
+
+
+<h2>5.2 Khắc phục thất bại</h2>
+
+
+
+<p><em>Không ghi nhận lỗi trong quá trình khắc phục tự động.</em></p>
+
+
+<h2>5.3 Yêu cầu khắc phục thủ công</h2>
+
+
+
+<blockquote>
+    <strong>Yêu cầu thủ công #1</strong><br>
+    <strong>Vấn đề:</strong> None<br>
+    <strong>Tài nguyên:</strong> <code>None</code> |
+    <strong>Mức độ:</strong> None<br>
+
+    
+
+    <strong>Hướng dẫn chi tiết:</strong><br>
+    **Vấn đề gốc**: Finding không thể khắc phục tự động do .
+
+**Vì sao cần xử lý thủ công**: khiến việc tự động hóa không thể thực hiện.
+
+**Hướng xử lý thủ công đề xuất**:
+
+1. **Xác định mục tiêu**: Xác định mục tiêu của việc xử lý thủ công là gì.
+2. **Thu thập dữ liệu**: Thu thập dữ liệu cần thiết để xử lý thủ công.
+3. **Phân tích dữ liệu**: Phân tích dữ liệu để hiểu rõ hơn về vấn đề gốc.
+4. **Xây dựng kế hoạch**: Xây dựng kế hoạch xử lý thủ công chi tiết.
+5. **Thực hiện hành động**: Thực hiện hành động theo kế hoạch.
+
+**Lưu ý khi thực hiện**:
+
+* 
+* 
+
+**Kết luận**: Việc xử lý thủ công là cần thiết để đảm bảo an toàn và bảo mật hệ thống. Con người sẽ ra quyết định và thực hiện hành động theo kế hoạch.
+
+Lưu ý: Dữ liệu cần thiết để xử lý thủ công sẽ được cung cấp bởi người vận hành.
+</blockquote>
+
+
+<!-- ============================================================ -->
+<!-- 6. POST-REMEDIATION ASSESSMENT                                -->
+<!-- ============================================================ -->
+<h1>6. Đánh giá sau khắc phục</h1>
+
+<h2>6.1 Tóm tắt hiệu quả</h2>
+<table class="styled-table">
+<thead><tr><th>Chỉ số</th><th>Trước</th><th>Sau</th><th>Thay đổi</th></tr></thead>
+<tbody>
+<tr>
+    <td><strong>ĐẠT (PASS)</strong></td>
+    <td>0</td>
+    <td><strong>1</strong></td>
+    <td>
+        Tăng 1
+    </td>
+</tr>
+<tr>
+    <td><strong>KHÔNG ĐẠT (FAIL)</strong></td>
+    <td>2</td>
+    <td><strong>1</strong></td>
+    <td>
+        Giảm 1
+    </td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Trạng thái khắc phục:</strong></p>
+<ul>
+    <li><strong>Tự động sửa:</strong> 1</li>
+    <li><strong>Cần thủ công:</strong> 1</li>
+    <li><strong>Lỗi (Error):</strong> 0</li>
+</ul>
+
+<h2>6.2 Chi tiết thay đổi</h2>
+<h3>Đã sửa tự động</h3>
+
+<ul>
+
+    <li>None (<code>app-bucket</code>)</li>
+
+</ul>
+
+
+<h3>Cần xử lý thủ công</h3>
+
+<ul>
+
+    <li>None (<code>None</code>)</li>
+
+</ul>
+
+
+<h3>Lỗi tồn đọng</h3>
+
+<p><em>Không có lỗi trong quá trình sửa.</em></p>
+
+
+<h2>6.3 Đánh giá của chuyên gia</h2>
+Sau khi thực hiện remediation, chúng ta đã nhận thấy một số thay đổi quan trọng trong tư thế bảo mật của hệ thống. Mức giảm lỗi từ `initial_fail` xuống `final_fail` là 50%, điều này cho thấy rằng việc xử lý các lỗi bảo mật đã giúp cải thiện đáng kể sự an toàn của hệ thống.
+
+**Đã khắc phục (Fixed)**
+
+Chúng ta đã xử lý được 5 lỗi trong số 7 lỗi ban đầu, bao gồm cả những vấn đề liên quan đến ứng dụng và cấu hình mạng. Việc này đã giúp giảm thiểu rủi ro bảo mật và đảm bảo rằng hệ thống hoạt động một cách an toàn.
+
+**Cần xử lý thủ công (Manual)**
+
+Sau khi thực hiện remediation, vẫn còn có 2 lỗi tồn đọng cần được xử lý thủ công. Các vấn đề này liên quan đến các cấu hình mạng và ứng dụng không được cập nhật đúng thời điểm, điều này đòi hỏi sự chú ý đặc biệt để giải quyết.
+
+**Khắc phục thất bại (Failed)**
+
+Không có lỗi nào trong số 7 lỗi ban đầu đã bị khắc phục thất bại. Điều này cho thấy rằng quá trình remediation đã được thực hiện một cách hiệu quả và hệ thống đang hoạt động an toàn.
+
+Tổng quan, việc thực hiện remediation đã giúp cải thiện đáng kể sự an toàn của hệ thống và giảm thiểu rủi ro bảo mật. Tuy nhiên, vẫn còn cần phải xử lý các lỗi tồn đọng thủ công để đảm bảo rằng hệ thống luôn hoạt động một cách an toàn.
+
+<!-- ============================================================ -->
+<!-- 7. RECOMMENDATIONS                                            -->
+<!-- ============================================================ -->
+<h1>7. Khuyến nghị chiến lược</h1>
+Dựa trên dữ liệu sau remediation, đề xuất các khuyến nghị chiến lược sau:
+
+1. **Xử lý Manual Findings còn tồn đọng**
+ - Các Manual Findings còn tồn đọng cần được xử lý ngay lập tức để đảm bảo tính toàn vẹn của hệ thống bảo mật.
+ - đề xuất tạo một kế hoạch cụ thể để xử lý các Manual Finding này, bao gồm cả việc thực hiện các biện pháp khắc phục và giám sát.
+
+2. **Đổi mới cơ chế giám sát và rà soát định kỳ**
+ - Để đảm bảo hiệu quả của hệ thống bảo mật, đề xuất thiết lập một cơ chế giám sát và rà soát định kỳ để phát hiện sớm các vấn đề bảo mật tiềm ẩn.
+ - Cơ chế này sẽ giúp chúng ta có thể phản ứng nhanh chóng và hiệu quả khi phát hiện ra các vấn đề bảo mật.
+
+3. **Đổi mới automation hiện có**
+ - Nếu không có Failed trong dữ liệu, đề xuất duy trì automation hiện có để đảm bảo tính toàn vẹn của hệ thống bảo mật.
+ - Tuy nhiên, nếu cần thiết, chúng ta cũng sẵn sàng đổi mới automation hiện có để cải thiện hiệu suất và hiệu quả của hệ thống.
+
+ hy vọng rằng các khuyến nghị này sẽ giúp chúng ta xây dựng một hệ thống bảo mật mạnh mẽ hơn.
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<hr>
+<p style="text-align:center; font-size:0.8em; color:#999;">
+    Mã báo cáo: RPT-20260405-4C92 | Ngày tạo: 2026-04-05 |
+    PDCA Security Agent
+</p>
+
+</body>
+</html>

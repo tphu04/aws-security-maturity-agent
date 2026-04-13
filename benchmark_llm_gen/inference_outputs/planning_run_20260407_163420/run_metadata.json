@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-04-07T09:38:40.695318+00:00",
+  "total_cases": 50,
+  "agent": "planning",
+  "ollama_model": "llama3.2:latest",
+  "rag_api_url": "http://localhost:8001"
+}

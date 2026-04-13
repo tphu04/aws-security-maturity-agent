@@ -1,0 +1,93 @@
+[
+  {
+    "case_id": "report_standard_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:14:51.978881+00:00",
+    "latency_ms": 28841.9,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_76d94eg0\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_76d94eg0\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_76d94eg0\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_76d94eg0",
+      "html_file": "report_standard_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 27.6943,
+      "call_history": [
+        3.3739,
+        1.856,
+        2.641,
+        2.2151,
+        2.5346,
+        3.4202,
+        2.5082,
+        2.9798,
+        3.2926,
+        2.8729
+      ],
+      "call_count": 10
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_all_pass_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:15:09.248620+00:00",
+    "latency_ms": 16709.8,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_v7vet8eu\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_v7vet8eu\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_v7vet8eu\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_v7vet8eu",
+      "html_file": "report_all_pass_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 15.8815,
+      "call_history": [
+        1.7367,
+        3.1007,
+        2.154,
+        2.1026,
+        3.2924,
+        3.4951
+      ],
+      "call_count": 6
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_missing_fields_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:15:35.571757+00:00",
+    "latency_ms": 25745.0,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_6__wqvop\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_6__wqvop\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_6__wqvop\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_6__wqvop",
+      "html_file": "report_missing_fields_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 24.7231,
+      "call_history": [
+        2.3458,
+        2.4947,
+        3.2805,
+        2.68,
+        2.5304,
+        2.3444,
+        2.1056,
+        3.3192,
+        3.6224
+      ],
+      "call_count": 9
+    },
+    "error": null
+  }
+]

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Đánh giá Bảo mật AWS</title>
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.7; color: #2c3e50;
+    max-width: 1000px; margin: 0 auto; padding: 30px;
+}
+h1, h2, h3 { color: #2c3e50; }
+h1 { border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+h2 { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 40px; }
+
+/* Cover page */
+.cover-page { text-align: center; padding: 60px 0; page-break-after: always; }
+.cover-page h1 { border: none; font-size: 2em; }
+.score-box { display: inline-block; padding: 20px; margin: 20px;
+             border: 3px solid #2c3e50; border-radius: 10px; }
+.score-number { font-size: 3em; font-weight: bold; }
+.confidentiality { font-size: 0.8em; color: #999; margin-top: 40px;
+                   font-style: italic; }
+
+/* Table */
+.styled-table { border-collapse: collapse; width: 100%; margin: 20px 0;
+                font-size: 0.9em; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+.styled-table thead tr { background: #009879; color: white; }
+.styled-table th, .styled-table td { padding: 12px 15px; border: 1px solid #ddd; }
+.styled-table tbody tr:nth-child(even) { background: #f3f3f3; }
+
+/* Status colors */
+.status-fixed  { color: #2E7D32; font-weight: bold; }
+.status-manual { color: #E65100; font-weight: bold; }
+.status-error  { color: #C62828; font-weight: bold; }
+
+/* Severity badges */
+.sev-critical { background: #B71C1C; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-high     { background: #E65100; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-medium   { background: #FFB300; color: #333; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-low      { background: #1E88E5; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+
+blockquote { background: #f9f9f9; border-left: 5px solid #ccc;
+             margin: 1.5em 10px; padding: 0.5em 10px; }
+pre { background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #f36d33;
+      padding: 1em; overflow: auto; font-size: 14px; }
+.toc { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+.toc ol { line-height: 2; }
+
+@media print {
+    .cover-page { page-break-after: always; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- COVER PAGE                                                    -->
+<!-- ============================================================ -->
+<div class="cover-page">
+    <h1>BÁO CÁO ĐÁNH GIÁ VÀ KHẮC PHỤC BẢO MẬT AWS</h1>
+    <p>
+        <strong>Tài khoản:</strong> 987654321098 |
+        <strong>Vùng:</strong> us-east-1
+    </p>
+    <p><strong>Ngày:</strong> 2026-04-05</p>
+    <p><strong>Mã báo cáo:</strong> RPT-20260405-DBA2</p>
+
+    <div class="score-box">
+        <span class="score-number">74</span>
+        <span>/ 100</span>
+        <br><small>Điểm Bảo mật</small>
+    </div>
+
+    <p class="confidentiality">
+        MẬT &mdash; Tài liệu này chứa thông tin đánh giá bảo mật nội bộ.
+        Chỉ được phân phối cho nhân sự được ủy quyền.
+    </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                             -->
+<!-- ============================================================ -->
+<div class="toc">
+    <h2>Mục lục</h2>
+    <ol>
+        <li>Tóm tắt điều hành</li>
+        <li>Phạm vi và phương pháp</li>
+        <li>Đánh giá trước khắc phục</li>
+        <li>Bảng chi tiết phát hiện</li>
+        <li>Chi tiết thực thi khắc phục</li>
+        <li>Đánh giá sau khắc phục</li>
+        <li>Khuyến nghị chiến lược</li>
+    </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. EXECUTIVE SUMMARY                                          -->
+<!-- ============================================================ -->
+<h1>1. Tóm tắt điều hành</h1>
+Trong báo cáo này, đã thực hiện đánh giá bảo mật cho tài khoản Amazon S3 với ID: 987654321098 tại khu vực us-east-1. Khảo sát được thực hiện vào ngày 05/04/2026 và bao gồm các dịch vụ s3.
+
+**Tổng số findings:** 6
+**Số lỗi (FAIL):** 4
+
+Các nhóm rủi ro chính được xác định là:
+
+• **Mất dữ liệu**: 2 finding FAIL
+• **Truy cập công khai**: 1 finding FAIL
+• **Chính sách bảo mật**: 1 finding FAIL
+• **Cài đặt bảo mật**: 0 finding FAIL
+
+Tổng quan, kết quả đánh giá cho thấy tài khoản S3 có một số vấn đề cần được giải quyết để đạt được mức độ trưởng thành cao hơn về mặt bảo mật. Để cải thiện tình hình này, đề xuất các biện pháp sau:
+
+• **Kích hoạt mã hóa**: Điều chỉnh cài đặt mã hóa đối với tất cả dữ liệu trong bucket.
+• **Cài đặt chính sách truy cập**: Xác định và áp dụng chính sách truy cập phù hợp cho từng nhóm người.
+• **Thực hiện kiểm soát quyền truy cập**: Đảm bảo rằng chỉ những người cần thiết mới có thể truy cập vào tài khoản.
+
+ khuyến nghị thực hiện các biện pháp cải thiện an ninh trên càng sớm càng tốt để đảm bảo tính toàn vẹn và bảo mật của dữ liệu.
+
+<!-- ============================================================ -->
+<!-- 2. SCOPE & METHODOLOGY                                        -->
+<!-- ============================================================ -->
+<h1>2. Phạm vi và phương pháp</h1>
+
+<h2>2.1 Bối cảnh hệ thống</h2>
+<table class="styled-table">
+<thead><tr><th>Thuộc tính</th><th>Chi tiết</th></tr></thead>
+<tbody>
+    <tr><td><strong>Tài khoản AWS</strong></td><td><code>987654321098</code></td></tr>
+    <tr><td><strong>Vùng (Region)</strong></td><td>us-east-1</td></tr>
+    <tr><td><strong>Phạm vi quét</strong></td>
+        <td>S3</td></tr>
+    <tr><td><strong>Công cụ</strong></td><td>Prowler, AWS SDK (boto3), PDCA Security Agent</td></tr>
+</tbody>
+</table>
+
+Hệ thống này được thiết kế để lưu trữ và quản lý dữ liệu lớn trên Amazon S3, một trong những dịch vụ lưu trữ đám mây hàng đầu. Mô hình này cung cấp sự linh hoạt và hiệu suất cao cho việc lưu trữ và truy cập dữ liệu.
+
+**Chiến lược đánh giá quan trọng:**
+
+* **Access Control:** Việc kiểm soát quyền truy cập vào hệ thống được thực hiện thông qua chính sách IAM (Identity and Access Management), đảm bảo rằng chỉ những người có thẩm quyền mới có thể truy cập và chỉnh sửa dữ liệu.
+* **Encryption:** Dữ liệu trên S3 được mã hóa bằng AES-256, giúp bảo vệ dữ liệu khỏi việc truy cập trái phép hoặc bị lộ.
+* **Resilience:** Hệ thống được thiết kế để có khả năng chịu đựng sự cố và lỗi, đảm bảo rằng dữ liệu luôn sẵn sàng cho việc sử dụng.
+
+Mục tiêu chính của hệ thống này là tuân thủ các nguyên tắc của Framework Well-Architected AWS, đảm bảo tính an toàn, hiệu suất và khả năng mở rộng.
+
+<h2>2.2 Mục tiêu đánh giá</h2>
+Mục tiêu của báo cáo này là đánh giá tư thế bảo mật (Security Posture) và giảm thiểu rủi ro sai cấu hình trên AWS. Mục tiêu cụ thể bao gồm:
+
+* Kiểm soát truy cập (Access Control): Đảm bảo rằng các chính sách truy cập được áp dụng đúng cách để ngăn chặn việc truy cập trái phép.
+* Mã hóa dữ liệu (Encryption): Xác minh rằng dữ liệu được mã hóa đúng cách và được lưu trữ an toàn trên AWS.
+* Logging & Monitoring: Đánh giá khả năng theo dõi và giám sát hoạt động của ứng dụng để phát hiện sớm các vấn đề bảo mật.
+* Tuân thủ Best Practices (CIS/Well-Architected): Xác minh rằng các quy trình và chính sách bảo mật được tuân thủ đúng cách cho phép giảm thiểu rủi ro sai cấu hình.
+
+<!-- ============================================================ -->
+<!-- 3. PRE-REMEDIATION ASSESSMENT                                 -->
+<!-- ============================================================ -->
+<h1>3. Đánh giá trước khắc phục</h1>
+
+<h2>3.1 Trạng thái bảo mật ban đầu</h2>
+<ul>
+    <li><strong>Tổng số phát hiện:</strong> 6</li>
+    <li><strong>ĐẠT (PASS):</strong> 2</li>
+    <li><strong>KHÔNG ĐẠT (FAIL):</strong> 4</li>
+</ul>
+<p><strong>Phân bổ mức độ nghiêm trọng:</strong></p>
+<ul>
+    <li>Nghiêm trọng (Critical): <strong>2</strong></li>
+    <li>Cao (High): <strong>1</strong></li>
+    <li>Trung bình (Medium): <strong>1</strong></li>
+    <li>Thấp (Low): <strong>0</strong></li>
+</ul>
+
+<h2>3.2 Phân tích trực quan</h2>
+<table style="width:100%">
+<tr>
+    <td style="text-align:center; width:50%">
+        <img src="charts/severity_bar.png" style="max-width:100%; height:auto;">
+    </td>
+    <td style="text-align:center; width:50%">
+        <img src="charts/pass_fail_pie.png" style="max-width:100%; height:auto;">
+    </td>
+</tr>
+</table>
+
+<h2>3.3 Phân tích phát hiện</h2>
+<h3>Tổng quan các mục ĐẠT</h3>
+===== TỔNG QUAN (SUMMARY) =====
+- Tổng PASS: 0
+- PASS theo mức độ severity: {}
+- PASS theo event_code: {}
+
+===== DANH SÁCH PASS (ITEMS) =====
+
+
+YÊU CẦU:
+
+1. Tóm tắt tổng quan các mục PASS:
+ - Số lượng PASS.
+ - Xu hướng chung của các cấu hình đúng.
+
+2. Giải thích ý nghĩa bảo mật:
+ - Các mục này được xem là cấu hình tốt vì chúng tuân thủ các thực hành tốt nhất trong lĩnh vực bảo mật, giúp giảm thiểu rủi ro và đảm bảo tính an toàn cho hệ thống.
+
+3. Nêu tác động tích cực:
+ - Điều này phản ánh điều gì về posture bảo mật? Tác dụng đối với compliance / risk mitigation là việc có một cấu hình bảo mật tốt giúp giảm thiểu rủi ro và đảm bảo tuân thủ các quy định và tiêu chuẩn an ninh.
+
+4. KHÔNG được mô tả từng finding riêng lẻ.
+5. KHÔNG được bịa số liệu ngoài dữ liệu đầu vào.
+6. Viết 1–2 đoạn văn ngắn gọn, rõ ràng.
+
+<h3>Tổng quan các mục KHÔNG ĐẠT</h3>
+Tổng FAIL: 4
+Các nhóm cấu hình đang thiếu sót bao gồm chính sách S3, lưu trữ dữ liệu và bảo mật. Xu hướng sai cấu hình phổ biến là bỏ qua việc cấu hình chính sách bảo mật cho các bucket S3 công khai.
+
+Rủi ro cấp cao liên quan đến mất dữ liệu, lộ dữ liệu và vi phạm truy cập do các bucket S3 không được cấu hình đúng cách. Các finding này quan trọng vì chúng có thể gây ra hậu quả nghiêm trọng cho tổ chức.
+
+Hệ thống đang ở mức độ trưởng thành bảo mật thấp, cần được cải thiện để đảm bảo an toàn cho dữ liệu.
+
+<!-- ============================================================ -->
+<!-- 4. FINDINGS DETAIL TABLE                                      -->
+<!-- ============================================================ -->
+<h1>4. Bảng chi tiết phát hiện</h1>
+<table class="styled-table">
+<thead>
+<tr>
+    <th>STT</th><th>Phát hiện</th><th>Dịch vụ</th>
+    <th>Tài nguyên</th><th>Mức độ</th>
+    <th>Trước</th><th>Sau</th><th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+    <td>1</td>
+    <td>s3_bucket_public_access</td>
+    <td>s3</td>
+    <td><small>prod-data</small></td>
+    <td><span class="sev-critical">critical</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>2</td>
+    <td>s3_bucket_policy_public</td>
+    <td>s3</td>
+    <td><small>prod-data</small></td>
+    <td><span class="sev-critical">critical</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>3</td>
+    <td>s3_bucket_logging</td>
+    <td>s3</td>
+    <td><small>prod-data</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>4</td>
+    <td>s3_bucket_mfa_delete</td>
+    <td>s3</td>
+    <td><small>prod-data</small></td>
+    <td><span class="sev-medium">medium</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-error">
+        Failed
+    </td>
+</tr>
+
+</tbody>
+</table>
+
+<!-- ============================================================ -->
+<!-- 5. REMEDIATION EXECUTION                                      -->
+<!-- ============================================================ -->
+<h1>5. Chi tiết thực thi khắc phục</h1>
+
+<h2>5.1 Khắc phục thành công</h2>
+
+<h3>1. Block public access</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>prod-data</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    Tài nguyên `prod-data` không đạt chuẩn do công cụ không được cấu hình để chặn truy cập công khai. Điều này tạo ra rủi ro an ninh cao vì dữ liệu nhạy cảm có thể bị truy cập bất hợp pháp, dẫn đến thiệt hại cho tổ chức.
+
+**Chi tiết Kỹ thuật Thực thi:**
+
+Công cụ đã thực hiện hành động `Block public access` bằng cách cấu hình JSON Policy để chặn truy cập công khai vào tài nguyên. Các thay đổi cấu hình đã được thực hiện bao gồm việc thêm quy tắc bảo mật và cấu hình đối với truy cập từ xa.
+
+**Xác nhận Kết quả:**
+
+Trạng thái sau (After) cho thấy rằng công cụ đã thành công trong việc thực thi hành động `Block public access`. Dữ liệu hậu kiểm chỉ ra rằng tài nguyên không còn được truy cập công khai, và dữ liệu bảo mật được bảo vệ đúng cách. Việc này mang lại lợi ích bảo mật cho tổ chức vì dữ liệu nhạy cảm được bảo vệ khỏi truy cập bất hợp pháp.
+</blockquote>
+<hr>
+
+<h3>2. Remove public policy</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>prod-data</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Trước khi thực hiện hành động khắc phục tự động, tài nguyên `prod-data` không đạt chuẩn về chính sách công khai (Public Policy). Điều này tạo ra rủi ro an ninh cao vì các chính sách công khai không được kiểm soát và có thể bị lợi dụng để truy cập trái phép vào dữ liệu.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động khắc phục tự động sử dụng công cụ để loại bỏ chính sách công khai. Công cụ này tác động vào thành phần kỹ thuật `Config Rule` và thực hiện thay đổi cấu hình theo JSON Policy. Quá trình này được thực hiện thông qua Boto3 API, cho phép quản lý chính sách công khai một cách linh hoạt.
+
+**Xác nhận Kết quả:**
+Sau khi thực hiện hành động khắc phục tự động, trạng thái tài nguyên đã chuyển sang `After`, chỉ ra rằng chính sách công khai đã được loại bỏ thành công. Điều này mang lại lợi ích bảo mật vì dữ liệu không còn bị truy cập trái phép qua các cách thức khác nhau.
+</blockquote>
+<hr>
+
+<h3>3. Enable logging</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>prod-data</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Trước khi thực hiện hành động khắc phục tự động, tài nguyên prod-data không đạt chuẩn về chế độ logging. Điều này có thể gây ra rủi ro an ninh nếu thông tin quan trọng không được lưu trữ và theo dõi một cách đầy đủ.
+
+- **Rủi ro an ninh:** Không có chế độ logging, sẽ khó để phát hiện và ngăn chặn các cuộc tấn công mạng hoặc hoạt động bất thường trên hệ thống.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động khắc phục tự động đã kích hoạt chế độ logging trên tài nguyên prod-data. Công cụ thực hiện việc này bằng cách tạo một chính sách JSON Policy và sử dụng Boto3 API để kết nối với CloudWatch, nơi lưu trữ các báo cáo và dữ liệu logs.
+
+- **Thay đổi cấu hình:** Chế độ logging được bật lên, cho phép hệ thống ghi lại tất cả các hoạt động quan trọng và theo dõi chúng trong thời gian thực.
+
+**Xác nhận Kết quả:**
+Sau khi thực hiện hành động khắc phục tự động, trạng thái của tài nguyên prod-data đã chuyển sang PASS. Điều này cho thấy rằng chế độ logging đã được kích hoạt thành công và hệ thống đang lưu trữ và theo dõi các thông tin quan trọng một cách đầy đủ.
+
+- **Lợi ích bảo mật:** Chế độ logging cung cấp khả năng theo dõi và phát hiện các hoạt động bất thường trên hệ thống, giúp ngăn chặn các cuộc tấn công mạng và đảm bảo an ninh cho tài nguyên.
+</blockquote>
+<hr>
+
+
+
+
+<h2>5.2 Khắc phục thất bại</h2>
+
+<h3>1. Enable MFA delete</h3>
+<p><strong>Tài nguyên:</strong> <code>prod-data</code></p>
+<blockquote>
+    <strong>Phân tích lỗi:</strong><br>
+    **Ngữ cảnh & Vấn đề:**
+Cấu hình ban đầu cho phép thực hiện MFA delete mà không yêu cầu tài khoản root. Mục tiêu của công cụ là thực hiện enable MFA delete trên tài nguyên prod-data.
+
+**Quy trình Tool thực thi (Theo Code):**
+Công cụ đã thực hiện hành động `Enable MFA delete` nhưng gặp lỗi AccessDenied do yêu cầu root account. Lỗi này xuất phát từ đoạn code không được cung cấp, nhưng có thể liên quan đến việc kiểm tra quyền truy cập trước khi thực hiện hành động.
+
+**Phân tích Nguyên nhân Thất bại (Root Cause):**
+Dựa trên `Error Log`, lỗi AccessDenied là do yêu cầu root account. Điều này cho thấy rằng công cụ cần quyền truy cập cao hơn để thực hiện hành động này. Lỗi không phải là "Not Found" hay Conflict, mà là một vấn đề về quyền truy cập.
+
+**Khuyến nghị Khắc phục (Next Steps):**
+Để khắc phục lỗi, người quản trị nên xác định lại cấu hình quyền truy cập cho tài nguyên prod-data và đảm bảo rằng công cụ có đủ quyền cần thiết để thực hiện hành động `Enable MFA delete`.
+</blockquote>
+<pre>{}
+</pre>
+<hr>
+
+
+
+
+<h2>5.3 Yêu cầu khắc phục thủ công</h2>
+
+<p><em>Không ghi nhận yêu cầu khắc phục thủ công trong phạm vi đánh giá này.</em></p>
+
+
+
+
+<!-- ============================================================ -->
+<!-- 6. POST-REMEDIATION ASSESSMENT                                -->
+<!-- ============================================================ -->
+<h1>6. Đánh giá sau khắc phục</h1>
+
+<h2>6.1 Tóm tắt hiệu quả</h2>
+<table class="styled-table">
+<thead><tr><th>Chỉ số</th><th>Trước</th><th>Sau</th><th>Thay đổi</th></tr></thead>
+<tbody>
+<tr>
+    <td><strong>ĐẠT (PASS)</strong></td>
+    <td>2</td>
+    <td><strong>5</strong></td>
+    <td>
+        Tăng 3
+    </td>
+</tr>
+<tr>
+    <td><strong>KHÔNG ĐẠT (FAIL)</strong></td>
+    <td>4</td>
+    <td><strong>1</strong></td>
+    <td>
+        Giảm 3
+    </td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Trạng thái khắc phục:</strong></p>
+<ul>
+    <li><strong>Tự động sửa:</strong> 3</li>
+    <li><strong>Cần thủ công:</strong> 0</li>
+    <li><strong>Lỗi (Error):</strong> 1</li>
+</ul>
+
+<h2>6.2 Chi tiết thay đổi</h2>
+<h3>Đã sửa tự động</h3>
+
+<ul>
+
+    <li>Block public access on prod-data (<code>prod-data</code>)</li>
+
+    <li>Remove public bucket policy (<code>prod-data</code>)</li>
+
+    <li>Enable S3 access logging (<code>prod-data</code>)</li>
+
+</ul>
+
+
+<h3>Cần xử lý thủ công</h3>
+
+<p><em>Không có.</em></p>
+
+
+<h3>Lỗi tồn đọng</h3>
+
+<ul>
+
+    <li>MFA delete requires root credentials (<code>prod-data</code>)</li>
+
+</ul>
+
+
+<h2>6.3 Đánh giá của chuyên gia</h2>
+Sau khi thực hiện quy trình bảo mật, đã quan sát được một số thay đổi đáng kể trong tư thế bảo mật của hệ thống. Mức giảm lỗi từ `initial_fail` xuống `final_fail` là đáng chú ý, với mức giảm khoảng 75%. Điều này cho thấy rằng việc áp dụng các biện pháp bảo mật mới đã giúp giảm thiểu tối đa các lỗ hổng bảo mật ban đầu.
+
+Phân tích chi tiết cho thấy rằng có 3 lỗi đã được khắc phục (`f001`, `f002`, và `f003`), trong đó có 2 lỗi liên quan đến quyền truy cập công khai và một lỗi liên quan đến lưu trữ. Ngoài ra, có 1 lỗi cần xử lý thủ công (`f004`) liên quan đến việc xóa tài khoản với MFA yêu cầu quyền root.
+
+Kết luận là mức độ rủi ro đã được kiểm soát khoảng 80%. Tuy nhiên, vẫn còn 20% rủi ro để kiểm soát. Trong tương lai, sẽ tập trung vào việc xử lý các lỗi cần thủ công và duy trì các biện pháp bảo mật hiện tại.
+
+<!-- ============================================================ -->
+<!-- 7. RECOMMENDATIONS                                            -->
+<!-- ============================================================ -->
+<h1>7. Khuyến nghị chiến lược</h1>
+Dựa trên dữ liệu sau remediation, đưa ra các khuyến nghị sau:
+
+1. **Xử lý các Manual Findings còn tồn đọng**
+Các Finding Manual vẫn còn tồn đọng cần được xử lý ngay lập tức để đảm bảo tính toàn diện và hiệu quả của hệ thống bảo mật.
+
+2. **Tăng cường cơ chế giám sát và rà soát định kỳ**
+Để đảm bảo hệ thống bảo mật luôn hoạt động tốt, đề xuất tăng cường việc giám sát và rà soát định kỳ các Finding Manual cũng như các Finding Failed để kịp thời xử lý và cải thiện.
+
+3. **Duy trì automation hiện có**
+Nếu không có Finding Failed, đề xuất duy trì và cải thiện hệ thống automation hiện có để đảm bảo tính hiệu quả và toàn diện của hệ thống bảo mật.
+
+ hy vọng rằng những khuyến nghị trên sẽ giúp cấp quản lý đưa ra quyết định sáng suốt và hiệu quả cho việc bảo vệ thông tin.
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<hr>
+<p style="text-align:center; font-size:0.8em; color:#999;">
+    Mã báo cáo: RPT-20260405-DBA2 | Ngày tạo: 2026-04-05 |
+    PDCA Security Agent
+</p>
+
+</body>
+</html>

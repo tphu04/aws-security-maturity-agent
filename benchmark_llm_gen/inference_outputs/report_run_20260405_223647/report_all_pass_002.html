@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Đánh giá Bảo mật AWS</title>
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.7; color: #2c3e50;
+    max-width: 1000px; margin: 0 auto; padding: 30px;
+}
+h1, h2, h3 { color: #2c3e50; }
+h1 { border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+h2 { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 40px; }
+
+/* Cover page */
+.cover-page { text-align: center; padding: 60px 0; page-break-after: always; }
+.cover-page h1 { border: none; font-size: 2em; }
+.score-box { display: inline-block; padding: 20px; margin: 20px;
+             border: 3px solid #2c3e50; border-radius: 10px; }
+.score-number { font-size: 3em; font-weight: bold; }
+.confidentiality { font-size: 0.8em; color: #999; margin-top: 40px;
+                   font-style: italic; }
+
+/* Table */
+.styled-table { border-collapse: collapse; width: 100%; margin: 20px 0;
+                font-size: 0.9em; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+.styled-table thead tr { background: #009879; color: white; }
+.styled-table th, .styled-table td { padding: 12px 15px; border: 1px solid #ddd; }
+.styled-table tbody tr:nth-child(even) { background: #f3f3f3; }
+
+/* Status colors */
+.status-fixed  { color: #2E7D32; font-weight: bold; }
+.status-manual { color: #E65100; font-weight: bold; }
+.status-error  { color: #C62828; font-weight: bold; }
+
+/* Severity badges */
+.sev-critical { background: #B71C1C; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-high     { background: #E65100; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-medium   { background: #FFB300; color: #333; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-low      { background: #1E88E5; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+
+blockquote { background: #f9f9f9; border-left: 5px solid #ccc;
+             margin: 1.5em 10px; padding: 0.5em 10px; }
+pre { background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #f36d33;
+      padding: 1em; overflow: auto; font-size: 14px; }
+.toc { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+.toc ol { line-height: 2; }
+
+@media print {
+    .cover-page { page-break-after: always; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- COVER PAGE                                                    -->
+<!-- ============================================================ -->
+<div class="cover-page">
+    <h1>BÁO CÁO ĐÁNH GIÁ VÀ KHẮC PHỤC BẢO MẬT AWS</h1>
+    <p>
+        <strong>Tài khoản:</strong> 555666777888 |
+        <strong>Vùng:</strong> us-west-2
+    </p>
+    <p><strong>Ngày:</strong> 2026-04-05</p>
+    <p><strong>Mã báo cáo:</strong> RPT-20260405-7FC3</p>
+
+    <div class="score-box">
+        <span class="score-number">90</span>
+        <span>/ 100</span>
+        <br><small>Điểm Bảo mật</small>
+    </div>
+
+    <p class="confidentiality">
+        MẬT &mdash; Tài liệu này chứa thông tin đánh giá bảo mật nội bộ.
+        Chỉ được phân phối cho nhân sự được ủy quyền.
+    </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                             -->
+<!-- ============================================================ -->
+<div class="toc">
+    <h2>Mục lục</h2>
+    <ol>
+        <li>Tóm tắt điều hành</li>
+        <li>Phạm vi và phương pháp</li>
+        <li>Đánh giá trước khắc phục</li>
+        <li>Bảng chi tiết phát hiện</li>
+        <li>Chi tiết thực thi khắc phục</li>
+        <li>Đánh giá sau khắc phục</li>
+        <li>Khuyến nghị chiến lược</li>
+    </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. EXECUTIVE SUMMARY                                          -->
+<!-- ============================================================ -->
+<h1>1. Tóm tắt điều hành</h1>
+Đánh giá bảo mật đã được thực hiện trên tài khoản 555666777888 vùng us-west-2. Tổng cộng 3 kiểm tra cấu hình trong phạm vi S3. Toàn bộ 3 kiểm tra đều đạt chuẩn (PASS). Không phát hiện lỗi bảo mật nào cần khắc phục.
+
+<!-- ============================================================ -->
+<!-- 2. SCOPE & METHODOLOGY                                        -->
+<!-- ============================================================ -->
+<h1>2. Phạm vi và phương pháp</h1>
+
+<h2>2.1 Bối cảnh hệ thống</h2>
+<table class="styled-table">
+<thead><tr><th>Thuộc tính</th><th>Chi tiết</th></tr></thead>
+<tbody>
+    <tr><td><strong>Tài khoản AWS</strong></td><td><code>555666777888</code></td></tr>
+    <tr><td><strong>Vùng (Region)</strong></td><td>us-west-2</td></tr>
+    <tr><td><strong>Phạm vi quét</strong></td>
+        <td>S3</td></tr>
+    <tr><td><strong>Công cụ</strong></td><td>Prowler, AWS SDK (boto3), PDCA Security Agent</td></tr>
+</tbody>
+</table>
+
+Hệ thống này được thiết kế để lưu trữ và quản lý dữ liệu lớn thông qua Amazon S3, một dịch vụ Data Lake của AWS. Mục tiêu chính là tạo ra một môi trường an toàn và tuân thủ cho các ứng dụng của tổ chức.
+
+Dưới đây là các điểm nhấn chiến lược quan trọng trong việc đánh giá hệ thống:
+
+* **Giám sát quyền truy cập**: Đảm bảo rằng chỉ những người có thẩm quyền mới có thể truy cập vào dữ liệu, với các quy trình kiểm soát quyền truy cập nghiêm ngặt.
+* **Bảo mật dữ liệu**: Sử dụng mã hóa AES-256 và các tính năng bảo mật khác để bảo vệ dữ liệu khỏi sự truy cập trái phép.
+* **Khả năng phục hồi**: Thiết kế hệ thống để có khả năng phục hồi nhanh chóng trong trường hợp xảy ra sự cố, với các bản sao lưu và phân phối dữ liệu đều đặn.
+
+Mục tiêu của chúng ta là đạt được chứng chỉ AWS Well-Architected Framework, đảm bảo rằng hệ thống của chúng ta đáp ứng các tiêu chuẩn về an toàn, hiệu suất, bảo mật và tính khả dụng.
+
+<h2>2.2 Mục tiêu đánh giá</h2>
+Mục tiêu tổng quát của báo cáo đánh giá cấu hình AWS là rà soát tư thế bảo mật (Security Posture) và giảm thiểu rủi ro sai cấu hình. Mục tiêu cụ thể bao gồm:
+
+* Kiểm soát truy cập: Đảm bảo rằng các quyền truy cập vào tài nguyên AWS được quản lý một cách chính xác và an toàn.
+* Mã hóa dữ liệu: Xác minh rằng tất cả dữ liệu lưu trữ trên AWS được mã hóa theo tiêu chuẩn an ninh.
+* Logging & Monitoring: Đánh giá hiệu quả của hệ thống đăng ký và giám sát, đảm bảo rằng mọi hoạt động quan trọng được ghi lại và theo dõi.
+* Tuân thủ Best Practices (CIS/Well-Architected): Theo dõi xem tài nguyên AWS được cấu hình tuân thủ các tiêu chuẩn an ninh và hiệu suất tốt nhất.
+
+<!-- ============================================================ -->
+<!-- 3. PRE-REMEDIATION ASSESSMENT                                 -->
+<!-- ============================================================ -->
+<h1>3. Đánh giá trước khắc phục</h1>
+
+<h2>3.1 Trạng thái bảo mật ban đầu</h2>
+<ul>
+    <li><strong>Tổng số phát hiện:</strong> 3</li>
+    <li><strong>ĐẠT (PASS):</strong> 3</li>
+    <li><strong>KHÔNG ĐẠT (FAIL):</strong> 0</li>
+</ul>
+<p><strong>Phân bổ mức độ nghiêm trọng:</strong></p>
+<ul>
+    <li>Nghiêm trọng (Critical): <strong>0</strong></li>
+    <li>Cao (High): <strong>0</strong></li>
+    <li>Trung bình (Medium): <strong>0</strong></li>
+    <li>Thấp (Low): <strong>0</strong></li>
+</ul>
+
+<h2>3.2 Phân tích trực quan</h2>
+<table style="width:100%">
+<tr>
+    <td style="text-align:center; width:50%">
+        <img src="charts/severity_bar.png" style="max-width:100%; height:auto;">
+    </td>
+    <td style="text-align:center; width:50%">
+        <img src="charts/pass_fail_pie.png" style="max-width:100%; height:auto;">
+    </td>
+</tr>
+</table>
+
+<h2>3.3 Phân tích phát hiện</h2>
+<h3>Tổng quan các mục ĐẠT</h3>
+Tổng quan, có 1 PASS trong tổng số PASS, với mức độ nghiêm trọng là trung bình và thuộc event_code s3_bucket_public_access. Điều này cho thấy rằng hệ thống đã tuân thủ một thực hành tốt về bảo mật.
+
+Các mục PASS này phản ánh điều đó hệ thống có một cấu hình đúng về việc quản lý tài nguyên S3, đảm bảo rằng không có truy cập công khai đối với các bucket. Điều này là quan trọng vì nó giúp ngăn chặn các cuộc tấn công mạng và duy trì tính riêng tư của dữ liệu.
+
+<h3>Tổng quan các mục KHÔNG ĐẠT</h3>
+Toàn bộ các kiểm tra cấu hình đều đạt chuẩn. Không ghi nhận lỗi bảo mật trong phạm vi đánh giá.
+
+<!-- ============================================================ -->
+<!-- 4. FINDINGS DETAIL TABLE                                      -->
+<!-- ============================================================ -->
+<h1>4. Bảng chi tiết phát hiện</h1>
+<table class="styled-table">
+<thead>
+<tr>
+    <th>STT</th><th>Phát hiện</th><th>Dịch vụ</th>
+    <th>Tài nguyên</th><th>Mức độ</th>
+    <th>Trước</th><th>Sau</th><th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+
+</tbody>
+</table>
+
+<!-- ============================================================ -->
+<!-- 5. REMEDIATION EXECUTION                                      -->
+<!-- ============================================================ -->
+<h1>5. Chi tiết thực thi khắc phục</h1>
+
+<h2>5.1 Khắc phục thành công</h2>
+
+
+
+<p><em>Không có khắc phục tự động thành công.</em></p>
+
+
+<h2>5.2 Khắc phục thất bại</h2>
+
+
+
+<p><em>Không ghi nhận lỗi trong quá trình khắc phục tự động.</em></p>
+
+
+<h2>5.3 Yêu cầu khắc phục thủ công</h2>
+
+<p><em>Không ghi nhận yêu cầu khắc phục thủ công trong phạm vi đánh giá này.</em></p>
+
+
+
+
+<!-- ============================================================ -->
+<!-- 6. POST-REMEDIATION ASSESSMENT                                -->
+<!-- ============================================================ -->
+<h1>6. Đánh giá sau khắc phục</h1>
+
+<h2>6.1 Tóm tắt hiệu quả</h2>
+<table class="styled-table">
+<thead><tr><th>Chỉ số</th><th>Trước</th><th>Sau</th><th>Thay đổi</th></tr></thead>
+<tbody>
+<tr>
+    <td><strong>ĐẠT (PASS)</strong></td>
+    <td>3</td>
+    <td><strong>3</strong></td>
+    <td>
+        Giữ nguyên
+    </td>
+</tr>
+<tr>
+    <td><strong>KHÔNG ĐẠT (FAIL)</strong></td>
+    <td>0</td>
+    <td><strong>0</strong></td>
+    <td>
+        Giữ nguyên
+    </td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Trạng thái khắc phục:</strong></p>
+<ul>
+    <li><strong>Tự động sửa:</strong> 0</li>
+    <li><strong>Cần thủ công:</strong> 0</li>
+    <li><strong>Lỗi (Error):</strong> 0</li>
+</ul>
+
+<h2>6.2 Chi tiết thay đổi</h2>
+<h3>Đã sửa tự động</h3>
+
+<p><em>Không có.</em></p>
+
+
+<h3>Cần xử lý thủ công</h3>
+
+<p><em>Không có.</em></p>
+
+
+<h3>Lỗi tồn đọng</h3>
+
+<p><em>Không có lỗi trong quá trình sửa.</em></p>
+
+
+<h2>6.3 Đánh giá của chuyên gia</h2>
+Không có hành động khắc phục nào được thực hiện do toàn bộ kiểm tra đều đạt chuẩn. Hệ thống duy trì trạng thái bảo mật tốt.
+
+<!-- ============================================================ -->
+<!-- 7. RECOMMENDATIONS                                            -->
+<!-- ============================================================ -->
+<h1>7. Khuyến nghị chiến lược</h1>
+Hệ thống hiện tại đạt chuẩn bảo mật. Khuyến nghị tiếp tục giám sát định kỳ và cập nhật cấu hình theo các tiêu chuẩn mới nhất.
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<hr>
+<p style="text-align:center; font-size:0.8em; color:#999;">
+    Mã báo cáo: RPT-20260405-7FC3 | Ngày tạo: 2026-04-05 |
+    PDCA Security Agent
+</p>
+
+</body>
+</html>

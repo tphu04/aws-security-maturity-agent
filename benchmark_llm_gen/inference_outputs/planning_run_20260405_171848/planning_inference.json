@@ -1,0 +1,503 @@
+[
+  {
+    "case_id": "plan_explicit_s3_001",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:08.411893+00:00",
+    "latency_ms": 0.4,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "s3_bucket_public_access",
+        "s3_bucket_default_encryption"
+      ],
+      "reasoning": "Explicit check IDs detected in request."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_explicit_iam_002",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:08.859040+00:00",
+    "latency_ms": 0.2,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "iam_root_mfa_enabled",
+        "iam_no_root_access_key",
+        "iam_user_mfa_enabled_console_access"
+      ],
+      "reasoning": "Explicit check IDs detected in request."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_explicit_ec2_003",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:09.296791+00:00",
+    "latency_ms": 0.2,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "ec2_instance_imdsv2_enabled",
+        "ec2_ebs_default_encryption"
+      ],
+      "reasoning": "Explicit check IDs detected in request."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_explicit_rds_004",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:09.750368+00:00",
+    "latency_ms": 0.3,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "rds_instance_no_public_access",
+        "rds_instance_storage_encrypted",
+        "rds_instance_backup_enabled"
+      ],
+      "reasoning": "Explicit check IDs detected in request."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_explicit_cloudtrail_005",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:10.209842+00:00",
+    "latency_ms": 0.2,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "cloudtrail_multi_region_enabled",
+        "cloudtrail_kms_encryption_enabled"
+      ],
+      "reasoning": "Explicit check IDs detected in request."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_group_s3_001",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:10.671897+00:00",
+    "latency_ms": 0.3,
+    "agent_output": {
+      "groups_to_scan": [
+        "s3"
+      ],
+      "target_services": [
+        "s3"
+      ],
+      "checks_to_scan": [],
+      "reasoning": "Group scan requested for s3."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_group_iam_002",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:11.131283+00:00",
+    "latency_ms": 0.3,
+    "agent_output": {
+      "groups_to_scan": [
+        "iam"
+      ],
+      "target_services": [
+        "iam"
+      ],
+      "checks_to_scan": [],
+      "reasoning": "Group scan requested for iam."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_group_ec2_003",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:11.598473+00:00",
+    "latency_ms": 0.3,
+    "agent_output": {
+      "groups_to_scan": [
+        "ec2"
+      ],
+      "target_services": [
+        "ec2"
+      ],
+      "checks_to_scan": [],
+      "reasoning": "Group scan requested for ec2."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_group_rds_004",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:12.050363+00:00",
+    "latency_ms": 0.3,
+    "agent_output": {
+      "groups_to_scan": [
+        "rds"
+      ],
+      "target_services": [
+        "rds"
+      ],
+      "checks_to_scan": [],
+      "reasoning": "Group scan requested for rds."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_group_kms_005",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:12.504320+00:00",
+    "latency_ms": 0.3,
+    "agent_output": {
+      "groups_to_scan": [
+        "kms"
+      ],
+      "target_services": [
+        "kms"
+      ],
+      "checks_to_scan": [],
+      "reasoning": "Group scan requested for kms."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_s3_pub_001",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:18.319418+00:00",
+    "latency_ms": 5327.4,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "s3_access_point_public_access_block",
+        "s3_bucket_public_access",
+        "s3_account_level_public_access_blocks",
+        "s3_bucket_level_public_access_block"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=1.018, selected 4 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_s3_enc_002",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:22.058748+00:00",
+    "latency_ms": 3238.5,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "s3_bucket_default_encryption",
+        "s3_bucket_kms_encryption"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.868, selected 2 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_s3_log_003",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:24.344110+00:00",
+    "latency_ms": 1803.2,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "s3_access_point_public_access_block",
+        "s3_bucket_server_access_logging_enabled",
+        "s3_bucket_default_encryption",
+        "s3_bucket_no_mfa_delete"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=1.016, selected 4 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_iam_mfa_004",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:28.879435+00:00",
+    "latency_ms": 4037.2,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "iam_user_mfa_enabled_console_access",
+        "iam_user_hardware_mfa_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.958, selected 2 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_iam_key_005",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:33.214610+00:00",
+    "latency_ms": 3857.7,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "iam_no_root_access_key",
+        "iam_user_accesskey_unused",
+        "iam_user_console_access_unused",
+        "iam_user_two_active_access_key",
+        "iam_user_no_setup_initial_access_key"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=1.014, selected 5 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_iam_policy_006",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:37.649914+00:00",
+    "latency_ms": 3955.8,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "iam_inline_policy_no_administrative_privileges",
+        "iam_customer_attached_policy_no_administrative_privileges",
+        "iam_policy_cloudshell_admin_not_attached"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.957, selected 3 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_ec2_sg_007",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:41.204177+00:00",
+    "latency_ms": 3072.7,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "ec2_instance_port_ssh_exposed_to_internet",
+        "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+        "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389",
+        "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_postgres_5432"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=1.017, selected 4 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_ec2_imds_008",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:46.602318+00:00",
+    "latency_ms": 4896.4,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "ec2_instance_imdsv2_enabled",
+        "ec2_instance_account_imdsv2_enabled",
+        "ec2_launch_template_imdsv2_required"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.958, selected 3 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_ec2_ebs_009",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:51.144658+00:00",
+    "latency_ms": 4039.9,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "workspaces_volume_encryption_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.830, selected 1 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_rds_pub_010",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:19:57.365392+00:00",
+    "latency_ms": 5716.1,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "rds_instance_no_public_access",
+        "rds_snapshots_public_access",
+        "rds_instance_inside_vpc"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=1.018, selected 3 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_rds_enc_011",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:03.591957+00:00",
+    "latency_ms": 5738.7,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "rds_cluster_storage_encrypted",
+        "rds_instance_storage_encrypted"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.867, selected 2 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_ct_log_012",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:05.484517+00:00",
+    "latency_ms": 1433.5,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "cloudtrail_multi_region_enabled",
+        "cloudtrail_log_file_validation_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.957, selected 2 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_kms_rot_013",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:07.693665+00:00",
+    "latency_ms": 1725.9,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "kms_cmk_rotation_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.868, selected 1 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_iam_root_014",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:14.220098+00:00",
+    "latency_ms": 6029.0,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "iam_no_root_access_key"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.899, selected 1 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_specific_kms_pub_015",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:16.643592+00:00",
+    "latency_ms": 1929.7,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "kms_cmk_not_deleted_unintentionally",
+        "kms_cmk_not_multi_region",
+        "kms_key_not_publicly_accessible",
+        "kms_cmk_are_used"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.981, selected 4 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_ambiguous_security_001",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:20.484624+00:00",
+    "latency_ms": 3323.9,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "s3_bucket_shadow_resource_vulnerability",
+        "s3_bucket_no_mfa_delete",
+        "s3_bucket_server_access_logging_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.957, selected 3 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_ambiguous_access_002",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:26.131407+00:00",
+    "latency_ms": 5157.3,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "s3_access_point_public_access_block",
+        "iam_user_administrator_access_policy",
+        "opensearch_service_domains_access_control_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.832, selected 3 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_ambiguous_database_003",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:32.439385+00:00",
+    "latency_ms": 5788.6,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "rds_instance_event_subscription_security_groups",
+        "rds_instance_non_default_port",
+        "rds_cluster_non_default_port"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.853, selected 3 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_ambiguous_network_004",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:40.719537+00:00",
+    "latency_ms": 7801.6,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+        "eks_cluster_network_policy_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.649, selected 2 checks."
+    },
+    "error": null
+  },
+  {
+    "case_id": "plan_ambiguous_audit_005",
+    "agent": "planning",
+    "timestamp": "2026-04-05T10:20:42.511926+00:00",
+    "latency_ms": 1293.1,
+    "agent_output": {
+      "groups_to_scan": [],
+      "target_services": [],
+      "checks_to_scan": [
+        "cloudtrail_log_file_validation_enabled",
+        "cloudtrail_logs_s3_bucket_access_logging_enabled"
+      ],
+      "reasoning": "Deterministic selection: RAG confidence=medium, top_score=0.864, selected 2 checks."
+    },
+    "error": null
+  }
+]

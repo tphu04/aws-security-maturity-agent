@@ -13,11 +13,17 @@ from __future__ import annotations
 
 import json
 import statistics
+import sys
+import io
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
+
+# Ensure UTF-8 output on Windows (Vietnamese queries in benchmark)
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from app.evaluation.metrics import (
     compute_average_precision,

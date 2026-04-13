@@ -1,0 +1,4703 @@
+{
+  "report_type": "report_agent_benchmark",
+  "timestamp": "2026-04-05T15:55:35.917070+00:00",
+  "total_cases": 19,
+  "structure": {
+    "html_valid_rate": 1.0,
+    "section_presence_rate": 1.0,
+    "no_template_leak_rate": 1.0,
+    "no_none_display_rate": 0.9474,
+    "cover_page_rate": 1.0,
+    "chart_presence_rate": 1.0,
+    "gate_pass_rate": 0.9474
+  },
+  "correctness": {
+    "stats_accuracy": 1.0,
+    "findings_table_accuracy": 1.0,
+    "score_accuracy": 1.0,
+    "status_color_accuracy": 1.0
+  },
+  "faithfulness": {
+    "numerical_faithfulness": 0.7192
+  },
+  "completeness": {
+    "findings_coverage": 1.0,
+    "conditional_bypass_correctness": 1.0
+  },
+  "by_group": {
+    "A_scenario": {
+      "total": 9,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.6236,
+      "findings_coverage": 1.0
+    },
+    "B_edge_case": {
+      "total": 10,
+      "gate_pass_rate": 0.9,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.8053,
+      "findings_coverage": 1.0
+    }
+  },
+  "by_scenario": {
+    "standard": {
+      "total": 3,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.7652,
+      "findings_coverage": 1.0
+    },
+    "all_pass": {
+      "total": 2,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.675,
+      "findings_coverage": 1.0
+    },
+    "all_fail": {
+      "total": 2,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.775,
+      "findings_coverage": 1.0
+    },
+    "minimal": {
+      "total": 2,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.2084,
+      "findings_coverage": 1.0
+    },
+    "missing_fields": {
+      "total": 2,
+      "gate_pass_rate": 0.5,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.7922,
+      "findings_coverage": 1.0
+    },
+    "mixed_case_status": {
+      "total": 2,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.7824,
+      "findings_coverage": 1.0
+    },
+    "multi_service": {
+      "total": 2,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.9616,
+      "findings_coverage": 1.0
+    },
+    "high_volume": {
+      "total": 1,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.6667,
+      "findings_coverage": 1.0
+    },
+    "zero_severity": {
+      "total": 1,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.6667,
+      "findings_coverage": 1.0
+    },
+    "complex_remediation": {
+      "total": 2,
+      "gate_pass_rate": 1.0,
+      "stats_accuracy": 1.0,
+      "faithfulness": 0.8236,
+      "findings_coverage": 1.0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "report_standard_001",
+      "group": "A_scenario",
+      "scenario": "standard",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 18675,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 26604.4
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 10,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 7,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 9,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 3,
+        "table_rows_found": 3,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 86,
+        "expected_score": 86,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.7143,
+        "verified": 10,
+        "total_claims": 14,
+        "known_numbers": [
+          2,
+          3,
+          7,
+          9,
+          10,
+          86,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 10,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": false
+          },
+          {
+            "number": 5,
+            "known_in_data": false
+          },
+          {
+            "number": 6,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 75,
+            "known_in_data": false
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 3,
+        "findings_total": 3,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_encryption",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_versioning",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_standard_002",
+      "group": "A_scenario",
+      "scenario": "standard",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 20661,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 31093.6
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 6,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 4,
+        "table_rows_found": 4,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 74,
+        "expected_score": 74,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.8889,
+        "verified": 8,
+        "total_claims": 9,
+        "known_numbers": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          74,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 6,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 80,
+            "known_in_data": false
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 4,
+        "findings_total": 4,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_logging",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_mfa_delete",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_policy_public",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_standard_003",
+      "group": "A_scenario",
+      "scenario": "standard",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 17479,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 24381.7
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 2,
+        "table_rows_found": 2,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 77,
+        "expected_score": 77,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.6923,
+        "verified": 9,
+        "total_claims": 13,
+        "known_numbers": [
+          2,
+          3,
+          4,
+          5,
+          77,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 111222333444,
+            "known_in_data": false
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 6,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 50,
+            "known_in_data": false
+          },
+          {
+            "number": 90,
+            "known_in_data": false
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 2,
+        "findings_total": 2,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_default_encryption",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_ssl_requests_only",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_all_pass_001",
+      "group": "A_scenario",
+      "scenario": "all_pass",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 11826,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 7562.1
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 0,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 0,
+        "table_rows_found": 0,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 90,
+        "expected_score": 90,
+        "status_color_accuracy": 1.0,
+        "status_detail": []
+      },
+      "faithfulness": {
+        "score": 0.75,
+        "verified": 3,
+        "total_claims": 4,
+        "known_numbers": [
+          2,
+          5,
+          90,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 123456789012,
+            "known_in_data": false
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 0,
+        "findings_total": 0,
+        "coverage_detail": [],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.fail == 0",
+            "expected": "hardcoded fail_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_all_pass_002",
+      "group": "A_scenario",
+      "scenario": "all_pass",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 11742,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 7458.6
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 0,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 0,
+        "table_rows_found": 0,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 90,
+        "expected_score": 90,
+        "status_color_accuracy": 1.0,
+        "status_detail": []
+      },
+      "faithfulness": {
+        "score": 0.6,
+        "verified": 3,
+        "total_claims": 5,
+        "known_numbers": [
+          3,
+          90,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 555666777888,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": false
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 0,
+        "findings_total": 0,
+        "coverage_detail": [],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.fail == 0",
+            "expected": "hardcoded fail_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_all_fail_001",
+      "group": "A_scenario",
+      "scenario": "all_fail",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 19975,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 28973.1
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 4,
+        "table_rows_found": 4,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 62,
+        "expected_score": 62,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.75,
+        "verified": 6,
+        "total_claims": 8,
+        "known_numbers": [
+          2,
+          3,
+          4,
+          62,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 75,
+            "known_in_data": false
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 75,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 4,
+        "findings_total": 4,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_logging",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_mfa_delete",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_policy_public",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass == 0",
+            "expected": "hardcoded pass_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_all_fail_002",
+      "group": "A_scenario",
+      "scenario": "all_fail",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 16908,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 23415.5
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 2,
+        "table_rows_found": 2,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 42,
+        "expected_score": 42,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.8,
+        "verified": 4,
+        "total_claims": 5,
+        "known_numbers": [
+          2,
+          42,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": false
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 2,
+        "findings_total": 2,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_versioning",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass == 0",
+            "expected": "hardcoded pass_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_minimal_001",
+      "group": "A_scenario",
+      "scenario": "minimal",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 15912,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 23722.4
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 0,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 1,
+        "table_rows_found": 1,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 70,
+        "expected_score": 70,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.0,
+        "verified": 0,
+        "total_claims": 6,
+        "known_numbers": [
+          70,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 3,
+            "known_in_data": false
+          },
+          {
+            "number": 33,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": false
+          },
+          {
+            "number": 66,
+            "known_in_data": false
+          },
+          {
+            "number": 33,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": false
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 1,
+        "findings_total": 1,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass == 0",
+            "expected": "hardcoded pass_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_minimal_002",
+      "group": "A_scenario",
+      "scenario": "minimal",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 17047,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 30299.8
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 0,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 1,
+        "table_rows_found": 1,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 97,
+        "expected_score": 97,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.4167,
+        "verified": 5,
+        "total_claims": 12,
+        "known_numbers": [
+          2,
+          97,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 222222222222,
+            "known_in_data": false
+          },
+          {
+            "number": 5,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": false
+          },
+          {
+            "number": 2026,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": false
+          },
+          {
+            "number": 100,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": false
+          },
+          {
+            "number": 95,
+            "known_in_data": false
+          },
+          {
+            "number": 95,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 1,
+        "findings_total": 1,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_logging",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_missing_fields_001",
+      "group": "B_edge_case",
+      "scenario": "missing_fields",
+      "bug_regression": "BUG-02",
+      "debug": {
+        "html_length": 18081,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 26106.0
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 2,
+        "table_rows_found": 2,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 60,
+        "expected_score": 60,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.7273,
+        "verified": 8,
+        "total_claims": 11,
+        "known_numbers": [
+          2,
+          3,
+          60,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 50,
+            "known_in_data": false
+          },
+          {
+            "number": 50,
+            "known_in_data": false
+          },
+          {
+            "number": 80,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 2,
+        "findings_total": 2,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_encryption",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_missing_fields_002",
+      "group": "B_edge_case",
+      "scenario": "missing_fields",
+      "bug_regression": "BUG-02",
+      "debug": {
+        "html_length": 17637,
+        "gate_passed": false,
+        "inference_error": null,
+        "latency_ms": 24290.4
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": false,
+        "none_occurrences": 4,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": false
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 2,
+        "table_rows_found": 2,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 50,
+        "expected_score": 50,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.8571,
+        "verified": 6,
+        "total_claims": 7,
+        "known_numbers": [
+          2,
+          50,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 50,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": false
+          },
+          {
+            "number": 50,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 2,
+        "findings_total": 2,
+        "coverage_detail": [
+          {
+            "identifier": "s3_bucket_lifecycle",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_versioning",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass == 0",
+            "expected": "hardcoded pass_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_mixed_case_001",
+      "group": "B_edge_case",
+      "scenario": "mixed_case_status",
+      "bug_regression": "BUG-03",
+      "debug": {
+        "html_length": 17894,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 25794.0
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 3,
+        "table_rows_found": 3,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 66,
+        "expected_score": 66,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "FIXED",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "failed",
+            "expected_class": "status-error",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.8,
+        "verified": 4,
+        "total_claims": 5,
+        "known_numbers": [
+          3,
+          4,
+          66,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": false
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 3,
+        "findings_total": 3,
+        "coverage_detail": [
+          {
+            "identifier": "check_a",
+            "found": true
+          },
+          {
+            "identifier": "check_b",
+            "found": true
+          },
+          {
+            "identifier": "check_c",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_mixed_case_002",
+      "group": "B_edge_case",
+      "scenario": "mixed_case_status",
+      "bug_regression": "BUG-03",
+      "debug": {
+        "html_length": 18759,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 28309.4
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 3,
+        "table_rows_found": 3,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 62,
+        "expected_score": 62,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "FIXED",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "FAILED",
+            "expected_class": "status-error",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.7647,
+        "verified": 13,
+        "total_claims": 17,
+        "known_numbers": [
+          2,
+          3,
+          62,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 777888999000,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 33,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 66,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 3,
+        "findings_total": 3,
+        "coverage_detail": [
+          {
+            "identifier": "check_x",
+            "found": true
+          },
+          {
+            "identifier": "check_y",
+            "found": true
+          },
+          {
+            "identifier": "check_z",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass == 0",
+            "expected": "hardcoded pass_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_multi_service_001",
+      "group": "B_edge_case",
+      "scenario": "multi_service",
+      "bug_regression": "BUG-05",
+      "debug": {
+        "html_length": 19541,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 29763.8
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 8,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 7,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 1,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 3,
+        "table_rows_found": 3,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 83,
+        "expected_score": 83,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 1.0,
+        "verified": 10,
+        "total_claims": 10,
+        "known_numbers": [
+          2,
+          3,
+          5,
+          7,
+          8,
+          83,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 8,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 3,
+        "findings_total": 3,
+        "coverage_detail": [
+          {
+            "identifier": "ec2_sg_open",
+            "found": true
+          },
+          {
+            "identifier": "iam_root_mfa",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_public_access",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_multi_service_002",
+      "group": "B_edge_case",
+      "scenario": "multi_service",
+      "bug_regression": "BUG-05",
+      "debug": {
+        "html_length": 17639,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 24604.0
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 6,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 6,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 0,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 2,
+        "table_rows_found": 2,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 96,
+        "expected_score": 96,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.9231,
+        "verified": 12,
+        "total_claims": 13,
+        "known_numbers": [
+          2,
+          4,
+          6,
+          96,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 6,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 6,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 2,
+        "findings_total": 2,
+        "coverage_detail": [
+          {
+            "identifier": "iam_unused_credentials",
+            "found": true
+          },
+          {
+            "identifier": "s3_bucket_encryption",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_high_volume_001",
+      "group": "B_edge_case",
+      "scenario": "high_volume",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 38583,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 69781.9
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 50,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 35,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 15,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 10,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 45,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 5,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 15,
+        "table_rows_found": 15,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 87,
+        "expected_score": 87,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.6667,
+        "verified": 20,
+        "total_claims": 30,
+        "known_numbers": [
+          2,
+          3,
+          4,
+          5,
+          10,
+          15,
+          35,
+          45,
+          50,
+          87,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 50,
+            "known_in_data": true
+          },
+          {
+            "number": 15,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 20,
+            "known_in_data": false
+          },
+          {
+            "number": 15,
+            "known_in_data": true
+          },
+          {
+            "number": 75,
+            "known_in_data": false
+          },
+          {
+            "number": 6,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 80,
+            "known_in_data": false
+          },
+          {
+            "number": 60,
+            "known_in_data": false
+          },
+          {
+            "number": 75,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 6,
+            "known_in_data": false
+          },
+          {
+            "number": 7,
+            "known_in_data": false
+          },
+          {
+            "number": 8,
+            "known_in_data": false
+          },
+          {
+            "number": 9,
+            "known_in_data": false
+          },
+          {
+            "number": 10,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 15,
+        "findings_total": 15,
+        "coverage_detail": [
+          {
+            "identifier": "s3_check_01",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_02",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_03",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_04",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_05",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_06",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_07",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_08",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_09",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_10",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_11",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_12",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_13",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_14",
+            "found": true
+          },
+          {
+            "identifier": "s3_check_15",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_zero_severity_001",
+      "group": "B_edge_case",
+      "scenario": "zero_severity",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 11532,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 6706.3
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 0,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 0,
+        "table_rows_found": 0,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 90,
+        "expected_score": 90,
+        "status_color_accuracy": 1.0,
+        "status_detail": []
+      },
+      "faithfulness": {
+        "score": 0.6667,
+        "verified": 2,
+        "total_claims": 3,
+        "known_numbers": [
+          4,
+          90,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 123456789012,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 0,
+        "findings_total": 0,
+        "coverage_detail": [],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.fail == 0",
+            "expected": "hardcoded fail_overview",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_complex_remediation_001",
+      "group": "B_edge_case",
+      "scenario": "complex_remediation",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 20418,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 29442.4
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 6,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 2,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 4,
+        "table_rows_found": 4,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 64,
+        "expected_score": 64,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.7647,
+        "verified": 13,
+        "total_claims": 17,
+        "known_numbers": [
+          2,
+          4,
+          6,
+          64,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 6,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": false
+          },
+          {
+            "number": 6,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 50,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 4,
+        "findings_total": 4,
+        "coverage_detail": [
+          {
+            "identifier": "s3_encryption",
+            "found": true
+          },
+          {
+            "identifier": "s3_lifecycle",
+            "found": true
+          },
+          {
+            "identifier": "s3_public_access",
+            "found": true
+          },
+          {
+            "identifier": "s3_versioning",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "report_complex_remediation_002",
+      "group": "B_edge_case",
+      "scenario": "complex_remediation",
+      "bug_regression": null,
+      "debug": {
+        "html_length": 21324,
+        "gate_passed": true,
+        "inference_error": null,
+        "latency_ms": 33713.9
+      },
+      "structure": {
+        "html_valid": true,
+        "section_presence_rate": 1.0,
+        "sections_detail": [
+          {
+            "section": "Tóm tắt điều hành",
+            "found": true
+          },
+          {
+            "section": "Phạm vi và phương pháp",
+            "found": true
+          },
+          {
+            "section": "Đánh giá trước khắc phục",
+            "found": true
+          },
+          {
+            "section": "Bảng chi tiết phát hiện",
+            "found": true
+          },
+          {
+            "section": "Chi tiết thực thi khắc phục",
+            "found": true
+          },
+          {
+            "section": "Đánh giá sau khắc phục",
+            "found": true
+          },
+          {
+            "section": "Khuyến nghị chiến lược",
+            "found": true
+          }
+        ],
+        "no_template_leak": true,
+        "template_leaks": [],
+        "no_none_display": true,
+        "none_occurrences": 0,
+        "cover_page_complete": true,
+        "cover_detail": {
+          "account": true,
+          "region": true,
+          "date": true,
+          "report_id": true,
+          "score": true
+        },
+        "chart_presence": true,
+        "hard_pass": true
+      },
+      "correctness": {
+        "stats_accuracy": 1.0,
+        "stats_detail": [
+          {
+            "field": "pre.total",
+            "expected": 5,
+            "found": true
+          },
+          {
+            "field": "pre.pass",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "pre.fail",
+            "expected": 4,
+            "found": true
+          },
+          {
+            "field": "pre.severity.critical",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "pre.severity.high",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.medium",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "pre.severity.low",
+            "expected": 0,
+            "found": true
+          },
+          {
+            "field": "post.fixed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.manual",
+            "expected": 2,
+            "found": true
+          },
+          {
+            "field": "post.failed",
+            "expected": 1,
+            "found": true
+          },
+          {
+            "field": "post.final_pass",
+            "expected": 3,
+            "found": true
+          },
+          {
+            "field": "post.final_fail",
+            "expected": 2,
+            "found": true
+          }
+        ],
+        "findings_table_accuracy": 1.0,
+        "table_rows_expected": 4,
+        "table_rows_found": 4,
+        "severity_badges_correct": true,
+        "score_accuracy": 1.0,
+        "displayed_score": 60,
+        "expected_score": 60,
+        "status_color_accuracy": 1.0,
+        "status_detail": [
+          {
+            "change": "Fixed",
+            "expected_class": "status-fixed",
+            "found": true
+          },
+          {
+            "change": "Failed",
+            "expected_class": "status-error",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          },
+          {
+            "change": "Manual",
+            "expected_class": "status-manual",
+            "found": true
+          }
+        ]
+      },
+      "faithfulness": {
+        "score": 0.8824,
+        "verified": 15,
+        "total_claims": 17,
+        "known_numbers": [
+          2,
+          3,
+          4,
+          5,
+          60,
+          100,
+          256,
+          2024,
+          2025,
+          2026,
+          2027
+        ],
+        "details": [
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 5,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 256,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 3,
+            "known_in_data": true
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 25,
+            "known_in_data": false
+          },
+          {
+            "number": 4,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          },
+          {
+            "number": 50,
+            "known_in_data": false
+          },
+          {
+            "number": 2,
+            "known_in_data": true
+          }
+        ]
+      },
+      "completeness": {
+        "findings_coverage": 1.0,
+        "findings_found": 4,
+        "findings_total": 4,
+        "coverage_detail": [
+          {
+            "identifier": "s3_access_logging",
+            "found": true
+          },
+          {
+            "identifier": "s3_cors_config",
+            "found": true
+          },
+          {
+            "identifier": "s3_object_lock",
+            "found": true
+          },
+          {
+            "identifier": "s3_transfer_accel",
+            "found": true
+          }
+        ],
+        "conditional_bypass_correctness": true,
+        "bypass_detail": [
+          {
+            "condition": "pre.pass > 0 AND pre.fail > 0",
+            "expected": "no bypass text",
+            "correct": true
+          }
+        ]
+      }
+    }
+  ],
+  "release_criteria": {
+    "verdict": "FAIL",
+    "checks": [
+      {
+        "criterion": "html_valid_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "section_presence_rate_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "no_template_leak_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "no_none_display_min",
+        "threshold": 1.0,
+        "actual": 0.9474,
+        "passed": false
+      },
+      {
+        "criterion": "stats_accuracy_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "findings_table_accuracy_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "score_accuracy_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "numerical_faithfulness_min",
+        "threshold": 0.9,
+        "actual": 0.7192,
+        "passed": false
+      },
+      {
+        "criterion": "findings_coverage_min",
+        "threshold": 0.9,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "conditional_bypass_correctness_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "_comment": "Report Agent release criteria — all deterministic, chi phi = 0.",
+  "_note": "10 criteria, khong phu thuoc LLM judge. Nguong ban dau, dieu chinh sau khi co baseline.",
+
+  "html_valid_min": 1.00,
+  "section_presence_rate_min": 1.00,
+  "no_template_leak_min": 1.00,
+  "no_none_display_min": 1.00,
+
+  "stats_accuracy_min": 1.00,
+  "findings_table_accuracy_min": 1.00,
+  "score_accuracy_min": 1.00,
+
+  "numerical_faithfulness_min": 0.90,
+
+  "findings_coverage_min": 0.90,
+  "conditional_bypass_correctness_min": 1.00
+}

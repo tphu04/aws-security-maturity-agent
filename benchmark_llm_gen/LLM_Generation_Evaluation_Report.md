@@ -29,14 +29,14 @@
 
 ```
 User Request
-  -> Planning Agent  (RAG: PlanningBundle -> chọn Prowler checks)
+  -> Planning Agent  (RAG: PlanningBundle → chọn Prowler checks hoặc group scan)
   -> Scanner Agent   (gọi Prowler API)
-  -> Risk Agent      (RAG: RiskBundle -> chấm điểm severity + reasoning)
+  -> Risk Agent      (RAG: RiskBundle → chấm điểm severity + reasoning)
   -> Remediation     (thực thi sửa lỗi)
-  -> Report Agent    (RAG: ReportBundle -> sinh báo cáo tổng hợp)
+  -> Report Agent    (RAG: ReportBundle → sinh báo cáo tổng hợp)
 ```
 
-Mỗi agent gọi RAG qua `build_context(consumer=...)` để nhận context bundle, sau đó truyền vào LLM prompt để sinh output (JSON có cấu trúc hoặc văn bản tự do).
+Mỗi agent có thể gọi RAG qua `build_context(consumer=...)` để nhận context bundle. Cách sử dụng context khác nhau: Risk Agent và Report Agent truyền trực tiếp vào LLM prompt, trong khi Planning Agent kết hợp RAG context với logic nội bộ (scoring, classification) và chỉ gọi LLM khi cần.
 
 ### 1.2 Tại sao cần đánh giá generation?
 
@@ -289,7 +289,7 @@ Mỗi agent có loại output khác nhau, nên cách đo correctness cũng khác
 |---|---|---|---|
 | Planning | List of check IDs | Set selection / recommendation | Precision, Recall, F1 |
 | Risk | Severity label (4 mức) | Ordinal classification | Accuracy, QWK |
-| Report | Văn bản tự do | Open-ended generation | LLM-based correctness judge |
+| Report | HTML5 document (template + LLM narrative) | Hybrid: deterministic + open-ended | Core: deterministic data accuracy. Extension: LLM judge |
 
 Tuy cách đo khác nhau, nhưng **ý nghĩa trục "Correctness" là nhất quán**: output có đúng không?
 
@@ -354,18 +354,24 @@ Phạm vi: [-1, 1]. Giá trị 1.0 = đồng ý hoàn hảo, 0 = ngẫu nhiên, 
 
 ---
 
-##### Report Agent — LLM-based Correctness
+##### Report Agent — Dual-layer Correctness
 
-Report Agent sinh văn bản tự do — không thể dùng Accuracy hay F1 trên tokens. Sử dụng **LLM-as-Judge** để đánh giá:
+Report Agent output gồm 2 phần: (1) **template-rendered** (tables, cover page, charts, stats) — deterministic, kiểm tra chính xác bằng parsing; (2) **LLM narrative** (executive summary, analysis, recommendations) — free text, cần LLM judge.
 
+*Deterministic correctness (core):*
+- Bảng findings có đúng số dòng? Severity badges đúng case? Status colors đúng?
+- Security Score trên cover page = `_calc_score(pre, post)`?
+- Số liệu thống kê (total, pass, fail, fixed) khớp `report_data`?
+
+*LLM-based correctness (extension):*
 ```
 Prompt cho judge:
-"So sánh report sinh ra với dữ liệu findings/remediation gốc.
-Report có trình bày đúng các sự kiện, con số, và kết quả không?
+"So sánh phần narrative của report với dữ liệu findings/remediation gốc.
+Narrative có trình bày đúng các sự kiện và kết quả không?
 Score 1-5. Giải thích lý do."
 ```
 
-Đây là metric thuộc **extension layer** về mặt chi phí, nhưng về mặt khái niệm nó vẫn thuộc trục Correctness.
+Deterministic correctness là **core metric** (chi phí = 0, bắt regression). LLM judge thuộc **extension layer** (chi phí cao, chỉ đánh giá narrative).
 
 ---
 
@@ -466,10 +472,10 @@ Với Planning Agent, Completeness thực chất trùng với **Recall** trong F
 
 | Trục đánh giá | Planning Agent | Risk Agent | Report Agent |
 |---|---|---|---|
-| **Structure** | Schema valid + mutual exclusivity + check ID format + internal LLM parse rate | JSON parse + enum + range + consistency | Section checklist |
-| **Faithfulness** | `reasoning` bám PlanningBundle? (**chỉ Flow 3** — reasoning LLM-generated) | `ai_reasoning` bám RiskBundle? (mọi case) | Narrative bám findings? |
-| **Correctness** | Check Selection F1 (Flows 1, 3) + Service Accuracy (Flows 2, 4) | Severity Accuracy + QWK | LLM-based judge (*extension*) |
-| **Completeness** | Recall (bỏ sót checks?) + Flow Appropriateness | Evidence checklist | Findings coverage |
+| **Structure** | `valid_output_rate` (gộp schema + exclusivity + format) | JSON parse + enum + range + consistency | **Gate check:** 4 hard constraints (`html_valid`, `section_presence`, `no_template_leak`, `no_none_display`) + 2 soft (`cover_page`, `charts`) |
+| **Faithfulness** | `grounded_reasoning_rate` (keyword-based, chỉ low-confidence cases) | `ai_reasoning` bám RiskBundle? (mọi case) | Core: `numerical_faithfulness` (số liệu trong narrative khớp `report_data`). Extension: `narrative_faithfulness` (claim-based LLM judge) |
+| **Correctness** | `planning_correctness` = 0.7×F1 + 0.3×service_accuracy | Severity Accuracy + QWK | Core: 100% deterministic (`stats_accuracy`, `findings_table_accuracy`, `score_accuracy`, `status_color_accuracy`). Extension: `correctness_judge_mean` (LLM judge) |
+| **Completeness** | Recall (bỏ sót checks?) + `action_type_accuracy` | Evidence checklist | Core: `findings_coverage` + `conditional_bypass_correctness`. Optional: `remediation_detail_coverage`, `scope_completeness` |
 
 Các mục 4.2–4.4 dưới đây mô tả chi tiết cách instantiate 4 trục cho **từng agent riêng biệt**, bao gồm: output format, RAG context, metric cụ thể, và cách tính.
 
@@ -554,23 +560,22 @@ File: `benchmark_llm_gen/benchmark_gen_cases.json`
 
 #### Đặc tính kiến trúc (khác biệt so với Risk Agent)
 
-Planning Agent có kiến trúc **multi-step orchestration**, khác biệt cơ bản so với Risk Agent (single LLM call → direct output):
+Planning Agent có kiến trúc **RAG-first, LLM-conditional**: phần lớn requests được xử lý bằng logic thuần (regex, keyword matching, deterministic scoring) mà không cần gọi LLM. LLM chỉ được gọi khi hệ thống có confidence thấp (ước tính ≤20% requests).
 
 | Đặc điểm | Risk Agent | Planning Agent |
 |---|---|---|
-| Số LLM calls | 1 (evaluate finding) | 2 (translate_intent + rerank) |
-| Output source | LLM trực tiếp sinh JSON | Python code tổng hợp từ nhiều nguồn |
-| Error handling | Có thể fail JSON parse | Luôn trả valid dict (fallback chain) |
-| RAG dependency | Bắt buộc (RiskBundle) | Tùy flow (có thể skip hoàn toàn) |
-| Output variability | Đồng nhất (luôn cùng schema) | Thay đổi theo flow (checks vs groups) |
+| LLM dependency | Mọi request đều gọi LLM | Phần lớn requests **không cần LLM** (0–1 calls) |
+| Output source | LLM trực tiếp sinh JSON | Python code tổng hợp từ classification + RAG + scoring |
+| Error behavior | Có thể fail JSON parse | Luôn trả valid dict — **không bao giờ silent default** |
+| RAG dependency | Bắt buộc (RiskBundle) | Tùy loại request (có thể skip hoàn toàn) |
 
-Hệ quả cho evaluation: **không thể áp dụng cùng methodology với Risk Agent**. Cần thiết kế metrics phản ánh đúng kiến trúc multi-step và multi-flow.
+Hệ quả cho evaluation: Planning Agent được đánh giá như một **black-box system** — input là user request, output là assessment plan. Không cần phân tích internal flow trong báo cáo evaluation.
 
 #### Output format
 
 Output là Python dict với 2 dạng **loại trừ lẫn nhau** (mutually exclusive):
 
-**Dạng 1 — Specific checks (normal flow, fast track):**
+**Dạng 1 — Specific checks:**
 ```json
 {
     "groups_to_scan": [],
@@ -579,7 +584,7 @@ Output là Python dict với 2 dạng **loại trừ lẫn nhau** (mutually excl
 }
 ```
 
-**Dạng 2 — Group scan (group request, low confidence, no candidates):**
+**Dạng 2 — Group scan:**
 ```json
 {
     "groups_to_scan": ["s3"],
@@ -588,65 +593,19 @@ Output là Python dict với 2 dạng **loại trừ lẫn nhau** (mutually excl
 }
 ```
 
-**Dạng 3 — Error fallback (exception):**
+**Dạng 3 — Error (explicit failure):**
 ```json
 {
-    "groups_to_scan": ["s3"],
+    "groups_to_scan": [],
     "checks_to_scan": [],
-    "error": "error message"
+    "reasoning": "",
+    "error": "Could not determine assessment target."
 }
 ```
 
-> **Ghi chú:** `groups_to_scan` và `checks_to_scan` không bao giờ cùng non-empty.
-> Output luôn là valid dict do error handling trong `run()`, khác với Risk Agent nơi LLM output trực tiếp có thể fail parse.
-
-#### Các flow thực thi (Decision Tree)
-
-Planning Agent có **5 flow** riêng biệt, mỗi flow có đặc tính evaluation khác nhau:
-
-```
-run(user_request)
-  │
-  ├─ Flow 1: FAST TRACK
-  │   Điều kiện: regex detect check IDs trong request (len > 8)
-  │   LLM calls: 0
-  │   RAG calls: 0
-  │   Reasoning: hardcoded ("User explicitly provided check IDs")
-  │   Output: checks_to_scan = detected IDs
-  │
-  ├─ Flow 2: GROUP SCAN
-  │   Điều kiện: LLM translate_intent trả is_group_scan=true
-  │   LLM calls: 1 (translate_intent)
-  │   RAG calls: 0
-  │   Reasoning: hardcoded ("User requested a full scan for {service}")
-  │   Output: groups_to_scan = [service]
-  │
-  ├─ Flow 3: NORMAL RERANK (target flow)
-  │   Điều kiện: RAG trả candidates + LLM rerank thành công
-  │   LLM calls: 2 (translate_intent + rerank)
-  │   RAG calls: 1 (build_context hoặc retrieve_checks)
-  │   Reasoning: LLM-generated (rerank output)
-  │   Output: checks_to_scan = top 5 từ rerank
-  │
-  ├─ Flow 4: LOW CONFIDENCE / NO CANDIDATES
-  │   Điều kiện: RAG confidence=low, hoặc candidates rỗng
-  │   LLM calls: 1-2
-  │   RAG calls: 1
-  │   Reasoning: hardcoded ("RAG confidence is low..." / "RAG returned no results...")
-  │   Output: groups_to_scan = [service]
-  │
-  └─ Flow 5: EXCEPTION FALLBACK
-      Điều kiện: bất kỳ exception nào
-      LLM calls: 0-2
-      RAG calls: 0-1
-      Reasoning: không có (chỉ có error field)
-      Output: groups_to_scan = ["s3"], error = message
-```
-
-> **Hệ quả quan trọng cho evaluation:**
-> - Faithfulness chỉ đo được ở **Flow 3** (reasoning LLM-generated). Flows 1, 2, 4, 5 có reasoning hardcoded → faithfulness = N/A.
-> - Correctness (F1) chỉ áp dụng cho Flows 1, 3 (có `checks_to_scan`). Flows 2, 4, 5 trả `groups_to_scan` → cần metric riêng.
-> - Benchmark cần cover tất cả 5 flows, không chỉ flow 3.
+> **Quy tắc output:**
+> - `groups_to_scan` và `checks_to_scan` không bao giờ cùng non-empty.
+> - Error output trả **empty lists** — không bao giờ default sang bất kỳ service nào.
 
 #### RAG context (PlanningBundle)
 
@@ -660,69 +619,50 @@ run(user_request)
 }
 ```
 
-RAG retrieval có fallback chain nội bộ:
-1. `build_context(consumer="planning")` → PlanningBundle (rich, có maturity context)
-2. `retrieve_checks()` → basic results (không có maturity)
-3. Empty result (RAG unavailable)
-
 #### 4 trục đánh giá
 
-**Structure — Structured Output Compliance:**
+**Structure — Valid Output Rate:**
 
-> **Khác biệt với Risk Agent:** Planning Agent output luôn là valid dict (do Python code tổng hợp + error handling), nên `json_parse_rate` gần như luôn = 1.0. Thay vào đó, Structure tập trung vào **chất lượng cấu trúc output** và **internal LLM parse success**.
+> **Khác biệt với Risk Agent:** Planning Agent output luôn là valid dict (do error handling nội bộ), nên `json_parse_rate` không có ý nghĩa. Structure được gộp thành **một metric duy nhất** kiểm tra tính hợp lệ tổng thể.
 
-| Sub-metric | Cách tính | Áp dụng flow | Ghi chú |
-|---|---|---|---|
-| `output_schema_valid` | Output có đúng 1 trong 3 dạng hợp lệ? (checks, groups, error) | Tất cả | Gate check — thay thế json_parse_rate |
-| `mutual_exclusivity` | `groups_to_scan` và `checks_to_scan` không cùng non-empty? | Tất cả | Kiểm tra logic consistency |
-| `reasoning_nonempty` | `reasoning` field tồn tại và không rỗng? (trừ error flow) | 1, 2, 3, 4 | |
-| `valid_check_id_format` | Mỗi ID trong `checks_to_scan` match pattern `[a-z0-9]+_[a-z0-9_]+` và len > 8? | 1, 3 | Prowler check ID format |
-| `internal_llm_parse_rate` | Tỷ lệ LLM calls nội bộ (translate_intent, rerank) parse JSON thành công | 2, 3, 4 | Đo chất lượng LLM interaction, không phải final output |
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `valid_output_rate` | Output hợp lệ? Gộp kiểm tra: (1) đúng 1 trong 3 dạng, (2) groups và checks không cùng non-empty, (3) reasoning không rỗng (trừ error), (4) check IDs đúng format Prowler | = 1.00 |
+| `llm_parse_success_rate` *(optional, debug)* | Tỷ lệ LLM refinement calls parse JSON thành công — chỉ áp dụng khi agent gọi LLM (low-confidence cases) | >= 0.90 |
 
-> **Ghi chú triển khai:** `internal_llm_parse_rate` cần instrument `parse_llm_json()` để log success/failure.
-> Metric này quan trọng hơn `json_parse_rate` trên final output vì nó phát hiện vấn đề LLM formatting
-> mà error handling che giấu.
+> `valid_output_rate` gộp các sub-checks trước đó (schema valid, mutual exclusivity, check ID format, reasoning nonempty) thành 1 con số duy nhất. Một output fail bất kỳ sub-check nào đều bị tính là invalid.
 
-**Faithfulness — Claim-based Verification (chỉ Flow 3):**
+**Faithfulness — Grounded Reasoning Rate:**
 
-> **Phạm vi hẹp hơn Risk Agent:** Reasoning chỉ do LLM sinh trong Flow 3 (normal rerank).
-> Các flow khác có reasoning hardcoded → faithfulness = N/A (không cần đo, không thể hallucinate).
-> Benchmark cần tách rõ test cases theo flow để tránh đo faithfulness trên reasoning hardcoded.
+> **Scope hẹp:** Faithfulness chỉ có ý nghĩa khi reasoning do LLM sinh (low-confidence cases).
+> Phần lớn requests có reasoning hardcoded → không thể hallucinate → không cần đo.
 
-Claim decomposition trên `reasoning` field (từ LLM rerank), verify với PlanningBundle context:
-- Claim "chọn check X vì severity cao" → verify X tồn tại trong candidates VÀ severity đúng
-- Claim "liên quan đến compliance Y" → verify Y có trong control_mapping_ids
-- Claim "check X phù hợp với maturity capability Z" → verify Z có trong maturity_capability_ids
+Thay vì claim decomposition (RAGAS-style, nặng), sử dụng **keyword-based grounding check** đơn giản hơn:
+
+Kiểm tra reasoning có chứa:
+- Check ID đã chọn (hoặc một phần của check ID)
+- Keyword liên quan từ RAG context (service name, severity, compliance mapping)
 
 | Sub-metric | Cách tính | Ngưỡng đề xuất |
 |---|---|---|
-| `faithfulness_mean` | supported_claims / total_claims (chỉ trên Flow 3 cases) | >= 0.80 |
+| `grounded_reasoning_rate` | % cases (chỉ low-confidence) mà reasoning chứa ít nhất 1 check_id hoặc keyword từ context | >= 0.80 |
 
-Fallback: rule-based heuristic (kiểm tra check_id trong reasoning có nằm trong candidates không).
+> **Tại sao không dùng claim-level RAGAS?** Planning Agent reasoning ngắn (1-2 câu) và focus vào justification cho check selection, không phải phân tích rủi ro chi tiết như Risk Agent. Keyword-based check đủ hiệu quả và chi phí thấp hơn nhiều.
 
-**Correctness — Check Selection F1 + Service Accuracy:**
+**Correctness — Check Selection F1 + Service Accuracy + Planning Correctness:**
 
-> **Vấn đề:** F1 chỉ áp dụng khi agent trả `checks_to_scan` (Flows 1, 3).
-> Khi agent trả `groups_to_scan` (Flows 2, 4), cần metric khác: **Service Accuracy**.
+Đây là **trục quan trọng nhất** của Planning Agent — agent có chọn đúng checks/service không?
 
-*Correctness cho Flows 1, 3 (specific checks):*
-
-So sánh `checks_to_scan` (predicted) với ground truth (expert-labeled relevant checks):
+*Khi agent trả specific checks:*
 
 ```
 Precision = |Selected ∩ Relevant| / |Selected|
-  → "Trong các checks agent chọn, bao nhiêu là đúng?"
-
-Recall = |Selected ∩ Relevant| / |Relevant|
-  → "Trong các checks cần chọn, agent tìm được bao nhiêu?"
-
-F1 = 2 × Precision × Recall / (Precision + Recall)
+Recall    = |Selected ∩ Relevant| / |Relevant|
+F1        = 2 × Precision × Recall / (Precision + Recall)
 ```
 
 | Sub-metric | Cách tính | Ngưỡng đề xuất |
 |---|---|---|
-| `check_selection_precision` | \|Selected ∩ Relevant\| / \|Selected\| | |
-| `check_selection_recall` | \|Selected ∩ Relevant\| / \|Relevant\| | |
 | `check_selection_f1` | Harmonic mean of Precision and Recall | >= 0.60 |
 
 Ví dụ:
@@ -735,73 +675,64 @@ Recall    = 2/3 = 0.67  (thiếu s3_bucket_versioning)
 F1        = 0.67
 ```
 
-*Correctness cho Flows 2, 4 (group scan):*
-
-Khi agent fallback sang group scan, đánh giá **service identification**:
+*Khi agent trả group scan:*
 
 | Sub-metric | Cách tính | Ngưỡng đề xuất |
 |---|---|---|
-| `service_accuracy` | `groups_to_scan[0]` có đúng service mong đợi? (binary: 0 hoặc 1) | >= 0.90 |
+| `service_accuracy` | Agent chọn đúng service mong đợi? (binary: 0 hoặc 1) | >= 0.90 |
 
-Ví dụ: User request "check IAM users" → expected service = "iam". Nếu agent trả `groups_to_scan: ["iam"]` → đúng. Nếu trả `["s3"]` (silent default) → sai.
-
-> **Tổng hợp Correctness toàn agent:**
-> `correctness_overall = w_specific * F1_mean + w_group * service_accuracy`
-> Với trọng số phản ánh tỷ lệ flow trong benchmark (ví dụ: 70% specific, 30% group).
-
-*Correctness cho Flow 5 (exception):*
-
-Exception flow luôn tính correctness = 0 (agent failed).
-
-**Completeness — Recall + Flow Appropriateness:**
-
-Đối với Flows 1, 3: Completeness trùng với **Recall** trong F1.
-
-Bổ sung metric **flow appropriateness** cho toàn bộ flows:
+*Metric tổng hợp (con số duy nhất để trả lời "agent tốt hay không?"):*
 
 | Sub-metric | Cách tính | Ngưỡng đề xuất |
 |---|---|---|
-| `check_selection_recall` | Tái sử dụng Recall từ F1 (Flows 1, 3) | |
-| `flow_appropriateness` | Agent chọn đúng flow cho request? (specific khi cần specific, group khi cần group) | >= 0.85 |
+| **`planning_correctness`** | **0.7 × F1_mean + 0.3 × service_accuracy** | >= 0.65 |
 
-Ví dụ flow_appropriateness:
-- Request "scan all iam" → expected: group scan → agent trả groups_to_scan → đúng
-- Request "check s3 encryption" → expected: specific checks → agent trả groups_to_scan → **sai** (over-broad)
-- Request "s3_bucket_public_access s3_bucket_versioning" → expected: fast track → agent trả checks_to_scan = exact IDs → đúng
+> Trọng số 0.7/0.3 phản ánh tỷ lệ specific vs group requests trong benchmark.
+> Error cases (empty output) tính correctness = 0.
+
+**Completeness — Recall + Action Type Accuracy:**
+
+| Sub-metric | Cách tính | Ngưỡng đề xuất |
+|---|---|---|
+| `check_selection_recall` | Tái sử dụng Recall từ F1 (khi trả specific checks) | |
+| `action_type_accuracy` | Agent chọn đúng **loại hành động**? (specific checks khi cần specific, group scan khi cần group) — binary per case | >= 0.85 |
+
+Ví dụ `action_type_accuracy`:
+- Request "scan all iam" → expected: group scan → agent trả `groups_to_scan` → **đúng**
+- Request "check s3 encryption" → expected: specific checks → agent trả `groups_to_scan` → **sai** (over-broad)
+- Request chứa check IDs → expected: specific checks → agent trả `checks_to_scan` = exact IDs → **đúng**
 
 #### Benchmark dataset (cần tạo)
 
-Benchmark cần **cover tất cả 5 flows** với phân bổ hợp lý:
+Benchmark được tổ chức theo **loại input** (user perspective), không theo internal flow:
 
-| Flow | Số cases đề xuất | Ví dụ request |
-|---|---|---|
-| Fast track (flow 1) | 5 | "chạy s3_bucket_public_access và s3_bucket_versioning" |
-| Group scan (flow 2) | 5 | "scan all iam", "check s3 group" |
-| Normal rerank (flow 3) | 15 | "kiểm tra S3 bucket có bị public access không" |
-| Low confidence (flow 4) | 3 | Requests mơ hồ, service không rõ |
-| Exception (flow 5) | 2 | Edge cases gây lỗi |
+| Input type | Số cases | Ví dụ request | Metric chính |
+|---|---|---|---|
+| Explicit check IDs | 5 | "chạy s3_bucket_public_access và s3_bucket_versioning" | F1 (= 1.0 expected), action_type |
+| Group request | 5 | "scan all iam", "full scan s3" | service_accuracy, action_type |
+| Specific intent | 15 | "kiểm tra S3 bucket có bị public access không" | F1, recall, action_type |
+| Ambiguous | 5 | "security audit", "check my AWS" | service_accuracy, grounded_reasoning |
 
-Tổng: ~30 test cases (tương đương Risk Agent benchmark).
+Tổng: ~30 test cases.
 
-Mỗi test case cần:
+Mỗi test case:
 ```json
 {
     "case_id": "plan_s3_public_001",
-    "expected_flow": "normal_rerank",
+    "input_type": "specific_intent",
     "input": { "user_request": "kiểm tra xem S3 bucket có bị public access không" },
     "rag_context_snapshot": {
         "related_findings": [
-            { "check_id": "s3_bucket_public_access", "service": "s3", "title": "S3 Bucket Public Access", "severity": "high" },
-            { "check_id": "s3_bucket_level_public_access_block", "service": "s3", "title": "S3 Bucket Level Public Access Block", "severity": "high" },
-            { "check_id": "s3_account_level_public_access_blocks", "service": "s3", "title": "S3 Account Level Public Access Blocks", "severity": "high" }
+            { "check_id": "s3_bucket_public_access", "service": "s3", "title": "S3 Bucket Public Access", "severity": "high", "score": 0.9 },
+            { "check_id": "s3_bucket_level_public_access_block", "service": "s3", "title": "S3 Bucket Level Public Access Block", "severity": "high", "score": 0.85 }
         ],
         "control_mapping_ids": ["block_public_access"],
-        "maturity_capability_ids": ["data_protection"]
+        "maturity_capability_ids": ["data_protection"],
+        "confidence": "high"
     },
     "expected": {
         "expected_service": "s3",
-        "relevant_checks": ["s3_bucket_public_access", "s3_bucket_level_public_access_block", "s3_account_level_public_access_blocks"],
-        "required_reasoning_evidence": ["public access", "s3"],
+        "relevant_checks": ["s3_bucket_public_access", "s3_bucket_level_public_access_block"],
         "acceptable_output_type": "specific_checks"
     }
 }
@@ -809,8 +740,8 @@ Mỗi test case cần:
 
 ```json
 {
-    "case_id": "plan_iam_group_scan_001",
-    "expected_flow": "group_scan",
+    "case_id": "plan_iam_group_001",
+    "input_type": "group_request",
     "input": { "user_request": "scan all iam" },
     "expected": {
         "expected_service": "iam",
@@ -826,91 +757,363 @@ Mỗi test case cần:
 
 ### 4.4 Report Agent — Instantiation
 
+#### Đặc tính kiến trúc (khác biệt so với Risk/Planning Agent)
+
+Report Agent có kiến trúc **template-first, LLM-enriched**: output chính là HTML5 đầy đủ (Jinja2 template + CSS), trong đó LLM chỉ viết các đoạn narrative xen kẽ giữa dữ liệu template-rendered. Report Agent **không sử dụng RAG** — toàn bộ context đến từ `report_data` dict do `build_report_data()` trong orchestrator gom sẵn.
+
+| Đặc điểm | Risk Agent | Report Agent |
+|---|---|---|
+| LLM dependency | Mọi request đều gọi LLM | 7 top-level sections + N per-finding calls. **Conditional bypass** khi PASS=0 hoặc FAIL=0 |
+| Output format | JSON (3 fields) | Full HTML5 document (cover page, TOC, 7 mục, charts) |
+| RAG dependency | Bắt buộc (RiskBundle) | **Không dùng RAG** — context là `report_data` dict từ orchestrator |
+| Post-processing | Không | `_clean()`: xóa placeholder `[...]`, ngôi thứ nhất, title trùng, collapse spaces |
+| Error behavior | Có thể fail JSON parse | Fallback text khi LLM down + graceful "None" handling |
+| Data integrity | Input là JSON đơn giản | `copy.deepcopy()` cho enrichment — không mutate input |
+
+Hệ quả cho evaluation: Report Agent được đánh giá trên **2 tầng riêng biệt**: (1) tầng template — deterministic, kiểm tra bằng parsing/regex; (2) tầng LLM narrative — cần claim-based verification với `report_data` làm ground truth.
+
 #### Output format
 
-Agent sinh file report (markdown → html → pdf) gồm nhiều sections, mỗi section do LLM viết:
+Report Agent sinh file HTML5 đầy đủ qua Jinja2 template rendering, pipeline 5 bước:
 
-| Section | LLM method | Mô tả |
+```
+validate → derive (charts, score) → LLM sections → enrich findings → render HTML/MD/PDF
+```
+
+**7 LLM sections (top-level):**
+
+| Section | LLM method | Word limit | Conditional bypass |
+|---|---|---|---|
+| Executive Summary | `write_exec_summary()` | 400 | Không |
+| System Overview | `write_system_overview()` | 250 | Không |
+| Assessment Goals | `write_assessment_goals()` | 200 | Không |
+| Pass Findings Overview | `write_pass_findings_overview()` | 200 | **Có** — hardcoded text khi `pre.pass == 0` |
+| Fail Findings Overview | `write_fail_findings_overview()` | 200 | **Có** — hardcoded text khi `pre.fail == 0` |
+| Post-Remediation Analysis | `write_post_remediation_analysis()` | 300 | Không |
+| Recommendations | `write_post_remediation_recommendations()` | 300 | Không |
+
+**Per-finding LLM calls (N calls mỗi loại):**
+
+| Method | Áp dụng cho | Word limit |
 |---|---|---|
-| Executive Summary | `write_exec_summary()` | Tóm tắt cho C-level (CTO/CISO) |
-| System Overview | `write_system_overview()` | Thông tin hệ thống AWS |
-| Assessment Goals | `write_assessment_goals()` | Mục tiêu đánh giá |
-| Pass Findings | `write_pass_findings_overview()` | Tổng quan findings đạt |
-| Fail Findings | `write_fail_findings_overview()` | Tổng quan findings lỗi |
-| Remediation Detail | `write_pass/fail_remediation_detail()` | Chi tiết xử lý từng finding |
-| Manual Guide | `write_manual_guide()` | Hướng dẫn xử lý thủ công |
-| Post-Remediation | `write_post_remediation_analysis()` | Phân tích sau xử lý |
-| Recommendations | `write_post_remediation_recommendations()` | Khuyến nghị |
+| `write_pass_remediation_detail()` | Mỗi finding trong `success_findings` | 350 |
+| `write_fail_remediation_detail()` | Mỗi finding trong `failed_findings` | 350 |
+| `write_manual_guide()` | Mỗi finding trong `manual_findings` | 300 |
 
-#### RAG context
+**Output files:**
 
-Report Agent **không sử dụng RAG** trực tiếp. Context đến từ các agent trước (findings, remediation results) được truyền qua `ctx` dict.
+| File | Mô tả |
+|---|---|
+| `final_report.html` | Full HTML5 — file chính (cover page, TOC, CSS, severity badges) |
+| `final_report.md` | Nội dung HTML (giống HTML file, backward compat) |
+| `final_report.pdf` | PDF qua weasyprint/wkhtmltopdf (fallback chain, hoặc None) |
+| `charts/severity_bar.png` | Bar chart mức độ nghiêm trọng |
+| `charts/pass_fail_pie.png` | Pie chart PASS vs FAIL |
+
+#### Input context (`report_data` dict — không phải RAG)
+
+Report Agent nhận `report_data` dict đầy đủ từ `build_report_data()` trong orchestrator. Đây là **nguồn truth duy nhất** cho evaluation — mọi claim trong narrative đều phải truy nguồn về dict này:
+
+```python
+{
+    "pre": {
+        "total": int, "pass": int, "fail": int,
+        "severity": {"critical": int, "high": int, "medium": int, "low": int}
+    },
+    "post": {
+        "initial_pass": int, "initial_fail": int,
+        "final_pass": int, "final_fail": int,
+        "fixed": int, "failed": int, "manual": int
+    },
+    "findings_table": [{"stt", "finding", "service", "resource", "severity", "before", "after", "change"}],
+    "success_findings": [...],
+    "failed_findings": [...],
+    "manual_findings": [...],
+    "raw_pre_findings": [...],
+    "environment": {"account_id": str, "region": str, "buckets": list},
+    "scope": {"services": list, "date": str, "user_request": str}
+}
+```
+
+> **Khác biệt quan trọng với Risk/Planning Agent:** Risk Agent nhận RAG context (RiskBundle) nên faithfulness đo "narrative bám RiskBundle". Report Agent nhận structured data nên faithfulness đo "narrative bám `report_data` dict" — verification dễ hơn vì ground truth là JSON cụ thể, không phải text context.
 
 #### 4 trục đánh giá
 
-**Structure — Section Checklist:**
+> **Nguyên tắc phân trục:** Mỗi metric chỉ thuộc **đúng 1 trục**, không overlap. Phân biệt rõ:
+> - **Structure** = HTML + template integrity (output có dùng được không?)
+> - **Correctness** = data accuracy trên template-rendered layer (số liệu có đúng không?)
+> - **Faithfulness** = LLM narrative vs `report_data` (LLM có bịa không?)
+> - **Completeness** = coverage + bypass logic (có đủ không?)
 
-| Sub-metric | Cách tính |
-|---|---|
-| `section_presence_rate` | % sections bắt buộc có trong report (Executive Summary, Findings, Remediation, Recommendations) |
-| `markdown_valid` | Report parse được thành valid markdown? |
-| `no_template_leak` | Không có placeholder hoặc template syntax lộ ra (ví dụ: `{{variable}}`) |
+**Structure — Gate Check (must-pass):**
 
-**Faithfulness — Narrative Grounding:**
+> **Vai trò:** Gate check — nếu fail bất kỳ hard constraint nào, output không sử dụng được, các metric khác không cần tính. Tất cả đều **deterministic** (regex/parsing, chi phí = 0).
 
-Verify các claims trong narrative có dựa trên findings/context thực tế:
-- Executive Summary nói "3 Critical findings" → kiểm tra findings data có đúng 3 Critical
-- Remediation detail nói "S3 bucket đã được fix" → kiểm tra success_findings có case đó
-- **Không bịa đặt thêm findings, số liệu, hoặc sự kiện** không có trong context
+*Hard constraints (fail 1 = fail toàn bộ output):*
 
-| Sub-metric | Cách tính |
-|---|---|
-| `faithfulness_mean` | Claim-based verification trên narrative sections |
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `html_valid` | Output là valid HTML5? (parse được bằng html.parser, có `<!DOCTYPE html>`, `<html lang="vi">`, charset UTF-8) | = 1.00 |
+| `section_presence_rate` | % sections bắt buộc có trong HTML output. 7 sections: Executive Summary, Phạm vi & Phương pháp, Đánh giá trước khắc phục, Bảng chi tiết, Chi tiết thực thi, Đánh giá sau khắc phục, Khuyến nghị | = 1.00 |
+| `no_template_leak` | Không có Jinja2 syntax lộ ra (`{{`, `{%`, `}}`) hoặc placeholder `[...]` từ `_clean()` failure (chỉ kiểm tra ngoài code blocks) | = 1.00 |
+| `no_none_display` | Không có giá trị "None" hiển thị trong text (BUG-02: `f.get("action")` trả None) | = 1.00 |
 
-Đây là nơi faithfulness quan trọng nhất — report narrative dài, LLM dễ bịa đặt.
+*Soft constraints (quality checks, không block output):*
 
-**Correctness — LLM-based Judge (*extension layer*):**
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `cover_page_complete` | Cover page có đủ: Account ID, Region, Date, Report ID (format `RPT-YYYYMMDD-XXXX`), Security Score | = 1.00 |
+| `chart_presence` | 2 charts tồn tại: `severity_bar.png` và `pass_fail_pie.png` | = 1.00 |
 
-Report Agent sinh free text — không thể dùng Accuracy hay F1. Sử dụng LLM-as-Judge:
+> **Gate logic:** Hard constraints fail → **STOP**, báo cáo lỗi, không tính metrics còn lại. Soft constraints fail → ghi nhận warning, tiếp tục đánh giá. Tách rõ vì: report thiếu `<!DOCTYPE html>` (broken) khác bản chất với report thiếu chart (chưa hoàn thiện nhưng vẫn đọc được).
+
+**Correctness — Deterministic Data Accuracy:**
+
+> **Scope:** Chỉ đo **template-rendered layer** (Jinja2 output). Đây là phần deterministic — không phụ thuộc LLM, kiểm tra chính xác bằng HTML parsing. Tất cả phải = 1.00 vì sai ở đây là bug template, không phải LLM variance.
+
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `stats_accuracy` | Số liệu trong template (pre.total, pre.fail, post.fixed...) khớp với `report_data`? Kiểm tra bằng HTML parsing, extract text từ các element chứa stats | = 1.00 |
+| `findings_table_accuracy` | Bảng chi tiết (mục 4) có đúng số dòng = `len(findings_table)`? Severity badges đúng case? (`row.change\|lower`) | = 1.00 |
+| `score_accuracy` | Security Score trên cover page = `_calc_score(pre, post)`? | = 1.00 |
+| `status_color_accuracy` | Fixed → xanh (`.status-fixed`), Manual → cam (`.status-manual`), Failed → đỏ (`.status-error`)? (BUG-03 regression check) | = 1.00 |
+
+> **Phân biệt với Faithfulness:** Correctness kiểm tra phần **template render** (Jinja2 `{{ pre.total }}`). Faithfulness kiểm tra phần **LLM viết** (narrative text). Template sai = bug code. LLM sai = hallucination. Hai nguyên nhân gốc khác nhau, hai cách fix khác nhau.
+
+**Faithfulness — Narrative vs Data (core = deterministic only):**
+
+> **Đặc thù Report Agent:** Ground truth là `report_data` dict (structured JSON). Rủi ro chính = LLM bịa số liệu hoặc sự kiện không có trong data. Core metric chỉ cần **numerical faithfulness** (deterministic, chi phí = 0) — đã cover phần quan trọng nhất. Narrative claim verification (LLM judge) chuyển xuống extension layer để giảm chi phí và tăng độ ổn định.
+
+*Core (deterministic, chi phí = 0):*
+
+Kiểm tra số liệu trong LLM narrative khớp với `report_data`:
+- Executive Summary nói "3 Critical findings" → `pre.severity.critical == 3`?
+- Post-Analysis nói "đã khắc phục thành công 5 lỗi" → `post.fixed == 5`?
+- Remediation detail nói "bucket my-bucket" → `success_findings` có resource "my-bucket"?
+
 ```
-Prompt: "So sánh report với findings/remediation gốc.
-Report có trình bày đúng các sự kiện, con số, và kết quả không?
-Score 1-5. Giải thích lý do."
+Numerical Faithfulness = (Số claims số liệu đúng) / (Tổng claims số liệu trong narrative)
 ```
 
-| Sub-metric | Cách tính |
-|---|---|
-| `correctness_judge_mean` | Trung bình LLM judge scores (1-5 → normalize về 0-1) |
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| **`numerical_faithfulness`** | Trích xuất số và named entities từ 7 LLM narrative sections, so khớp với `report_data`. Regex-based extraction + exact matching | **>= 0.90** |
 
-Thuộc extension layer do chi phí cao (nhiều LLM calls).
+> **Tại sao chỉ numerical cho core?** (1) Sai số liệu là lỗi nghiêm trọng nhất — decision-makers dựa vào con số. (2) Deterministic → ổn định, reproducible, chi phí = 0. (3) Cover phần rủi ro cao nhất: LLM hallucinate "5 Critical" khi thực tế có 3 nguy hiểm hơn LLM diễn đạt sai ý.
 
-**Completeness — Findings Coverage:**
+*Extension (LLM-as-Judge, chi phí cao):*
 
-Report phải đề cập đầy đủ findings — không bỏ sót:
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `narrative_faithfulness` | Claim decomposition + verification trên 3 sections chính (Executive Summary, Post-Analysis, Recommendations). LLM judge xác minh từng claim có support bởi `report_data` | >= 0.75 |
+| `correctness_judge_mean` | LLM judge đánh giá narrative: "trình bày đúng sự kiện, kết quả, khuyến nghị hợp lý không?" Score 1-5 → normalize 0-1 | >= 0.70 |
 
-```
-Findings Coverage = (Số findings xuất hiện trong report) / (Tổng findings trong input context)
-```
+> Cả `narrative_faithfulness` và `correctness_judge_mean` đều thuộc **extension layer** — chỉ triển khai khi core metrics đã ổn định và cần đánh giá sâu hơn chất lượng diễn đạt.
 
-| Sub-metric | Cách tính |
-|---|---|
-| `findings_coverage` | Matching finding_id hoặc event_code giữa report text và input findings |
-| `remediation_coverage` | % findings có remediation detail (thay vì chỉ được liệt kê) |
+**Completeness — Findings Coverage & Bypass Logic:**
+
+> **Core:** 2 metrics trọng tâm, đủ để phát hiện "report bỏ sót findings" và "bypass logic sai". Optional metrics bổ sung khi cần đánh giá chi tiết hơn.
+
+*Core:*
+
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `findings_coverage` | Matching `finding_id` hoặc `event_code` giữa HTML output và `report_data.findings_table` + `raw_pre_findings`. Coverage = found / total | >= 0.90 |
+| `conditional_bypass_correctness` | Khi `pre.pass == 0`: pass_overview = hardcoded text (không gọi LLM). Khi `pre.fail == 0`: tương tự. Kiểm tra bypass logic đúng (BUG-04 regression) | = 1.00 |
+
+*Optional (bổ sung khi cần, không bắt buộc phase 1):*
+
+| Sub-metric | Cách tính | Ngưỡng |
+|---|---|---|
+| `remediation_detail_coverage` | % findings có LLM remediation detail (không phải chỉ liệt kê trong bảng). Kiểm tra `success_findings` có `llm_detail`, `manual_findings` có `llm_manual_guide` | >= 0.85 |
+| `scope_completeness` | Report hiển thị đúng services (`scope.services \| join(', ') \| upper` → "S3" thay vì "['s3']"), date, account_id, region | = 1.00 |
+
+> **Mối quan hệ giữa các trục:**
+> - Structure fail → **STOP** (report broken)
+> - Correctness fail → bug template/code (fix bằng code change)
+> - Faithfulness fail → LLM hallucination (fix bằng prompt engineering hoặc `_clean()`)
+> - Completeness fail → missing data hoặc logic error (fix bằng pipeline change)
 
 #### Benchmark dataset (cần tạo)
 
-Mỗi test case cần:
+Benchmark tổ chức theo **2 nhóm**: (A) scenario logic — đo xử lý luồng chính; (B) edge cases / robustness — bám sát các bug đã fix và data bất thường thực tế.
+
+**Nhóm A — Scenario logic:**
+
+| Scenario | Số cases | Đặc điểm | Metric trọng tâm |
+|---|---|---|---|
+| Standard (có cả PASS + FAIL) | 3 | Trường hợp thông thường, có remediation | Tất cả metrics |
+| All PASS (no FAIL) | 2 | `pre.fail == 0` → conditional bypass cho fail_overview | `conditional_bypass_correctness`, faithfulness |
+| All FAIL (no PASS) | 2 | `pre.pass == 0` → conditional bypass cho pass_overview | `conditional_bypass_correctness`, faithfulness |
+| Minimal data | 2 | 1-2 findings, ít metadata → LLM có bịa đặt thêm không? | `numerical_faithfulness` |
+
+**Nhóm B — Edge cases / Robustness (bám sát các bug đã fix):**
+
+| Scenario | Số cases | Đặc điểm | Bug liên quan | Metric trọng tâm |
+|---|---|---|---|---|
+| Missing fields | 2 | `action=None`, thiếu `resource`, `description` rỗng | BUG-02 (None display) | `no_none_display`, `findings_table_accuracy` |
+| Mixed case status | 2 | `change` = "FIXED", "fixed", "Fixed" lẫn lộn | BUG-03 (case-sensitive) | `status_color_accuracy` |
+| Multi-service | 2 | `scope.services = ["s3", "iam"]` — kiểm tra join/upper format | BUG-05 (raw list display) | `scope_completeness`, `stats_accuracy` |
+| High volume | 2 | 50+ findings, nhiều severity levels | Deep copy + coverage | `findings_coverage`, `findings_table_accuracy` |
+| Zero severity counts | 1 | `severity = {"critical": 0, "high": 0, "medium": 0, "low": 0}` | Chart zero data | `chart_presence`, `numerical_faithfulness` |
+| Complex remediation mix | 2 | Cả 3 loại: success + failed + manual, với nested execution_output | Deep copy enrich | `remediation_detail_coverage`, `no_none_display` |
+
+Tổng: ~20 test cases.
+
+**Ví dụ test cases:**
+
+*Nhóm A — Standard:*
 ```json
 {
-    "case_id": "report_basic_001",
+    "case_id": "report_standard_001",
+    "group": "A_scenario",
+    "scenario": "standard",
     "input": {
-        "ctx": { ... },
-        "report_context": { ... }
+        "pre": { "total": 10, "pass": 7, "fail": 3, "severity": {"critical": 1, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 7, "initial_fail": 3, "final_pass": 9, "final_fail": 1, "fixed": 2, "failed": 0, "manual": 1 },
+        "findings_table": [ {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"} ],
+        "success_findings": [ {"finding_id": "f001", "action": "Block public access", "resource": "my-bucket", "description": "S3 bucket public access blocked"} ],
+        "failed_findings": [],
+        "manual_findings": [ {"finding_id": "f003", "description": "Enable S3 versioning", "manual_reason": "Requires business approval"} ],
+        "raw_pre_findings": [ {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access"} ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["my-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Kiểm tra bảo mật S3" }
     },
     "expected": {
-        "required_sections": ["executive_summary", "findings", "remediation", "recommendations"],
-        "expected_finding_ids": ["finding_001", "finding_002"],
-        "expected_stats": { "total_findings": 10, "critical": 3 }
+        "required_sections": ["executive_summary", "scope_method", "pre_assessment", "findings_table", "remediation_detail", "post_assessment", "recommendations"],
+        "expected_finding_ids": ["f001", "f003"],
+        "expected_stats": { "total": 10, "fail": 3, "fixed": 2, "manual": 1 },
+        "expected_score_range": [60, 90],
+        "bypass_sections": []
+    }
+}
+```
+
+*Nhóm A — All PASS:*
+```json
+{
+    "case_id": "report_all_pass_001",
+    "group": "A_scenario",
+    "scenario": "all_pass",
+    "input": {
+        "pre": { "total": 5, "pass": 5, "fail": 0, "severity": {"critical": 0, "high": 0, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 5, "initial_fail": 0, "final_pass": 5, "final_fail": 0, "fixed": 0, "failed": 0, "manual": 0 },
+        "findings_table": [],
+        "success_findings": [], "failed_findings": [], "manual_findings": [],
+        "raw_pre_findings": [ {"finding_id": "f001", "status": "PASS", "severity": "low", "event_code": "s3_bucket_versioning"} ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["bucket-a"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Scan S3" }
+    },
+    "expected": {
+        "required_sections": ["executive_summary", "scope_method", "pre_assessment", "findings_table", "post_assessment", "recommendations"],
+        "expected_finding_ids": [],
+        "expected_stats": { "total": 5, "fail": 0, "fixed": 0 },
+        "bypass_sections": ["fail_overview"]
+    }
+}
+```
+
+*Nhóm B — Missing fields (BUG-02 regression):*
+```json
+{
+    "case_id": "report_missing_fields_001",
+    "group": "B_edge_case",
+    "scenario": "missing_fields",
+    "bug_regression": "BUG-02",
+    "input": {
+        "pre": { "total": 3, "pass": 1, "fail": 2, "severity": {"critical": 1, "high": 1, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 1, "initial_fail": 2, "final_pass": 2, "final_fail": 1, "fixed": 1, "failed": 1, "manual": 0 },
+        "findings_table": [
+            {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+            {"stt": 2, "finding": "s3_bucket_encryption", "service": "s3", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Failed"}
+        ],
+        "success_findings": [ {"finding_id": "f001", "action": null, "resource": null, "description": "S3 bucket public access"} ],
+        "failed_findings": [ {"finding_id": "f002", "action": null, "resource": "my-bucket", "description": "", "execution_error": "Access denied"} ],
+        "manual_findings": [],
+        "raw_pre_findings": [
+            {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access"},
+            {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_encryption"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": [] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Check S3" }
+    },
+    "expected": {
+        "must_not_contain": ["None", "null"],
+        "expected_finding_ids": ["f001", "f002"],
+        "expected_display_titles": ["S3 bucket public access", "Remediation Action"]
+    }
+}
+```
+
+*Nhóm B — Mixed case status (BUG-03 regression):*
+```json
+{
+    "case_id": "report_mixed_case_001",
+    "group": "B_edge_case",
+    "scenario": "mixed_case_status",
+    "bug_regression": "BUG-03",
+    "input": {
+        "pre": { "total": 4, "pass": 1, "fail": 3, "severity": {"critical": 1, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 1, "initial_fail": 3, "final_pass": 3, "final_fail": 1, "fixed": 1, "failed": 1, "manual": 1 },
+        "findings_table": [
+            {"stt": 1, "finding": "check_a", "service": "s3", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "FIXED"},
+            {"stt": 2, "finding": "check_b", "service": "s3", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "failed"},
+            {"stt": 3, "finding": "check_c", "service": "s3", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [{"finding_id": "f001", "action": "Fix A", "resource": "res-a", "description": "Check A"}],
+        "failed_findings": [{"finding_id": "f002", "action": "Fix B", "resource": "res-b", "description": "Check B"}],
+        "manual_findings": [{"finding_id": "f003", "description": "Check C", "manual_reason": "Need approval"}],
+        "raw_pre_findings": [
+            {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "check_a"},
+            {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "check_b"},
+            {"finding_id": "f003", "status": "FAIL", "severity": "medium", "event_code": "check_c"}
+        ],
+        "environment": { "account_id": "111222333444", "region": "us-east-1", "buckets": ["res-a", "res-b"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Security scan" }
+    },
+    "expected": {
+        "status_colors": {
+            "FIXED": "status-fixed",
+            "failed": "status-error",
+            "Manual": "status-manual"
+        }
+    }
+}
+```
+
+*Nhóm B — Multi-service (BUG-05 regression):*
+```json
+{
+    "case_id": "report_multi_service_001",
+    "group": "B_edge_case",
+    "scenario": "multi_service",
+    "bug_regression": "BUG-05",
+    "input": {
+        "pre": { "total": 8, "pass": 5, "fail": 3, "severity": {"critical": 1, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 5, "initial_fail": 3, "final_pass": 7, "final_fail": 1, "fixed": 2, "failed": 1, "manual": 0 },
+        "findings_table": [
+            {"stt": 1, "finding": "s3_check", "service": "s3", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+            {"stt": 2, "finding": "iam_check", "service": "iam", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+            {"stt": 3, "finding": "ec2_check", "service": "ec2", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Failed"}
+        ],
+        "success_findings": [
+            {"finding_id": "f001", "action": "Block public access", "resource": "s3-bucket", "description": "S3 check"},
+            {"finding_id": "f002", "action": "Rotate key", "resource": "iam-user", "description": "IAM check"}
+        ],
+        "failed_findings": [{"finding_id": "f003", "action": "Harden SG", "resource": "ec2-instance", "description": "EC2 check"}],
+        "manual_findings": [],
+        "raw_pre_findings": [
+            {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_check"},
+            {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "iam_check"},
+            {"finding_id": "f003", "status": "FAIL", "severity": "medium", "event_code": "ec2_check"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["s3-bucket"] },
+        "scope": { "services": ["s3", "iam", "ec2"], "date": "2026-04-05", "user_request": "Full security audit" }
+    },
+    "expected": {
+        "scope_display": "S3, IAM, EC2",
+        "must_not_contain": ["['s3', 'iam', 'ec2']"],
+        "expected_finding_ids": ["f001", "f002", "f003"]
     }
 }
 ```
@@ -937,20 +1140,37 @@ Chi tiết đầy đủ: xem `benchmark_llm_gen/Risk_Agent_Evaluation_Report.md`
 
 | # | Metric | Trạng thái | Ưu tiên | Ghi chú |
 |---|---|---|---|---|
-| 5 | Structure (schema + mutual exclusivity + check ID format) | Chưa | Cao | Khác Risk Agent: focus internal LLM parse, không phải final output parse |
-| 6 | Faithfulness (claim-based, Flow 3 only) | Chưa | Trung bình | Scope hẹp hơn Risk Agent — chỉ LLM-generated reasoning |
-| 7 | Check Selection F1 (Flows 1, 3) | Chưa | **Cao — metric core mới** | Precision + Recall + F1 |
-| 8 | Service Accuracy (Flows 2, 4) | Chưa | **Cao — metric core mới** | Bổ sung cho F1 khi agent trả group scan |
-| 9 | Flow Appropriateness (Completeness) | Chưa | Cao | Agent chọn đúng flow cho request? |
+| 5 | `valid_output_rate` (Structure) | Chưa | Cao | Gộp schema + exclusivity + format thành 1 metric |
+| 6 | `grounded_reasoning_rate` (Faithfulness) | Chưa | Trung bình | Keyword-based, chỉ low-confidence cases |
+| 7 | `check_selection_f1` (Correctness) | Chưa | **Cao — metric core** | Precision + Recall + F1 |
+| 8 | `service_accuracy` (Correctness) | Chưa | **Cao — metric core** | Bổ sung cho F1 khi agent trả group scan |
+| 9 | **`planning_correctness`** (Correctness tổng) | Chưa | **Cao — con số duy nhất** | 0.7 × F1 + 0.3 × service_accuracy |
+| 10 | `action_type_accuracy` (Completeness) | Chưa | Cao | Agent chọn đúng loại hành động? |
 
 **Giai đoạn 3 — Report Agent:**
 
-| # | Metric | Trạng thái | Ưu tiên |
-|---|---|---|---|
-| 9 | Section Checklist | Chưa | Cao — deterministic |
-| 10 | Faithfulness (narrative) | Chưa | **Cao — rủi ro hallucination lớn nhất** |
-| 11 | Findings Coverage | Chưa | Cao |
-| 12 | LLM-based Correctness | Chưa | Thấp — extension layer |
+*Core (triển khai ngay, tất cả deterministic):*
+
+| # | Metric | Trạng thái | Ưu tiên | Trục | Ghi chú |
+|---|---|---|---|---|---|
+| 13 | Structure gate checks (4 hard + 2 soft) | Chưa | **Cao — gate check** | Structure | `html_valid`, `section_presence_rate`, `no_template_leak`, `no_none_display` + `cover_page_complete`, `chart_presence` |
+| 14 | `stats_accuracy` + `findings_table_accuracy` + `score_accuracy` + `status_color_accuracy` | Chưa | **Cao** | Correctness | Template-rendered data khớp `report_data`? Regression cho BUG-03 |
+| 15 | `numerical_faithfulness` | Chưa | **Cao — rủi ro chính** | Faithfulness | Trích xuất số/entities từ narrative, so khớp `report_data`. Deterministic |
+| 16 | `findings_coverage` + `conditional_bypass_correctness` | Chưa | **Cao** | Completeness | Coverage + bypass logic (BUG-04 regression) |
+
+*Optional (bổ sung sau khi core ổn định):*
+
+| # | Metric | Trạng thái | Ưu tiên | Trục | Ghi chú |
+|---|---|---|---|---|---|
+| 17 | `remediation_detail_coverage` | Chưa | Trung bình | Completeness | % findings có LLM detail |
+| 18 | `scope_completeness` | Chưa | Trung bình | Completeness | BUG-05 regression |
+
+*Extension (cần LLM judge, chi phí cao):*
+
+| # | Metric | Trạng thái | Ưu tiên | Trục | Ghi chú |
+|---|---|---|---|---|---|
+| 19 | `narrative_faithfulness` | Chưa | Thấp | Faithfulness | Claim decomposition, LLM-as-Judge |
+| 20 | `correctness_judge_mean` | Chưa | Thấp | Correctness | LLM judge cho narrative quality |
 
 ### 4.6 Proposed Internal Release Criteria
 
@@ -971,22 +1191,31 @@ Chi tiết đầy đủ: xem `benchmark_llm_gen/Risk_Agent_Evaluation_Report.md`
 
 | # | Tiêu chí | Ngưỡng đề xuất | Trục | Ghi chú |
 |---|---|---|---|---|
-| 7 | output_schema_valid | = 1.00 | Structure | Thay json_parse_rate (output luôn valid dict) |
-| 8 | mutual_exclusivity | = 1.00 | Structure | groups và checks không cùng non-empty |
-| 9 | valid_check_id_format | >= 0.95 | Structure | Chỉ Flows 1, 3 |
-| 10 | internal_llm_parse_rate | >= 0.90 | Structure | Đo LLM formatting quality |
-| 11 | faithfulness_mean | >= 0.80 | Faithfulness | Chỉ Flow 3 (LLM-generated reasoning) |
-| 12 | check_selection_f1 | >= 0.60 | Correctness | Flows 1, 3 |
-| 13 | service_accuracy | >= 0.90 | Correctness | Flows 2, 4 |
-| 14 | flow_appropriateness | >= 0.85 | Completeness | Tất cả flows |
+| 7 | `valid_output_rate` | = 1.00 | Structure | Gộp: schema valid + mutual exclusivity + check ID format + reasoning nonempty |
+| 8 | `grounded_reasoning_rate` | >= 0.80 | Faithfulness | Keyword-based, chỉ low-confidence cases |
+| 9 | `check_selection_f1` | >= 0.60 | Correctness | Khi agent trả specific checks |
+| 10 | `service_accuracy` | >= 0.90 | Correctness | Khi agent trả group scan |
+| 11 | **`planning_correctness`** | **>= 0.65** | Correctness | **0.7 × F1 + 0.3 × service_accuracy** — con số duy nhất |
+| 12 | `action_type_accuracy` | >= 0.85 | Completeness | Agent chọn đúng loại hành động (specific vs group)? |
 
 **Report Agent (đề xuất):**
 
-| # | Tiêu chí | Ngưỡng đề xuất | Trục |
-|---|---|---|---|
-| 11 | section_presence_rate | = 1.00 | Structure |
-| 12 | faithfulness_mean | >= 0.75 | Faithfulness |
-| 13 | findings_coverage | >= 0.80 | Completeness |
+*Core release criteria (tất cả deterministic, chi phí = 0):*
+
+| # | Tiêu chí | Ngưỡng đề xuất | Trục | Ghi chú |
+|---|---|---|---|---|
+| 13 | `html_valid` | = 1.00 | Structure (gate) | Hard constraint — fail = report broken |
+| 14 | `section_presence_rate` | = 1.00 | Structure (gate) | Hard constraint — 7 sections bắt buộc |
+| 15 | `no_template_leak` | = 1.00 | Structure (gate) | Hard constraint — no Jinja2/placeholder leak |
+| 16 | `no_none_display` | = 1.00 | Structure (gate) | Hard constraint — BUG-02 regression |
+| 17 | `stats_accuracy` | = 1.00 | Correctness | Template-rendered stats khớp `report_data` |
+| 18 | `findings_table_accuracy` | = 1.00 | Correctness | Bảng findings đúng số dòng, severity badges, status colors |
+| 19 | `score_accuracy` | = 1.00 | Correctness | Security Score trên cover page = `_calc_score()` |
+| 20 | `numerical_faithfulness` | >= 0.90 | Faithfulness | Số liệu trong LLM narrative khớp `report_data` |
+| 21 | `findings_coverage` | >= 0.90 | Completeness | Finding IDs/event_codes xuất hiện trong HTML output |
+| 22 | `conditional_bypass_correctness` | = 1.00 | Completeness | Bypass logic đúng khi PASS=0 hoặc FAIL=0 (BUG-04 regression) |
+
+> **Đặc điểm:** 10 release criteria, tất cả deterministic. Không phụ thuộc LLM judge ở core layer → evaluation ổn định, reproducible, chi phí = 0. Benchmark dataset 20 test cases (9 scenario + 11 edge case) bám sát 6 bugs đã fix.
 
 ---
 

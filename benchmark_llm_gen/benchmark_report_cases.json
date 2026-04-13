@@ -1,0 +1,656 @@
+{
+  "_comment": "Report Agent benchmark — 20 test cases (9 scenario + 11 edge case). Bam sat 6 bugs da fix.",
+  "report_cases": [
+    {
+      "case_id": "report_standard_001",
+      "group": "A_scenario",
+      "scenario": "standard",
+      "input": {
+        "pre": { "total": 10, "pass": 7, "fail": 3, "severity": {"critical": 1, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 7, "initial_fail": 3, "final_pass": 9, "final_fail": 1, "fixed": 2, "failed": 0, "manual": 1 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "arn:aws:s3:::my-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_versioning", "service": "s3", "resource": "arn:aws:s3:::my-bucket", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Manual"},
+          {"stt": 3, "finding": "s3_bucket_encryption", "service": "s3", "resource": "arn:aws:s3:::my-bucket", "severity": "medium", "before": "FAIL", "after": "PASS", "change": "Fixed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Block public access", "resource": "my-bucket", "description": "S3 bucket public access blocked", "execution_output": {"status": "success"}, "before": {"PublicAccess": true}, "after": {"PublicAccess": false}, "tool_code": "s3_block_public", "tool_description": "Block S3 public access"},
+          {"finding_id": "f003", "action": "Enable encryption", "resource": "my-bucket", "description": "S3 bucket encryption enabled", "execution_output": {"status": "success"}, "before": {}, "after": {"SSEAlgorithm": "AES256"}, "tool_code": "s3_enable_encryption", "tool_description": "Enable S3 encryption"}
+        ],
+        "failed_findings": [],
+        "manual_findings": [
+          {"finding_id": "f002", "description": "Enable S3 versioning", "resource": "my-bucket", "severity": "high", "manual_reason": "Requires business approval", "remaining_actions": ["Enable versioning via console"]}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "S3 bucket has public access", "resource_id": "arn:aws:s3:::my-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_versioning", "description": "S3 bucket versioning disabled", "resource_id": "arn:aws:s3:::my-bucket"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "medium", "event_code": "s3_bucket_encryption", "description": "S3 bucket not encrypted", "resource_id": "arn:aws:s3:::my-bucket"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["my-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Kiem tra bao mat S3 bucket" }
+      },
+      "expected": {
+        "required_sections": ["executive_summary", "scope_method", "pre_assessment", "findings_table", "remediation_detail", "post_assessment", "recommendations"],
+        "expected_finding_ids": ["s3_bucket_public_access", "s3_bucket_versioning", "s3_bucket_encryption"],
+        "expected_stats": { "total": 10, "fail": 3, "fixed": 2, "manual": 1 },
+        "bypass_sections": []
+      }
+    },
+    {
+      "case_id": "report_standard_002",
+      "group": "A_scenario",
+      "scenario": "standard",
+      "input": {
+        "pre": { "total": 6, "pass": 2, "fail": 4, "severity": {"critical": 2, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 2, "initial_fail": 4, "final_pass": 5, "final_fail": 1, "fixed": 3, "failed": 1, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "prod-data", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_policy_public", "service": "s3", "resource": "prod-data", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 3, "finding": "s3_bucket_logging", "service": "s3", "resource": "prod-data", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 4, "finding": "s3_bucket_mfa_delete", "service": "s3", "resource": "prod-data", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Failed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Block public access", "resource": "prod-data", "description": "Block public access on prod-data"},
+          {"finding_id": "f002", "action": "Remove public policy", "resource": "prod-data", "description": "Remove public bucket policy"},
+          {"finding_id": "f003", "action": "Enable logging", "resource": "prod-data", "description": "Enable S3 access logging"}
+        ],
+        "failed_findings": [
+          {"finding_id": "f004", "action": "Enable MFA delete", "resource": "prod-data", "description": "MFA delete requires root credentials", "execution_error": "AccessDenied: MFA delete requires root account"}
+        ],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "S3 bucket has public access", "resource_id": "prod-data"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_policy_public", "description": "S3 bucket policy allows public", "resource_id": "prod-data"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_logging", "description": "S3 bucket logging disabled", "resource_id": "prod-data"},
+          {"finding_id": "f004", "status": "FAIL", "severity": "medium", "event_code": "s3_bucket_mfa_delete", "description": "MFA delete not enabled", "resource_id": "prod-data"}
+        ],
+        "environment": { "account_id": "987654321098", "region": "us-east-1", "buckets": ["prod-data"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Full S3 security assessment" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_bucket_public_access", "s3_bucket_policy_public", "s3_bucket_logging", "s3_bucket_mfa_delete"],
+        "expected_stats": { "total": 6, "fail": 4, "fixed": 3, "failed": 1 },
+        "bypass_sections": []
+      }
+    },
+    {
+      "case_id": "report_standard_003",
+      "group": "A_scenario",
+      "scenario": "standard",
+      "input": {
+        "pre": { "total": 5, "pass": 3, "fail": 2, "severity": {"critical": 0, "high": 2, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 3, "initial_fail": 2, "final_pass": 4, "final_fail": 1, "fixed": 1, "failed": 0, "manual": 1 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_ssl_requests_only", "service": "s3", "resource": "web-assets", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_default_encryption", "service": "s3", "resource": "web-assets", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Enforce SSL", "resource": "web-assets", "description": "Enforce SSL-only access"}
+        ],
+        "failed_findings": [],
+        "manual_findings": [
+          {"finding_id": "f002", "description": "Enable default encryption", "resource": "web-assets", "severity": "high", "manual_reason": "KMS key selection required"}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_ssl_requests_only", "description": "SSL not enforced", "resource_id": "web-assets"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_default_encryption", "description": "No default encryption", "resource_id": "web-assets"}
+        ],
+        "environment": { "account_id": "111222333444", "region": "eu-west-1", "buckets": ["web-assets"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Check S3 encryption and transport" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_bucket_ssl_requests_only", "s3_bucket_default_encryption"],
+        "expected_stats": { "total": 5, "fail": 2, "fixed": 1, "manual": 1 },
+        "bypass_sections": []
+      }
+    },
+    {
+      "case_id": "report_all_pass_001",
+      "group": "A_scenario",
+      "scenario": "all_pass",
+      "input": {
+        "pre": { "total": 5, "pass": 5, "fail": 0, "severity": {"critical": 0, "high": 0, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 5, "initial_fail": 0, "final_pass": 5, "final_fail": 0, "fixed": 0, "failed": 0, "manual": 0 },
+        "findings_table": [],
+        "success_findings": [],
+        "failed_findings": [],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "PASS", "severity": "low", "event_code": "s3_bucket_versioning", "description": "Versioning enabled", "resource_id": "bucket-a"},
+          {"finding_id": "f002", "status": "PASS", "severity": "low", "event_code": "s3_bucket_encryption", "description": "Encryption enabled", "resource_id": "bucket-a"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["bucket-a"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Scan S3" }
+      },
+      "expected": {
+        "expected_finding_ids": [],
+        "expected_stats": { "total": 5, "fail": 0, "fixed": 0 },
+        "bypass_sections": ["fail_overview"]
+      }
+    },
+    {
+      "case_id": "report_all_pass_002",
+      "group": "A_scenario",
+      "scenario": "all_pass",
+      "input": {
+        "pre": { "total": 3, "pass": 3, "fail": 0, "severity": {"critical": 0, "high": 0, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 3, "initial_fail": 0, "final_pass": 3, "final_fail": 0, "fixed": 0, "failed": 0, "manual": 0 },
+        "findings_table": [],
+        "success_findings": [],
+        "failed_findings": [],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "PASS", "severity": "medium", "event_code": "s3_bucket_public_access", "description": "No public access", "resource_id": "secure-bucket"}
+        ],
+        "environment": { "account_id": "555666777888", "region": "us-west-2", "buckets": ["secure-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Quick S3 check" }
+      },
+      "expected": {
+        "expected_stats": { "total": 3, "fail": 0 },
+        "bypass_sections": ["fail_overview"]
+      }
+    },
+    {
+      "case_id": "report_all_fail_001",
+      "group": "A_scenario",
+      "scenario": "all_fail",
+      "input": {
+        "pre": { "total": 4, "pass": 0, "fail": 4, "severity": {"critical": 2, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 0, "initial_fail": 4, "final_pass": 3, "final_fail": 1, "fixed": 3, "failed": 1, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "exposed-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_policy_public", "service": "s3", "resource": "exposed-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 3, "finding": "s3_bucket_logging", "service": "s3", "resource": "exposed-bucket", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 4, "finding": "s3_bucket_mfa_delete", "service": "s3", "resource": "exposed-bucket", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Failed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Block public", "resource": "exposed-bucket", "description": "Block public access"},
+          {"finding_id": "f002", "action": "Remove policy", "resource": "exposed-bucket", "description": "Remove public policy"},
+          {"finding_id": "f003", "action": "Enable logging", "resource": "exposed-bucket", "description": "Enable logging"}
+        ],
+        "failed_findings": [
+          {"finding_id": "f004", "action": "Enable MFA delete", "resource": "exposed-bucket", "description": "MFA delete failed", "execution_error": "Root credentials required"}
+        ],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "Public access", "resource_id": "exposed-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_policy_public", "description": "Public policy", "resource_id": "exposed-bucket"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_logging", "description": "No logging", "resource_id": "exposed-bucket"},
+          {"finding_id": "f004", "status": "FAIL", "severity": "medium", "event_code": "s3_bucket_mfa_delete", "description": "No MFA delete", "resource_id": "exposed-bucket"}
+        ],
+        "environment": { "account_id": "999888777666", "region": "ap-northeast-1", "buckets": ["exposed-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Emergency S3 audit" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_bucket_public_access", "s3_bucket_policy_public", "s3_bucket_logging", "s3_bucket_mfa_delete"],
+        "expected_stats": { "total": 4, "fail": 4, "fixed": 3, "failed": 1 },
+        "bypass_sections": ["pass_overview"]
+      }
+    },
+    {
+      "case_id": "report_all_fail_002",
+      "group": "A_scenario",
+      "scenario": "all_fail",
+      "input": {
+        "pre": { "total": 2, "pass": 0, "fail": 2, "severity": {"critical": 1, "high": 1, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 0, "initial_fail": 2, "final_pass": 1, "final_fail": 1, "fixed": 1, "failed": 0, "manual": 1 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "test-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_versioning", "service": "s3", "resource": "test-bucket", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Block access", "resource": "test-bucket", "description": "Block public access"}
+        ],
+        "failed_findings": [],
+        "manual_findings": [
+          {"finding_id": "f002", "description": "Enable versioning", "resource": "test-bucket", "severity": "high", "manual_reason": "Data retention policy review needed"}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "Public access enabled", "resource_id": "test-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_versioning", "description": "No versioning", "resource_id": "test-bucket"}
+        ],
+        "environment": { "account_id": "444333222111", "region": "eu-central-1", "buckets": ["test-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "S3 security check" }
+      },
+      "expected": {
+        "expected_stats": { "total": 2, "fail": 2, "fixed": 1, "manual": 1 },
+        "bypass_sections": ["pass_overview"]
+      }
+    },
+    {
+      "case_id": "report_minimal_001",
+      "group": "A_scenario",
+      "scenario": "minimal",
+      "input": {
+        "pre": { "total": 1, "pass": 0, "fail": 1, "severity": {"critical": 1, "high": 0, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 0, "initial_fail": 1, "final_pass": 1, "final_fail": 0, "fixed": 1, "failed": 0, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "solo-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Block public access", "resource": "solo-bucket", "description": "S3 public access blocked"}
+        ],
+        "failed_findings": [],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "Public access", "resource_id": "solo-bucket"}
+        ],
+        "environment": { "account_id": "111111111111", "region": "ap-southeast-1", "buckets": ["solo-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Check public access" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_bucket_public_access"],
+        "expected_stats": { "total": 1, "fail": 1, "fixed": 1 },
+        "bypass_sections": ["pass_overview"]
+      }
+    },
+    {
+      "case_id": "report_minimal_002",
+      "group": "A_scenario",
+      "scenario": "minimal",
+      "input": {
+        "pre": { "total": 2, "pass": 1, "fail": 1, "severity": {"critical": 0, "high": 0, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 1, "initial_fail": 1, "final_pass": 2, "final_fail": 0, "fixed": 1, "failed": 0, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_logging", "service": "s3", "resource": "log-bucket", "severity": "medium", "before": "FAIL", "after": "PASS", "change": "Fixed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Enable logging", "resource": "log-bucket", "description": "S3 logging enabled"}
+        ],
+        "failed_findings": [],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "medium", "event_code": "s3_bucket_logging", "description": "Logging disabled", "resource_id": "log-bucket"}
+        ],
+        "environment": { "account_id": "222222222222", "region": "us-east-1", "buckets": ["log-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Enable S3 logging" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_bucket_logging"],
+        "expected_stats": { "total": 2, "fail": 1, "fixed": 1 },
+        "bypass_sections": []
+      }
+    },
+
+    {
+      "case_id": "report_missing_fields_001",
+      "group": "B_edge_case",
+      "scenario": "missing_fields",
+      "bug_regression": "BUG-02",
+      "input": {
+        "pre": { "total": 3, "pass": 1, "fail": 2, "severity": {"critical": 1, "high": 1, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 1, "initial_fail": 2, "final_pass": 2, "final_fail": 1, "fixed": 1, "failed": 1, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "arn:aws:s3:::data-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_encryption", "service": "s3", "resource": "arn:aws:s3:::data-bucket", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Failed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": null, "resource": null, "description": "S3 bucket public access blocked", "execution_output": {}}
+        ],
+        "failed_findings": [
+          {"finding_id": "f002", "action": null, "resource": "data-bucket", "description": "", "execution_error": "Access denied"}
+        ],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "Public access enabled", "resource_id": "data-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_encryption", "description": "No encryption", "resource_id": "data-bucket"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": [] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Check S3" }
+      },
+      "expected": {
+        "must_not_contain": ["None"],
+        "expected_finding_ids": ["s3_bucket_public_access", "s3_bucket_encryption"]
+      }
+    },
+    {
+      "case_id": "report_missing_fields_002",
+      "group": "B_edge_case",
+      "scenario": "missing_fields",
+      "bug_regression": "BUG-02",
+      "input": {
+        "pre": { "total": 2, "pass": 0, "fail": 2, "severity": {"critical": 0, "high": 2, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 0, "initial_fail": 2, "final_pass": 1, "final_fail": 1, "fixed": 1, "failed": 0, "manual": 1 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_versioning", "service": "s3", "resource": "arn:aws:s3:::app-bucket", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_bucket_lifecycle", "service": "s3", "resource": "arn:aws:s3:::app-bucket", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": null, "resource": "app-bucket", "description": null, "execution_output": null}
+        ],
+        "failed_findings": [],
+        "manual_findings": [
+          {"finding_id": "f002", "description": null, "resource": null, "severity": null, "manual_reason": null}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_versioning", "description": "No versioning", "resource_id": "app-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_lifecycle", "description": "No lifecycle", "resource_id": "app-bucket"}
+        ],
+        "environment": { "account_id": "333444555666", "region": "ap-southeast-1", "buckets": ["app-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "S3 lifecycle check" }
+      },
+      "expected": {
+        "must_not_contain": ["None"],
+        "expected_finding_ids": ["s3_bucket_versioning", "s3_bucket_lifecycle"]
+      }
+    },
+    {
+      "case_id": "report_mixed_case_001",
+      "group": "B_edge_case",
+      "scenario": "mixed_case_status",
+      "bug_regression": "BUG-03",
+      "input": {
+        "pre": { "total": 4, "pass": 1, "fail": 3, "severity": {"critical": 1, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 1, "initial_fail": 3, "final_pass": 3, "final_fail": 1, "fixed": 1, "failed": 1, "manual": 1 },
+        "findings_table": [
+          {"stt": 1, "finding": "check_a", "service": "s3", "resource": "bucket-x", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "FIXED"},
+          {"stt": 2, "finding": "check_b", "service": "s3", "resource": "bucket-x", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "failed"},
+          {"stt": 3, "finding": "check_c", "service": "s3", "resource": "bucket-x", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Fix A", "resource": "bucket-x", "description": "Check A fixed"}
+        ],
+        "failed_findings": [
+          {"finding_id": "f002", "action": "Fix B", "resource": "bucket-x", "description": "Check B failed", "execution_error": "Timeout"}
+        ],
+        "manual_findings": [
+          {"finding_id": "f003", "description": "Check C manual", "resource": "bucket-x", "severity": "medium", "manual_reason": "Need approval"}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "check_a", "description": "Check A", "resource_id": "bucket-x"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "check_b", "description": "Check B", "resource_id": "bucket-x"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "medium", "event_code": "check_c", "description": "Check C", "resource_id": "bucket-x"}
+        ],
+        "environment": { "account_id": "111222333444", "region": "us-east-1", "buckets": ["bucket-x"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Security scan" }
+      },
+      "expected": {
+        "status_colors": {"FIXED": "status-fixed", "failed": "status-error", "Manual": "status-manual"},
+        "expected_finding_ids": ["check_a", "check_b", "check_c"]
+      }
+    },
+    {
+      "case_id": "report_mixed_case_002",
+      "group": "B_edge_case",
+      "scenario": "mixed_case_status",
+      "bug_regression": "BUG-03",
+      "input": {
+        "pre": { "total": 3, "pass": 0, "fail": 3, "severity": {"critical": 0, "high": 3, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 0, "initial_fail": 3, "final_pass": 2, "final_fail": 1, "fixed": 2, "failed": 1, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "check_x", "service": "s3", "resource": "res-1", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "check_y", "service": "s3", "resource": "res-1", "severity": "high", "before": "FAIL", "after": "PASS", "change": "FIXED"},
+          {"stt": 3, "finding": "check_z", "service": "s3", "resource": "res-1", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "FAILED"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Fix X", "resource": "res-1", "description": "Fixed X"},
+          {"finding_id": "f002", "action": "Fix Y", "resource": "res-1", "description": "Fixed Y"}
+        ],
+        "failed_findings": [
+          {"finding_id": "f003", "action": "Fix Z", "resource": "res-1", "description": "Z failed", "execution_error": "Permission denied"}
+        ],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "high", "event_code": "check_x", "description": "X", "resource_id": "res-1"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "check_y", "description": "Y", "resource_id": "res-1"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "high", "event_code": "check_z", "description": "Z", "resource_id": "res-1"}
+        ],
+        "environment": { "account_id": "777888999000", "region": "ap-southeast-2", "buckets": ["res-1"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Fix S3 issues" }
+      },
+      "expected": {
+        "status_colors": {"Fixed": "status-fixed", "FIXED": "status-fixed", "FAILED": "status-error"}
+      }
+    },
+    {
+      "case_id": "report_multi_service_001",
+      "group": "B_edge_case",
+      "scenario": "multi_service",
+      "bug_regression": "BUG-05",
+      "input": {
+        "pre": { "total": 8, "pass": 5, "fail": 3, "severity": {"critical": 1, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 5, "initial_fail": 3, "final_pass": 7, "final_fail": 1, "fixed": 2, "failed": 1, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_public_access", "service": "s3", "resource": "s3-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "iam_root_mfa", "service": "iam", "resource": "root-account", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 3, "finding": "ec2_sg_open", "service": "ec2", "resource": "sg-12345", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Failed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Block public access", "resource": "s3-bucket", "description": "S3 public access blocked"},
+          {"finding_id": "f002", "action": "Enable root MFA", "resource": "root-account", "description": "Root MFA enabled"}
+        ],
+        "failed_findings": [
+          {"finding_id": "f003", "action": "Close open ports", "resource": "sg-12345", "description": "Security group fix failed", "execution_error": "In use by active instances"}
+        ],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_bucket_public_access", "description": "Public access", "resource_id": "s3-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "iam_root_mfa", "description": "Root no MFA", "resource_id": "root-account"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "medium", "event_code": "ec2_sg_open", "description": "Open SG ports", "resource_id": "sg-12345"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["s3-bucket"] },
+        "scope": { "services": ["s3", "iam", "ec2"], "date": "2026-04-05", "user_request": "Full security audit" }
+      },
+      "expected": {
+        "scope_display": "S3, IAM, EC2",
+        "must_not_contain": ["['s3', 'iam', 'ec2']"],
+        "expected_finding_ids": ["s3_bucket_public_access", "iam_root_mfa", "ec2_sg_open"]
+      }
+    },
+    {
+      "case_id": "report_multi_service_002",
+      "group": "B_edge_case",
+      "scenario": "multi_service",
+      "bug_regression": "BUG-05",
+      "input": {
+        "pre": { "total": 6, "pass": 4, "fail": 2, "severity": {"critical": 0, "high": 1, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 4, "initial_fail": 2, "final_pass": 6, "final_fail": 0, "fixed": 2, "failed": 0, "manual": 0 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_bucket_encryption", "service": "s3", "resource": "data-bucket", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "iam_unused_credentials", "service": "iam", "resource": "old-user", "severity": "medium", "before": "FAIL", "after": "PASS", "change": "Fixed"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Enable encryption", "resource": "data-bucket", "description": "Encryption enabled"},
+          {"finding_id": "f002", "action": "Disable credentials", "resource": "old-user", "description": "Unused creds disabled"}
+        ],
+        "failed_findings": [],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "high", "event_code": "s3_bucket_encryption", "description": "No encryption", "resource_id": "data-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "medium", "event_code": "iam_unused_credentials", "description": "Unused IAM creds", "resource_id": "old-user"}
+        ],
+        "environment": { "account_id": "998877665544", "region": "eu-west-1", "buckets": ["data-bucket"] },
+        "scope": { "services": ["s3", "iam"], "date": "2026-04-05", "user_request": "Check S3 and IAM" }
+      },
+      "expected": {
+        "scope_display": "S3, IAM",
+        "must_not_contain": ["['s3', 'iam']"],
+        "expected_finding_ids": ["s3_bucket_encryption", "iam_unused_credentials"]
+      }
+    },
+    {
+      "case_id": "report_high_volume_001",
+      "group": "B_edge_case",
+      "scenario": "high_volume",
+      "input": {
+        "pre": { "total": 50, "pass": 35, "fail": 15, "severity": {"critical": 3, "high": 5, "medium": 4, "low": 3} },
+        "post": { "initial_pass": 35, "initial_fail": 15, "final_pass": 45, "final_fail": 5, "fixed": 10, "failed": 3, "manual": 2 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_check_01", "service": "s3", "resource": "bucket-01", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_check_02", "service": "s3", "resource": "bucket-02", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 3, "finding": "s3_check_03", "service": "s3", "resource": "bucket-03", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 4, "finding": "s3_check_04", "service": "s3", "resource": "bucket-04", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 5, "finding": "s3_check_05", "service": "s3", "resource": "bucket-05", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 6, "finding": "s3_check_06", "service": "s3", "resource": "bucket-06", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 7, "finding": "s3_check_07", "service": "s3", "resource": "bucket-07", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 8, "finding": "s3_check_08", "service": "s3", "resource": "bucket-08", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 9, "finding": "s3_check_09", "service": "s3", "resource": "bucket-09", "severity": "medium", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 10, "finding": "s3_check_10", "service": "s3", "resource": "bucket-10", "severity": "medium", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 11, "finding": "s3_check_11", "service": "s3", "resource": "bucket-11", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Failed"},
+          {"stt": 12, "finding": "s3_check_12", "service": "s3", "resource": "bucket-12", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Failed"},
+          {"stt": 13, "finding": "s3_check_13", "service": "s3", "resource": "bucket-13", "severity": "low", "before": "FAIL", "after": "FAIL", "change": "Failed"},
+          {"stt": 14, "finding": "s3_check_14", "service": "s3", "resource": "bucket-14", "severity": "low", "before": "FAIL", "after": "FAIL", "change": "Manual"},
+          {"stt": 15, "finding": "s3_check_15", "service": "s3", "resource": "bucket-15", "severity": "low", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Fix 01", "resource": "bucket-01", "description": "Fix check 01"},
+          {"finding_id": "f002", "action": "Fix 02", "resource": "bucket-02", "description": "Fix check 02"},
+          {"finding_id": "f003", "action": "Fix 03", "resource": "bucket-03", "description": "Fix check 03"},
+          {"finding_id": "f004", "action": "Fix 04", "resource": "bucket-04", "description": "Fix check 04"},
+          {"finding_id": "f005", "action": "Fix 05", "resource": "bucket-05", "description": "Fix check 05"},
+          {"finding_id": "f006", "action": "Fix 06", "resource": "bucket-06", "description": "Fix check 06"},
+          {"finding_id": "f007", "action": "Fix 07", "resource": "bucket-07", "description": "Fix check 07"},
+          {"finding_id": "f008", "action": "Fix 08", "resource": "bucket-08", "description": "Fix check 08"},
+          {"finding_id": "f009", "action": "Fix 09", "resource": "bucket-09", "description": "Fix check 09"},
+          {"finding_id": "f010", "action": "Fix 10", "resource": "bucket-10", "description": "Fix check 10"}
+        ],
+        "failed_findings": [
+          {"finding_id": "f011", "action": "Fix 11", "resource": "bucket-11", "description": "Failed", "execution_error": "Error"},
+          {"finding_id": "f012", "action": "Fix 12", "resource": "bucket-12", "description": "Failed", "execution_error": "Error"},
+          {"finding_id": "f013", "action": "Fix 13", "resource": "bucket-13", "description": "Failed", "execution_error": "Error"}
+        ],
+        "manual_findings": [
+          {"finding_id": "f014", "description": "Manual 14", "resource": "bucket-14", "severity": "low", "manual_reason": "Approval needed"},
+          {"finding_id": "f015", "description": "Manual 15", "resource": "bucket-15", "severity": "low", "manual_reason": "Approval needed"}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_check_01", "description": "Check 01", "resource_id": "bucket-01"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "critical", "event_code": "s3_check_02", "description": "Check 02", "resource_id": "bucket-02"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "critical", "event_code": "s3_check_03", "description": "Check 03", "resource_id": "bucket-03"},
+          {"finding_id": "f004", "status": "FAIL", "severity": "high", "event_code": "s3_check_04", "description": "Check 04", "resource_id": "bucket-04"},
+          {"finding_id": "f005", "status": "FAIL", "severity": "high", "event_code": "s3_check_05", "description": "Check 05", "resource_id": "bucket-05"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["bucket-01", "bucket-02", "bucket-03", "bucket-04", "bucket-05"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Full S3 assessment" }
+      },
+      "expected": {
+        "expected_stats": { "total": 50, "fail": 15, "fixed": 10, "failed": 3, "manual": 2 },
+        "min_table_rows": 15
+      }
+    },
+    {
+      "case_id": "report_zero_severity_001",
+      "group": "B_edge_case",
+      "scenario": "zero_severity",
+      "input": {
+        "pre": { "total": 4, "pass": 4, "fail": 0, "severity": {"critical": 0, "high": 0, "medium": 0, "low": 0} },
+        "post": { "initial_pass": 4, "initial_fail": 0, "final_pass": 4, "final_fail": 0, "fixed": 0, "failed": 0, "manual": 0 },
+        "findings_table": [],
+        "success_findings": [],
+        "failed_findings": [],
+        "manual_findings": [],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "PASS", "severity": "low", "event_code": "s3_check_a", "description": "All good", "resource_id": "bucket"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Quick check" }
+      },
+      "expected": {
+        "expected_stats": { "total": 4, "fail": 0 },
+        "bypass_sections": ["fail_overview"]
+      }
+    },
+    {
+      "case_id": "report_complex_remediation_001",
+      "group": "B_edge_case",
+      "scenario": "complex_remediation",
+      "input": {
+        "pre": { "total": 6, "pass": 2, "fail": 4, "severity": {"critical": 1, "high": 2, "medium": 1, "low": 0} },
+        "post": { "initial_pass": 2, "initial_fail": 4, "final_pass": 4, "final_fail": 2, "fixed": 2, "failed": 1, "manual": 1 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_public_access", "service": "s3", "resource": "prod-bucket", "severity": "critical", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_encryption", "service": "s3", "resource": "prod-bucket", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 3, "finding": "s3_versioning", "service": "s3", "resource": "prod-bucket", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Failed"},
+          {"stt": 4, "finding": "s3_lifecycle", "service": "s3", "resource": "prod-bucket", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {
+            "finding_id": "f001", "action": "Block public access", "resource": "prod-bucket",
+            "description": "Block all public access settings",
+            "execution_output": {"before": {"BlockPublicAcls": false}, "after": {"BlockPublicAcls": true}, "api_calls": 2},
+            "before": {"BlockPublicAcls": false, "IgnorePublicAcls": false},
+            "after": {"BlockPublicAcls": true, "IgnorePublicAcls": true},
+            "tool_code": "s3_block_public_access",
+            "tool_description": "Configure S3 Block Public Access"
+          },
+          {
+            "finding_id": "f002", "action": "Enable AES-256 encryption", "resource": "prod-bucket",
+            "description": "Enable default server-side encryption",
+            "execution_output": {"SSEAlgorithm": "AES256"},
+            "before": {}, "after": {"SSEAlgorithm": "AES256"},
+            "tool_code": "s3_enable_encryption",
+            "tool_description": "Enable S3 default encryption"
+          }
+        ],
+        "failed_findings": [
+          {
+            "finding_id": "f003", "action": "Enable versioning", "resource": "prod-bucket",
+            "description": "Enable S3 bucket versioning",
+            "execution_status": "error",
+            "execution_output": {"error": "BucketVersioningNotEnabled"},
+            "execution_error": "S3.ClientException: Versioning configuration conflict",
+            "execution_timing": {"start": "2026-04-05T10:00:00", "end": "2026-04-05T10:00:02"},
+            "tool_code": "s3_enable_versioning",
+            "tool_description": "Enable S3 versioning"
+          }
+        ],
+        "manual_findings": [
+          {
+            "finding_id": "f004", "description": "Configure lifecycle rules", "resource": "prod-bucket",
+            "severity": "medium", "manual_reason": "Requires data retention policy review",
+            "remaining_actions": ["Define retention policy", "Configure lifecycle rules", "Test with non-prod bucket"]
+          }
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "critical", "event_code": "s3_public_access", "description": "Public access enabled", "resource_id": "prod-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_encryption", "description": "No encryption", "resource_id": "prod-bucket"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "high", "event_code": "s3_versioning", "description": "No versioning", "resource_id": "prod-bucket"},
+          {"finding_id": "f004", "status": "FAIL", "severity": "medium", "event_code": "s3_lifecycle", "description": "No lifecycle", "resource_id": "prod-bucket"}
+        ],
+        "environment": { "account_id": "123456789012", "region": "ap-southeast-1", "buckets": ["prod-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "Full S3 remediation" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_public_access", "s3_encryption", "s3_versioning", "s3_lifecycle"],
+        "expected_stats": { "total": 6, "fail": 4, "fixed": 2, "failed": 1, "manual": 1 }
+      }
+    },
+    {
+      "case_id": "report_complex_remediation_002",
+      "group": "B_edge_case",
+      "scenario": "complex_remediation",
+      "input": {
+        "pre": { "total": 5, "pass": 1, "fail": 4, "severity": {"critical": 0, "high": 2, "medium": 2, "low": 0} },
+        "post": { "initial_pass": 1, "initial_fail": 4, "final_pass": 3, "final_fail": 2, "fixed": 1, "failed": 1, "manual": 2 },
+        "findings_table": [
+          {"stt": 1, "finding": "s3_access_logging", "service": "s3", "resource": "logs-bucket", "severity": "high", "before": "FAIL", "after": "PASS", "change": "Fixed"},
+          {"stt": 2, "finding": "s3_object_lock", "service": "s3", "resource": "compliance-bucket", "severity": "high", "before": "FAIL", "after": "FAIL", "change": "Failed"},
+          {"stt": 3, "finding": "s3_cors_config", "service": "s3", "resource": "web-bucket", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Manual"},
+          {"stt": 4, "finding": "s3_transfer_accel", "service": "s3", "resource": "cdn-bucket", "severity": "medium", "before": "FAIL", "after": "FAIL", "change": "Manual"}
+        ],
+        "success_findings": [
+          {"finding_id": "f001", "action": "Enable access logging", "resource": "logs-bucket", "description": "Access logging enabled", "execution_output": {"target_bucket": "log-destination"}, "before": {}, "after": {"LoggingEnabled": true}}
+        ],
+        "failed_findings": [
+          {"finding_id": "f002", "action": "Enable object lock", "resource": "compliance-bucket", "description": "Object lock failed", "execution_error": "ObjectLockConfigurationNotFoundError", "execution_output": {"error": true}}
+        ],
+        "manual_findings": [
+          {"finding_id": "f003", "description": "Configure CORS", "resource": "web-bucket", "severity": "medium", "manual_reason": "Requires frontend team coordination"},
+          {"finding_id": "f004", "description": "Enable transfer acceleration", "resource": "cdn-bucket", "severity": "medium", "manual_reason": "Cost implications need approval"}
+        ],
+        "raw_pre_findings": [
+          {"finding_id": "f001", "status": "FAIL", "severity": "high", "event_code": "s3_access_logging", "description": "No access logging", "resource_id": "logs-bucket"},
+          {"finding_id": "f002", "status": "FAIL", "severity": "high", "event_code": "s3_object_lock", "description": "No object lock", "resource_id": "compliance-bucket"},
+          {"finding_id": "f003", "status": "FAIL", "severity": "medium", "event_code": "s3_cors_config", "description": "CORS misconfigured", "resource_id": "web-bucket"},
+          {"finding_id": "f004", "status": "FAIL", "severity": "medium", "event_code": "s3_transfer_accel", "description": "No transfer accel", "resource_id": "cdn-bucket"}
+        ],
+        "environment": { "account_id": "112233445566", "region": "us-west-1", "buckets": ["logs-bucket", "compliance-bucket", "web-bucket", "cdn-bucket"] },
+        "scope": { "services": ["s3"], "date": "2026-04-05", "user_request": "S3 compliance check" }
+      },
+      "expected": {
+        "expected_finding_ids": ["s3_access_logging", "s3_object_lock", "s3_cors_config", "s3_transfer_accel"],
+        "expected_stats": { "total": 5, "fail": 4, "fixed": 1, "failed": 1, "manual": 2 }
+      }
+    }
+  ]
+}

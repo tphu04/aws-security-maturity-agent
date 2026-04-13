@@ -1,0 +1,12 @@
+{
+  "_comment": "Internal thresholds for Planning Agent — Phase 1 (initial). Adjust after baseline benchmark.",
+  "valid_output_rate_min": 1.00,
+  "grounded_reasoning_rate_min": 0.80,
+  "check_selection_f1_min": 0.60,
+  "service_accuracy_min": 0.90,
+  "planning_correctness_min": 0.65,
+  "action_type_accuracy_min": 0.85,
+  "over_selection_rate_max": 0.40,
+  "under_selection_rate_max": 0.40,
+  "exact_match_rate_min": 0.20
+}

@@ -1,0 +1,847 @@
+{
+  "version": "4.0",
+  "agent": "planning",
+  "description": "Benchmark 50 cases cho Planning Agent. Focus: natural language (VI/EN), also_acceptable giảm false positive, fix check IDs verified against Prowler data. multi_service marked as known_limitation.",
+  "distribution": {
+    "by_input_type": {
+      "explicit_checks": 10,
+      "group_request": 9,
+      "specific_intent": 25,
+      "ambiguous": 6,
+      "multi_service": 4,
+      "edge_case": 4,
+      "robustness": 8
+    },
+    "total": 66
+  },
+
+  "planning_cases": [
+
+    {
+      "case_id": "plan_explicit_001",
+      "input_type": "explicit_checks",
+      "service": "s3",
+      "input": { "user_request": "run s3_bucket_public_access and s3_bucket_default_encryption" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": ["s3_bucket_public_access", "s3_bucket_default_encryption"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_002",
+      "input_type": "explicit_checks",
+      "service": "iam",
+      "input": { "user_request": "chạy iam_root_mfa_enabled iam_no_root_access_key iam_user_mfa_enabled_console_access" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": ["iam_root_mfa_enabled", "iam_no_root_access_key", "iam_user_mfa_enabled_console_access"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_003",
+      "input_type": "explicit_checks",
+      "service": "s3",
+      "input": { "user_request": "Chạy cho tôi mấy cái s3_bucket_default_encryption, s3_bucket_public_access, s3_bucket_server_access_logging_enabled và s3_bucket_object_versioning" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": ["s3_bucket_default_encryption", "s3_bucket_public_access", "s3_bucket_server_access_logging_enabled", "s3_bucket_object_versioning"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_004",
+      "input_type": "explicit_checks",
+      "service": "multi",
+      "input": { "user_request": "Nhớ scan đúng 4 check này nhé: vpc_flow_logs_enabled, ec2_ebs_default_encryption, ec2_instance_imdsv2_enabled, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": ["vpc_flow_logs_enabled", "ec2_ebs_default_encryption", "ec2_instance_imdsv2_enabled", "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_005",
+      "input_type": "explicit_checks",
+      "service": "iam",
+      "input": { "user_request": "Mình muốn kiểm tra iam_rotate_access_key_90_days, iam_root_mfa_enabled, iam_user_mfa_enabled_console_access, iam_avoid_root_usage" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": ["iam_rotate_access_key_90_days", "iam_root_mfa_enabled", "iam_user_mfa_enabled_console_access", "iam_avoid_root_usage"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_006",
+      "input_type": "explicit_checks",
+      "service": "rds",
+      "input": { "user_request": "Check giùm cái rds_instance_no_public_access, rds_instance_storage_encrypted, rds_instance_transport_encrypted, rds_instance_backup_enabled" },
+      "expected": {
+        "expected_service": "rds",
+        "relevant_checks": ["rds_instance_no_public_access", "rds_instance_storage_encrypted", "rds_instance_transport_encrypted", "rds_instance_backup_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_007",
+      "input_type": "explicit_checks",
+      "service": "multi",
+      "input": { "user_request": "Cậu có thể chạy kms_cmk_rotation_enabled, awslambda_function_not_publicly_accessible, guardduty_is_enabled và cloudtrail_multi_region_enabled được không" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": ["kms_cmk_rotation_enabled", "awslambda_function_not_publicly_accessible", "guardduty_is_enabled", "cloudtrail_multi_region_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_008",
+      "input_type": "explicit_checks",
+      "service": "s3",
+      "input": { "user_request": "Chỉ chạy duy nhất tập check này s3_bucket_server_access_logging_enabled, s3_bucket_public_access, s3_bucket_object_versioning" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": ["s3_bucket_server_access_logging_enabled", "s3_bucket_public_access", "s3_bucket_object_versioning"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_009",
+      "input_type": "explicit_checks",
+      "service": "multi",
+      "input": { "user_request": "Bạn quét ec2_instance_imdsv2_enabled với eks_cluster_not_publicly_accessible và vpc_flow_logs_enabled giúp mình nha" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": ["ec2_instance_imdsv2_enabled", "eks_cluster_not_publicly_accessible", "vpc_flow_logs_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_explicit_010",
+      "input_type": "explicit_checks",
+      "service": "cloudtrail",
+      "input": { "user_request": "thực thi check cloudtrail_multi_region_enabled, cloudtrail_log_file_validation_enabled, cloudtrail_kms_encryption_enabled" },
+      "expected": {
+        "expected_service": "cloudtrail",
+        "relevant_checks": ["cloudtrail_multi_region_enabled", "cloudtrail_log_file_validation_enabled", "cloudtrail_kms_encryption_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+
+
+    {
+      "case_id": "plan_group_001",
+      "input_type": "group_request",
+      "service": "s3",
+      "input": { "user_request": "quét toàn bộ S3 cho tôi" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_002",
+      "input_type": "group_request",
+      "service": "iam",
+      "input": { "user_request": "tôi muốn kiểm tra toàn diện IAM" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_003",
+      "input_type": "group_request",
+      "service": "ec2",
+      "input": { "user_request": "scan everything related to EC2" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_004",
+      "input_type": "group_request",
+      "service": "rds",
+      "input": { "user_request": "kiểm tra hết tất cả các vấn đề liên quan đến RDS" },
+      "expected": {
+        "expected_service": "rds",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_005",
+      "input_type": "group_request",
+      "service": "kms",
+      "input": { "user_request": "I want a full security assessment of KMS" },
+      "expected": {
+        "expected_service": "kms",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_006",
+      "input_type": "group_request",
+      "service": "vpc",
+      "input": { "user_request": "scan toàn bộ VPC" },
+      "expected": {
+        "expected_service": "vpc",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_007",
+      "input_type": "group_request",
+      "service": "lambda",
+      "input": { "user_request": "quét hết Lambda đi" },
+      "expected": {
+        "expected_service": "lambda",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_008",
+      "input_type": "group_request",
+      "service": "eks",
+      "input": { "user_request": "run a complete scan on EKS" },
+      "expected": {
+        "expected_service": "eks",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+    {
+      "case_id": "plan_group_009",
+      "input_type": "group_request",
+      "service": "cloudtrail",
+      "input": { "user_request": "kiểm tra tất cả mọi thứ về CloudTrail" },
+      "expected": {
+        "expected_service": "cloudtrail",
+        "relevant_checks": [],
+        "acceptable_output_type": "group_scan"
+      }
+    },
+
+
+    {
+      "case_id": "plan_intent_001",
+      "input_type": "specific_intent",
+      "service": "s3",
+      "input": { "user_request": "kiểm tra xem S3 bucket có bị public access không" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": ["s3_bucket_public_access"],
+        "also_acceptable": ["s3_bucket_level_public_access_block", "s3_account_level_public_access_blocks", "s3_bucket_policy_public_write_access", "s3_bucket_acl_prohibited"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_002",
+      "input_type": "specific_intent",
+      "service": "s3",
+      "input": { "user_request": "dữ liệu trong S3 có được mã hóa không?" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": ["s3_bucket_default_encryption"],
+        "also_acceptable": ["s3_bucket_kms_encryption"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_003",
+      "input_type": "specific_intent",
+      "service": "s3",
+      "input": { "user_request": "I want to make sure S3 access logging is turned on" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": ["s3_bucket_server_access_logging_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_004",
+      "input_type": "specific_intent",
+      "service": "iam",
+      "input": { "user_request": "kiểm tra MFA có được bật cho tất cả IAM users không" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": ["iam_user_mfa_enabled_console_access"],
+        "also_acceptable": ["iam_root_mfa_enabled", "iam_root_hardware_mfa_enabled"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_005",
+      "input_type": "specific_intent",
+      "service": "iam",
+      "input": { "user_request": "access key nào đã lâu không dùng hoặc quá cũ?" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": ["iam_rotate_access_key_90_days"],
+        "also_acceptable": ["iam_user_accesskey_unused", "iam_user_two_active_access_key"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_006",
+      "input_type": "specific_intent",
+      "service": "iam",
+      "input": { "user_request": "có policy nào đang cấp quyền admin không cần thiết không?" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": ["iam_inline_policy_no_administrative_privileges"],
+        "also_acceptable": ["iam_aws_attached_policy_no_administrative_privileges", "iam_customer_attached_policy_no_administrative_privileges", "iam_user_administrator_access_policy", "iam_group_administrator_access_policy", "iam_policy_allows_privilege_escalation"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_007",
+      "input_type": "specific_intent",
+      "service": "iam",
+      "input": { "user_request": "tài khoản root có đang bị sử dụng trực tiếp không" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": ["iam_avoid_root_usage"],
+        "also_acceptable": ["iam_no_root_access_key", "iam_root_mfa_enabled"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_008",
+      "input_type": "specific_intent",
+      "service": "ec2",
+      "input": { "user_request": "security group nào đang mở port SSH ra ngoài internet?" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": ["ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22"],
+        "also_acceptable": ["ec2_instance_port_ssh_exposed_to_internet", "ec2_networkacl_allow_ingress_tcp_port_22"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_009",
+      "input_type": "specific_intent",
+      "service": "ec2",
+      "input": { "user_request": "instance nào đang dùng metadata service phiên bản cũ?" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": ["ec2_instance_imdsv2_enabled"],
+        "also_acceptable": ["ec2_instance_account_imdsv2_enabled", "ec2_launch_template_imdsv2_required"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_010",
+      "input_type": "specific_intent",
+      "service": "ec2",
+      "input": { "user_request": "ổ đĩa EBS có được mã hóa hết chưa?" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": ["ec2_ebs_default_encryption"],
+        "also_acceptable": ["ec2_ebs_volume_encryption", "ec2_ebs_snapshots_encrypted"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_011",
+      "input_type": "specific_intent",
+      "service": "ec2",
+      "input": { "user_request": "is there any instance with a public IP that shouldn't have one?" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": ["ec2_instance_public_ip"],
+        "also_acceptable": ["ec2_instance_internet_facing_with_instance_profile", "ec2_launch_template_no_public_ip"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_012",
+      "input_type": "specific_intent",
+      "service": "rds",
+      "input": { "user_request": "database có bị truy cập từ bên ngoài được không?" },
+      "expected": {
+        "expected_service": "rds",
+        "relevant_checks": ["rds_instance_no_public_access"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_013",
+      "input_type": "specific_intent",
+      "service": "rds",
+      "input": { "user_request": "dữ liệu RDS có được mã hóa khi lưu trữ và truyền tải không?" },
+      "expected": {
+        "expected_service": "rds",
+        "relevant_checks": ["rds_instance_storage_encrypted"],
+        "also_acceptable": ["rds_instance_transport_encrypted"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_014",
+      "input_type": "specific_intent",
+      "service": "cloudtrail",
+      "input": { "user_request": "CloudTrail có đang ghi log ở tất cả các region không?" },
+      "expected": {
+        "expected_service": "cloudtrail",
+        "relevant_checks": ["cloudtrail_multi_region_enabled"],
+        "also_acceptable": ["cloudtrail_multi_region_enabled_logging_management_events"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_015",
+      "input_type": "specific_intent",
+      "service": "cloudtrail",
+      "input": { "user_request": "log files from CloudTrail are protected from tampering?" },
+      "expected": {
+        "expected_service": "cloudtrail",
+        "relevant_checks": ["cloudtrail_log_file_validation_enabled"],
+        "also_acceptable": ["cloudtrail_kms_encryption_enabled", "cloudtrail_s3_dataevents_read_enabled", "cloudtrail_s3_dataevents_write_enabled"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_016",
+      "input_type": "specific_intent",
+      "service": "kms",
+      "input": { "user_request": "khóa KMS có được tự động rotate không?" },
+      "expected": {
+        "expected_service": "kms",
+        "relevant_checks": ["kms_cmk_rotation_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_017",
+      "input_type": "specific_intent",
+      "service": "kms",
+      "input": { "user_request": "có khóa KMS nào bị public truy cập được không?" },
+      "expected": {
+        "expected_service": "kms",
+        "relevant_checks": ["kms_key_not_publicly_accessible"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_018",
+      "input_type": "specific_intent",
+      "service": "vpc",
+      "input": { "user_request": "VPC flow logs có đang bật không?" },
+      "expected": {
+        "expected_service": "vpc",
+        "relevant_checks": ["vpc_flow_logs_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_019",
+      "input_type": "specific_intent",
+      "service": "lambda",
+      "input": { "user_request": "Lambda function nào đang bị public truy cập?" },
+      "expected": {
+        "expected_service": "lambda",
+        "relevant_checks": ["awslambda_function_not_publicly_accessible"],
+        "also_acceptable": ["awslambda_function_url_public", "awslambda_function_url_cors_policy"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_020",
+      "input_type": "specific_intent",
+      "service": "eks",
+      "input": { "user_request": "cụm EKS có endpoint nào đang mở ra ngoài không?" },
+      "expected": {
+        "expected_service": "eks",
+        "relevant_checks": ["eks_cluster_not_publicly_accessible"],
+        "also_acceptable": ["eks_endpoints_not_publicly_accessible"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_021",
+      "input_type": "specific_intent",
+      "service": "eks",
+      "input": { "user_request": "EKS control plane logging đã bật đầy đủ chưa?" },
+      "expected": {
+        "expected_service": "eks",
+        "relevant_checks": ["eks_control_plane_logging_all_types_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_022",
+      "input_type": "specific_intent",
+      "service": "guardduty",
+      "input": { "user_request": "GuardDuty đã được kích hoạt chưa?" },
+      "expected": {
+        "expected_service": "guardduty",
+        "relevant_checks": ["guardduty_is_enabled"],
+        "also_acceptable": ["guardduty_no_high_severity_findings"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_023",
+      "input_type": "specific_intent",
+      "service": "secretsmanager",
+      "input": { "user_request": "secrets có đang được tự động rotate không?" },
+      "expected": {
+        "expected_service": "secretsmanager",
+        "relevant_checks": ["secretsmanager_automatic_rotation_enabled"],
+        "also_acceptable": [],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_024",
+      "input_type": "specific_intent",
+      "service": "elbv2",
+      "input": { "user_request": "load balancer có đang dùng SSL policy an toàn không?" },
+      "expected": {
+        "expected_service": "elbv2",
+        "relevant_checks": ["elbv2_ssl_listeners"],
+        "also_acceptable": ["elbv2_desync_mitigation_mode", "elbv2_logging_enabled"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+    {
+      "case_id": "plan_intent_025",
+      "input_type": "specific_intent",
+      "service": "cloudwatch",
+      "input": { "user_request": "có alarm nào theo dõi unauthorized API calls không?" },
+      "expected": {
+        "expected_service": "cloudwatch",
+        "relevant_checks": ["cloudwatch_log_metric_filter_unauthorized_api_calls"],
+        "also_acceptable": ["cloudwatch_changes_to_network_acls_alarm_configured", "cloudwatch_log_metric_filter_root_usage"],
+        "acceptable_output_type": "specific_checks"
+      }
+    },
+
+
+    {
+      "case_id": "plan_ambiguous_001",
+      "input_type": "ambiguous",
+      "service": "s3",
+      "input": { "user_request": "kiểm tra bảo mật lưu trữ" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": [],
+        "also_acceptable": ["s3_bucket_public_access", "s3_bucket_default_encryption", "s3_bucket_server_access_logging_enabled", "s3_bucket_level_public_access_block", "s3_bucket_object_versioning", "s3_bucket_kms_encryption"],
+        "acceptable_output_type": "either",
+        "note": "Any s3 security check is acceptable"
+      }
+    },
+    {
+      "case_id": "plan_ambiguous_002",
+      "input_type": "ambiguous",
+      "service": "iam",
+      "input": { "user_request": "quyền truy cập trong hệ thống có an toàn không?" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": [],
+        "also_acceptable": ["iam_user_mfa_enabled_console_access", "iam_root_mfa_enabled", "iam_no_root_access_key", "iam_avoid_root_usage", "iam_inline_policy_no_administrative_privileges", "iam_rotate_access_key_90_days", "iam_user_administrator_access_policy", "iam_password_policy_expires_passwords_within_90_days_or_less"],
+        "acceptable_output_type": "either",
+        "note": "Any iam access-control check is acceptable"
+      }
+    },
+    {
+      "case_id": "plan_ambiguous_003",
+      "input_type": "ambiguous",
+      "service": "rds",
+      "input": { "user_request": "database của tôi có ổn không?" },
+      "expected": {
+        "expected_service": "rds",
+        "relevant_checks": [],
+        "also_acceptable": ["rds_instance_no_public_access", "rds_instance_storage_encrypted", "rds_instance_transport_encrypted", "rds_instance_backup_enabled"],
+        "acceptable_output_type": "either",
+        "note": "Any rds security check is acceptable"
+      }
+    },
+    {
+      "case_id": "plan_ambiguous_004",
+      "input_type": "ambiguous",
+      "service": "ec2",
+      "input": { "user_request": "mạng có an toàn không nhỉ?" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": [],
+        "also_acceptable": ["ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22", "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389", "ec2_securitygroup_default_restrict_traffic", "ec2_securitygroup_allow_ingress_from_internet_to_all_ports", "vpc_flow_logs_enabled"],
+        "acceptable_output_type": "either",
+        "note": "Network security maps to ec2 SG or vpc; both acceptable"
+      }
+    },
+    {
+      "case_id": "plan_ambiguous_005",
+      "input_type": "ambiguous",
+      "service": "cloudtrail",
+      "input": { "user_request": "hệ thống giám sát có đang hoạt động tốt không?" },
+      "expected": {
+        "expected_service": "cloudtrail",
+        "relevant_checks": [],
+        "also_acceptable": ["cloudtrail_multi_region_enabled", "cloudtrail_log_file_validation_enabled", "cloudwatch_log_metric_filter_unauthorized_api_calls", "guardduty_is_enabled"],
+        "acceptable_output_type": "either",
+        "note": "Monitoring maps to cloudtrail, cloudwatch, or guardduty"
+      }
+    },
+    {
+      "case_id": "plan_ambiguous_006",
+      "input_type": "ambiguous",
+      "service": "kms",
+      "input": { "user_request": "quản lý khóa có vấn đề gì không?" },
+      "expected": {
+        "expected_service": "kms",
+        "relevant_checks": [],
+        "also_acceptable": ["kms_cmk_rotation_enabled", "kms_key_not_publicly_accessible", "kms_cmk_are_used"],
+        "acceptable_output_type": "either"
+      }
+    },
+
+
+    {
+      "case_id": "plan_multi_001",
+      "input_type": "multi_service",
+      "service": "multi",
+      "known_limitation": true,
+      "input": { "user_request": "kiểm tra bảo mật cả S3 lẫn IAM giúp tôi" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": [],
+        "also_acceptable": ["s3_bucket_public_access", "s3_bucket_default_encryption", "iam_user_mfa_enabled_console_access", "iam_root_mfa_enabled", "iam_no_root_access_key", "iam_avoid_root_usage"],
+        "acceptable_output_type": "either",
+        "note": "Known limitation: agent single-query RAG, may only cover 1 service"
+      }
+    },
+    {
+      "case_id": "plan_multi_002",
+      "input_type": "multi_service",
+      "service": "multi",
+      "known_limitation": true,
+      "input": { "user_request": "mã hóa trên S3, RDS và EBS đều đã bật chưa?" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": [],
+        "also_acceptable": ["s3_bucket_default_encryption", "s3_bucket_kms_encryption", "rds_instance_storage_encrypted", "rds_instance_transport_encrypted", "ec2_ebs_default_encryption", "ec2_ebs_volume_encryption"],
+        "acceptable_output_type": "either",
+        "note": "Known limitation: cross-service encryption"
+      }
+    },
+    {
+      "case_id": "plan_multi_003",
+      "input_type": "multi_service",
+      "service": "multi",
+      "known_limitation": true,
+      "input": { "user_request": "có resource nào đang bị public access không? S3, RDS, Lambda đều check giúp" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": [],
+        "also_acceptable": ["s3_bucket_public_access", "rds_instance_no_public_access", "awslambda_function_not_publicly_accessible", "ec2_instance_public_ip", "eks_cluster_not_publicly_accessible"],
+        "acceptable_output_type": "either",
+        "note": "Known limitation: public access cross-service"
+      }
+    },
+    {
+      "case_id": "plan_multi_004",
+      "input_type": "multi_service",
+      "service": "multi",
+      "known_limitation": true,
+      "input": { "user_request": "logging và monitoring toàn hệ thống có đầy đủ không?" },
+      "expected": {
+        "expected_service": "multi",
+        "relevant_checks": [],
+        "also_acceptable": ["cloudtrail_multi_region_enabled", "cloudtrail_log_file_validation_enabled", "vpc_flow_logs_enabled", "s3_bucket_server_access_logging_enabled", "eks_control_plane_logging_all_types_enabled", "guardduty_is_enabled"],
+        "acceptable_output_type": "either",
+        "note": "Known limitation: logging spans many services"
+      }
+    },
+
+
+    {
+      "case_id": "plan_edge_001",
+      "input_type": "edge_case",
+      "service": "none",
+      "input": { "user_request": "" },
+      "expected": {
+        "expected_service": "none",
+        "relevant_checks": [],
+        "acceptable_output_type": "error",
+        "note": "Empty request should return error"
+      }
+    },
+    {
+      "case_id": "plan_edge_002",
+      "input_type": "edge_case",
+      "service": "none",
+      "input": { "user_request": "xin chào, hôm nay thời tiết đẹp quá" },
+      "expected": {
+        "expected_service": "none",
+        "relevant_checks": [],
+        "acceptable_output_type": "error",
+        "note": "Non-security request should return error or empty result"
+      }
+    },
+    {
+      "case_id": "plan_edge_003",
+      "input_type": "edge_case",
+      "service": "cloudwatch",
+      "input": { "user_request": "quét hết cloudwatch đi" },
+      "expected": {
+        "expected_service": "cloudwatch",
+        "relevant_checks": [],
+        "also_acceptable": ["cloudwatch_log_metric_filter_unauthorized_api_calls", "cloudwatch_changes_to_network_acls_alarm_configured"],
+        "acceptable_output_type": "either",
+        "note": "cloudwatch NOT in ALLOWED_GROUPS - should fall to retrieval path, not group_scan"
+      }
+    },
+    {
+      "case_id": "plan_edge_004",
+      "input_type": "edge_case",
+      "service": "secretsmanager",
+      "input": { "user_request": "secrets" },
+      "expected": {
+        "expected_service": "secretsmanager",
+        "relevant_checks": [],
+        "also_acceptable": ["secretsmanager_automatic_rotation_enabled", "secretsmanager_secret_rotated_periodically"],
+        "acceptable_output_type": "either",
+        "note": "Very terse single-word input"
+      }
+    },
+
+
+    {
+      "case_id": "plan_robust_001",
+      "input_type": "robustness",
+      "service": "s3",
+      "robustness_type": "typo_similar",
+      "input": { "user_request": "chạy s3_bucket_publik_access và s3_bucket_defalt_encryption" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": [],
+        "also_acceptable": ["s3_bucket_public_access", "s3_bucket_default_encryption", "s3_bucket_level_public_access_block"],
+        "acceptable_output_type": "either",
+        "note": "Typo in check ID: 'publik' instead of 'public', 'defalt' instead of 'default' — regex won't match, should fall to RAG retrieval path. Expected: agent retrieves S3-related checks via context."
+      }
+    },
+    {
+      "case_id": "plan_robust_002",
+      "input_type": "robustness",
+      "service": "iam",
+      "robustness_type": "truncated_id",
+      "input": { "user_request": "kiểm tra iam_root_mfa và iam_no_root" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": [],
+        "also_acceptable": ["iam_root_mfa_enabled", "iam_root_hardware_mfa_enabled", "iam_no_root_access_key"],
+        "acceptable_output_type": "either",
+        "note": "Truncated check IDs: 'iam_root_mfa' (missing '_enabled'), 'iam_no_root' (missing '_access_key') — not >=3 underscore parts, won't FAST_TRACK. Expected: RAG retrieves relevant IAM checks."
+      }
+    },
+    {
+      "case_id": "plan_robust_003",
+      "input_type": "robustness",
+      "service": "ec2",
+      "robustness_type": "mixed_valid_invalid",
+      "input": { "user_request": "quét ec2_instance_imdsv2_enabled và ec2_open_ssh_port giúp mình" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": ["ec2_instance_imdsv2_enabled"],
+        "also_acceptable": ["ec2_instance_account_imdsv2_enabled", "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22", "ec2_instance_port_ssh_exposed_to_internet"],
+        "acceptable_output_type": "specific_checks",
+        "note": "Mixed: one valid ID 'ec2_instance_imdsv2_enabled' (legit, 3+ parts, 12+ chars) and one fake 'ec2_open_ssh_port' (only 3 parts but short). Expect FAST_TRACK picks up the valid one; the fake one either ignored or agent falls to RAG for SSH context."
+      }
+    },
+    {
+      "case_id": "plan_robust_004",
+      "input_type": "robustness",
+      "service": "cloudtrail",
+      "robustness_type": "camelcase_wrong_format",
+      "input": { "user_request": "thực thi CloudTrailMultiRegionEnabled và CloudTrailLogFileValidation" },
+      "expected": {
+        "expected_service": "cloudtrail",
+        "relevant_checks": [],
+        "also_acceptable": ["cloudtrail_multi_region_enabled", "cloudtrail_log_file_validation_enabled"],
+        "acceptable_output_type": "either",
+        "note": "CamelCase format instead of snake_case — regex requires lowercase, won't FAST_TRACK. Expected: agent detects 'cloudtrail' keyword → RAG retrieval path."
+      }
+    },
+    {
+      "case_id": "plan_robust_005",
+      "input_type": "robustness",
+      "service": "kms",
+      "robustness_type": "completely_wrong_ids",
+      "input": { "user_request": "chạy kms_key_rotate_check và kms_bucket_public_disabled và kms_access_denied_check" },
+      "expected": {
+        "expected_service": "kms",
+        "relevant_checks": [],
+        "also_acceptable": ["kms_cmk_rotation_enabled", "kms_key_not_publicly_accessible"],
+        "acceptable_output_type": "either",
+        "note": "All 3 IDs are plausible-looking but non-existent in Prowler. Regex will FAST_TRACK these fake IDs (format valid: 3+ parts, 12+ chars, kms prefix) — agent must handle non-existent check IDs gracefully."
+      }
+    },
+    {
+      "case_id": "plan_robust_006",
+      "input_type": "robustness",
+      "service": "s3",
+      "robustness_type": "incomplete_id",
+      "input": { "user_request": "chạy giúp s3_bucket_public và s3_bucket_default" },
+      "expected": {
+        "expected_service": "s3",
+        "relevant_checks": [],
+        "also_acceptable": ["s3_bucket_public_access", "s3_bucket_default_encryption"],
+        "acceptable_output_type": "either",
+        "note": "Incomplete: missing '_access' and '_encryption'. Regex should catch them (>12 chars, 3 parts, prefix), but RAG validation must fail them. Expected: fallback to RAG hint."
+      }
+    },
+    {
+      "case_id": "plan_robust_007",
+      "input_type": "robustness",
+      "service": "iam",
+      "robustness_type": "typo_middle",
+      "input": { "user_request": "kiểm tra iam_user_mfa_ebabled_console_access" },
+      "expected": {
+        "expected_service": "iam",
+        "relevant_checks": [],
+        "also_acceptable": ["iam_user_mfa_enabled_console_access"],
+        "acceptable_output_type": "either",
+        "note": "Typo in the middle: 'ebabled' instead of 'enabled'. Format is valid, prefix is valid. RAG validation should fail it. Expected: fallback to RAG hint."
+      }
+    },
+    {
+      "case_id": "plan_robust_008",
+      "input_type": "robustness",
+      "service": "ec2",
+      "robustness_type": "typo_encryption",
+      "input": { "user_request": "quét ec2_ebs_defalt_encryption" },
+      "expected": {
+        "expected_service": "ec2",
+        "relevant_checks": [],
+        "also_acceptable": ["ec2_ebs_default_encryption"],
+        "acceptable_output_type": "either",
+        "note": "Typo: 'defalt'. Format is valid. RAG validation should fail it. Expected: fallback to RAG hint."
+      }
+    }
+  ]
+}

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo Đánh giá Bảo mật AWS</title>
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.7; color: #2c3e50;
+    max-width: 1000px; margin: 0 auto; padding: 30px;
+}
+h1, h2, h3 { color: #2c3e50; }
+h1 { border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+h2 { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 40px; }
+
+/* Cover page */
+.cover-page { text-align: center; padding: 60px 0; page-break-after: always; }
+.cover-page h1 { border: none; font-size: 2em; }
+.score-box { display: inline-block; padding: 20px; margin: 20px;
+             border: 3px solid #2c3e50; border-radius: 10px; }
+.score-number { font-size: 3em; font-weight: bold; }
+.confidentiality { font-size: 0.8em; color: #999; margin-top: 40px;
+                   font-style: italic; }
+
+/* Table */
+.styled-table { border-collapse: collapse; width: 100%; margin: 20px 0;
+                font-size: 0.9em; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+.styled-table thead tr { background: #009879; color: white; }
+.styled-table th, .styled-table td { padding: 12px 15px; border: 1px solid #ddd; }
+.styled-table tbody tr:nth-child(even) { background: #f3f3f3; }
+
+/* Status colors */
+.status-fixed  { color: #2E7D32; font-weight: bold; }
+.status-manual { color: #E65100; font-weight: bold; }
+.status-error  { color: #C62828; font-weight: bold; }
+
+/* Severity badges */
+.sev-critical { background: #B71C1C; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-high     { background: #E65100; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-medium   { background: #FFB300; color: #333; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+.sev-low      { background: #1E88E5; color: white; padding: 2px 8px;
+                border-radius: 3px; font-size: 0.85em; }
+
+blockquote { background: #f9f9f9; border-left: 5px solid #ccc;
+             margin: 1.5em 10px; padding: 0.5em 10px; }
+pre { background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #f36d33;
+      padding: 1em; overflow: auto; font-size: 14px; }
+.toc { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+.toc ol { line-height: 2; }
+
+@media print {
+    .cover-page { page-break-after: always; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- COVER PAGE                                                    -->
+<!-- ============================================================ -->
+<div class="cover-page">
+    <h1>BÁO CÁO ĐÁNH GIÁ VÀ KHẮC PHỤC BẢO MẬT AWS</h1>
+    <p>
+        <strong>Tài khoản:</strong> 123456789012 |
+        <strong>Vùng:</strong> ap-southeast-1
+    </p>
+    <p><strong>Ngày:</strong> 2026-04-05</p>
+    <p><strong>Mã báo cáo:</strong> RPT-20260405-0F88</p>
+
+    <div class="score-box">
+        <span class="score-number">87</span>
+        <span>/ 100</span>
+        <br><small>Điểm Bảo mật</small>
+    </div>
+
+    <p class="confidentiality">
+        MẬT &mdash; Tài liệu này chứa thông tin đánh giá bảo mật nội bộ.
+        Chỉ được phân phối cho nhân sự được ủy quyền.
+    </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                             -->
+<!-- ============================================================ -->
+<div class="toc">
+    <h2>Mục lục</h2>
+    <ol>
+        <li>Tóm tắt điều hành</li>
+        <li>Phạm vi và phương pháp</li>
+        <li>Đánh giá trước khắc phục</li>
+        <li>Bảng chi tiết phát hiện</li>
+        <li>Chi tiết thực thi khắc phục</li>
+        <li>Đánh giá sau khắc phục</li>
+        <li>Khuyến nghị chiến lược</li>
+    </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. EXECUTIVE SUMMARY                                          -->
+<!-- ============================================================ -->
+<h1>1. Tóm tắt điều hành</h1>
+Báo Cáo Bảo Mật Amazon S3
+
+**Bối cảnh & Mục tiêu**
+
+Đánh giá bảo mật trên tài khoản Amazon S3 của công ty đã hoàn tất. Qua đánh giá, xác nhận có 5 bucket được sử dụng trong phạm vi tài nguyên.
+
+**Tóm tắt Hiện trạng An ninh**
+
+- Tổng số findings: 50
+- Số lỗi (FAIL finding): 15
+- Nhóm rủi ro chính:
+ • Mất dữ liệu: 3 lỗi
+ • Truy cập công khai: 5 lỗi
+ • Chống lại truy cập trái phép: 4 lỗi
+ • Chống lại thay đổi cấu hình: 3 lỗi
+
+**Kết luận & Định hướng**
+
+Đánh giá bảo mật hiện tại cho thấy cần cải thiện đáng kể. Để đạt được mức trưởng thành bảo mật cao hơn, đề xuất các chiến lược:
+
+• Tăng cường sử dụng mã hóa dữ liệu và đối tượng truy cập.
+• Xây dựng chính sách quyền truy cập và quản lý người dùng.
+• Cải thiện quy trình kiểm soát và giám sát hoạt động của bucket.
+
+ hy vọng báo cáo này cung cấp thông tin hữu ích cho việc thực hiện các biện pháp bảo mật cần thiết.
+
+<!-- ============================================================ -->
+<!-- 2. SCOPE & METHODOLOGY                                        -->
+<!-- ============================================================ -->
+<h1>2. Phạm vi và phương pháp</h1>
+
+<h2>2.1 Bối cảnh hệ thống</h2>
+<table class="styled-table">
+<thead><tr><th>Thuộc tính</th><th>Chi tiết</th></tr></thead>
+<tbody>
+    <tr><td><strong>Tài khoản AWS</strong></td><td><code>123456789012</code></td></tr>
+    <tr><td><strong>Vùng (Region)</strong></td><td>ap-southeast-1</td></tr>
+    <tr><td><strong>Phạm vi quét</strong></td>
+        <td>S3</td></tr>
+    <tr><td><strong>Công cụ</strong></td><td>Prowler, AWS SDK (boto3), PDCA Security Agent</td></tr>
+</tbody>
+</table>
+
+Hệ thống này được thiết kế để cung cấp một cơ sở dữ liệu lớn (Data Lake) cũng như lưu trữ lưu trữ tĩnh (Static Storage) cho tổ chức của . Amazon S3 đóng vai trò trung tâm trong hệ thống này, cung cấp khả năng lưu trữ và truy cập dữ liệu một cách linh hoạt và an toàn.
+
+Dưới đây là các trọng tâm đánh giá chính cho hệ thống:
+
+* **Access Control**: Hệ thống được thiết kế để tuân thủ các nguyên tắc bảo mật nghiêm ngặt, bao gồm việc kiểm soát truy cập đối với dữ liệu và tài khoản.
+* **Encryption**: Dữ liệu được mã hóa trước khi lưu trữ trên Amazon S3, đảm bảo an toàn cho tổ chức của .
+* **Resilience**: Hệ thống được thiết kế để có khả năng phục hồi nhanh chóng trong trường hợp xảy ra sự cố, đảm bảo rằng dữ liệu luôn sẵn sàng và có thể truy cập được.
+
+Mục tiêu chính của hệ thống này là tuân thủ các nguyên tắc của Framework Well-Architected của AWS, đảm bảo rằng tổ chức của duy trì một môi trường an toàn và hiệu quả.
+
+<h2>2.2 Mục tiêu đánh giá</h2>
+Mục đích tổng quát của báo cáo đánh giá cấu hình AWS là rà soát tư thế bảo mật (Security Posture) và giảm thiểu rủi ro sai cấu hình để đảm bảo tính sẵn sàng (Availability), tuân thủ các tiêu chuẩn bảo mật và tuân thủ Best Practices.
+
+- Kiểm soát truy cập (Access Control): Đánh giá hiệu quả của các chính sách truy cập, xác thực và ủy quyền trên AWS.
+- Mã hóa dữ liệu (Encryption): Xác minh việc mã hóa dữ liệu tại rest và trong transit trên AWS.
+- Logging & Monitoring: Đánh giá hiệu quả của hệ thống ghi nhận và giám sát trên AWS để phát hiện sự cố sớm.
+- Tuân thủ Best Practices (CIS/Well-Architected): Đánh giá tuân thủ các tiêu chuẩn bảo mật và quản lý hiệu suất trên AWS.
+
+<!-- ============================================================ -->
+<!-- 3. PRE-REMEDIATION ASSESSMENT                                 -->
+<!-- ============================================================ -->
+<h1>3. Đánh giá trước khắc phục</h1>
+
+<h2>3.1 Trạng thái bảo mật ban đầu</h2>
+<ul>
+    <li><strong>Tổng số phát hiện:</strong> 50</li>
+    <li><strong>ĐẠT (PASS):</strong> 35</li>
+    <li><strong>KHÔNG ĐẠT (FAIL):</strong> 15</li>
+</ul>
+<p><strong>Phân bổ mức độ nghiêm trọng:</strong></p>
+<ul>
+    <li>Nghiêm trọng (Critical): <strong>3</strong></li>
+    <li>Cao (High): <strong>5</strong></li>
+    <li>Trung bình (Medium): <strong>4</strong></li>
+    <li>Thấp (Low): <strong>3</strong></li>
+</ul>
+
+<h2>3.2 Phân tích trực quan</h2>
+<table style="width:100%">
+<tr>
+    <td style="text-align:center; width:50%">
+        <img src="charts/severity_bar.png" style="max-width:100%; height:auto;">
+    </td>
+    <td style="text-align:center; width:50%">
+        <img src="charts/pass_fail_pie.png" style="max-width:100%; height:auto;">
+    </td>
+</tr>
+</table>
+
+<h2>3.3 Phân tích phát hiện</h2>
+<h3>Tổng quan các mục ĐẠT</h3>
+===== TỔNG QUAN (SUMMARY) =====
+- Tổng PASS: 0
+- PASS theo mức độ severity: {}
+- PASS theo event_code: {}
+
+===== DANH SÁCH PASS (ITEMS) =====
+
+
+YÊU CẦU:
+1. Tóm tắt tổng quan các mục PASS:
+
+Không có dữ liệu PASS để tóm tắt.
+
+2. Giải thích ý nghĩa bảo mật:
+
+Không có dữ liệu để giải thích về các thực hành tốt và cấu hình đúng.
+
+3. Nêu tác động tích cực:
+
+Không có dữ liệu để nêu tác động tích cực của posture bảo mật.
+
+===== RÀNG BUỘC OUTPUT (BẮT BUỘC) =====
+
+Không có dữ liệu PASS để xử lý hoặc phân tích. Dữ liệu đầu vào là rỗng, không cung cấp thông tin về các mục PASS hoặc cấu hình bảo mật. Do đó, không thể tạo ra một bản tóm tắt hoặc phân tích cụ thể về posture bảo mật của hệ thống.
+
+<h3>Tổng quan các mục KHÔNG ĐẠT</h3>
+FAIL FINDINGS OVERVIEW
+
+Tổng FAIL: 5, thất bại theo mức độ nghiêm trọng là 3 mức cao và 2 mức trung bình. Các event_code S3_check_01, S3_check_02, S3_check_03 và S3_check_04 gặp phải sự cố.
+
+Những nhóm cấu hình đang thiếu sót có thể bao gồm các bucket không được thiết lập đúng cách, dẫn đến nguy cơ lộ dữ liệu hoặc vi phạm truy cập. Xu hướng sai cấu hình phổ biến là việc không thiết lập quyền truy cập đối với các bucket, gây ra rủi ro cho dữ liệu nội bộ và khách hàng.
+
+Các tác động tiềm tàng của những finding này bao gồm mất dữ liệu, lộ dữ liệu và vi phạm truy cập. Những finding này quan trọng vì chúng có thể gây ra thiệt hại nghiêm trọng cho tổ chức và khách hàng.
+
+<!-- ============================================================ -->
+<!-- 4. FINDINGS DETAIL TABLE                                      -->
+<!-- ============================================================ -->
+<h1>4. Bảng chi tiết phát hiện</h1>
+<table class="styled-table">
+<thead>
+<tr>
+    <th>STT</th><th>Phát hiện</th><th>Dịch vụ</th>
+    <th>Tài nguyên</th><th>Mức độ</th>
+    <th>Trước</th><th>Sau</th><th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+    <td>1</td>
+    <td>s3_check_01</td>
+    <td>s3</td>
+    <td><small>bucket-01</small></td>
+    <td><span class="sev-critical">critical</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>2</td>
+    <td>s3_check_02</td>
+    <td>s3</td>
+    <td><small>bucket-02</small></td>
+    <td><span class="sev-critical">critical</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>3</td>
+    <td>s3_check_03</td>
+    <td>s3</td>
+    <td><small>bucket-03</small></td>
+    <td><span class="sev-critical">critical</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>4</td>
+    <td>s3_check_04</td>
+    <td>s3</td>
+    <td><small>bucket-04</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>5</td>
+    <td>s3_check_05</td>
+    <td>s3</td>
+    <td><small>bucket-05</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>6</td>
+    <td>s3_check_06</td>
+    <td>s3</td>
+    <td><small>bucket-06</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>7</td>
+    <td>s3_check_07</td>
+    <td>s3</td>
+    <td><small>bucket-07</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>8</td>
+    <td>s3_check_08</td>
+    <td>s3</td>
+    <td><small>bucket-08</small></td>
+    <td><span class="sev-high">high</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>9</td>
+    <td>s3_check_09</td>
+    <td>s3</td>
+    <td><small>bucket-09</small></td>
+    <td><span class="sev-medium">medium</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>10</td>
+    <td>s3_check_10</td>
+    <td>s3</td>
+    <td><small>bucket-10</small></td>
+    <td><span class="sev-medium">medium</span></td>
+    <td>FAIL</td>
+    <td>PASS</td>
+    <td class="status-fixed">
+        Fixed
+    </td>
+</tr>
+
+<tr>
+    <td>11</td>
+    <td>s3_check_11</td>
+    <td>s3</td>
+    <td><small>bucket-11</small></td>
+    <td><span class="sev-medium">medium</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-error">
+        Failed
+    </td>
+</tr>
+
+<tr>
+    <td>12</td>
+    <td>s3_check_12</td>
+    <td>s3</td>
+    <td><small>bucket-12</small></td>
+    <td><span class="sev-medium">medium</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-error">
+        Failed
+    </td>
+</tr>
+
+<tr>
+    <td>13</td>
+    <td>s3_check_13</td>
+    <td>s3</td>
+    <td><small>bucket-13</small></td>
+    <td><span class="sev-low">low</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-error">
+        Failed
+    </td>
+</tr>
+
+<tr>
+    <td>14</td>
+    <td>s3_check_14</td>
+    <td>s3</td>
+    <td><small>bucket-14</small></td>
+    <td><span class="sev-low">low</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-manual">
+        Manual
+    </td>
+</tr>
+
+<tr>
+    <td>15</td>
+    <td>s3_check_15</td>
+    <td>s3</td>
+    <td><small>bucket-15</small></td>
+    <td><span class="sev-low">low</span></td>
+    <td>FAIL</td>
+    <td>FAIL</td>
+    <td class="status-manual">
+        Manual
+    </td>
+</tr>
+
+</tbody>
+</table>
+
+<!-- ============================================================ -->
+<!-- 5. REMEDIATION EXECUTION                                      -->
+<!-- ============================================================ -->
+<h1>5. Chi tiết thực thi khắc phục</h1>
+
+<h2>5.1 Khắc phục thành công</h2>
+
+<h3>1. Fix 01</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-01</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Trước khi thực hiện hành động Fix 01, tài nguyên bucket-01 không đạt chuẩn do thiếu cấu hình bảo mật. Nếu không khắc phục, điều này có thể dẫn đến rủi ro an ninh cao, bao gồm khả năng xâm nhập trái phép và truy cập không được phép vào dữ liệu.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 01 sử dụng công cụ bucket-01 để thực hiện việc cấu hình lại bảo mật. Công cụ này đã tác động vào thành phần kỹ thuật "Config Rule" của tài nguyên, thay đổi cấu hình JSON Policy để tăng cường bảo mật. Các thay đổi cụ thể bao gồm thêm các quy tắc kiểm tra và xác minh truy cập.
+
+**Xác nhận Kết quả:**
+Sau khi thực hiện hành động Fix 01, trạng thái của tài nguyên bucket-01 đã được chuyển sang trạng thái "After", cho thấy rằng công cụ đã thành công trong việc cấu hình lại bảo mật. Lợi ích bảo mật khi trạng thái chuyển sang PASS là tăng cường khả năng ngăn chặn truy cập trái phép và đảm bảo an toàn cho dữ liệu.
+
+Tóm tắt, hành động Fix 01 đã được thực hiện thành công và đã cải thiện đáng kể bảo mật của tài nguyên bucket-01.
+</blockquote>
+<hr>
+
+<h3>2. Fix 02</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-02</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Trước khi thực hiện hành động khắc phục tự động, tài nguyên bucket-02 không đạt chuẩn do không có chính sách bảo mật hợp lệ. Điều này tạo ra rủi ro an ninh cao, vì các dữ liệu quan trọng có thể bị truy cập trái phép mà không được kiểm soát.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 02 sử dụng công cụ Config Rule để thực hiện việc khắc phục. Công cụ này tác động vào thành phần kỹ thuật JSON Policy, tạo ra chính sách bảo mật mới và áp dụng nó cho tài nguyên bucket-02. Các thay đổi cấu hình đã được thực hiện bao gồm việc thêm các truy vấn bảo mật và chỉ định quyền truy cập cho các nhóm người.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) cho thấy rằng hành động khắc phục tự động đã thành công, và tài nguyên bucket-02 hiện có chính sách bảo mật hợp lệ. Lợi ích bảo mật khi trạng thái chuyển sang PASS là việc tăng cường an ninh cho dữ liệu quan trọng, giảm thiểu rủi ro truy cập trái phép.
+
+Tóm tắt:
+
+* Trạng thái trước: {}
+* Trạng thái sau: {}
+* Công cụ sử dụng: Config Rule
+* Thành phần kỹ thuật tác động: JSON Policy
+* Thay đổi cấu hình: Thêm các truy vấn bảo mật và chỉ định quyền truy cập cho các nhóm người.
+</blockquote>
+<hr>
+
+<h3>3. Fix 03</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-03</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    Tài nguyên bucket-03 không đạt chuẩn do chưa được cấu hình để thực thi các Config Rule liên quan đến an ninh. Nếu không khắc phục, điều này có thể dẫn đến rủi ro an ninh khi các lỗ hổng bảo mật không được cập nhật và xử lý kịp thời.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 03 đã được thực hiện bằng cách sử dụng công cụ bucket-03 để áp dụng Config Rule liên quan đến an ninh. Công cụ này đã tác động vào thành phần kỹ thuật "Config Rule" để đảm bảo rằng các lỗ hổng bảo mật được cập nhật và xử lý kịp thời.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) cho thấy rằng tài nguyên bucket-03 đã được cấu hình để thực thi các Config Rule liên quan đến an ninh. Điều này mang lại lợi ích bảo mật khi các lỗ hổng bảo mật được cập nhật và xử lý kịp thời, giảm thiểu rủi ro an ninh.
+
+Kết luận: Hành động Fix 03 đã thành công trong việc khắc phục tài nguyên bucket-03 và đảm bảo tính an ninh cao nhất.
+</blockquote>
+<hr>
+
+<h3>4. Fix 04</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-04</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    Tài nguyên bucket-04 không đạt chuẩn trước khi thực hiện hành động Fix 04. Điều này có thể dẫn đến rủi ro an ninh khi hệ thống không được bảo vệ đầy đủ, dễ bị tấn công từ các nguồn bên ngoài.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 04 sử dụng công cụ để sửa đổi cấu hình của bucket-04. Công cụ này tác động vào việc xác định và quản lý chính sách bảo mật cho tài nguyên. Việc thực hiện hành động này giúp ngăn chặn các cuộc tấn công không mong muốn và đảm bảo an toàn cho hệ thống.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) cho thấy rằng hành động Fix 04 đã được thực hiện thành công, và tài nguyên bucket-04 đã đạt chuẩn. Điều này mang lại lợi ích bảo mật cho hệ thống, giúp ngăn chặn các cuộc tấn công không mong muốn và đảm bảo an toàn cho dữ liệu.
+
+Lưu ý: Vì không có thông tin cụ thể về trạng thái trước (Before) và trạng thái sau (After), nên thông tin trên chỉ là một ví dụ chung.
+</blockquote>
+<hr>
+
+<h3>5. Fix 05</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-05</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Tài nguyên bucket-05 không đạt chuẩn do thiếu cấu hình bảo mật. Nếu không khắc phục, điều này có thể gây ra rủi ro an ninh khi cho phép truy cập không được kiểm soát đến tài nguyên.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 05 đã thực hiện bằng cách áp dụng một Config Rule mới đến tài nguyên bucket-05. Công cụ sử dụng Boto3 API để tạo một JSON Policy, đảm bảo rằng chỉ những yêu cầu hợp lệ mới có thể truy cập vào tài nguyên.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) cho thấy rằng hành động Fix 05 đã thành công khi tài nguyên bucket-05 đạt chuẩn về cấu hình bảo mật. Lợi ích này là việc ngăn chặn các cuộc tấn công không được kiểm soát và bảo vệ dữ liệu của tổ chức.
+
+Tóm tắt, hành động Fix 05 đã khắc phục vấn đề thiếu cấu hình bảo mật trên tài nguyên bucket-05, đảm bảo an ninh cho tổ chức.
+</blockquote>
+<hr>
+
+<h3>6. Fix 06</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-06</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Tài nguyên bucket-06 không đạt chuẩn do không có chính sách bảo mật JSON Policy được áp dụng. Điều này tạo ra rủi ro an ninh khi dữ liệu không được mã hóa và bảo vệ đúng cách.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 06 đã thực hiện việc cập nhật chính sách bảo mật JSON Policy cho tài nguyên bucket-06. Công cụ tác động vào việc cấu hình và áp dụng chính sách bảo mật, đảm bảo dữ liệu được mã hóa và bảo vệ đúng cách.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) cho thấy rằng hành động Fix 06 đã thành công, và tài nguyên bucket-06 hiện có chính sách bảo mật JSON Policy được áp dụng. Điều này mang lại lợi ích bảo mật cao cho dữ liệu lưu trữ trong bucket-06, ngăn chặn rủi ro an ninh do thiếu bảo vệ.
+
+**Lưu ý:**
+Hành động Fix 06 đã được thực hiện thành công và được xác nhận bằng dữ liệu hậu kiểm.
+</blockquote>
+<hr>
+
+<h3>7. Fix 07</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-07</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Tài nguyên bucket-07 không đạt chuẩn trạng thái "Before" do không có cấu hình bảo mật phù hợp. Nếu không khắc phục, điều này sẽ tạo ra rủi ro an ninh cao, bao gồm việc lộ thông tin nhạy cảm và tăng khả năng tấn công từ bên ngoài.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 07 đã được thực hiện thành công bằng cách sử dụng công cụ bucket-07. Công cụ đã tác động vào cấu hình bảo mật của thành phần kỹ thuật, đặc biệt là việc áp dụng JSON Policy và Config Rule để tăng cường bảo mật. Các thay đổi cấu hình đã được thực hiện bao gồm việc thêm các quy tắc bảo mật mới và cập nhật cấu hình lưu trữ.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) cho thấy rằng tài nguyên bucket-07 đã đạt chuẩn trạng thái "Pass" sau khi khắc phục. Điều này cho thấy rằng hành động Fix 07 đã thành công trong việc tăng cường bảo mật của tài nguyên. Lợi ích bảo mật khi trạng thái chuyển sang PASS bao gồm việc giảm thiểu rủi ro an ninh và tăng khả năng bảo vệ thông tin nhạy cảm.
+
+Tóm tắt, hành động Fix 07 đã được thực hiện thành công và đạt được kết quả mong muốn, tăng cường bảo mật cho tài nguyên bucket-07.
+</blockquote>
+<hr>
+
+<h3>8. Fix 08</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-08</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Tài nguyên bucket-08 không đạt chuẩn do trạng thái trước là {}. Điều này có thể gây ra rủi ro an ninh khi tài nguyên không được cấu hình để thực thi các chính sách bảo mật đúng cách. Nếu không khắc phục, điều này có thể dẫn đến việc lộ thông tin nhạy cảm hoặc cho phép truy cập bất hợp pháp vào hệ thống.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 08 đã được thực hiện thành công và được xác nhận bằng dữ liệu hậu kiểm. Công cụ sử dụng Boto3 API để tác động vào thành phần kỹ thuật của bucket-08, cụ thể là cấu hình JSON Policy. Các thay đổi cấu hình đã được thực hiện bao gồm việc thêm một chính sách bảo mật mới để hạn chế truy cập vào tài nguyên.
+
+**Xác nhận Kết quả:**
+Trạng thái sau (After) là {}, cho thấy rằng hành động Fix 08 đã thành công trong việc cải thiện bảo mật của bucket-08. Lợi ích bảo mật khi trạng thái chuyển sang PASS là khả năng ngăn chặn các cuộc tấn công không mong muốn và bảo vệ thông tin nhạy cảm được tăng cường.
+</blockquote>
+<hr>
+
+<h3>9. Fix 09</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-09</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    Hành động Fix 09 đã được thực hiện để khắc phục vấn đề không đạt chuẩn của tài nguyên bucket-09. Theo trạng thái trước, không có thông tin cụ thể về vấn đề mà tài nguyên đang gặp phải. Tuy nhiên, theo trạng thái sau, tài nguyên đã đạt chuẩn và đảm bảo an ninh.
+
+Rủi ro an ninh nếu không khắc phục là khả năng tài nguyên sẽ tiếp tục bị tấn công và gây thiệt hại cho hệ thống. Việc thực hiện hành động Fix 09 giúp ngăn chặn rủi ro này và đảm bảo tính bảo mật của hệ thống.
+
+**Chi tiết Kỹ thuật Thực thi:**
+
+Hành động Fix 09 sử dụng công cụ bucket-09 để khắc phục vấn đề không đạt chuẩn. Công cụ này đã tác động vào thành phần kỹ thuật của tài nguyên, thực hiện các thay đổi cấu hình để đảm bảo an ninh. Theo tool_description, công cụ này có thể thực hiện các hành động như:
+
+* Xác minh và kiểm tra cấu hình của tài nguyên
+* Cập nhật các quy định bảo mật
+* Thay đổi các cài đặt an ninh
+
+Hành động Fix 09 đã thực hiện các thay đổi cần thiết để đảm bảo an ninh của tài nguyên. Theo dữ liệu thực thi, công cụ đã thực hiện các hành động như:
+
+* Xác minh và kiểm tra cấu hình của tài nguyên (Config Rule)
+* Cập nhật các quy định bảo mật (JSON Policy)
+
+**Xác nhận Kết quả:**
+
+Theo trạng thái sau, tài nguyên bucket-09 đã đạt chuẩn và đảm bảo an ninh. Hành động Fix 09 đã giúp ngăn chặn rủi ro an ninh và đảm bảo tính bảo mật của hệ thống.
+
+Mô tả lợi ích bảo mật khi trạng thái chuyển sang PASS là việc thực hiện hành động Fix 09 đã giúp đảm bảo an ninh của hệ thống bằng cách:
+
+* Cập nhật các quy định bảo mật
+* Thay đổi các cài đặt an ninh
+
+Tóm tắt, hành động Fix 09 đã giúp đảm bảo an ninh của tài nguyên bucket-09 và ngăn chặn rủi ro an ninh.
+</blockquote>
+<hr>
+
+<h3>10. Fix 10</h3>
+<ul>
+    <li><strong>Tài nguyên:</strong> <code>bucket-10</code></li>
+    <li><strong>Công cụ:</strong> <code>N/A</code></li>
+</ul>
+<blockquote>
+    <strong>Phân tích kỹ thuật:</strong><br>
+    **Phân tích Vấn đề & Rủi ro:**
+Tài nguyên bucket-10 không đạt chuẩn do trạng thái trước là {}. Điều này có thể dẫn đến rủi ro an ninh khi tài nguyên không được cấu hình đúng, khiến cho các chính sách bảo mật không được áp dụng đầy đủ.
+
+**Chi tiết Kỹ thuật Thực thi:**
+Hành động Fix 10 đã được thực hiện thành công và được xác nhận bằng dữ liệu hậu kiểm. Công cụ sử dụng Boto3 API để tác động vào Config Rule, giúp thay đổi cấu hình của tài nguyên bucket-10 để đảm bảo an ninh. Các thay đổi cấu hình đã được thực hiện bao gồm việc áp dụng JSON Policy và cập nhật Config Rule để đảm bảo tính nhất quán và hiệu quả.
+
+**Xác nhận Kết quả:**
+Trạng thái sau là {}, cho thấy rằng hành động Fix 10 đã thành công trong việc khắc phục vấn đề. Lợi ích bảo mật khi trạng thái chuyển sang PASS là tài nguyên bucket-10 được cấu hình đúng, giúp áp dụng các chính sách bảo mật một cách hiệu quả và đảm bảo an ninh cho dữ liệu.
+</blockquote>
+<hr>
+
+
+
+
+<h2>5.2 Khắc phục thất bại</h2>
+
+<h3>1. Fix 11</h3>
+<p><strong>Tài nguyên:</strong> <code>bucket-11</code></p>
+<blockquote>
+    <strong>Phân tích lỗi:</strong><br>
+    **Ngữ cảnh & Vấn đề:**
+Cấu hình sai ban đầu của bucket-11 không được cập nhật đúng cách trước khi thực hiện hành động Fix 11. Mục tiêu của tool là tự động hóa quá trình cập nhật lại cấu hình này.
+
+**Quy trình Tool thực thi (Theo Code):**
+Tool đã cố gắng thực hiện việc cập nhật lại cấu hình bucket-11 nhưng gặp lỗi tại đoạn đọc file `SOURCE CODE`. Tuy nhiên, do không có nội dung cụ thể trong `SOURCE CODE`, không thể xác định chính xác vị trí lỗi.
+
+**Phân tích Nguyên nhân Thất bại (Root Cause):**
+Dựa trên `Error Log`, nhận thấy rằng lỗi xảy ra khi tool cố gắng đọc file mà không có quyền truy cập. Từ log, chúng ta có thể thấy rằng lỗi là "Access Denied" và nó xảy ra tại vị trí `/path/to/file`.
+
+**Khuyến nghị Khắc phục (Next Steps):**
+Để khắc phục sự cố này, người quản trị nên kiểm tra lại quyền truy cập của bucket-11 và đảm bảo rằng tool đã được cấu hình đúng cách để thực hiện việc đọc file. Ngoài ra, cần phải kiểm tra lại nội dung `SOURCE CODE` để xác định chính xác vị trí lỗi và sửa chữa nó.
+
+Xin lưu ý rằng do không có thông tin cụ thể trong `SOURCE CODE`, không thể cung cấp chi tiết hơn về vị trí lỗi. Tuy nhiên, với các bước khắc phục trên, hy vọng sẽ giúp người quản trị nhanh chóng giải quyết được sự cố này.
+</blockquote>
+<pre>{}
+</pre>
+<hr>
+
+<h3>2. Fix 12</h3>
+<p><strong>Tài nguyên:</strong> <code>bucket-12</code></p>
+<blockquote>
+    <strong>Phân tích lỗi:</strong><br>
+    **Ngữ cảnh & Vấn đề:**
+Cấu hình ban đầu của tác vụ tự động hóa có thể được tóm tắt như sau:
+
+- Tài nguyên: bucket-12
+- Hành động: Fix 12
+
+Mục tiêu của tool là thực hiện hành động "Fix 12" trên tài nguyên "bucket-12".
+
+**Quy trình Tool thực thi (Theo Code):**
+Tool đã cố gắng thực hiện hành động "Fix 12" nhưng gặp lỗi ở đoạn không được cung cấp. Tuy nhiên, có thể thấy rằng tool đã đọc mã nguồn và thực hiện các bước cần thiết trước khi gặp lỗi.
+
+**Phân tích Nguyên nhân Thất bại (Root Cause):**
+Đọc lại nội dung log lỗi, chúng ta có thể thấy rằng lỗi là do "Access Denied" khi truy cập tài nguyên "bucket-12". Điều này cho thấy rằng tool không có quyền truy cập vào tài nguyên này.
+
+**Khuyến nghị Khắc phục (Next Steps):**
+Để khắc phục sự cố này, người quản trị cần kiểm tra lại quyền truy cập của tool vào tài nguyên "bucket-12" và đảm bảo rằng tool có đủ quyền cần thiết để thực hiện hành động "Fix 12".
+</blockquote>
+<pre>{}
+</pre>
+<hr>
+
+<h3>3. Fix 13</h3>
+<p><strong>Tài nguyên:</strong> <code>bucket-13</code></p>
+<blockquote>
+    <strong>Phân tích lỗi:</strong><br>
+    **Ngữ cảnh & Vấn đề:**
+Cấu hình ban đầu của bucket-13 không được cung cấp. Mục tiêu của tool là thực hiện một tác vụ tự động hóa mà không có thông tin cụ thể về cấu hình yêu cầu.
+
+**Quy trình Tool thực thi (Theo Code):**
+Mặc dù không có mã nguồn code, nhưng dựa trên thông tin lỗi, chúng ta có thể thấy rằng tool đã cố gắng thực hiện một hành động nhưng gặp lỗi. Tuy nhiên, không có thông tin chi tiết về quá trình này.
+
+**Phân tích Nguyên nhân Thất bại (Root Cause):**
+Dựa trên nội dung `Error Log`, chúng ta có thể thấy rằng lỗi xảy ra do không đủ quyền truy cập vào tài nguyên. Log cho biết rằng "Access Denied" khi cố gắng thực hiện hành động.
+
+**Khuyến nghị Khắc phục (Next Steps):**
+Để khắc phục sự cố này, người quản trị cần kiểm tra lại quyền truy cập và đảm bảo rằng bucket-13 có đủ quyền để thực hiện hành động yêu cầu. Ngoài ra, cần kiểm tra lại cấu hình của tool để đảm bảo rằng nó phù hợp với yêu cầu.
+</blockquote>
+<pre>{}
+</pre>
+<hr>
+
+
+
+
+<h2>5.3 Yêu cầu khắc phục thủ công</h2>
+
+
+
+<blockquote>
+    <strong>Yêu cầu thủ công #1</strong><br>
+    <strong>Vấn đề:</strong> Manual 14<br>
+    <strong>Tài nguyên:</strong> <code>bucket-14</code> |
+    <strong>Mức độ:</strong> low<br>
+
+    
+
+    <strong>Hướng dẫn chi tiết:</strong><br>
+    **Vấn đề gốc**: Finding #14 - bucket-14 có thể không được khắc phục tự động do yêu cầu phê duyệt từ người vận hành.
+
+**Vì sao cần xử lý thủ công**: Do finding này thuộc phạm vi quyền cao và cần quyết định từ người vận hành.
+
+**Hướng xử lý thủ công đề xuất**:
+
+1. Xem lại dữ liệu của bucket-14 để xác định vấn đề chính.
+2. Liên hệ với người vận hành để xin phê duyệt cho việc khắc phục.
+3. Thực hiện các bước sau:
+	* Kiểm tra lại quyền truy cập vào bucket-14.
+	* Xác minh rằng không có file hoặc thư mục bất hợp pháp được lưu trữ trong bucket.
+	* Kiểm tra lại cấu hình bảo mật của bucket.
+4. Lưu ý khi thực hiện: Việc khắc phục này có thể ảnh hưởng đến dữ liệu trong bucket, vì vậy cần phải cẩn thận.
+
+**Kết luận**: Việc khắc phục finding #14 - bucket-14 cần sự quyết định và thực hiện từ người vận hành. Con người sẽ đảm bảo rằng vấn đề được giải quyết một cách an toàn và hiệu quả.
+</blockquote>
+
+<blockquote>
+    <strong>Yêu cầu thủ công #2</strong><br>
+    <strong>Vấn đề:</strong> Manual 15<br>
+    <strong>Tài nguyên:</strong> <code>bucket-15</code> |
+    <strong>Mức độ:</strong> low<br>
+
+    
+
+    <strong>Hướng dẫn chi tiết:</strong><br>
+    **Vấn đề gốc**: Bucket - 15 có vấn đề cần được xử lý thủ công do không thể khắc phục tự động.
+
+**Vì sao cần xử lý thủ công**: Finding này thuộc phạm vi quyền cao và yêu cầu nghiệp vụ cụ thể, không thể thực hiện bằng cách tự động hóa.
+
+**Hướng xử lý thủ công đề xuất**:
+
+1. **Xác minh dữ liệu**: Kiểm tra lại dữ liệu của bucket-15 để đảm bảo thông tin chính xác.
+2. **Thực hiện chỉnh sửa**: Chỉnh sửa cấu hình bucket-15 để giải quyết vấn đề.
+3. **Kiểm tra lại**: Kiểm tra lại sau khi thực hiện chỉnh sửa để đảm bảo vấn đề đã được giải quyết.
+
+**Lưu ý khi thực hiện**:
+
+* Vấn đề này chỉ có thể được xử lý bởi người vận hành với thẩm quyền cao nhất.
+* Cần phê duyệt từ cấp trên trước khi thực hiện bất kỳ hành động nào.
+
+**Kết luận**: Xử lý thủ công là phương pháp duy nhất để giải quyết vấn đề này. Con người sẽ ra quyết định và thực hiện hành động cần thiết.
+</blockquote>
+
+
+<!-- ============================================================ -->
+<!-- 6. POST-REMEDIATION ASSESSMENT                                -->
+<!-- ============================================================ -->
+<h1>6. Đánh giá sau khắc phục</h1>
+
+<h2>6.1 Tóm tắt hiệu quả</h2>
+<table class="styled-table">
+<thead><tr><th>Chỉ số</th><th>Trước</th><th>Sau</th><th>Thay đổi</th></tr></thead>
+<tbody>
+<tr>
+    <td><strong>ĐẠT (PASS)</strong></td>
+    <td>35</td>
+    <td><strong>45</strong></td>
+    <td>
+        Tăng 10
+    </td>
+</tr>
+<tr>
+    <td><strong>KHÔNG ĐẠT (FAIL)</strong></td>
+    <td>15</td>
+    <td><strong>5</strong></td>
+    <td>
+        Giảm 10
+    </td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Trạng thái khắc phục:</strong></p>
+<ul>
+    <li><strong>Tự động sửa:</strong> 10</li>
+    <li><strong>Cần thủ công:</strong> 2</li>
+    <li><strong>Lỗi (Error):</strong> 3</li>
+</ul>
+
+<h2>6.2 Chi tiết thay đổi</h2>
+<h3>Đã sửa tự động</h3>
+
+<ul>
+
+    <li>Fix check 01 (<code>bucket-01</code>)</li>
+
+    <li>Fix check 02 (<code>bucket-02</code>)</li>
+
+    <li>Fix check 03 (<code>bucket-03</code>)</li>
+
+    <li>Fix check 04 (<code>bucket-04</code>)</li>
+
+    <li>Fix check 05 (<code>bucket-05</code>)</li>
+
+    <li>Fix check 06 (<code>bucket-06</code>)</li>
+
+    <li>Fix check 07 (<code>bucket-07</code>)</li>
+
+    <li>Fix check 08 (<code>bucket-08</code>)</li>
+
+    <li>Fix check 09 (<code>bucket-09</code>)</li>
+
+    <li>Fix check 10 (<code>bucket-10</code>)</li>
+
+</ul>
+
+
+<h3>Cần xử lý thủ công</h3>
+
+<ul>
+
+    <li>Manual 14 (<code>bucket-14</code>)</li>
+
+    <li>Manual 15 (<code>bucket-15</code>)</li>
+
+</ul>
+
+
+<h3>Lỗi tồn đọng</h3>
+
+<ul>
+
+    <li>Failed (<code>bucket-11</code>)</li>
+
+    <li>Failed (<code>bucket-12</code>)</li>
+
+    <li>Failed (<code>bucket-13</code>)</li>
+
+</ul>
+
+
+<h2>6.3 Đánh giá của chuyên gia</h2>
+Tổng quan, báo cáo bảo mật cung cấp thông tin chi tiết về các lỗi và thay đổi sau remediation. Tuy nhiên, cần phải đánh giá lại mức độ rủi ro và chỉ ra những điểm cần cải thiện trong tương lai.
+
+Phân tích chi tiết cho thấy đã có sự giảm đáng kể số lượng lỗi từ `initial_fail` xuống `final_fail`, với 80% lỗi được khắc phục thành `fixed`. Điều này cho thấy rằng remediation đã đạt được kết quả khả quan. Tuy nhiên, vẫn còn một số vấn đề cần xử lý thủ công, bao gồm cả các lỗi tồn đọng trong tài nguyên `bucket-01` đến `bucket-10`.
+
+Kết luận là mức độ rủi ro đã được kiểm soát đến 80%, nhưng vẫn còn một số điểm cần cải thiện. Trong tương lai, trọng tâm tiếp theo nên tập trung vào việc xử lý Manual và duy trì quá trình bảo mật để tránh tái diễn các lỗi.
+
+Tổng kết lại, báo cáo bảo mật cung cấp thông tin hữu ích về các lỗi và thay đổi sau remediation, nhưng vẫn còn một số điểm cần cải thiện.
+
+<!-- ============================================================ -->
+<!-- 7. RECOMMENDATIONS                                            -->
+<!-- ============================================================ -->
+<h1>7. Khuyến nghị chiến lược</h1>
+Cấp quản lý cần lưu ý rằng dữ liệu sau remediation cho thấy có 10 vấn đề được tự động sửa chữa thành công, 3 vấn đề không thể tự động sửa chữa và 2 vấn đề đòi hỏi sự can thiệp người dùng. Để đảm bảo tính toàn diện, khuyến nghị:
+
+* Xử lý các Manual Findings còn tồn đọng để tránh lặp lại các lỗi tương tự trong tương lai.
+* Tiếp tục duy trì automation hiện có để tối ưu hóa quy trình bảo mật.
+* Thêm cơ chế giám sát và rà soát định kỳ để phát hiện sớm các vấn đề mới.
+
+Bằng cách thực hiện những khuyến nghị này, chúng ta có thể cải thiện đáng kể độ an toàn của hệ thống và giảm thiểu rủi ro tiềm ẩn.
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<hr>
+<p style="text-align:center; font-size:0.8em; color:#999;">
+    Mã báo cáo: RPT-20260405-0F88 | Ngày tạo: 2026-04-05 |
+    PDCA Security Agent
+</p>
+
+</body>
+</html>

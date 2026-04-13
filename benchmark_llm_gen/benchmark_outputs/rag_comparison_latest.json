@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-04-06 08:12:36",
+  "no_rag": {
+    "label": "No RAG",
+    "latency_ms": 1221.9,
+    "llm_calls": 18,
+    "html_generated": true,
+    "html_size_bytes": 17219,
+    "has_rag_in_prompts": true,
+    "rag_enriched_prompts": 0,
+    "total_prompts": 18,
+    "structure": {
+      "has_doctype": true,
+      "has_charset": true,
+      "has_cover_page": true,
+      "has_toc": true,
+      "has_score": true,
+      "has_report_id": true,
+      "has_confidential": true,
+      "has_severity_badges": true,
+      "has_status_colors": true,
+      "vietnamese_diacritics": true,
+      "no_raw_list": true,
+      "no_none_display": true,
+      "section_count": 8
+    },
+    "content": {
+      "has_account_id": true,
+      "has_region": true,
+      "has_pre_total": true,
+      "has_pre_pass": true,
+      "has_pre_fail": true,
+      "has_post_fixed": true,
+      "findings_table_rows": 18,
+      "success_section_present": true,
+      "manual_section_present": true
+    }
+  },
+  "with_rag": {
+    "label": "With RAG",
+    "latency_ms": 994.4,
+    "llm_calls": 18,
+    "html_generated": true,
+    "html_size_bytes": 17219,
+    "has_rag_in_prompts": true,
+    "rag_enriched_prompts": 9,
+    "total_prompts": 18,
+    "structure": {
+      "has_doctype": true,
+      "has_charset": true,
+      "has_cover_page": true,
+      "has_toc": true,
+      "has_score": true,
+      "has_report_id": true,
+      "has_confidential": true,
+      "has_severity_badges": true,
+      "has_status_colors": true,
+      "vietnamese_diacritics": true,
+      "no_raw_list": true,
+      "no_none_display": true,
+      "section_count": 8
+    },
+    "content": {
+      "has_account_id": true,
+      "has_region": true,
+      "has_pre_total": true,
+      "has_pre_pass": true,
+      "has_pre_fail": true,
+      "has_post_fixed": true,
+      "findings_table_rows": 18,
+      "success_section_present": true,
+      "manual_section_present": true
+    }
+  },
+  "verdict": {
+    "rag_working": true,
+    "backward_compatible": true,
+    "rag_enriched_prompts": 9
+  }
+}

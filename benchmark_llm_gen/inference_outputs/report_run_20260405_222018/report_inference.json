@@ -1,0 +1,600 @@
+[
+  {
+    "case_id": "report_standard_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:20:55.644665+00:00",
+    "latency_ms": 26777.9,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_qo7hklbj\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_qo7hklbj\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_qo7hklbj\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_001_qo7hklbj",
+      "html_file": "report_standard_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 25.7002,
+      "call_history": [
+        2.2847,
+        2.0442,
+        2.8121,
+        2.2534,
+        2.1022,
+        3.1428,
+        2.7116,
+        3.1429,
+        2.6791,
+        2.5271
+      ],
+      "call_count": 10
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_standard_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:21:26.002257+00:00",
+    "latency_ms": 29895.9,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_002_l9d248j1\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_002_l9d248j1\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_002_l9d248j1\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_002_l9d248j1",
+      "html_file": "report_standard_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 28.9874,
+      "call_history": [
+        2.535,
+        1.6318,
+        3.5033,
+        2.4285,
+        2.0085,
+        2.6329,
+        2.3002,
+        2.5698,
+        2.7969,
+        3.7208,
+        2.8598
+      ],
+      "call_count": 11
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_standard_003",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:21:52.050849+00:00",
+    "latency_ms": 25598.8,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_003_rs62lmno\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_003_rs62lmno\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_003_rs62lmno\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_standard_003_rs62lmno",
+      "html_file": "report_standard_003.html"
+    },
+    "llm_metrics": {
+      "total_latency": 24.722,
+      "call_history": [
+        1.045,
+        1.6085,
+        3.3315,
+        3.1145,
+        2.1939,
+        3.3793,
+        3.7938,
+        2.6981,
+        3.5575
+      ],
+      "call_count": 9
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_all_pass_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:22:08.875224+00:00",
+    "latency_ms": 16340.4,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_db7wgegi\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_db7wgegi\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_db7wgegi\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_001_db7wgegi",
+      "html_file": "report_all_pass_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 15.4861,
+      "call_history": [
+        1.977,
+        3.6191,
+        2.15,
+        2.3844,
+        2.6295,
+        2.7261
+      ],
+      "call_count": 6
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_all_pass_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:22:24.955379+00:00",
+    "latency_ms": 15566.3,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_002_nikd17xy\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_002_nikd17xy\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_002_nikd17xy\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_pass_002_nikd17xy",
+      "html_file": "report_all_pass_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 14.7015,
+      "call_history": [
+        2.1172,
+        2.7428,
+        2.643,
+        2.4577,
+        2.5706,
+        2.1702
+      ],
+      "call_count": 6
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_all_fail_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:22:57.843023+00:00",
+    "latency_ms": 32275.9,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_001_vekglqx5\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_001_vekglqx5\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_001_vekglqx5\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_001_vekglqx5",
+      "html_file": "report_all_fail_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 31.086,
+      "call_history": [
+        1.9382,
+        3.2858,
+        2.9488,
+        2.0359,
+        3.6449,
+        4.2088,
+        3.2054,
+        3.3685,
+        3.2076,
+        3.242
+      ],
+      "call_count": 10
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_all_fail_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:23:21.213430+00:00",
+    "latency_ms": 22854.7,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_002_nqn6wzy1\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_002_nqn6wzy1\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_002_nqn6wzy1\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_all_fail_002_nqn6wzy1",
+      "html_file": "report_all_fail_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 21.8844,
+      "call_history": [
+        2.173,
+        3.0543,
+        3.1888,
+        2.5606,
+        2.6022,
+        2.7744,
+        3.16,
+        2.3711
+      ],
+      "call_count": 8
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_minimal_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:23:41.814933+00:00",
+    "latency_ms": 19949.1,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_001_uk0vojsr\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_001_uk0vojsr\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_001_uk0vojsr\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_001_uk0vojsr",
+      "html_file": "report_minimal_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 18.8126,
+      "call_history": [
+        1.8357,
+        3.1349,
+        2.2528,
+        2.3497,
+        2.3589,
+        2.7515,
+        4.1291
+      ],
+      "call_count": 7
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_minimal_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:24:06.834612+00:00",
+    "latency_ms": 24357.0,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_002_dhd015fa\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_002_dhd015fa\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_002_dhd015fa\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_minimal_002_dhd015fa",
+      "html_file": "report_minimal_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 23.3262,
+      "call_history": [
+        1.945,
+        2.3813,
+        2.8304,
+        2.5115,
+        2.588,
+        4.3839,
+        3.6742,
+        3.0119
+      ],
+      "call_count": 8
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_missing_fields_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:24:31.371761+00:00",
+    "latency_ms": 24024.0,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_rhxt385l\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_rhxt385l\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_rhxt385l\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_001_rhxt385l",
+      "html_file": "report_missing_fields_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 23.1058,
+      "call_history": [
+        2.0937,
+        2.2093,
+        3.2129,
+        2.6345,
+        2.4009,
+        2.3212,
+        2.6813,
+        2.7817,
+        2.7704
+      ],
+      "call_count": 9
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_missing_fields_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:24:53.713342+00:00",
+    "latency_ms": 21821.2,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_002_823va9qt\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_002_823va9qt\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_002_823va9qt\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_missing_fields_002_823va9qt",
+      "html_file": "report_missing_fields_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 20.8816,
+      "call_history": [
+        1.8206,
+        2.8554,
+        2.6031,
+        2.3005,
+        2.8172,
+        2.6608,
+        2.7641,
+        3.06
+      ],
+      "call_count": 8
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_mixed_case_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:25:23.387866+00:00",
+    "latency_ms": 29110.7,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_001_frnofavw\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_001_frnofavw\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_001_frnofavw\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_001_frnofavw",
+      "html_file": "report_mixed_case_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 28.1639,
+      "call_history": [
+        2.9951,
+        1.8116,
+        3.2634,
+        2.7721,
+        2.4117,
+        3.3464,
+        2.9343,
+        3.1362,
+        3.0412,
+        2.4519
+      ],
+      "call_count": 10
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_mixed_case_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:25:51.821159+00:00",
+    "latency_ms": 27845.1,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_002_fbhepqym\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_002_fbhepqym\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_002_fbhepqym\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_mixed_case_002_fbhepqym",
+      "html_file": "report_mixed_case_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 26.079,
+      "call_history": [
+        2.0801,
+        2.8857,
+        2.8038,
+        2.3949,
+        2.5356,
+        2.8283,
+        2.6251,
+        3.6145,
+        4.3109
+      ],
+      "call_count": 9
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_multi_service_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:26:26.976176+00:00",
+    "latency_ms": 33982.5,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_001_4191x_xu\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_001_4191x_xu\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_001_4191x_xu\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_001_4191x_xu",
+      "html_file": "report_multi_service_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 32.289,
+      "call_history": [
+        3.4032,
+        3.6031,
+        3.2517,
+        3.1706,
+        2.0284,
+        3.5551,
+        3.1216,
+        2.9217,
+        4.3672,
+        2.8665
+      ],
+      "call_count": 10
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_multi_service_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:26:57.376767+00:00",
+    "latency_ms": 29675.7,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_002_ya6v63ag\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_002_ya6v63ag\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_002_ya6v63ag\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_multi_service_002_ya6v63ag",
+      "html_file": "report_multi_service_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 27.4908,
+      "call_history": [
+        4.0528,
+        1.8635,
+        3.7567,
+        3.3081,
+        2.718,
+        3.7769,
+        2.1587,
+        2.9464,
+        2.9097
+      ],
+      "call_count": 9
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_high_volume_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:28:07.359315+00:00",
+    "latency_ms": 69222.2,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_high_volume_001_krqbu_i3\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_high_volume_001_krqbu_i3\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_high_volume_001_krqbu_i3\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_high_volume_001_krqbu_i3",
+      "html_file": "report_high_volume_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 67.8243,
+      "call_history": [
+        2.834,
+        2.2994,
+        3.1357,
+        2.7292,
+        2.2067,
+        3.0651,
+        2.1139,
+        3.3919,
+        3.6885,
+        3.0262,
+        2.991,
+        2.7567,
+        2.8244,
+        3.5566,
+        3.181,
+        5.0705,
+        3.0214,
+        3.8882,
+        3.3138,
+        3.0752,
+        2.909,
+        2.7458
+      ],
+      "call_count": 22
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_zero_severity_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:28:27.328680+00:00",
+    "latency_ms": 19452.3,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_zero_severity_001_cud7lcl0\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_zero_severity_001_cud7lcl0\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_zero_severity_001_cud7lcl0\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_zero_severity_001_cud7lcl0",
+      "html_file": "report_zero_severity_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 18.5388,
+      "call_history": [
+        1.4695,
+        3.4901,
+        3.3716,
+        2.5983,
+        4.7149,
+        2.8944
+      ],
+      "call_count": 6
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_complex_remediation_001",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:29:01.554002+00:00",
+    "latency_ms": 33596.2,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_001_iqnmmh71\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_001_iqnmmh71\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_001_iqnmmh71\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_001_iqnmmh71",
+      "html_file": "report_complex_remediation_001.html"
+    },
+    "llm_metrics": {
+      "total_latency": 32.6029,
+      "call_history": [
+        2.3628,
+        2.3435,
+        2.2424,
+        2.8446,
+        1.9486,
+        3.4691,
+        3.1374,
+        4.5267,
+        3.2125,
+        2.9477,
+        3.5676
+      ],
+      "call_count": 11
+    },
+    "error": null
+  },
+  {
+    "case_id": "report_complex_remediation_002",
+    "agent": "report",
+    "timestamp": "2026-04-05T15:29:34.564847+00:00",
+    "latency_ms": 32435.0,
+    "agent_output": {
+      "output_paths": {
+        "markdown": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_002_vttu8s3w\\final_report.md",
+        "html": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_002_vttu8s3w\\final_report.html",
+        "pdf": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_002_vttu8s3w\\final_report.pdf"
+      },
+      "output_dir": "C:\\Users\\trung\\AppData\\Local\\Temp\\report_bench_report_complex_remediation_002_vttu8s3w",
+      "html_file": "report_complex_remediation_002.html"
+    },
+    "llm_metrics": {
+      "total_latency": 31.3071,
+      "call_history": [
+        2.2167,
+        1.9612,
+        2.8778,
+        2.3572,
+        2.1231,
+        3.4527,
+        3.4243,
+        3.234,
+        3.8805,
+        3.1152,
+        2.6644
+      ],
+      "call_count": 11
+    },
+    "error": null
+  }
+]
