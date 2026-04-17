@@ -24,17 +24,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Ensure project root is on path
-_project_root = str(Path(__file__).resolve().parent.parent)
-if _project_root not in sys.path:
-    sys.path.insert(0, _project_root)
+# Ensure RAG root (for `app`) and repo root (for `benchmarks`) are on path
+_rag_root = Path(__file__).resolve().parent.parent
+_repo_root = _rag_root.parent
+for _p in (str(_rag_root), str(_repo_root)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from app.evaluation.metrics import (
     compute_confidence_calibration,
     compute_latency_percentiles,
     compute_robustness_gap,
 )
-from data.benchmarks.benchmark_retrieval import (
+from benchmarks.rag.benchmark_retrieval import (
     _load_cases_from_file,
     evaluate_cases,
     print_report,
@@ -42,8 +44,7 @@ from data.benchmarks.benchmark_retrieval import (
     MATURITY_ENDPOINT,
 )
 
-SCRIPT_DIR = Path(__file__).resolve().parent.parent
-BENCHMARKS_DIR = SCRIPT_DIR / "data" / "benchmarks"
+BENCHMARKS_DIR = _repo_root / "benchmarks" / "rag"
 DEFAULT_OUTPUT_DIR = BENCHMARKS_DIR / "benchmark_outputs"
 RELEASE_CRITERIA_FILE = BENCHMARKS_DIR / "release_criteria.json"
 
@@ -366,7 +367,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Unified RAG benchmark runner")
     parser.add_argument(
         "--output-dir", type=str, default=None,
-        help="Directory for output files (default: data/benchmarks/benchmark_outputs)",
+        help="Directory for output files (default: benchmarks/rag/benchmark_outputs)",
     )
     parser.add_argument(
         "--tag", type=str, default=None,

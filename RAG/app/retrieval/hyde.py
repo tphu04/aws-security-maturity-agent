@@ -130,7 +130,7 @@ def maybe_generate_hyde(
     if requires_exact_lookup:
         return None
 
-    model = hyde_cfg.get("model", "llama3.2:latest")
+    model = hyde_cfg.get("model", "gemma3:4b")
     base_url = hyde_cfg.get("base_url", "http://localhost:11434")
 
     generator = HyDEGenerator.get_instance(model, base_url)

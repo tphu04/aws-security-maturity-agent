@@ -16,8 +16,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.planning_agent import PlanningAgent
-from agents.risk_evaluation_agent import RiskEvaluationAgent
+from pdca.agents.planning_agent import PlanningAgent
+from pdca.agents.risk_evaluation_agent import RiskEvaluationAgent
 
 
 # ============================================================

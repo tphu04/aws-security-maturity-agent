@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 
-from agents.risk_evaluation_agent import (
+from pdca.agents.risk_evaluation_agent import (
     RiskEvaluationAgent,
     SYSTEM_PROMPT_SINGLE,
     _VALID_SEVERITIES,
@@ -590,7 +590,7 @@ class TestSystemPromptQuality:
 
     def test_prompt_mentions_rag_context(self):
         """Q9.1: Two-Pass: PASS2 prompt references RAG context fields."""
-        from agents.risk_evaluation_agent import SYSTEM_PROMPT_PASS2
+        from pdca.agents.risk_evaluation_agent import SYSTEM_PROMPT_PASS2
         assert "rag_official_severity" in SYSTEM_PROMPT_PASS2
 
     def test_prompt_has_scoring_rubric(self):

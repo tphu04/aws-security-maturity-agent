@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 
-from agents.planning_agent import PlanningAgent
-from agents.shared.rag_client import RAGClient
+from pdca.agents.planning_agent import PlanningAgent
+from pdca.agents.shared.rag_client import RAGClient
 
 
 # ============================================================
@@ -380,8 +380,8 @@ class TestRerankingQuality:
         ]
         retrieval = {"candidates": candidates, "maturity_context": "", "confidence": "high", "source": "build_context"}
 
-        with patch("agents.planning_agent.parse_llm_json", return_value={"selected_ids": [], "reasoning": "none"}):
-            with patch("agents.planning_agent.ChatPromptTemplate") as MockPrompt:
+        with patch("pdca.agents.planning_agent.parse_llm_json", return_value={"selected_ids": [], "reasoning": "none"}):
+            with patch("pdca.agents.planning_agent.ChatPromptTemplate") as MockPrompt:
                 mock_chain = MagicMock()
                 mock_chain.invoke.return_value = '{"selected_ids": []}'
                 MockPrompt.from_template.return_value.__or__ = MagicMock(

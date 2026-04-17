@@ -15,8 +15,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.planning_agent import PlanningAgent, RERANK_PROMPT, TRANSLATION_PROMPT
-from agents.shared.rag_client import RAGClient
+from pdca.agents.planning_agent import PlanningAgent, RERANK_PROMPT, TRANSLATION_PROMPT
+from pdca.agents.shared.rag_client import RAGClient
 
 
 # ============================================================
@@ -62,7 +62,7 @@ def rag_client():
 
 @pytest.fixture
 def agent(rag_client):
-    with patch("agents.planning_agent.ChatOllama") as MockLLM:
+    with patch("pdca.agents.planning_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         a = PlanningAgent(

@@ -118,10 +118,10 @@ def root() -> dict[str, str]:
 if __name__ == "__main__":
     import uvicorn
 
-    print("Starting Prowler Scan API server...")
+    print("Starting RAG service...")
     uvicorn.run(
-        "api_server:app",
+        "app.main:app",
         host="127.0.0.1",
-        port=8000,
+        port=8005,
         reload=True
     )

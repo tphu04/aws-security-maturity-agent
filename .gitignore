@@ -1,12 +1,39 @@
-# .gitignore
-venv/
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
 __pycache__/
-.vscode/
-.env
-prowler/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
 
-# Claude Code
+# ---------------------------------------------------------------------------
+# Environments
+# ---------------------------------------------------------------------------
+venv/
+.venv/
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Editors / tooling
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
 .claude/
+
+# ---------------------------------------------------------------------------
+# Project-specific
+# ---------------------------------------------------------------------------
+prowler/
 PROMPT.md
 
 # Logs
@@ -14,6 +41,16 @@ PROMPT.md
 RAG/uvicorn_stderr.log
 RAG/uvicorn_stdout.log
 
-# Generated data
+# ---------------------------------------------------------------------------
+# Runtime artifacts (regenerated each run — never commit)
+# ---------------------------------------------------------------------------
+job_outputs/
+output/
+benchmark_results/
+data/artifacts/
+benchmarks/rag/benchmark_outputs/
+benchmarks/llm_generation/benchmark_outputs/
+benchmarks/llm_generation/inference_outputs/
 RAG/data/indexes/chroma/
-RAG/.coverage
+RAG/data/indexes/chroma_backup_*/
+RAG/data/raw/maturity_mapping_candidates.json

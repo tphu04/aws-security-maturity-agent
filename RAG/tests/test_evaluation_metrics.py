@@ -582,17 +582,17 @@ class TestComputeConfidenceCalibration:
 
 class TestInferRouteType:
     def test_checks_endpoint(self):
-        from data.benchmarks.benchmark_retrieval import _infer_route_type
+        from benchmarks.rag.benchmark_retrieval import _infer_route_type
         assert _infer_route_type("http://localhost:8000/v1/retrieve/checks") == "check_search"
 
     def test_maturity_endpoint(self):
-        from data.benchmarks.benchmark_retrieval import _infer_route_type
+        from benchmarks.rag.benchmark_retrieval import _infer_route_type
         assert _infer_route_type("http://localhost:8000/v1/retrieve/maturity") == "maturity_search"
 
     def test_unknown_endpoint(self):
-        from data.benchmarks.benchmark_retrieval import _infer_route_type
+        from benchmarks.rag.benchmark_retrieval import _infer_route_type
         assert _infer_route_type("http://localhost:8000/v1/retrieve/other") == "unknown"
 
     def test_empty_endpoint(self):
-        from data.benchmarks.benchmark_retrieval import _infer_route_type
+        from benchmarks.rag.benchmark_retrieval import _infer_route_type
         assert _infer_route_type("") == "unknown"

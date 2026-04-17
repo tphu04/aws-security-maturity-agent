@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.shared.rag_client import RAGClient
+from pdca.agents.shared.rag_client import RAGClient
 
 
 # ============================================================
@@ -44,8 +44,8 @@ def mock_rag_client_unhealthy():
 @pytest.fixture
 def planning_agent(mock_rag_client):
     """PlanningAgent with mocked LLM + RAGClient."""
-    from agents.planning_agent import PlanningAgent
-    with patch("agents.planning_agent.ChatOllama") as MockLLM:
+    from pdca.agents.planning_agent import PlanningAgent
+    with patch("pdca.agents.planning_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         agent = PlanningAgent(
@@ -60,8 +60,8 @@ def planning_agent(mock_rag_client):
 @pytest.fixture
 def planning_agent_no_rag():
     """PlanningAgent WITHOUT RAGClient (degraded mode)."""
-    from agents.planning_agent import PlanningAgent
-    with patch("agents.planning_agent.ChatOllama") as MockLLM:
+    from pdca.agents.planning_agent import PlanningAgent
+    with patch("pdca.agents.planning_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         agent = PlanningAgent(
@@ -80,8 +80,8 @@ def planning_agent_no_rag():
 @pytest.fixture
 def risk_agent(mock_rag_client):
     """RiskEvaluationAgent with mocked LLM + RAGClient."""
-    from agents.risk_evaluation_agent import RiskEvaluationAgent
-    with patch("agents.risk_evaluation_agent.ChatOllama") as MockLLM:
+    from pdca.agents.risk_evaluation_agent import RiskEvaluationAgent
+    with patch("pdca.agents.risk_evaluation_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         agent = RiskEvaluationAgent(
@@ -97,8 +97,8 @@ def risk_agent(mock_rag_client):
 @pytest.fixture
 def risk_agent_no_rag():
     """RiskEvaluationAgent WITHOUT RAGClient (degraded mode)."""
-    from agents.risk_evaluation_agent import RiskEvaluationAgent
-    with patch("agents.risk_evaluation_agent.ChatOllama") as MockLLM:
+    from pdca.agents.risk_evaluation_agent import RiskEvaluationAgent
+    with patch("pdca.agents.risk_evaluation_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         agent = RiskEvaluationAgent(

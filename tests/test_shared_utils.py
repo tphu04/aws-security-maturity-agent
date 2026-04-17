@@ -6,7 +6,7 @@ Tối thiểu 3 test cases mỗi function (extract_check_id, parse_llm_json, san
 """
 
 import pytest
-from agents.shared.utils import extract_check_id, parse_llm_json, sanitize_check_id
+from pdca.agents.shared.utils import extract_check_id, parse_llm_json, sanitize_check_id
 
 
 # ============================================================

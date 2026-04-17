@@ -15,12 +15,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.risk_evaluation_agent import (
+from pdca.agents.risk_evaluation_agent import (
     RiskEvaluationAgent,
     SYSTEM_PROMPT_SINGLE,
     _VALID_SEVERITIES,
 )
-from agents.shared.utils import extract_check_id
+from pdca.agents.shared.utils import extract_check_id
 
 
 # ============================================================
@@ -66,7 +66,7 @@ def rag_client():
 
 @pytest.fixture
 def agent(rag_client):
-    with patch("agents.risk_evaluation_agent.ChatOllama") as MockLLM:
+    with patch("pdca.agents.risk_evaluation_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         a = RiskEvaluationAgent(

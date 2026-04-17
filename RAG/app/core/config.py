@@ -149,7 +149,7 @@ def load_scoring_config() -> Dict[str, Any]:
         },
         "hyde": {
             "enabled": False,
-            "model": "llama3.2:latest",
+            "model": "gemma3:4b",
             "base_url": "http://localhost:11434",
         },
         "reranker": {

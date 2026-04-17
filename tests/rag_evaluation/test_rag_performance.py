@@ -17,8 +17,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.planning_agent import PlanningAgent
-from agents.risk_evaluation_agent import RiskEvaluationAgent, _RAG_BATCH_CHUNK_SIZE
+from pdca.agents.planning_agent import PlanningAgent
+from pdca.agents.risk_evaluation_agent import RiskEvaluationAgent, _RAG_BATCH_CHUNK_SIZE
 
 
 # ============================================================

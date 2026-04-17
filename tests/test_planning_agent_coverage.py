@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 
-from agents.planning_agent import (
+from pdca.agents.planning_agent import (
     PlanningAgent,
     ALLOWED_GROUPS,
     DROP_RATIO_THRESHOLD,
@@ -38,7 +38,7 @@ def mock_rag_client():
 
 @pytest.fixture
 def agent(mock_rag_client):
-    with patch("agents.planning_agent.ChatOllama") as MockLLM:
+    with patch("pdca.agents.planning_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         a = PlanningAgent(
@@ -52,7 +52,7 @@ def agent(mock_rag_client):
 
 @pytest.fixture
 def agent_no_rag():
-    with patch("agents.planning_agent.ChatOllama") as MockLLM:
+    with patch("pdca.agents.planning_agent.ChatOllama") as MockLLM:
         mock_llm = MagicMock()
         MockLLM.return_value = mock_llm
         a = PlanningAgent(
@@ -449,7 +449,7 @@ class TestLLMRefinementPath:
             mock_refine.return_value = agent._make_output(
                 checks=["s3_bucket_public_access"], reasoning="LLM refined."
             )
-            result = agent.run("check something about s3")
+            result = agent.run("check s3 encryption configuration")
 
         # Score 0.1 → final_score < MIN_TOP_SCORE_FOR_SKIP (0.35) → LLM
         mock_refine.assert_called_once()
@@ -518,7 +518,7 @@ class TestFaithfulnessMetricCoverage:
     """Test that faithfulness metric correctly handles both hardcoded and LLM reasoning."""
 
     def test_hardcoded_reasoning_skipped(self):
-        from benchmark_llm_gen.planning_metrics import evaluate_faithfulness
+        from benchmarks.llm_generation.planning_metrics import evaluate_faithfulness
 
         result = evaluate_faithfulness(
             reasoning="Deterministic selection: RAG confidence=high, top_score=0.880, selected 3 checks.",
@@ -529,7 +529,7 @@ class TestFaithfulnessMetricCoverage:
         assert result["score"] == 1.0
 
     def test_llm_reasoning_grounded(self):
-        from benchmark_llm_gen.planning_metrics import evaluate_faithfulness
+        from benchmarks.llm_generation.planning_metrics import evaluate_faithfulness
 
         result = evaluate_faithfulness(
             reasoning="Selected s3_bucket_public_access because it addresses public access vulnerability with critical severity.",
@@ -540,12 +540,12 @@ class TestFaithfulnessMetricCoverage:
             },
             selected_checks=["s3_bucket_public_access"],
         )
-        assert result["method"] == "keyword"
+        assert result["method"] == "keyword_with_negative_checks"
         assert result["grounded"] is True
         assert result["score"] == 1.0
 
     def test_llm_reasoning_ungrounded(self):
-        from benchmark_llm_gen.planning_metrics import evaluate_faithfulness
+        from benchmarks.llm_generation.planning_metrics import evaluate_faithfulness
 
         result = evaluate_faithfulness(
             reasoning="I recommend checking firewall rules because network security is important.",
@@ -556,14 +556,14 @@ class TestFaithfulnessMetricCoverage:
             },
             selected_checks=["s3_bucket_public_access"],
         )
-        assert result["method"] == "keyword"
+        assert result["method"] == "keyword_with_negative_checks"
         # "s3_bucket_public_access" and "s3" not in reasoning → may still match "s3" partially
         # The important thing is the metric runs and returns a valid result
         assert isinstance(result["score"], float)
         assert 0.0 <= result["score"] <= 1.0
 
     def test_empty_reasoning(self):
-        from benchmark_llm_gen.planning_metrics import evaluate_faithfulness
+        from benchmarks.llm_generation.planning_metrics import evaluate_faithfulness
 
         result = evaluate_faithfulness(
             reasoning="",
@@ -574,7 +574,7 @@ class TestFaithfulnessMetricCoverage:
         assert result["grounded"] is False
 
     def test_group_scan_hardcoded(self):
-        from benchmark_llm_gen.planning_metrics import evaluate_faithfulness
+        from benchmarks.llm_generation.planning_metrics import evaluate_faithfulness
 
         result = evaluate_faithfulness(
             reasoning="Group scan requested for iam.",
@@ -584,7 +584,7 @@ class TestFaithfulnessMetricCoverage:
         assert result["method"] == "hardcoded_skip"
 
     def test_explicit_check_ids_hardcoded(self):
-        from benchmark_llm_gen.planning_metrics import evaluate_faithfulness
+        from benchmarks.llm_generation.planning_metrics import evaluate_faithfulness
 
         result = evaluate_faithfulness(
             reasoning="Explicit check IDs detected in request.",

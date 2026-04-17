@@ -9,7 +9,8 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-from agents.shared.rag_client import RAGClient
+from pdca.agents.shared.rag_client import RAGClient
+from pdca.config import RAG_API_URL
 
 
 class TestRAGClientInit(unittest.TestCase):
@@ -18,7 +19,7 @@ class TestRAGClientInit(unittest.TestCase):
     def test_default_base_url_from_config(self):
         """config.py cung cấp default URL khi không truyền base_url."""
         client = RAGClient()
-        self.assertEqual(client.base_url, "http://localhost:8001")
+        self.assertEqual(client.base_url, RAG_API_URL.rstrip("/"))
 
     def test_custom_base_url(self):
         client = RAGClient(base_url="http://rag-service:9000")
@@ -92,7 +93,7 @@ class TestRAGClientIsHealthy(unittest.TestCase):
     def setUp(self):
         self.client = RAGClient(base_url="http://localhost:8001", timeout=1.0)
 
-    @patch("agents.shared.rag_client.requests.Session.get")
+    @patch("pdca.agents.shared.rag_client.requests.Session.get")
     def test_healthy_when_ready(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -102,7 +103,7 @@ class TestRAGClientIsHealthy(unittest.TestCase):
 
         self.assertTrue(self.client.is_healthy())
 
-    @patch("agents.shared.rag_client.requests.Session.get")
+    @patch("pdca.agents.shared.rag_client.requests.Session.get")
     def test_unhealthy_when_not_ready(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.status_code = 200

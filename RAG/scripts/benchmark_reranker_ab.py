@@ -27,9 +27,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-_project_root = str(Path(__file__).resolve().parent.parent)
-if _project_root not in sys.path:
-    sys.path.insert(0, _project_root)
+_rag_root = Path(__file__).resolve().parent.parent
+_repo_root = _rag_root.parent
+for _p in (str(_rag_root), str(_repo_root)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from app.evaluation.metrics import (
     compute_ndcg,
@@ -227,7 +229,7 @@ def run_live_ab() -> Dict[str, Any]:
     WARNING: This modifies scoring_config.json and requires the
     RAG server to reload config between runs (restart or hot-reload).
     """
-    from data.benchmarks.benchmark_retrieval import (
+    from benchmarks.rag.benchmark_retrieval import (
         _load_cases_from_file,
         evaluate_cases,
         CHECKS_ENDPOINT,
