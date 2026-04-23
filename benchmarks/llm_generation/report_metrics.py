@@ -74,15 +74,17 @@ def _extract_numbers(text: str) -> List[int]:
 # 1. Structure — Gate Check
 # ---------------------------------------------------------------------------
 
-# Section headings that MUST appear in the HTML output
+# Section headings that MUST appear in the HTML output.
+# These are matched case-insensitively against the rendered HTML.
+# Anchored to actual Jinja template strings (template.py) — verified 2026-04-20.
 REQUIRED_SECTIONS = [
     "Tóm tắt điều hành",             # 1. Executive Summary
     "Phạm vi và phương pháp",         # 2. Scope & Methodology
     "Đánh giá trước khắc phục",       # 3. Pre-remediation
     "Bảng chi tiết phát hiện",        # 4. Findings table
     "Chi tiết thực thi khắc phục",    # 5. Remediation execution
-    "Đánh giá sau khắc phục",         # 6. Post-remediation
-    "Khuyến nghị chiến lược",         # 7. Recommendations
+    "Hậu Khắc phục",                  # 6/7. Post-remediation (template: "Hậu Khắc phục")
+    "Khuyến nghị",                    # 7/8. Recommendations (template: "Khuyến nghị")
 ]
 
 
@@ -239,15 +241,27 @@ def evaluate_correctness(
     # The findings table is the styled-table right after "Bảng chi tiết phát hiện"
     # and before the next <h1> section. Use a more specific pattern to avoid
     # matching other tables (e.g. section 6.1 post-remediation summary table).
+    # The template may insert a note paragraph (e.g. "Ghi chú: N findings
+    # không thay đổi ... đã được ẩn") between the heading and the table
+    # when PASS→PASS rows are filtered out. Allow arbitrary intermediate
+    # content so the regex keeps matching after that template change.
     table_section = re.search(
-        r'Bảng chi tiết phát hiện</h1>\s*<table class="styled-table">.*?<tbody>(.*?)</tbody>',
+        r'Bảng chi tiết phát hiện</h1>.*?<table class="styled-table">.*?<tbody>(.*?)</tbody>',
         html, re.DOTALL
     )
     table_rows = 0
     if table_section:
         table_rows = len(re.findall(r'<tr>', table_section.group(1)))
 
-    expected_rows = len(findings_table)
+    # The template hides PASS→PASS "Unchanged" rows (see the "Ghi chú: N
+    # findings không thay đổi đã được ẩn" note). Expected visible count
+    # is only the rows whose status actually changed — including the
+    # edge case where *every* row is Unchanged, which renders an empty
+    # tbody correctly.
+    expected_rows = sum(
+        1 for r in findings_table
+        if (r.get("change") or "").strip().lower() != "unchanged"
+    )
     table_row_match = table_rows == expected_rows
 
     # Check severity badges use correct CSS classes
@@ -391,6 +405,15 @@ def evaluate_faithfulness(
         known_numbers.add(len(report_data.get(key, [])))
     known_numbers.add(len(report_data.get("findings_table", [])))
     known_numbers.add(len(report_data.get("raw_pre_findings", [])))
+
+    # Add account_id from environment (LLM writes it in the cover / narrative)
+    env = report_data.get("environment", {})
+    acct = env.get("account_id")
+    if acct is not None:
+        try:
+            known_numbers.add(int(str(acct).replace("-", "")))
+        except ValueError:
+            pass
 
     # Remove trivial numbers (0, 1) — too common to be meaningful
     known_numbers.discard(0)

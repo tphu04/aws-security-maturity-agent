@@ -1,0 +1,17 @@
+{
+  "_description": "Release thresholds for Report Agent v3. HARD metrics gate the release; SOFT metrics report-only. See docs/report_agent_evaluation_plan.md §3.",
+  "schema_version": 3,
+  "hard": {
+    "structure_pass_rate_min":        1.00,
+    "off_scope_mention_rate_max":     0.02,
+    "scope_accuracy_min":             1.00,
+    "numerical_faithfulness_min":     0.90,
+    "template_data_accuracy_min":     1.00
+  },
+  "soft": {
+    "capability_grounding_rate_min":  0.85,
+    "claim_support_rate_min":         0.85,
+    "ndcg_at_5_severity_min":         0.85,
+    "actionability_likert_min":       3.5
+  }
+}

@@ -40,7 +40,14 @@ class BenchmarkMockLLM:
         self.call_count = 0
 
     def invoke(self, prompt):
-        self.prompts.append(prompt)
+        # Phase 4+: LLM receives [SystemMessage, HumanMessage] list
+        if isinstance(prompt, list):
+            text = " ".join(
+                getattr(m, "content", str(m)) for m in prompt
+            )
+        else:
+            text = str(prompt)
+        self.prompts.append(text)
         self.call_count += 1
         return BenchmarkMockResponse(
             "Mock LLM response for benchmark testing."

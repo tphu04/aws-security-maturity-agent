@@ -12,6 +12,7 @@ Supports:
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import sys
 import io
@@ -37,7 +38,7 @@ from app.evaluation.metrics import (
     compute_robustness_gap,
 )
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.environ.get("RAG_BASE_URL", "http://localhost:8001")
 TOP_K = 5
 TIMEOUT = 30
 
