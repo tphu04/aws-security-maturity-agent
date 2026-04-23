@@ -1,0 +1,14 @@
+{
+  "sections_validated": [
+    "executive_summary",
+    "system_overview",
+    "assessment_goals",
+    "pass_overview",
+    "fail_overview",
+    "post_analysis",
+    "recommendations"
+  ],
+  "issue_count": 0,
+  "summary": {},
+  "issues": []
+}

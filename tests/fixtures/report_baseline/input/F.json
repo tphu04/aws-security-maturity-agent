@@ -1,0 +1,201 @@
+{
+  "pre": {
+    "total": 6,
+    "pass": 2,
+    "fail": 4,
+    "severity": {
+      "critical": 1,
+      "high": 2,
+      "medium": 1,
+      "low": 0
+    }
+  },
+  "post": {
+    "initial_pass": 2,
+    "initial_fail": 4,
+    "final_pass": 5,
+    "final_fail": 1,
+    "fixed": 3,
+    "failed": 0,
+    "manual": 1
+  },
+  "environment": {
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "buckets": []
+  },
+  "scope": {
+    "services": [
+      "iam"
+    ],
+    "date": "2026-04-20",
+    "user_request": "Review IAM MFA, password policy and root protection."
+  },
+  "findings_table": [
+    {
+      "stt": 1,
+      "finding": "IAM user alice does not have MFA enabled",
+      "service": "iam",
+      "resource": "arn:aws:iam::123456789012:user/alice",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 2,
+      "finding": "IAM user bob does not have MFA enabled",
+      "service": "iam",
+      "resource": "arn:aws:iam::123456789012:user/bob",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 3,
+      "finding": "IAM user carol has MFA enabled",
+      "service": "iam",
+      "resource": "arn:aws:iam::123456789012:user/carol",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 4,
+      "finding": "Root account MFA is disabled",
+      "service": "iam",
+      "resource": "123456789012",
+      "severity": "Critical",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing (ManualRequired)"
+    },
+    {
+      "stt": 5,
+      "finding": "Password policy does not meet strength requirements",
+      "service": "iam",
+      "resource": "123456789012",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 6,
+      "finding": "Password policy meets minimum length",
+      "service": "iam",
+      "resource": "123456789012",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    }
+  ],
+  "success_findings": [],
+  "failed_findings": [],
+  "manual_findings": [],
+  "raw_pre_findings": [
+    {
+      "finding_uid": "uid-iam-1",
+      "finding_id": "f-iam-1",
+      "event_code": "iam_user_mfa_enabled",
+      "check_id": "iam_user_mfa_enabled",
+      "service": "iam",
+      "resource_id": "arn:aws:iam::123456789012:user/alice",
+      "resource": "arn:aws:iam::123456789012:user/alice",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "IAM user alice does not have MFA enabled"
+    },
+    {
+      "finding_uid": "uid-iam-2",
+      "finding_id": "f-iam-2",
+      "event_code": "iam_user_mfa_enabled",
+      "check_id": "iam_user_mfa_enabled",
+      "service": "iam",
+      "resource_id": "arn:aws:iam::123456789012:user/bob",
+      "resource": "arn:aws:iam::123456789012:user/bob",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "IAM user bob does not have MFA enabled"
+    },
+    {
+      "finding_uid": "uid-iam-3",
+      "finding_id": "f-iam-3",
+      "event_code": "iam_user_mfa_enabled",
+      "check_id": "iam_user_mfa_enabled",
+      "service": "iam",
+      "resource_id": "arn:aws:iam::123456789012:user/carol",
+      "resource": "arn:aws:iam::123456789012:user/carol",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "IAM user carol has MFA enabled"
+    },
+    {
+      "finding_uid": "uid-iam-4",
+      "finding_id": "f-iam-4",
+      "event_code": "iam_root_mfa_enabled",
+      "check_id": "iam_root_mfa_enabled",
+      "service": "iam",
+      "resource_id": "123456789012",
+      "resource": "123456789012",
+      "severity": "Critical",
+      "status": "FAIL",
+      "description": "Root account MFA is disabled"
+    },
+    {
+      "finding_uid": "uid-iam-5",
+      "finding_id": "f-iam-5",
+      "event_code": "iam_password_policy_strong",
+      "check_id": "iam_password_policy_strong",
+      "service": "iam",
+      "resource_id": "123456789012",
+      "resource": "123456789012",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "Password policy does not meet strength requirements"
+    },
+    {
+      "finding_uid": "uid-iam-6",
+      "finding_id": "f-iam-6",
+      "event_code": "iam_password_policy_min_length",
+      "check_id": "iam_password_policy_min_length",
+      "service": "iam",
+      "resource_id": "123456789012",
+      "resource": "123456789012",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Password policy meets minimum length"
+    }
+  ],
+  "rag_context": {
+    "primary_topics": [
+      "Identity And Access Management"
+    ],
+    "control_themes": [
+      {
+        "capability_id": "identity-mgmt",
+        "capability_name": "Identity And Access Management",
+        "summary_short": "Identity And Access Management controls for IAM."
+      }
+    ],
+    "capability_details": [
+      {
+        "capability_id": "identity-mgmt",
+        "capability_name": "Identity And Access Management",
+        "summary": "Identity And Access Management enforces baseline guardrails.",
+        "risk_explanation": "Misconfiguration exposes data or access.",
+        "recommendation": "Apply the documented remediation.",
+        "guidance_questions": []
+      }
+    ],
+    "recommended_practices": [
+      "Apply the Identity And Access Management baseline on every resource.",
+      "Log and monitor configuration drift."
+    ],
+    "key_findings": [],
+    "confidence": "medium"
+  }
+}

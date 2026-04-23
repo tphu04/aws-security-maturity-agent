@@ -1,0 +1,272 @@
+{
+  "pre": {
+    "total": 9,
+    "pass": 3,
+    "fail": 6,
+    "severity": {
+      "critical": 0,
+      "high": 3,
+      "medium": 3,
+      "low": 0
+    }
+  },
+  "post": {
+    "initial_pass": 3,
+    "initial_fail": 6,
+    "final_pass": 6,
+    "final_fail": 3,
+    "fixed": 3,
+    "failed": 2,
+    "manual": 1
+  },
+  "environment": {
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "buckets": [
+      "prod-data-lake",
+      "logs-archive"
+    ]
+  },
+  "scope": {
+    "services": [
+      "s3",
+      "iam",
+      "ec2"
+    ],
+    "date": "2026-04-20",
+    "user_request": "Multi-service baseline review: S3, IAM, EC2."
+  },
+  "findings_table": [
+    {
+      "stt": 1,
+      "finding": "Bucket prod-data-lake missing default encryption",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 2,
+      "finding": "Bucket prod-data-lake has versioning enabled",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 3,
+      "finding": "Bucket logs-archive allows HTTP access",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing"
+    },
+    {
+      "stt": 4,
+      "finding": "IAM user alice does not have MFA enabled",
+      "service": "iam",
+      "resource": "arn:aws:iam::123456789012:user/alice",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 5,
+      "finding": "IAM role admin has inline policy attached",
+      "service": "iam",
+      "resource": "arn:aws:iam::123456789012:role/admin",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing"
+    },
+    {
+      "stt": 6,
+      "finding": "IAM user carol has MFA enabled",
+      "service": "iam",
+      "resource": "arn:aws:iam::123456789012:user/carol",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 7,
+      "finding": "EC2 instance i-0abc1 still allows IMDSv1",
+      "service": "ec2",
+      "resource": "i-0abc1",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 8,
+      "finding": "EC2 instance i-0abc2 has a public IP",
+      "service": "ec2",
+      "resource": "i-0abc2",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing (ManualRequired)"
+    },
+    {
+      "stt": 9,
+      "finding": "EC2 instance i-0abc3 enforces IMDSv2",
+      "service": "ec2",
+      "resource": "i-0abc3",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    }
+  ],
+  "success_findings": [],
+  "failed_findings": [],
+  "manual_findings": [],
+  "raw_pre_findings": [
+    {
+      "finding_uid": "uid-s3-1",
+      "finding_id": "f-s3-1",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "Bucket prod-data-lake missing default encryption"
+    },
+    {
+      "finding_uid": "uid-s3-2",
+      "finding_id": "f-s3-2",
+      "event_code": "s3_bucket_object_versioning",
+      "check_id": "s3_bucket_object_versioning",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "Bucket prod-data-lake has versioning enabled"
+    },
+    {
+      "finding_uid": "uid-s3-3",
+      "finding_id": "f-s3-3",
+      "event_code": "s3_bucket_secure_transport",
+      "check_id": "s3_bucket_secure_transport",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "Bucket logs-archive allows HTTP access"
+    },
+    {
+      "finding_uid": "uid-iam-4",
+      "finding_id": "f-iam-4",
+      "event_code": "iam_user_mfa_enabled",
+      "check_id": "iam_user_mfa_enabled",
+      "service": "iam",
+      "resource_id": "arn:aws:iam::123456789012:user/alice",
+      "resource": "arn:aws:iam::123456789012:user/alice",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "IAM user alice does not have MFA enabled"
+    },
+    {
+      "finding_uid": "uid-iam-5",
+      "finding_id": "f-iam-5",
+      "event_code": "iam_role_inline_policy",
+      "check_id": "iam_role_inline_policy",
+      "service": "iam",
+      "resource_id": "arn:aws:iam::123456789012:role/admin",
+      "resource": "arn:aws:iam::123456789012:role/admin",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "IAM role admin has inline policy attached"
+    },
+    {
+      "finding_uid": "uid-iam-6",
+      "finding_id": "f-iam-6",
+      "event_code": "iam_user_mfa_enabled",
+      "check_id": "iam_user_mfa_enabled",
+      "service": "iam",
+      "resource_id": "arn:aws:iam::123456789012:user/carol",
+      "resource": "arn:aws:iam::123456789012:user/carol",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "IAM user carol has MFA enabled"
+    },
+    {
+      "finding_uid": "uid-ec2-7",
+      "finding_id": "f-ec2-7",
+      "event_code": "ec2_instance_imdsv2_required",
+      "check_id": "ec2_instance_imdsv2_required",
+      "service": "ec2",
+      "resource_id": "i-0abc1",
+      "resource": "i-0abc1",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "EC2 instance i-0abc1 still allows IMDSv1"
+    },
+    {
+      "finding_uid": "uid-ec2-8",
+      "finding_id": "f-ec2-8",
+      "event_code": "ec2_instance_public_ip",
+      "check_id": "ec2_instance_public_ip",
+      "service": "ec2",
+      "resource_id": "i-0abc2",
+      "resource": "i-0abc2",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "EC2 instance i-0abc2 has a public IP"
+    },
+    {
+      "finding_uid": "uid-ec2-9",
+      "finding_id": "f-ec2-9",
+      "event_code": "ec2_instance_imdsv2_required",
+      "check_id": "ec2_instance_imdsv2_required",
+      "service": "ec2",
+      "resource_id": "i-0abc3",
+      "resource": "i-0abc3",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "EC2 instance i-0abc3 enforces IMDSv2"
+    }
+  ],
+  "rag_context": {
+    "primary_topics": [
+      "Baseline Security"
+    ],
+    "control_themes": [
+      {
+        "capability_id": "baseline-security",
+        "capability_name": "Baseline Security",
+        "summary_short": "Baseline Security controls for MULTI."
+      }
+    ],
+    "capability_details": [
+      {
+        "capability_id": "baseline-security",
+        "capability_name": "Baseline Security",
+        "summary": "Baseline Security enforces baseline guardrails.",
+        "risk_explanation": "Misconfiguration exposes data or access.",
+        "recommendation": "Apply the documented remediation.",
+        "guidance_questions": []
+      }
+    ],
+    "recommended_practices": [
+      "Apply the Baseline Security baseline on every resource.",
+      "Log and monitor configuration drift."
+    ],
+    "key_findings": [],
+    "confidence": "medium"
+  }
+}

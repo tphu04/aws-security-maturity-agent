@@ -32,13 +32,25 @@ class MockLLMResponse:
         self.content = content
 
 
+def _prompt_to_str(prompt):
+    """Normalize a LangChain ``[SystemMessage, HumanMessage]`` payload to
+    a single string so test assertions can inspect the full prompt text
+    (system constraints + human prompt) with a simple substring check.
+    """
+    if isinstance(prompt, list):
+        return "\n\n".join(
+            getattr(m, "content", str(m)) for m in prompt
+        )
+    return prompt
+
+
 class MockLLM:
     """Returns predictable text. Captures prompt for inspection."""
     def __init__(self):
         self.last_prompt = None
 
     def invoke(self, prompt):
-        self.last_prompt = prompt
+        self.last_prompt = _prompt_to_str(prompt)
         return MockLLMResponse(
             "Detailed analysis based on the provided security data. "
             "The assessment shows measurable improvements in security posture."
@@ -56,8 +68,8 @@ class ScriptedLLM:
         self._content = content
         self.last_prompt = None
 
-    def invoke(self, prompt: str):
-        self.last_prompt = prompt
+    def invoke(self, prompt):
+        self.last_prompt = _prompt_to_str(prompt)
         return MockLLMResponse(self._content)
 
 

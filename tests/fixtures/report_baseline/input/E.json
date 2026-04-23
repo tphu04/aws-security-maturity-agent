@@ -1,0 +1,338 @@
+{
+  "pre": {
+    "total": 12,
+    "pass": 4,
+    "fail": 8,
+    "severity": {
+      "critical": 0,
+      "high": 4,
+      "medium": 4,
+      "low": 0
+    }
+  },
+  "post": {
+    "initial_pass": 4,
+    "initial_fail": 8,
+    "final_pass": 8,
+    "final_fail": 4,
+    "fixed": 4,
+    "failed": 4,
+    "manual": 0
+  },
+  "environment": {
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "buckets": [
+      "prod-data-lake",
+      "logs-archive",
+      "public-assets",
+      "ops-backup"
+    ]
+  },
+  "scope": {
+    "services": [
+      "s3"
+    ],
+    "date": "2026-04-20",
+    "user_request": "Intensive sweep of every S3 bucket across the account."
+  },
+  "findings_table": [
+    {
+      "stt": 1,
+      "finding": "s3_bucket_default_encryption for bucket prod-data-lake",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 2,
+      "finding": "s3_bucket_object_versioning for bucket prod-data-lake",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing"
+    },
+    {
+      "stt": 3,
+      "finding": "s3_bucket_secure_transport for bucket prod-data-lake",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 4,
+      "finding": "s3_bucket_default_encryption for bucket logs-archive",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 5,
+      "finding": "s3_bucket_object_versioning for bucket logs-archive",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing"
+    },
+    {
+      "stt": 6,
+      "finding": "s3_bucket_secure_transport for bucket logs-archive",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 7,
+      "finding": "s3_bucket_default_encryption for bucket public-assets",
+      "service": "s3",
+      "resource": "public-assets",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 8,
+      "finding": "s3_bucket_object_versioning for bucket public-assets",
+      "service": "s3",
+      "resource": "public-assets",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing"
+    },
+    {
+      "stt": 9,
+      "finding": "s3_bucket_secure_transport for bucket public-assets",
+      "service": "s3",
+      "resource": "public-assets",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 10,
+      "finding": "s3_bucket_default_encryption for bucket ops-backup",
+      "service": "s3",
+      "resource": "ops-backup",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 11,
+      "finding": "s3_bucket_object_versioning for bucket ops-backup",
+      "service": "s3",
+      "resource": "ops-backup",
+      "severity": "Medium",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing"
+    },
+    {
+      "stt": 12,
+      "finding": "s3_bucket_secure_transport for bucket ops-backup",
+      "service": "s3",
+      "resource": "ops-backup",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    }
+  ],
+  "success_findings": [],
+  "failed_findings": [],
+  "manual_findings": [],
+  "raw_pre_findings": [
+    {
+      "finding_uid": "uid-s3-1",
+      "finding_id": "f-s3-1",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "s3_bucket_default_encryption for bucket prod-data-lake"
+    },
+    {
+      "finding_uid": "uid-s3-2",
+      "finding_id": "f-s3-2",
+      "event_code": "s3_bucket_object_versioning",
+      "check_id": "s3_bucket_object_versioning",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "s3_bucket_object_versioning for bucket prod-data-lake"
+    },
+    {
+      "finding_uid": "uid-s3-3",
+      "finding_id": "f-s3-3",
+      "event_code": "s3_bucket_secure_transport",
+      "check_id": "s3_bucket_secure_transport",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "s3_bucket_secure_transport for bucket prod-data-lake"
+    },
+    {
+      "finding_uid": "uid-s3-4",
+      "finding_id": "f-s3-4",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "s3_bucket_default_encryption for bucket logs-archive"
+    },
+    {
+      "finding_uid": "uid-s3-5",
+      "finding_id": "f-s3-5",
+      "event_code": "s3_bucket_object_versioning",
+      "check_id": "s3_bucket_object_versioning",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "s3_bucket_object_versioning for bucket logs-archive"
+    },
+    {
+      "finding_uid": "uid-s3-6",
+      "finding_id": "f-s3-6",
+      "event_code": "s3_bucket_secure_transport",
+      "check_id": "s3_bucket_secure_transport",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "s3_bucket_secure_transport for bucket logs-archive"
+    },
+    {
+      "finding_uid": "uid-s3-7",
+      "finding_id": "f-s3-7",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "public-assets",
+      "resource": "public-assets",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "s3_bucket_default_encryption for bucket public-assets"
+    },
+    {
+      "finding_uid": "uid-s3-8",
+      "finding_id": "f-s3-8",
+      "event_code": "s3_bucket_object_versioning",
+      "check_id": "s3_bucket_object_versioning",
+      "service": "s3",
+      "resource_id": "public-assets",
+      "resource": "public-assets",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "s3_bucket_object_versioning for bucket public-assets"
+    },
+    {
+      "finding_uid": "uid-s3-9",
+      "finding_id": "f-s3-9",
+      "event_code": "s3_bucket_secure_transport",
+      "check_id": "s3_bucket_secure_transport",
+      "service": "s3",
+      "resource_id": "public-assets",
+      "resource": "public-assets",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "s3_bucket_secure_transport for bucket public-assets"
+    },
+    {
+      "finding_uid": "uid-s3-10",
+      "finding_id": "f-s3-10",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "ops-backup",
+      "resource": "ops-backup",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "s3_bucket_default_encryption for bucket ops-backup"
+    },
+    {
+      "finding_uid": "uid-s3-11",
+      "finding_id": "f-s3-11",
+      "event_code": "s3_bucket_object_versioning",
+      "check_id": "s3_bucket_object_versioning",
+      "service": "s3",
+      "resource_id": "ops-backup",
+      "resource": "ops-backup",
+      "severity": "Medium",
+      "status": "FAIL",
+      "description": "s3_bucket_object_versioning for bucket ops-backup"
+    },
+    {
+      "finding_uid": "uid-s3-12",
+      "finding_id": "f-s3-12",
+      "event_code": "s3_bucket_secure_transport",
+      "check_id": "s3_bucket_secure_transport",
+      "service": "s3",
+      "resource_id": "ops-backup",
+      "resource": "ops-backup",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "s3_bucket_secure_transport for bucket ops-backup"
+    }
+  ],
+  "rag_context": {
+    "primary_topics": [
+      "Data Protection"
+    ],
+    "control_themes": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary_short": "Data Protection controls for S3."
+      }
+    ],
+    "capability_details": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary": "Data Protection enforces baseline guardrails.",
+        "risk_explanation": "Misconfiguration exposes data or access.",
+        "recommendation": "Apply the documented remediation.",
+        "guidance_questions": []
+      }
+    ],
+    "recommended_practices": [
+      "Apply the Data Protection baseline on every resource.",
+      "Log and monitor configuration drift."
+    ],
+    "key_findings": [],
+    "confidence": "medium"
+  }
+}

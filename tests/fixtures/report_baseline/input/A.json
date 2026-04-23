@@ -1,0 +1,208 @@
+{
+  "pre": {
+    "total": 6,
+    "pass": 6,
+    "fail": 0,
+    "severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  },
+  "post": {
+    "initial_pass": 6,
+    "initial_fail": 0,
+    "final_pass": 6,
+    "final_fail": 0,
+    "fixed": 0,
+    "failed": 0,
+    "manual": 0
+  },
+  "environment": {
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "buckets": [
+      "prod-data-lake",
+      "logs-archive",
+      "public-assets",
+      "analytics-warehouse",
+      "ml-models",
+      "ops-backup"
+    ]
+  },
+  "scope": {
+    "services": [
+      "s3"
+    ],
+    "date": "2026-04-20",
+    "user_request": "Verify that every S3 bucket has baseline encryption."
+  },
+  "findings_table": [
+    {
+      "stt": 1,
+      "finding": "Bucket prod-data-lake has default encryption enabled",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 2,
+      "finding": "Bucket logs-archive has default encryption enabled",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 3,
+      "finding": "Bucket public-assets has default encryption enabled",
+      "service": "s3",
+      "resource": "public-assets",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 4,
+      "finding": "Bucket analytics-warehouse has default encryption enabled",
+      "service": "s3",
+      "resource": "analytics-warehouse",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 5,
+      "finding": "Bucket ml-models has default encryption enabled",
+      "service": "s3",
+      "resource": "ml-models",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 6,
+      "finding": "Bucket ops-backup has default encryption enabled",
+      "service": "s3",
+      "resource": "ops-backup",
+      "severity": "Low",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    }
+  ],
+  "success_findings": [],
+  "failed_findings": [],
+  "manual_findings": [],
+  "raw_pre_findings": [
+    {
+      "finding_uid": "uid-s3-1",
+      "finding_id": "f-s3-1",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Bucket prod-data-lake has default encryption enabled"
+    },
+    {
+      "finding_uid": "uid-s3-2",
+      "finding_id": "f-s3-2",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Bucket logs-archive has default encryption enabled"
+    },
+    {
+      "finding_uid": "uid-s3-3",
+      "finding_id": "f-s3-3",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "public-assets",
+      "resource": "public-assets",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Bucket public-assets has default encryption enabled"
+    },
+    {
+      "finding_uid": "uid-s3-4",
+      "finding_id": "f-s3-4",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "analytics-warehouse",
+      "resource": "analytics-warehouse",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Bucket analytics-warehouse has default encryption enabled"
+    },
+    {
+      "finding_uid": "uid-s3-5",
+      "finding_id": "f-s3-5",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "ml-models",
+      "resource": "ml-models",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Bucket ml-models has default encryption enabled"
+    },
+    {
+      "finding_uid": "uid-s3-6",
+      "finding_id": "f-s3-6",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "ops-backup",
+      "resource": "ops-backup",
+      "severity": "Low",
+      "status": "PASS",
+      "description": "Bucket ops-backup has default encryption enabled"
+    }
+  ],
+  "rag_context": {
+    "primary_topics": [
+      "Data Protection"
+    ],
+    "control_themes": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary_short": "Data Protection controls for S3."
+      }
+    ],
+    "capability_details": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary": "Data Protection enforces baseline guardrails.",
+        "risk_explanation": "Misconfiguration exposes data or access.",
+        "recommendation": "Apply the documented remediation.",
+        "guidance_questions": []
+      }
+    ],
+    "recommended_practices": [
+      "Apply the Data Protection baseline on every resource.",
+      "Log and monitor configuration drift."
+    ],
+    "key_findings": [],
+    "confidence": "medium"
+  }
+}

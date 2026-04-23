@@ -1,0 +1,95 @@
+{
+  "fixtures": {
+    "A": {
+      "llm_calls": 5,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": true,
+        "mentions_bucket": false,
+        "mentions_iam": false,
+        "mentions_ec2": false,
+        "mentions_infrastructure": false,
+        "html_bytes": 15589
+      }
+    },
+    "B": {
+      "llm_calls": 8,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": true,
+        "mentions_bucket": true,
+        "mentions_iam": false,
+        "mentions_ec2": false,
+        "mentions_infrastructure": false,
+        "html_bytes": 20066
+      }
+    },
+    "C": {
+      "llm_calls": 9,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": true,
+        "mentions_bucket": true,
+        "mentions_iam": false,
+        "mentions_ec2": false,
+        "mentions_infrastructure": false,
+        "html_bytes": 18003
+      }
+    },
+    "D": {
+      "llm_calls": 4,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": true,
+        "mentions_bucket": false,
+        "mentions_iam": false,
+        "mentions_ec2": false,
+        "mentions_infrastructure": false,
+        "html_bytes": 15310
+      }
+    },
+    "E": {
+      "llm_calls": 9,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": true,
+        "mentions_bucket": true,
+        "mentions_iam": false,
+        "mentions_ec2": false,
+        "mentions_infrastructure": false,
+        "html_bytes": 21279
+      }
+    },
+    "F": {
+      "llm_calls": 9,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": false,
+        "mentions_bucket": false,
+        "mentions_iam": true,
+        "mentions_ec2": false,
+        "mentions_infrastructure": false,
+        "html_bytes": 18613
+      }
+    },
+    "G": {
+      "llm_calls": 9,
+      "validation_issue_count": 0,
+      "validation_summary": {},
+      "scope": {
+        "mentions_s3": false,
+        "mentions_bucket": true,
+        "mentions_iam": false,
+        "mentions_ec2": false,
+        "mentions_infrastructure": true,
+        "html_bytes": 20217
+      }
+    }
+  }
+}

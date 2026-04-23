@@ -1,0 +1,67 @@
+{
+  "pre": {
+    "total": 0,
+    "pass": 0,
+    "fail": 0,
+    "severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  },
+  "post": {
+    "initial_pass": 0,
+    "initial_fail": 0,
+    "final_pass": 0,
+    "final_fail": 0,
+    "fixed": 0,
+    "failed": 0,
+    "manual": 0
+  },
+  "environment": {
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "buckets": []
+  },
+  "scope": {
+    "services": [
+      "s3"
+    ],
+    "date": "2026-04-20",
+    "user_request": "Scan S3 posture for the empty account."
+  },
+  "findings_table": [],
+  "success_findings": [],
+  "failed_findings": [],
+  "manual_findings": [],
+  "raw_pre_findings": [],
+  "rag_context": {
+    "primary_topics": [
+      "Data Protection"
+    ],
+    "control_themes": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary_short": "Data Protection controls for S3."
+      }
+    ],
+    "capability_details": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary": "Data Protection enforces baseline guardrails.",
+        "risk_explanation": "Misconfiguration exposes data or access.",
+        "recommendation": "Apply the documented remediation.",
+        "guidance_questions": []
+      }
+    ],
+    "recommended_practices": [
+      "Apply the Data Protection baseline on every resource.",
+      "Log and monitor configuration drift."
+    ],
+    "key_findings": [],
+    "confidence": "medium"
+  }
+}

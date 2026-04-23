@@ -1,0 +1,205 @@
+{
+  "pre": {
+    "total": 6,
+    "pass": 3,
+    "fail": 3,
+    "severity": {
+      "critical": 1,
+      "high": 1,
+      "medium": 0,
+      "low": 1
+    }
+  },
+  "post": {
+    "initial_pass": 3,
+    "initial_fail": 3,
+    "final_pass": 5,
+    "final_fail": 1,
+    "fixed": 2,
+    "failed": 0,
+    "manual": 1
+  },
+  "environment": {
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "buckets": [
+      "prod-data-lake",
+      "logs-archive",
+      "public-assets"
+    ]
+  },
+  "scope": {
+    "services": [
+      "s3"
+    ],
+    "date": "2026-04-20",
+    "user_request": "Audit S3 encryption, versioning and public exposure."
+  },
+  "findings_table": [
+    {
+      "stt": 1,
+      "finding": "Bucket prod-data-lake missing default encryption",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "High",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 2,
+      "finding": "Bucket prod-data-lake has versioning enabled",
+      "service": "s3",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 3,
+      "finding": "Bucket logs-archive allows public read",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "Critical",
+      "before": "FAIL",
+      "after": "FAIL",
+      "change": "Still Failing (ManualRequired)"
+    },
+    {
+      "stt": 4,
+      "finding": "Bucket logs-archive enforces TLS",
+      "service": "s3",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    },
+    {
+      "stt": 5,
+      "finding": "Bucket public-assets has access logging off",
+      "service": "s3",
+      "resource": "public-assets",
+      "severity": "Low",
+      "before": "FAIL",
+      "after": "PASS",
+      "change": "Fixed"
+    },
+    {
+      "stt": 6,
+      "finding": "Bucket public-assets has default encryption",
+      "service": "s3",
+      "resource": "public-assets",
+      "severity": "High",
+      "before": "PASS",
+      "after": "PASS",
+      "change": "Unchanged"
+    }
+  ],
+  "success_findings": [],
+  "failed_findings": [],
+  "manual_findings": [],
+  "raw_pre_findings": [
+    {
+      "finding_uid": "uid-s3-1",
+      "finding_id": "f-s3-1",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "High",
+      "status": "FAIL",
+      "description": "Bucket prod-data-lake missing default encryption"
+    },
+    {
+      "finding_uid": "uid-s3-2",
+      "finding_id": "f-s3-2",
+      "event_code": "s3_bucket_object_versioning",
+      "check_id": "s3_bucket_object_versioning",
+      "service": "s3",
+      "resource_id": "prod-data-lake",
+      "resource": "prod-data-lake",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "Bucket prod-data-lake has versioning enabled"
+    },
+    {
+      "finding_uid": "uid-s3-3",
+      "finding_id": "f-s3-3",
+      "event_code": "s3_bucket_public_access",
+      "check_id": "s3_bucket_public_access",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "Critical",
+      "status": "FAIL",
+      "description": "Bucket logs-archive allows public read"
+    },
+    {
+      "finding_uid": "uid-s3-4",
+      "finding_id": "f-s3-4",
+      "event_code": "s3_bucket_secure_transport",
+      "check_id": "s3_bucket_secure_transport",
+      "service": "s3",
+      "resource_id": "logs-archive",
+      "resource": "logs-archive",
+      "severity": "Medium",
+      "status": "PASS",
+      "description": "Bucket logs-archive enforces TLS"
+    },
+    {
+      "finding_uid": "uid-s3-5",
+      "finding_id": "f-s3-5",
+      "event_code": "s3_bucket_logging_enabled",
+      "check_id": "s3_bucket_logging_enabled",
+      "service": "s3",
+      "resource_id": "public-assets",
+      "resource": "public-assets",
+      "severity": "Low",
+      "status": "FAIL",
+      "description": "Bucket public-assets has access logging off"
+    },
+    {
+      "finding_uid": "uid-s3-6",
+      "finding_id": "f-s3-6",
+      "event_code": "s3_bucket_default_encryption",
+      "check_id": "s3_bucket_default_encryption",
+      "service": "s3",
+      "resource_id": "public-assets",
+      "resource": "public-assets",
+      "severity": "High",
+      "status": "PASS",
+      "description": "Bucket public-assets has default encryption"
+    }
+  ],
+  "rag_context": {
+    "primary_topics": [
+      "Data Protection"
+    ],
+    "control_themes": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary_short": "Data Protection controls for S3."
+      }
+    ],
+    "capability_details": [
+      {
+        "capability_id": "data-protection",
+        "capability_name": "Data Protection",
+        "summary": "Data Protection enforces baseline guardrails.",
+        "risk_explanation": "Misconfiguration exposes data or access.",
+        "recommendation": "Apply the documented remediation.",
+        "guidance_questions": []
+      }
+    ],
+    "recommended_practices": [
+      "Apply the Data Protection baseline on every resource.",
+      "Log and monitor configuration drift."
+    ],
+    "key_findings": [],
+    "confidence": "medium"
+  }
+}
