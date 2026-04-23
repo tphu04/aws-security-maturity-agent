@@ -592,3 +592,146 @@ class TestFaithfulnessMetricCoverage:
             selected_checks=["s3_bucket_public_access"],
         )
         assert result["method"] == "hardcoded_skip"
+
+
+# ============================================================
+# Multi-intent splitter + multi-retrieve path
+# ============================================================
+
+class TestMultiIntent:
+    """Test LLM intent splitter + union-based multi-retrieve."""
+
+    def test_split_intents_returns_list(self, agent):
+        fake_raw = '{"sub_queries": ["s3 notification", "s3 encryption"]}'
+        with patch.object(agent, "llm"):
+            with patch(
+                "pdca.agents.planning_agent.ChatPromptTemplate.from_template"
+            ) as mock_tpl:
+                chain = MagicMock()
+                chain.invoke.return_value = fake_raw
+                mock_tpl.return_value.__or__.return_value.__or__.return_value = chain
+                result = agent._split_intents("kiểm tra notification và encryption của s3", "s3")
+        assert result == ["s3 notification", "s3 encryption"]
+
+    def test_split_intents_handles_llm_failure(self, agent):
+        with patch(
+            "pdca.agents.planning_agent.ChatPromptTemplate.from_template"
+        ) as mock_tpl:
+            chain = MagicMock()
+            chain.invoke.side_effect = RuntimeError("LLM down")
+            mock_tpl.return_value.__or__.return_value.__or__.return_value = chain
+            result = agent._split_intents("anything", "s3")
+        assert result == []
+
+    def test_split_intents_handles_bad_json(self, agent):
+        with patch(
+            "pdca.agents.planning_agent.ChatPromptTemplate.from_template"
+        ) as mock_tpl:
+            chain = MagicMock()
+            chain.invoke.return_value = '{"sub_queries": "not a list"}'
+            mock_tpl.return_value.__or__.return_value.__or__.return_value = chain
+            result = agent._split_intents("x", "s3")
+        assert result == []
+
+    def test_multi_retrieve_unions_per_topic_candidates(self, agent, mock_rag_client):
+        """Two sub-queries return distinct checks; union preserves both topics."""
+        def build_context_side_effect(*, consumer, query, top_k, retrieval_mode):
+            if "notification" in query.lower():
+                return _make_build_context_response([
+                    {"check_id": "s3_bucket_event_notifications_enabled",
+                     "title": "Notifications", "severity": "medium", "service": "s3", "score": 0.90},
+                    {"check_id": "s3_bucket_kms_encryption_enabled",
+                     "title": "KMS enc (weak hit)", "severity": "medium", "service": "s3", "score": 0.30},
+                ], confidence="high")
+            if "encryption" in query.lower():
+                return _make_build_context_response([
+                    {"check_id": "s3_bucket_default_encryption",
+                     "title": "Default enc", "severity": "high", "service": "s3", "score": 0.88},
+                    {"check_id": "s3_bucket_kms_encryption_enabled",
+                     "title": "KMS enc", "severity": "high", "service": "s3", "score": 0.82},
+                ], confidence="high")
+            return _make_build_context_response([], confidence="low")
+
+        mock_rag_client.build_context.side_effect = build_context_side_effect
+
+        result = agent._multi_retrieve_and_gate(
+            request="kiểm tra notification và encryption của s3",
+            sub_queries=["s3 notification", "s3 encryption"],
+            detected_service="s3",
+        )
+
+        checks = result["checks_to_scan"]
+        # Both topics represented — notification check is no longer culled by encryption's cluster
+        assert "s3_bucket_event_notifications_enabled" in checks
+        assert "s3_bucket_default_encryption" in checks
+        assert result["groups_to_scan"] == []
+        # Reasoning mentions the split
+        assert "Multi-intent" in result["reasoning"]
+
+    def test_multi_retrieve_low_confidence_falls_back_to_llm(self, agent, mock_rag_client):
+        mock_rag_client.build_context.return_value = _make_build_context_response(
+            [{"check_id": "s3_bucket_event_notifications_enabled", "title": "N",
+              "severity": "low", "service": "s3", "score": 0.20}],
+            confidence="low",
+        )
+        with patch.object(agent, "_llm_refine", return_value=agent._make_output(
+            checks=["s3_bucket_default_encryption"], reasoning="LLM picked encryption",
+        )) as mock_refine:
+            result = agent._multi_retrieve_and_gate(
+                request="kiểm tra notification và encryption của s3",
+                sub_queries=["s3 notification", "s3 encryption"],
+                detected_service="s3",
+            )
+        mock_refine.assert_called_once()
+        assert result["checks_to_scan"] == ["s3_bucket_default_encryption"]
+
+    def test_run_triggers_splitter_on_conjunction(self, agent, mock_rag_client):
+        """End-to-end: Vietnamese request with 'và' triggers splitter + multi-retrieve."""
+        # LLM returns 2 sub-queries
+        with patch.object(agent, "_split_intents",
+                          return_value=["s3 notification", "s3 encryption"]) as mock_split:
+            with patch.object(agent, "_multi_retrieve_and_gate",
+                              return_value=agent._make_output(
+                                  checks=["s3_bucket_event_notifications_enabled",
+                                          "s3_bucket_default_encryption"],
+                                  reasoning="multi",
+                              )) as mock_multi:
+                result = agent.run("kiểm tra notification và encryption của s3")
+        mock_split.assert_called_once()
+        mock_multi.assert_called_once()
+        assert len(result["checks_to_scan"]) == 2
+
+    def test_run_skips_splitter_when_no_conjunction(self, agent, mock_rag_client):
+        """Single-topic Vietnamese request — splitter NOT called."""
+        mock_rag_client.build_context.return_value = _make_build_context_response(
+            [{"check_id": "s3_bucket_default_encryption", "title": "E",
+              "severity": "high", "service": "s3", "score": 0.9}],
+            confidence="high",
+        )
+        with patch.object(agent, "_split_intents") as mock_split:
+            agent.run("kiểm tra encryption của s3")
+        mock_split.assert_not_called()
+
+    def test_run_skips_splitter_when_splitter_returns_single(self, agent, mock_rag_client):
+        """Conjunction present but LLM decides it's really one topic — fall back to single path."""
+        mock_rag_client.build_context.return_value = _make_build_context_response(
+            [{"check_id": "s3_bucket_default_encryption", "title": "E",
+              "severity": "high", "service": "s3", "score": 0.9}],
+            confidence="high",
+        )
+        with patch.object(agent, "_split_intents", return_value=["s3 encryption"]):
+            with patch.object(agent, "_multi_retrieve_and_gate") as mock_multi:
+                agent.run("kiểm tra mã hoá, encryption của s3")
+        mock_multi.assert_not_called()
+
+    def test_run_skips_splitter_when_explicit_check_ids(self, agent, mock_rag_client):
+        """FAST_TRACK takes precedence over splitter."""
+        mock_rag_client.retrieve_checks.return_value = _make_retrieve_response([
+            {"doc_id": "s3_bucket_public_access", "score": 1.0,
+             "metadata": {"title": "Public", "severity": "high", "service": "s3"}},
+        ])
+        with patch.object(agent, "_split_intents") as mock_split:
+            result = agent.run("check s3_bucket_public_access and s3_bucket_default_encryption")
+        # At least one ID validated → FAST_TRACK or hint path; splitter shouldn't run
+        # because candidate_ids is non-empty
+        mock_split.assert_not_called()

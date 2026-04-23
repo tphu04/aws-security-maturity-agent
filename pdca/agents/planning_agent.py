@@ -153,6 +153,38 @@ _SECURITY_TOPIC_KEYWORDS.update(
 _SECURITY_TOPIC_KEYWORDS -= set(VALID_SERVICES)
 _SECURITY_TOPIC_KEYWORDS -= ALLOWED_GROUPS
 
+# Multi-intent trigger: conjunction detection in original request.
+# Keeps splitter LLM-conditional — only fires when user plausibly asks
+# about multiple topics in one breath.
+_CONJUNCTION_PATTERN = re.compile(
+    r"\b(?:và|and|plus|cùng)\b|[,&]", re.IGNORECASE
+)
+
+# Per-sub-query candidate cap after gap filter (keeps merged pool bounded).
+TOP_K_PER_SUBQUERY = 3
+# Hard cap on merged multi-intent candidate list.
+MAX_MERGED_CANDIDATES = 10
+
+# ---------------------------------------------------------------------------
+# LLM PROMPTS
+# ---------------------------------------------------------------------------
+
+INTENT_SPLITTER_PROMPT = """Split this AWS security request into English sub-queries, one per distinct topic.
+
+REQUEST: "{request}"
+DETECTED SERVICE: {service}
+
+Return raw JSON only:
+{{"sub_queries": ["short english phrase", "..."]}}
+
+Rules:
+- 1 sub-query if the request covers a single topic.
+- 2-4 sub-queries if the request joins multiple distinct topics (via và/and/,).
+- Each sub-query: 2-6 English words; include the service name when relevant.
+- Translate Vietnamese to English; fix obvious typos (e.g. "encrytipn" -> "encryption").
+- Do NOT invent topics that are not in the request."""
+
+
 # ---------------------------------------------------------------------------
 # LLM REFINEMENT PROMPT (conditional — only used when confidence is low)
 # ---------------------------------------------------------------------------
@@ -273,7 +305,22 @@ class PlanningAgent:
                         "Invalid IDs used as RAG hints: %s", invalid_ids
                     )
 
-            # Step 5: Classify on enhanced query (language-independent)
+            # Step 5: Multi-intent check (LLM-conditional)
+            # Trigger: conjunction in request + service detected + no explicit IDs.
+            if (detected_service
+                    and not candidate_ids
+                    and _CONJUNCTION_PATTERN.search(request)):
+                sub_queries = self._split_intents(request, detected_service)
+                if len(sub_queries) >= 2:
+                    logger.info(
+                        "MULTI_INTENT: %d sub-queries: %s",
+                        len(sub_queries), sub_queries,
+                    )
+                    return self._multi_retrieve_and_gate(
+                        request, sub_queries, detected_service,
+                    )
+
+            # Step 6: Classify on enhanced query (language-independent)
             if self._is_group_intent(enhanced_query, detected_service):
                 logger.info("GROUP SCAN: %s", detected_service)
                 return self._make_output(
@@ -281,7 +328,7 @@ class PlanningAgent:
                     reasoning=f"Group scan requested for {detected_service}.",
                 )
 
-            # Step 6: RETRIEVAL_PATH
+            # Step 7: RETRIEVAL_PATH (single query)
             retrieval = self._retrieve(enhanced_query)
             scored = self._score_candidates(retrieval, detected_service)
             return self._apply_confidence_gate(request, scored, retrieval)
@@ -783,6 +830,127 @@ class PlanningAgent:
             "Could not determine assessment target. "
             "Please specify an AWS service or check IDs. "
             f"LLM reasoning: {reasoning}"
+        )
+
+    # ------------------------------------------------------------------
+    # Multi-intent splitter (LLM-conditional, pre-RAG)
+    # ------------------------------------------------------------------
+
+    def _split_intents(
+        self, request: str, detected_service: Optional[str],
+    ) -> List[str]:
+        """Ask LLM to split multi-topic request into English sub-queries.
+
+        Returns an empty list on any failure so the caller falls back
+        to the single-query path (never silently wrong).
+        """
+        prompt = ChatPromptTemplate.from_template(INTENT_SPLITTER_PROMPT)
+        try:
+            raw = (prompt | self.llm | StrOutputParser()).invoke({
+                "request": request,
+                "service": detected_service or "unknown",
+            })
+            data = parse_llm_json(raw)
+        except Exception as e:
+            logger.warning("Intent splitter failed: %s", e)
+            return []
+
+        sub_queries = data.get("sub_queries", [])
+        if not isinstance(sub_queries, list):
+            return []
+        cleaned = [
+            q.strip() for q in sub_queries
+            if isinstance(q, str) and q.strip()
+        ]
+        # Cap at 4 to bound downstream RAG calls
+        return cleaned[:4]
+
+    def _multi_retrieve_and_gate(
+        self,
+        request: str,
+        sub_queries: List[str],
+        detected_service: Optional[str],
+    ) -> Dict[str, Any]:
+        """Run RAG per sub-query, union top candidates, then gate.
+
+        Key difference from single-query path: the gap filter is applied
+        PER sub-query (within-topic tightness) rather than across all
+        candidates, so a second topic's top hit isn't culled by the
+        first topic's stronger cluster.
+        """
+        merged: Dict[str, Dict[str, Any]] = {}
+        maturity_parts: List[str] = []
+        confidences: List[str] = []
+
+        for sq in sub_queries:
+            retrieval = self._retrieve(sq)
+            confidences.append(retrieval.get("confidence", "low"))
+            mat = retrieval.get("maturity_context", "")
+            if mat:
+                maturity_parts.append(mat)
+
+            scored = self._score_candidates(retrieval, detected_service)
+            if not scored:
+                continue
+
+            top = scored[0]["final_score"]
+            cutoff = top * DROP_RATIO_THRESHOLD
+            kept = 0
+            for c in scored:
+                if kept >= TOP_K_PER_SUBQUERY:
+                    break
+                if c["final_score"] < cutoff:
+                    break  # scored is sorted desc
+                cid = c["check_id"]
+                prev = merged.get(cid)
+                if prev is None or c["final_score"] > prev["final_score"]:
+                    merged[cid] = c
+                kept += 1
+
+            logger.info(
+                "Sub-query '%s': %d candidates kept (top=%.3f, cutoff=%.3f)",
+                sq, kept, top, cutoff,
+            )
+
+        merged_list = sorted(
+            merged.values(), key=lambda x: x["final_score"], reverse=True,
+        )[:MAX_MERGED_CANDIDATES]
+
+        # Aggregate confidence: worst-case across sub-queries.
+        if not confidences or "low" in confidences:
+            agg_confidence = "low"
+        elif "medium" in confidences:
+            agg_confidence = "medium"
+        else:
+            agg_confidence = "high"
+
+        top_score = merged_list[0]["final_score"] if merged_list else 0.0
+
+        if (merged_list
+                and agg_confidence in CONFIDENCE_SKIP_LLM
+                and top_score > MIN_TOP_SCORE_FOR_SKIP):
+            check_ids = [c["check_id"] for c in merged_list]
+            logger.info(
+                "Multi-intent ConfidenceGate PASS: %d sub-queries -> %d checks (no LLM)",
+                len(sub_queries), len(check_ids),
+            )
+            return self._make_output(
+                checks=check_ids,
+                reasoning=(
+                    f"Multi-intent split into {len(sub_queries)} sub-queries "
+                    f"[{'; '.join(sub_queries)}]: selected {len(check_ids)} checks."
+                ),
+            )
+
+        # Low aggregate confidence or empty union -> LLM refine on merged pool
+        logger.info(
+            "Multi-intent ConfidenceGate FAIL: confidence=%s, top=%.3f -> LLM refine",
+            agg_confidence, top_score,
+        )
+        maturity_text = "\n".join(maturity_parts[:2])
+        return self._llm_refine(
+            request, merged_list,
+            {"maturity_context": maturity_text, "confidence": agg_confidence},
         )
 
     # ------------------------------------------------------------------
