@@ -9,22 +9,87 @@ import markdown
 
 from pdca.agents.report_module.llm_validator import FactValidator
 
+try:  # langchain is always available in prod but tests can mock the LLM
+    from langchain_core.messages import HumanMessage, SystemMessage
+    _LC_MESSAGES_AVAILABLE = True
+except Exception:  # pragma: no cover — fallback for stripped env
+    HumanMessage = SystemMessage = None  # type: ignore[assignment]
+    _LC_MESSAGES_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 _VALIDATOR = FactValidator()
 
 
-# Constraint block appended to every LLM prompt
-_OUTPUT_CONSTRAINTS = """
+def _default_scope_info(sysdata) -> dict:
+    """Fallback scope info when the caller did not pass one.
 
-===== RÀNG BUỘC OUTPUT (BẮT BUỘC) =====
-- KHÔNG vượt quá {word_limit} từ.
-- KHÔNG tạo tiêu đề (đã có sẵn trong template).
+    Mirrors the shape returned by ``scope_detector.detect_scope`` so the
+    prompt templates can interpolate values without ``None`` showing up in
+    the rendered text. Kept minimal on purpose — real scope detection
+    happens upstream in the report agent.
+    """
+    scope = sysdata.get("primary_service") if isinstance(sysdata, dict) else None
+    if scope:
+        # Re-use the canonical dictionaries via a lazy import so this helper
+        # stays cheap for unit tests that don't load the module.
+        from pdca.agents.report_module.scope_detector import (
+            GENERIC_FALLBACK, RESOURCE_TERMS, SERVICE_DISPLAY,
+        )
+        term_s, term_p = RESOURCE_TERMS.get(
+            scope,
+            (GENERIC_FALLBACK["term_singular"], GENERIC_FALLBACK["term_plural"]),
+        )
+        return {
+            "primary_service": scope,
+            "service_list": [scope],
+            "is_multi_service": False,
+            "service_display": SERVICE_DISPLAY.get(scope, f"AWS {scope.upper()}"),
+            "resource_term": term_s,
+            "resource_term_plural": term_p,
+            "dominance_ratio": 1.0,
+            "source": "sysdata",
+        }
+    return {
+        "primary_service": None,
+        "service_list": [],
+        "is_multi_service": False,
+        "service_display": "AWS Infrastructure",
+        "resource_term": "resource",
+        "resource_term_plural": "resources",
+        "dominance_ratio": 0.0,
+        "source": "default",
+    }
+
+
+# System-level constraints — sent ONCE per call as a SystemMessage instead
+# of appended to every prompt. Keeps the per-prompt payload smaller (the
+# constraints are identical across all 15 sections) and makes the intent
+# cleaner to the model. The {word_limit} placeholder is filled in per call
+# so the same template covers short exec summaries and longer narratives.
+_SYSTEM_CONSTRAINTS_TMPL = """Bạn là trợ lý soạn nội dung cho báo cáo bảo mật AWS. Tuân thủ tuyệt đối các ràng buộc sau:
+- Tối đa {word_limit} từ.
+- KHÔNG tạo tiêu đề (template đã có sẵn).
 - KHÔNG dùng ngôi thứ nhất (tôi, chúng tôi).
-- KHÔNG dùng placeholder [text ở đây].
-- KHÔNG lặp lại cùng 1 ý nhiều lần.
-- Nếu data bằng 0 hoặc rỗng, nêu rõ sự thật và ngừng. KHÔNG suy đoán.
+- KHÔNG dùng placeholder dạng [text ở đây].
+- KHÔNG lặp lại cùng một ý nhiều lần.
+- Nếu dữ liệu bằng 0 hoặc rỗng, nêu thẳng sự thật và dừng — KHÔNG suy đoán.
 - KHÔNG sử dụng emoji hay icon (✅, ❌, 🚩...).
-"""
+- Khi ghi severity, dùng dạng (CRITICAL)/(HIGH)/(MEDIUM)/(LOW), KHÔNG dùng [CRITICAL]."""
+
+
+# Backward-compat: some unit tests reference the legacy string. The helper
+# ``_with_constraints`` still appends it when the LLM fallback path is in
+# use, so keep a near-identical copy here.
+_OUTPUT_CONSTRAINTS = (
+    "\n\n===== RÀNG BUỘC OUTPUT (BẮT BUỘC) =====\n"
+    "- KHÔNG vượt quá {word_limit} từ.\n"
+    "- KHÔNG tạo tiêu đề (đã có sẵn trong template).\n"
+    "- KHÔNG dùng ngôi thứ nhất (tôi, chúng tôi).\n"
+    "- KHÔNG dùng placeholder [text ở đây].\n"
+    "- KHÔNG lặp lại cùng 1 ý nhiều lần.\n"
+    "- Nếu data bằng 0 hoặc rỗng, nêu rõ sự thật và ngừng. KHÔNG suy đoán.\n"
+    "- KHÔNG sử dụng emoji hay icon.\n"
+)
 
 
 class LLMWriter:
@@ -59,10 +124,44 @@ class LLMWriter:
     # CORE: ASK + CLEAN
     # ----------------------------------------------------------
     def _ask(self, prompt: str,
-             fallback: str = "*Nội dung không khả dụng.*") -> str:
-        """Gọi LLM với error handling + clean output."""
+             fallback: str = "*Nội dung không khả dụng.*",
+             word_limit: int = None) -> str:
+        """Gọi LLM với error handling + clean output.
+
+        Gửi system-level constraints (word limit + style rules) qua
+        ``SystemMessage`` nếu backend LangChain hỗ trợ; nếu gặp lỗi, tự
+        động chuyển sang pattern chuỗi đơn + append constraint để giữ
+        backward compatibility với các mock cũ chỉ accept string.
+        """
+        if word_limit is None:
+            # Callers that still use ``_with_constraints`` set a pending
+            # value — consume it once so it doesn't leak into the next
+            # call.
+            word_limit = getattr(self, "_pending_word_limit", 300)
+            self._pending_word_limit = 300
+        messages = self._build_messages(prompt, word_limit=word_limit)
         try:
-            res = self.llm.invoke(prompt)
+            res = self.llm.invoke(messages)
+            if res is None or not hasattr(res, "content"):
+                # Fall through to string fallback — some lightweight mocks
+                # return ``None`` when handed a message list but accept the
+                # plain string path just fine.
+                raise RuntimeError("LLM returned None / no content attribute")
+            text = res.content or ""
+            cleaned = self._clean(text)
+            return cleaned if cleaned else fallback
+        except Exception as e:
+            logger.debug(
+                "[LLMWriter] SystemMessage path failed (%s: %s) — falling back "
+                "to string prompt.", type(e).__name__, e,
+            )
+
+        # String fallback: keep legacy behaviour for mocks that do not
+        # support list-of-messages. Constraints are appended so the model
+        # still sees them.
+        legacy_prompt = prompt + _OUTPUT_CONSTRAINTS.format(word_limit=word_limit)
+        try:
+            res = self.llm.invoke(legacy_prompt)
             if res is None or not hasattr(res, "content"):
                 print("[LLMWriter] LLM returned None or invalid response")
                 return fallback
@@ -72,6 +171,20 @@ class LLMWriter:
         except Exception as e:
             print(f"[LLMWriter] LLM call failed ({type(e).__name__}): {e}")
             return fallback
+
+    def _build_messages(self, prompt: str, word_limit: int = 300):
+        """Build a ``[SystemMessage, HumanMessage]`` payload when the
+        LangChain message classes are available; otherwise return the
+        plain prompt string.
+        """
+        if not _LC_MESSAGES_AVAILABLE:
+            return prompt + _OUTPUT_CONSTRAINTS.format(word_limit=word_limit)
+        return [
+            SystemMessage(
+                content=_SYSTEM_CONSTRAINTS_TMPL.format(word_limit=word_limit)
+            ),
+            HumanMessage(content=prompt),
+        ]
 
     def _clean(self, text: str) -> str:
         """Post-processing: sanitize, then convert markdown → HTML.
@@ -85,8 +198,9 @@ class LLMWriter:
         text = self._PLACEHOLDER.sub('', text)
         # Remove first-person pronouns (Vietnamese variants)
         text = self._FIRST_PERSON.sub('', text)
-        # Replace standalone "None" leaked from Python None values
-        text = re.sub(r'(?<=["\s])None(?=["\s,.\)])', 'N/A', text)
+        # Replace standalone "None"/'None'/None leaked from Python None values
+        text = re.sub(r"""['""]None['""]""", '"N/A"', text)
+        text = re.sub(r'\bNone\b', 'N/A', text)
         # Collapse multiple spaces left by removals
         text = re.sub(r' {2,}', ' ', text)
         # Remove LLM-generated duplicate title (dòng đầu là bold title)
@@ -133,14 +247,25 @@ class LLMWriter:
         return text
 
     def _with_constraints(self, prompt: str, word_limit: int = 300) -> str:
-        """Append output constraints to prompt."""
-        return prompt + _OUTPUT_CONSTRAINTS.format(word_limit=word_limit)
+        """Legacy adapter — returns the prompt unchanged but stashes the
+        word limit so the immediately following ``_ask`` call can use it.
+
+        Constraints are delivered through :class:`SystemMessage` inside
+        :meth:`_ask` (see ``_SYSTEM_CONSTRAINTS_TMPL``). Keeping this
+        method means the 15-odd call sites that use the
+        ``self._ask(self._with_constraints(prompt, N), ...)`` pattern
+        still honour their declared word limit without rewriting every
+        prompt template.
+        """
+        self._pending_word_limit = int(word_limit)
+        return prompt
 
     def _ask_validated(self, prompt: str, allowed_numbers: set,
                        fallback: str,
-                       section: str = "unknown") -> str:
+                       section: str = "unknown",
+                       word_limit: int = None) -> str:
         """Call LLM then validate numbers. Fallback if hallucinated numbers."""
-        text = self._ask(prompt, fallback=fallback)
+        text = self._ask(prompt, fallback=fallback, word_limit=word_limit)
         if not text or text == fallback:
             return text
         result = _VALIDATOR.validate(text, allowed_numbers)
@@ -153,11 +278,52 @@ class LLMWriter:
             return fallback
         return text
 
+    def _ask_validated_full(self, prompt: str, *,
+                             fallback: str,
+                             section: str,
+                             validator,
+                             word_limit: int = None,
+                             issue_sink: list = None) -> str:
+        """Like :meth:`_ask` but runs ``validator`` on the output.
+
+        When the validator reports one or more issues, the section falls
+        back to ``fallback`` so the rendered report never ships content
+        that violates scope / fact / grounding rules. Discovered issues
+        are appended to ``issue_sink`` (if provided) so the report agent
+        can surface them in ``validation_report.json``.
+
+        ``validator=None`` makes this a thin wrapper around :meth:`_ask`
+        — used by unit tests that don't exercise validation.
+        """
+        text = self._ask(prompt, fallback=fallback, word_limit=word_limit)
+        if not text or text == fallback or validator is None:
+            return text
+
+        result = validator.validate(text, section)
+        if issue_sink is not None:
+            issue_sink.extend(result.issues)
+        if not result.ok:
+            logger.warning(
+                "[LLMWriter:%s] ReportValidator rejected output. "
+                "Issues: %s. Falling back to template.",
+                section,
+                [(i.kind, i.evidence) for i in result.issues[:5]],
+            )
+            return fallback
+        return text
+
     # ======================================================
     # 1. Executive Summary
     # ======================================================
-    def write_exec_summary(self, pre, sysdata, meta, rag_knowledge: str = "",
+    def write_exec_summary(self, pre, sysdata, meta, scope_info: dict = None,
+                           rag_knowledge: str = "",
                            fail_findings: list = None):
+        scope_info = scope_info or _default_scope_info(sysdata)
+        service_display = scope_info["service_display"]
+        resource_term = scope_info["resource_term"]
+        resource_term_plural = scope_info["resource_term_plural"]
+        is_multi = scope_info.get("is_multi_service", False)
+
         rag_block = f"\n===== KIẾN THỨC CHUYÊN MÔN TỪ CƠ SỞ DỮ LIỆU =====\n{rag_knowledge}\n\nHãy SỬ DỤNG kiến thức trên để viết chính xác hơn — KHÔNG bịa thêm.\n" if rag_knowledge else ""
 
         account_id = ""
@@ -173,12 +339,13 @@ class LLMWriter:
                     desc = desc[:137] + "..."
                 sev = (f.get("severity") or "N/A").upper()
                 res = (f.get("resource") or f.get("resource_id") or "N/A").strip()
-                # Account-level checks use account_id in `resource`. Label
-                # clearly so the LLM doesn't call the account ID a bucket.
+                # Account-level checks put the account id in `resource`. Label
+                # clearly so the LLM does not treat the account id as a
+                # concrete resource of the scoped service.
                 if res == account_id or res.isdigit():
                     scope_label = "scope: account-level"
                 else:
-                    scope_label = f"bucket: {res}"
+                    scope_label = f"{resource_term}: {res}"
                 # Avoid [SEV] brackets — they are stripped by _PLACEHOLDER
                 # regex in _clean. Use parens instead.
                 lines.append(f"  {i}. ({sev}) {desc} ({scope_label})")
@@ -191,14 +358,20 @@ class LLMWriter:
                   "'Encryption', 'Access Control' nếu chúng không xuất hiện).\n"
             )
 
+        services_in_scope = ", ".join(
+            s.upper() for s in (scope_info.get("service_list") or [])
+        ) or service_display
+
         prompt = f"""
 Bạn là Senior Cloud Security Consultant.
-Nhiệm vụ của bạn là viết **Executive Summary** cho báo cáo đánh giá bảo mật Amazon S3 gửi lên C-Level (CTO/CISO).
+Nhiệm vụ của bạn là viết **Executive Summary** cho báo cáo đánh giá bảo mật
+{service_display} gửi lên C-Level (CTO/CISO).
 
 ===== DỮ LIỆU ĐẦU VÀO =====
 - Bối cảnh hệ thống: {sysdata}
 - Kết quả quét (Pre-remediation): {pre}
 - Meta & User Notes: {meta}
+- Phạm vi dịch vụ: {services_in_scope}
 {rag_block}
 {fail_block}
 
@@ -206,26 +379,28 @@ Nhiệm vụ của bạn là viết **Executive Summary** cho báo cáo đánh g
 - "Finding": là kết quả kiểm tra cấu hình (bao gồm cả PASS và FAIL).
 - "Lỗi" (Issue / Non-compliant): CHỈ các finding có trạng thái FAIL.
 - TUYỆT ĐỐI KHÔNG gọi tổng số findings là tổng số lỗi.
-- TUYỆT ĐỐI KHÔNG gọi số findings là số buckets — một bucket có thể có nhiều
-  findings. Chỉ dùng `total_buckets` (trong sysdata) làm số buckets.
+- TUYỆT ĐỐI KHÔNG gọi số findings là số {resource_term_plural} — một {resource_term} có thể có nhiều
+  findings. Chỉ dùng `total_resources` (trong sysdata) làm số {resource_term_plural}.
 - Khi trình bày số liệu:
   + Dùng "Tổng số findings" cho toàn bộ kết quả kiểm tra.
   + Dùng "Số lỗi" hoặc "Số finding FAIL" cho các cấu hình không đạt.
-  + Dùng "Số buckets" = sysdata.total_buckets.
+  + Dùng "Số {resource_term_plural}" = sysdata.total_resources.
 - Phân bổ severity (critical/high/medium/low) trong `pre` là của TOÀN BỘ findings (PASS+FAIL), KHÔNG phải chỉ của nhóm FAIL.
 
 ===== HARD CONSTRAINTS =====
-- KHÔNG tạo tiêu đề báo cáo (ví dụ: "Báo Cáo Bảo Mật Amazon S3").
+- KHÔNG tạo tiêu đề báo cáo (ví dụ: "Báo Cáo Bảo Mật {service_display}").
 - KHÔNG lặp lại tên báo cáo hoặc tên dịch vụ ở dạng tiêu đề.
 - Chỉ viết nội dung, bắt đầu trực tiếp từ phần "Bối cảnh & Mục tiêu".
 - KHÔNG suy diễn số liệu ngoài dữ liệu được cung cấp.
+- TUYỆT ĐỐI KHÔNG nhắc tới các dịch vụ AWS nằm ngoài phạm vi đánh giá
+  ({services_in_scope}). {"Nếu phải nêu tổng quát, dùng thuật ngữ 'AWS resources'." if is_multi else "Dùng đúng thuật ngữ " + service_display + "."}
 
 ===== YÊU CẦU CẤU TRÚC =====
 Hãy trình bày ngắn gọn, súc tích, sử dụng kết hợp văn xuôi và gạch đầu dòng.
 
 1. **Bối cảnh & Mục tiêu (1 đoạn văn ngắn):**
    - Xác nhận hoàn tất đánh giá bảo mật trên tài khoản/region nào.
-   - Nêu đúng quy mô tài nguyên (ví dụ: số lượng bucket nếu có trong dữ liệu).
+   - Nêu đúng quy mô tài nguyên (ví dụ: số lượng {resource_term_plural} nếu có trong dữ liệu).
 
 2. **Tóm tắt Hiện trạng An ninh (Bullet Points):**
    - Nêu số lượng findings và số lỗi (FAIL findings) một cách chính xác.
@@ -249,21 +424,40 @@ BẮT ĐẦU VIẾT EXECUTIVE SUMMARY:
     # ======================================================
     # 2. System Overview
     # ======================================================
-    def write_system_overview(self, sysdata):
+    def write_system_overview(self, sysdata, scope_info: dict = None):
+        scope_info = scope_info or _default_scope_info(sysdata)
+        service_display = scope_info["service_display"]
+        resource_term = scope_info["resource_term"]
+        resource_term_plural = scope_info["resource_term_plural"]
+        is_multi = scope_info.get("is_multi_service", False)
+
         sys_str = (
             json.dumps(sysdata, indent=2, ensure_ascii=False)
             if isinstance(sysdata, dict)
             else str(sysdata)
         )
 
-        # Deterministic facts the LLM must respect. `total_buckets` already
-        # reflects findings-derived count when env.buckets is empty, so this
-        # line is always safe to quote.
-        tb = sysdata.get("total_buckets", 0) if isinstance(sysdata, dict) else 0
-        bucket_facts = (
-            f"Số buckets trong phạm vi quét: {tb}."
-            if tb > 0 else
-            "Không có bucket nào được liệt kê trong phạm vi."
+        # Deterministic facts the LLM must respect. `total_resources` already
+        # reflects findings-derived count when env has no resource list, so
+        # this line is always safe to quote.
+        total = (
+            sysdata.get("total_resources", 0)
+            if isinstance(sysdata, dict) else 0
+        )
+        resource_facts = (
+            f"Số {resource_term_plural} trong phạm vi quét: {total}."
+            if total > 0 else
+            f"Không có {resource_term} nào được liệt kê trong phạm vi."
+        )
+
+        role_hint = (
+            f"Mô tả vai trò của {service_display} trong hệ thống này "
+            f"(ví dụ đặc thù của dịch vụ: data lake / backup / lưu trữ tĩnh với S3; "
+            f"quản lý danh tính & phân quyền với IAM; compute instances với EC2; v.v.)."
+            if not is_multi else
+            f"Mô tả vai trò chung của các dịch vụ AWS trong phạm vi "
+            f"({', '.join(s.upper() for s in scope_info.get('service_list') or [])}) "
+            f"mà không giả định cụ thể một dịch vụ đóng vai trò chính."
         )
 
         prompt = f"""
@@ -273,23 +467,25 @@ DỮ LIỆU HỆ THỐNG:
 {sys_str}
 
 SỰ THẬT BẮT BUỘC (không được phủ nhận hoặc nói ngược lại):
-- {bucket_facts}
+- {resource_facts}
+- Phạm vi dịch vụ thực tế: {service_display}.
 
 YÊU CẦU NỘI DUNG:
 Viết một đoạn giới thiệu tổng quan (Narrative) kết hợp với các điểm nhấn chiến lược:
 
 1. **Tổng quan (Văn xuôi):**
-   - Mô tả vai trò của Amazon S3 trong hệ thống này (Data Lake, Backup, hay lưu trữ tĩnh...).
+   - {role_hint}
    - Không lặp lại Account ID/Region một cách máy móc (vì đã có bảng ở trên).
-   - KHÔNG được viết câu kiểu "không có bucket được tìm thấy" nếu Số buckets > 0.
+   - KHÔNG được viết câu kiểu "không có {resource_term} được tìm thấy" nếu Số {resource_term_plural} > 0.
 
 2. **Chiến lược đánh giá (Bullet Points):**
-   - Sử dụng gạch đầu dòng để liệt kê các trọng tâm đánh giá (ví dụ: Access Control, Encryption, Resilience).
+   - Sử dụng gạch đầu dòng để liệt kê các trọng tâm đánh giá (ví dụ: Access Control, Encryption, Resilience, Logging & Monitoring).
    - Khẳng định mục tiêu tuân thủ (AWS Well-Architected Framework).
 
 LƯU Ý:
 - Không dùng các từ như "Đoạn 1", "Mục 2".
 - Giữ văn phong trang trọng.
+- TUYỆT ĐỐI KHÔNG nhắc tới dịch vụ AWS nằm ngoài phạm vi ({service_display}).
 
 BẮT ĐẦU VIẾT:
 """
@@ -605,7 +801,36 @@ BẮT ĐẦU VIẾT MANUAL REMEDIATION RUNBOOK:
     # 6.3 Post-Remediation Analysis
     # ======================================================
     def write_post_remediation_analysis(self, data):
-        data_str = json.dumps(data, indent=2, ensure_ascii=False)
+        # Extract only the fields the prompt references. The previous
+        # revision dumped the whole analysis context (including raw
+        # tool_code, execution_output, and deeply nested per-finding
+        # payloads), which tempted the LLM to quote source code back
+        # verbatim. A compact block keeps the prompt focused on the four
+        # numbers — initial_fail / final_fail / fixed / manual — plus a
+        # one-line title sample per category so the narrative can still
+        # name specific issues without seeing tool_code.
+        post_summary = data.get("post_summary") or {}
+
+        def _titles(items, limit=3):
+            out = []
+            for f in items or []:
+                t = (f.get("description") or f.get("finding_id") or "").strip()
+                if t:
+                    out.append(t[:140])
+                if len(out) >= limit:
+                    break
+            return out
+
+        compact = {
+            "post_summary": post_summary,
+            "fixed_count": len(data.get("fixed_findings") or []),
+            "manual_count": len(data.get("manual_findings") or []),
+            "failed_count": len(data.get("failed_findings") or []),
+            "fixed_sample_titles": _titles(data.get("fixed_findings")),
+            "manual_sample_titles": _titles(data.get("manual_findings")),
+            "failed_sample_titles": _titles(data.get("failed_findings")),
+        }
+        data_str = json.dumps(compact, indent=2, ensure_ascii=False)
 
         prompt = f"""
 Viết nội dung **Đánh giá của chuyên gia** cho báo cáo bảo mật.

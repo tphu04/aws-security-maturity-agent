@@ -4,9 +4,13 @@
 # Input data is READ-ONLY (deep copy in enrich, không mutate)
 # ------------------------------------------------------------
 import copy
+import json
+import logging
 import os
 import time
 import yaml
+
+logger = logging.getLogger(__name__)
 from uuid import uuid4
 from typing import Dict, Any, Optional
 
@@ -16,6 +20,13 @@ from pdca.agents.report_module.exporters import write_file, export_pdf
 from pdca.agents.report_module.chart_util import (
     make_pass_fail_pie, make_severity_bar,
     make_domain_radar, make_stage_progress, make_maturity_delta_chart,
+)
+from pdca.agents.report_module.scope_detector import (
+    detect_scope, is_valid_resource,
+)
+from pdca.agents.report_module.rag_formatter import RAGViewFormatter
+from pdca.agents.report_module.validators import (
+    ReportValidator, build_evidence, ValidationIssue,
 )
 
 # Mode selection thresholds (percentage-based for service-scoped assessment)
@@ -65,6 +76,11 @@ class ReportAgent:
                  output_path: Optional[str] = None,
                  llm_config: Optional[Dict[str, Any]] = None):
         self.timer = ReportTimer()
+        # Populated by ``_write_llm_sections`` so ``_render`` can emit
+        # ``validation_report.json`` next to the HTML output. Reset on
+        # every ``run()`` call.
+        self._validation_issues: list[ValidationIssue] = []
+        self._validation_sections_run: list[str] = []
 
         # LLM setup (injectable for testing)
         llm_instance = self._create_llm(model, api_key, base_url, llm_config)
@@ -112,12 +128,25 @@ class ReportAgent:
             data = report_context
 
         self._validate_input(data)
+        # Reset validation state per run so a prior job doesn't leak issues.
+        self._validation_issues = []
+        self._validation_sections_run = []
 
         # 1. Read input (KHÔNG mutate data)
         pre = data["pre"]
         post = data["post"]
         env = data["environment"]
         scope = data["scope"]
+
+        # Scope detection — prefer value already computed by orchestrator,
+        # otherwise derive it here so the agent remains callable in isolation
+        # (e.g. from unit tests). Service terminology flows from this dict
+        # down into every LLM prompt and data-aggregation call below.
+        scope_info = data.get("scope_info") or detect_scope(
+            findings=data.get("raw_pre_findings") or [],
+            env=env,
+            services_hint=scope.get("services") if isinstance(scope, dict) else None,
+        )
 
         # NEW: Maturity data
         maturity = data.get("maturity_assessment")
@@ -149,7 +178,8 @@ class ReportAgent:
 
         # 3. LLM content
         llm = self._write_llm_sections(
-            data, pre, post, env, scope, pass_findings, fail_findings
+            data, pre, post, env, scope, pass_findings, fail_findings,
+            scope_info=scope_info,
         )
 
         # NEW: Maturity LLM sections (pre-remediation)
@@ -169,7 +199,8 @@ class ReportAgent:
 
         # 5. Render
         template_ctx = {
-            "env": env, "scope": scope, "pre": pre, "post": post,
+            "env": env, "scope": scope, "scope_info": scope_info,
+            "pre": pre, "post": post,
             "score": score, "report_id": report_id,
             "charts": charts, "table": data["findings_table"],
             "unchanged_count": sum(1 for r in data["findings_table"] if r["change"] == "Unchanged"),
@@ -462,15 +493,94 @@ class ReportAgent:
         return sections
 
     # ----------------------------------------------------------
+    # VALIDATION (Phase 5)
+    # ----------------------------------------------------------
+    def _build_validator(self, *, pre, post, env, scope_info, rag_context,
+                          raw_findings) -> ReportValidator:
+        """Construct the :class:`ReportValidator` used to gate LLM
+        sections before render. Evidence is assembled by
+        :func:`build_evidence` from the already-validated input data.
+        """
+        evidence = build_evidence(
+            findings=raw_findings,
+            pre=pre,
+            post=post,
+            scope=scope_info,
+            env=env,
+            rag_context=rag_context or {},
+        )
+        return ReportValidator(scope=scope_info, evidence=evidence)
+
+    def _validate_section(self, section: str, text: str,
+                           validator: ReportValidator,
+                           fallback: str = "") -> str:
+        """Validate a single section's text. When the validator flags
+        issues, record them and fall back to ``fallback`` — keeps the
+        rendered report grounded even if the LLM went off the rails.
+
+        Empty / None text passes through unchanged (nothing to gate).
+        """
+        if not text or not text.strip():
+            return text
+        self._validation_sections_run.append(section)
+        result = validator.validate(text, section)
+        if result.ok:
+            return text
+        self._validation_issues.extend(result.issues)
+        logger.warning(
+            "[ReportValidator] section=%s rejected: %s",
+            section,
+            [(i.kind, i.evidence) for i in result.issues[:5]],
+        )
+        return fallback if fallback else text
+
+    def _validate_sections_pre_render(self, sections: dict,
+                                       validator: ReportValidator,
+                                       fallbacks: dict) -> dict:
+        """Run validator on each LLM section in ``sections``. Sections
+        that fail validation are replaced with ``fallbacks[section]``.
+        """
+        if validator is None:
+            return sections
+        gated: dict = {}
+        for name, text in sections.items():
+            gated[name] = self._validate_section(
+                name, text, validator,
+                fallback=fallbacks.get(name, ""),
+            )
+        return gated
+
+    # ----------------------------------------------------------
     # LLM SECTIONS
     # ----------------------------------------------------------
     def _write_llm_sections(self, data, pre, post, env, scope,
-                            pass_findings, fail_findings) -> dict:
+                            pass_findings, fail_findings,
+                            scope_info: Optional[Dict[str, Any]] = None) -> dict:
         """Gọi LLM cho từng section. Mỗi call có fallback.
         RAG context được inject vào prompts nếu có."""
 
-        # RAG knowledge (empty dict nếu RAG không khả dụng)
-        rag = self._build_rag_knowledge(data.get("rag_context", {}))
+        # Defensive default: unit tests may call this helper directly
+        # without a pre-computed scope.
+        if scope_info is None:
+            scope_info = detect_scope(
+                findings=data.get("raw_pre_findings") or [],
+                env=env,
+                services_hint=scope.get("services") if isinstance(scope, dict) else None,
+            )
+
+        # RAG view formatter — one instance, four per-section views. The
+        # formatter handles the empty-context case internally (every view
+        # returns "" when there is no data).
+        rag_context = data.get("rag_context", {}) or {}
+        rag_views = RAGViewFormatter(rag_context, scope_info)
+        rag_exec = rag_views.for_executive()
+        rag_pass = rag_views.for_pass_analysis()
+        rag_fail = rag_views.for_fail_analysis()
+        rag_reco = rag_views.for_recommendations()
+        # Legacy flat blob — kept for LLM writers that have not been
+        # migrated to a dedicated view yet (manual guide, pass/fail
+        # remediation details fetched per finding via ``for_per_finding``).
+        rag = self._build_rag_knowledge(rag_context)
 
         # Conditional bypass: không gọi LLM khi data trivial (fix BUG-04)
         if pre["pass"] == 0:
@@ -480,7 +590,7 @@ class ReportAgent:
             )
         else:
             pass_overview = self.llm.write_pass_findings_overview(
-                self._build_findings_ctx(pass_findings), rag_knowledge=rag
+                self._build_findings_ctx(pass_findings), rag_knowledge=rag_pass
             )
 
         if pre["fail"] == 0:
@@ -490,22 +600,26 @@ class ReportAgent:
             )
         else:
             fail_overview = self.llm.write_fail_findings_overview(
-                self._build_findings_ctx(fail_findings), rag_knowledge=rag
+                self._build_findings_ctx(fail_findings), rag_knowledge=rag_fail
             )
 
-        # Pass ALL findings (pass+fail simplified copies) so bucket count can
-        # fall back to distinct resources when env.buckets is empty.
+        # Pass ALL findings (pass+fail simplified copies) so resource count
+        # can fall back to distinct resources when env.buckets is empty.
         system_data = self._build_system_data(
-            env, scope, findings=(pass_findings or []) + (fail_findings or []),
+            env, scope, scope_info,
+            findings=(pass_findings or []) + (fail_findings or []),
         )
 
         # Conditional bypass: all-pass scenario — no findings to analyze
         if pre["fail"] == 0 and post["fixed"] == 0 and post["failed"] == 0:
+            service_summary = ", ".join(
+                s.upper() for s in (scope.get("services") or [])
+            ) or scope_info.get("service_display", "AWS Infrastructure")
             exec_summary = (
                 f"Đánh giá bảo mật đã được thực hiện trên tài khoản "
                 f"{env.get('account_id', 'N/A')} vùng {env.get('region', 'N/A')}. "
                 f"Tổng cộng {pre['total']} kiểm tra cấu hình trong phạm vi "
-                f"{', '.join(s.upper() for s in scope.get('services', []))}. "
+                f"{service_summary}. "
                 f"Toàn bộ {pre['pass']} kiểm tra đều đạt chuẩn (PASS). "
                 "Không phát hiện lỗi bảo mật nào cần khắc phục."
             )
@@ -519,7 +633,8 @@ class ReportAgent:
             )
         else:
             exec_summary = self.llm.write_exec_summary(
-                pre, system_data, scope, rag_knowledge=rag,
+                pre, system_data, scope, scope_info=scope_info,
+                rag_knowledge=rag_exec,
                 fail_findings=fail_findings,
             )
             post_analysis = self.llm.write_post_remediation_analysis(
@@ -531,13 +646,15 @@ class ReportAgent:
             failing_caps = self._collect_failing_capability_names(data)
             recommendations = self.llm.write_post_remediation_recommendations(
                 self._build_recommendation_ctx(data, post, pre),
-                rag_knowledge=rag,
+                rag_knowledge=rag_reco,
                 failing_capabilities=failing_caps,
             )
 
-        return {
+        sections = {
             "executive_summary": exec_summary,
-            "system_overview": self.llm.write_system_overview(system_data),
+            "system_overview": self.llm.write_system_overview(
+                system_data, scope_info=scope_info,
+            ),
             "assessment_goals": self.llm.write_assessment_goals(
                 scope.get("user_request", "")
             ),
@@ -545,6 +662,65 @@ class ReportAgent:
             "fail_overview": fail_overview,
             "post_analysis": post_analysis,
             "recommendations": recommendations,
+        }
+
+        # Phase 5 — Output Validation Gate.
+        # Validator runs on every LLM-authored section; sections that
+        # violate scope/fact/grounding rules fall back to the deterministic
+        # template strings defined above, so the rendered HTML is always
+        # grounded even if the LLM drifts.
+        raw_findings = (
+            (data.get("raw_pre_findings") or [])
+            + (pass_findings or []) + (fail_findings or [])
+        )
+        validator = self._build_validator(
+            pre=pre, post=post, env=env, scope_info=scope_info,
+            rag_context=rag_context,
+            raw_findings=raw_findings,
+        )
+        fallbacks = self._make_section_fallbacks(
+            pre=pre, post=post, scope_info=scope_info,
+        )
+        gated = self._validate_sections_pre_render(sections, validator, fallbacks)
+        return gated
+
+    # Deterministic per-section fallbacks used when the validator
+    # rejects a piece of LLM output. Keep them short, factual, and
+    # free of any service-specific wording so they never themselves
+    # trigger the validator on re-run.
+    def _make_section_fallbacks(self, *, pre, post, scope_info) -> dict:
+        service = scope_info.get("service_display", "AWS Infrastructure")
+        term_p = scope_info.get("resource_term_plural", "resources")
+        total = pre.get("total", 0)
+        fail = pre.get("fail", 0)
+        passed = pre.get("pass", 0)
+        return {
+            "executive_summary": (
+                f"<p>Đánh giá bảo mật {service} đã hoàn tất với "
+                f"{total} findings ({passed} PASS, {fail} FAIL). "
+                "Chi tiết xem phần bên dưới.</p>"
+            ),
+            "system_overview": (
+                f"<p>Hệ thống gồm các {term_p} trong phạm vi {service}.</p>"
+            ),
+            "assessment_goals": (
+                "<p>Mục tiêu: rà soát tư thế bảo mật, phát hiện cấu hình "
+                "không đạt chuẩn và đề xuất khắc phục.</p>"
+            ),
+            "pass_overview": (
+                f"<p>Có {passed} cấu hình đạt chuẩn. Chi tiết ở bảng findings.</p>"
+            ),
+            "fail_overview": (
+                f"<p>Có {fail} cấu hình không đạt chuẩn. Chi tiết ở bảng findings.</p>"
+            ),
+            "post_analysis": (
+                "<p>Kết quả khắc phục đã được ghi nhận. "
+                "Chi tiết các số liệu xem bảng ở phần trên.</p>"
+            ),
+            "recommendations": (
+                "<p>Khuyến nghị chi tiết dựa trên findings và mức độ nghiêm trọng "
+                "đã được liệt kê trong bảng khắc phục.</p>"
+            ),
         }
 
     @staticmethod
@@ -591,10 +767,13 @@ class ReportAgent:
             lines = []
             for kf in key_findings[:10]:
                 title = kf.get("title", "")
-                severity = kf.get("severity", "")
+                severity = (kf.get("severity", "") or "N/A").upper()
                 risk = kf.get("risk_summary", "")
                 if title:
-                    lines.append(f"- [{severity}] {title}: {risk}")
+                    # Use parens (not brackets): `_clean` in LLMWriter strips
+                    # anything inside [...] as a stray placeholder, which
+                    # silently ate the severity label in previous revisions.
+                    lines.append(f"- ({severity}) {title}: {risk}")
             if lines:
                 parts.append(
                     "KIẾN THỨC BẢO MẬT TỪ CƠ SỞ DỮ LIỆU (RAG):\n"
@@ -631,57 +810,75 @@ class ReportAgent:
 
         return "\n\n".join(parts)
 
-    def _build_system_data(self, env, scope, findings=None):
-        """Build context for system overview prompts.
+    def _build_system_data(self, env, scope, scope_info: Dict[str, Any],
+                           findings=None):
+        """Build context for system overview prompts (scope-aware).
 
-        `total_buckets` is derived from distinct `resource` in findings when
-        `env.buckets` is empty (EnvironmentAgent cannot enumerate cross-account
-        resources). Account-level checks (e.g. `s3_account_level_...`) carry
-        the account ID in `resource`, which must NOT be counted as a bucket.
+        Resource counting is service-aware: for S3 scopes the count is
+        the number of distinct buckets in the findings (or ``env.buckets``
+        when populated), for other services it is the number of distinct
+        resources of that service type.
+
+        Account-level Prowler checks (e.g. ``*_account_level_*``) carry the
+        account ID in ``resource`` — ``is_valid_resource`` drops those so
+        they are not counted as real resources.
         """
-        env_buckets = env.get("buckets", []) or []
         account_id = str(env.get("account_id", "")).strip()
+        primary_service = scope_info.get("primary_service")
 
-        def _looks_like_bucket(res: str) -> bool:
-            r = (res or "").strip()
-            if not r or len(r) < 3:
-                return False
-            # Exclude account ID and purely numeric strings (account IDs
-            # leak through for *_account_level_* checks).
-            if r == account_id:
-                return False
-            if r.isdigit():
-                return False
-            return True
+        # Env may list resources under a service-specific key (``buckets`` is
+        # the only one the current EnvironmentAgent populates). Fall back to
+        # that S3 key when the scope is S3 so historical data still works.
+        env_resources: list = []
+        if primary_service == "s3":
+            env_resources = env.get("buckets") or []
+        else:
+            # Convention for future env agents: ``resources`` is a generic
+            # list; service-prefixed keys (e.g. ``iam_entities``) win when set.
+            svc_key = f"{primary_service}s" if primary_service else None
+            if svc_key and env.get(svc_key):
+                env_resources = env.get(svc_key) or []
+            else:
+                env_resources = env.get("resources") or []
 
         distinct_resources: set[str] = set()
         if findings:
             for f in findings:
                 res = f.get("resource") or f.get("resource_id")
-                if res and _looks_like_bucket(res):
+                finding_service = (
+                    (f.get("service") or primary_service or "").lower()
+                    or None
+                )
+                if is_valid_resource(res, finding_service, account_id):
                     distinct_resources.add(res)
 
-        if env_buckets:
-            total_buckets = len(env_buckets)
-            bucket_list = env_buckets
+        if env_resources:
+            total_resources = len(env_resources)
+            resource_list = list(env_resources)
+            source = "env"
         elif distinct_resources:
-            total_buckets = len(distinct_resources)
-            bucket_list = sorted(distinct_resources)
+            total_resources = len(distinct_resources)
+            resource_list = sorted(distinct_resources)
+            source = "findings"
         else:
-            total_buckets = 0
-            bucket_list = []
+            total_resources = 0
+            resource_list = []
+            source = "none"
 
         return {
             "account_id": env["account_id"],
             "region": env["region"],
             "scan_scope": scope["services"],
             "date": scope["date"],
-            "total_buckets": total_buckets,
-            "bucket_list": bucket_list,
-            "bucket_count_source": (
-                "env" if env_buckets else
-                ("findings" if distinct_resources else "none")
-            ),
+            # Scope-aware fields (new canonical names):
+            "primary_service": primary_service,
+            "service_display": scope_info.get("service_display"),
+            "is_multi_service": scope_info.get("is_multi_service", False),
+            "resource_term": scope_info.get("resource_term"),
+            "resource_term_plural": scope_info.get("resource_term_plural"),
+            "total_resources": total_resources,
+            "resource_list": resource_list,
+            "resource_count_source": source,
         }
 
     def _build_findings_ctx(self, findings: list) -> dict:
@@ -830,6 +1027,7 @@ class ReportAgent:
         md_path = self.output_path
         html_path = os.path.join(self.output_dir, "final_report.html")
         pdf_path = os.path.join(self.output_dir, "final_report.pdf")
+        validation_path = os.path.join(self.output_dir, "validation_report.json")
 
         # Render full HTML template
         html = Template(REPORT_TEMPLATE).render(**ctx)
@@ -841,11 +1039,38 @@ class ReportAgent:
         # PDF export
         pdf_result = export_pdf(html, pdf_path)
 
+        # Phase 5 — dump validation report alongside the rendered output.
+        # Always written (even when zero issues) so downstream tooling
+        # can rely on the file existing for every job.
+        self._write_validation_report(validation_path)
+
         return {
             "markdown": md_path,
             "html": html_path,
             "pdf": pdf_path if pdf_result else None,
+            "validation_report": validation_path,
         }
+
+    def _write_validation_report(self, path: str) -> None:
+        """Persist the list of ValidationIssues encountered during the
+        current run. Format is stable so thesis tooling can diff
+        before/after runs.
+        """
+        issues = [i.to_dict() for i in self._validation_issues]
+        summary: dict = {}
+        for i in self._validation_issues:
+            summary[i.kind] = summary.get(i.kind, 0) + 1
+        payload = {
+            "sections_validated": list(self._validation_sections_run),
+            "issue_count": len(issues),
+            "summary": summary,
+            "issues": issues,
+        }
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2, ensure_ascii=False)
+        except OSError as e:
+            logger.warning("Failed to write validation report to %s: %s", path, e)
 
     # ----------------------------------------------------------
     # METRICS (giữ nguyên interface cho orchestrator)

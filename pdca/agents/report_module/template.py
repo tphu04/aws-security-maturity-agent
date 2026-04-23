@@ -269,6 +269,10 @@ REPORT_TEMPLATE = (
     <tr><td><strong>Vùng (Region)</strong></td><td>{{ env.region }}</td></tr>
     <tr><td><strong>Phạm vi quét</strong></td>
         <td>{{ scope.services | join(', ') | upper }}</td></tr>
+{% if scope_info and scope_info.service_display %}
+    <tr><td><strong>Dịch vụ chính</strong></td>
+        <td>{{ scope_info.service_display }}{% if scope_info.is_multi_service %} (nhiều dịch vụ){% endif %}</td></tr>
+{% endif %}
     <tr><td><strong>Công cụ</strong></td><td>Prowler, AWS SDK (boto3), PDCA Security Agent</td></tr>
 </tbody>
 </table>
@@ -608,8 +612,8 @@ Bảng dưới đây chỉ hiển thị các findings có thay đổi.</em></p>
 {% for f in success %}
 <h3>{{ loop.index }}. {{ f.display_title }}</h3>
 <ul>
-    <li><strong>Tài nguyên:</strong> <code>{{ f.resource | default('N/A') }}</code></li>
-    <li><strong>Công cụ:</strong> <code>{{ f.tool_name | default('N/A') }}</code></li>
+    <li><strong>Tài nguyên:</strong> <code>{{ f.resource | default('N/A', true) }}</code></li>
+    <li><strong>Công cụ:</strong> <code>{{ f.tool_name | default('N/A', true) }}</code></li>
 </ul>
 <blockquote>
     <strong>Phân tích kỹ thuật:</strong><br>
@@ -625,7 +629,7 @@ Bảng dưới đây chỉ hiển thị các findings có thay đổi.</em></p>
 <h2>{{ rem_section }}.2 Khắc phục thất bại</h2>
 {% for f in failed %}
 <h3>{{ loop.index }}. {{ f.display_title }}</h3>
-<p><strong>Tài nguyên:</strong> <code>{{ f.resource | default('N/A') }}</code></p>
+<p><strong>Tài nguyên:</strong> <code>{{ f.resource | default('N/A', true) }}</code></p>
 <blockquote>
     <strong>Phân tích lỗi:</strong><br>
     {{ f.llm_detail }}
@@ -646,9 +650,9 @@ Bảng dưới đây chỉ hiển thị các findings có thay đổi.</em></p>
 {% for f in manual %}
 <blockquote>
     <strong>Yêu cầu thủ công #{{ loop.index }}</strong><br>
-    <strong>Vấn đề:</strong> {{ f.description | default('Không có mô tả') }}<br>
-    <strong>Tài nguyên:</strong> <code>{{ f.resource | default('N/A') }}</code> |
-    <strong>Mức độ:</strong> {{ f.severity | default('N/A') }}<br>
+    <strong>Vấn đề:</strong> {{ f.description | default('Không có mô tả', true) }}<br>
+    <strong>Tài nguyên:</strong> <code>{{ f.resource | default('N/A', true) }}</code> |
+    <strong>Mức độ:</strong> {{ f.severity | default('N/A', true) }}<br>
 
     {% if f.remaining_actions %}
     <strong>Kế hoạch hành động:</strong>

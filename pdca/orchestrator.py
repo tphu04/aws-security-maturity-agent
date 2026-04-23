@@ -614,10 +614,16 @@ def _fetch_rag_for_report(raw_pre_findings: list,
 
     Returns:
         {
-            "key_findings":         [{check_id, title, severity, risk_summary}],
-            "control_themes":       [{capability_id, capability_name, summary_short}],
+            "primary_topics":        [str],
+            "key_findings":          [{check_id, title, severity, risk_summary,
+                                       remediation}],
+            "control_themes":        [{capability_id, capability_name,
+                                       summary_short}],
             "recommended_practices": [str],
-            "confidence":           "high" | "medium" | "low" | None,
+            "capability_details":    [{capability_id, capability_name, summary,
+                                       risk_explanation, recommendation,
+                                       guidance_questions, url}],
+            "confidence":            "high" | "medium" | "low" | None,
         }
         hoặc {} nếu RAG không khả dụng.
     """
@@ -677,19 +683,28 @@ def _fetch_rag_for_report(raw_pre_findings: list,
 
         # Extract report_bundle từ response
         bundle = result.get("payload", {}).get("report_bundle", {})
-        confidence = result.get("_meta", {}).get("confidence")
+        confidence = (
+            bundle.get("confidence")
+            or result.get("_meta", {}).get("confidence")
+        )
 
         context = {
+            "primary_topics": bundle.get("primary_topics", []),
             "key_findings": bundle.get("key_findings", []),
             "control_themes": bundle.get("control_themes", []),
             "recommended_practices": bundle.get("recommended_practices", []),
+            "capability_details": bundle.get("capability_details", []),
             "confidence": confidence,
         }
 
         finding_count = len(context["key_findings"])
         theme_count = len(context["control_themes"])
-        print(f"[report_node] RAG context: {finding_count} findings, "
-              f"{theme_count} themes, confidence={confidence}")
+        detail_count = len(context["capability_details"])
+        print(
+            f"[report_node] RAG context: {finding_count} findings, "
+            f"{theme_count} themes, {detail_count} capability_details, "
+            f"confidence={confidence}"
+        )
 
         return context
 
@@ -740,6 +755,16 @@ def report_node(state: PDCAState):
         aws_context=state.get("aws_context") or {},
         plan=state.get("assessment_plan") or {},
         user_request=state.get("user_request", ""),
+    )
+
+    # --- Scope detection (Phase 1 — de-S3 bias) ---
+    # Compute before RAG so the scope is available for any upstream consumer
+    # that may want it later (e.g. the upcoming validator in Phase 5).
+    from pdca.agents.report_module.scope_detector import detect_scope
+    report_data["scope_info"] = detect_scope(
+        findings=report_data.get("raw_pre_findings", []),
+        env=report_data.get("environment"),
+        services_hint=report_data.get("scope", {}).get("services"),
     )
 
     # --- RAG Context: enrich report với security knowledge ---
