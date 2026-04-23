@@ -168,6 +168,16 @@ class BundleFactory:
         """
         Report bundle: aggregated themes, key findings, and
         consolidated recommended practices for narrative generation.
+
+        Quality gates (Phase 3 rebuild):
+          - ``key_findings`` sorted by severity (critical -> low).
+          - ``control_themes`` filtered to mappings with confidence >= medium.
+          - ``recommended_practices`` sourced from ``remediation_recommendation``
+            (human-readable guidance). No fallback to raw ``remediation`` code
+            blocks or to ``mapping.rationale`` — both leak structured/noisy
+            text into the prompt.
+          - ``capability_details`` surfaces the rich maturity payload so the
+            report prompts can ground wording against the actual doc.
         """
         all_checks = list(requested_checks) + list(related_checks)
         seen_checks: set[str] = set()
@@ -183,8 +193,9 @@ class BundleFactory:
                 primary_topics_set.add(item.service.lower())
 
             meta = _ensure_dict(item.metadata)
-            risk_summary = _truncate_text(
-                meta.get("risk") or meta.get("description")
+            risk_summary = _truncate_at_sentence(
+                meta.get("risk") or meta.get("description"),
+                max_chars=300,
             )
 
             key_findings.append({
@@ -194,60 +205,95 @@ class BundleFactory:
                 "risk_summary": risk_summary,
             })
 
+        key_findings.sort(key=lambda f: _severity_rank(f.get("severity")))
         primary_topics = sorted(list(primary_topics_set))
 
+        # Only mappings at medium+ confidence are allowed to flow into the
+        # report. Unreviewed/low-confidence links are the exact hallucination
+        # vector we want to keep out.
+        confident_mappings = _filter_confident_mappings(
+            selected_mappings, min_level="medium"
+        )
+        allowed_capability_ids = {m.capability_id for m in confident_mappings if m.capability_id}
+
         control_themes: List[Dict[str, Any]] = []
-        practices_set: set[str] = set()
+        capability_details: List[Dict[str, Any]] = []
+        practices: List[str] = []
+        seen_capabilities: set[str] = set()
 
         for item in selected_capabilities:
+            if item.capability_id in seen_capabilities:
+                continue
+            seen_capabilities.add(item.capability_id)
+
+            # When we *have* confident mappings, stay within them so the
+            # report never leans on a capability the retrieval layer
+            # surfaced via a low-confidence link. When no confident
+            # mapping exists (e.g. pure semantic query with no findings),
+            # fall back to the full capability list.
+            if allowed_capability_ids and item.capability_id not in allowed_capability_ids:
+                continue
+
             meta = _ensure_dict(item.metadata)
+            summary = _truncate_at_sentence(
+                meta.get("summary") or item.short_text, max_chars=500
+            ) or ""
+
             control_themes.append({
                 "capability_id": item.capability_id,
                 "capability_name": item.capability_name,
-                "summary_short": _truncate_text(meta.get("summary")) or "",
+                "summary_short": summary,
             })
 
-            raw_practices = meta.get("recommended_practices") or []
-            for p in raw_practices:
-                practices_set.add(p)
+            capability_details.append({
+                "capability_id": item.capability_id,
+                "capability_name": item.capability_name or "Unknown capability",
+                "domain": meta.get("domain") or item.domain,
+                "stage": meta.get("stage"),
+                "summary": summary or (item.capability_name or item.capability_id),
+                "risk_explanation": _truncate_at_sentence(
+                    meta.get("risk_explanation"), max_chars=500
+                ),
+                "recommendation": _truncate_at_sentence(
+                    meta.get("guidance"), max_chars=500
+                ),
+                "guidance_questions": _split_guidance_questions(
+                    meta.get("how_to_check")
+                ),
+                "url": meta.get("source_uri") or meta.get("url"),
+            })
 
-        if not control_themes and selected_mappings:
-            for mapping in selected_mappings:
-                control_themes.append({
-                    "capability_id": mapping.capability_id,
-                    "capability_name": mapping.capability_name,
-                    "summary_short": _truncate_text(mapping.rationale) or "",
-                })
+            for p in meta.get("recommended_practices") or []:
+                if isinstance(p, str) and p.strip():
+                    practices.append(p.strip())
 
-        if not practices_set and selected_mappings:
-            for mapping in selected_mappings:
-                if mapping.rationale:
-                    practices_set.add(mapping.rationale)
+        # Augment practices with finding-level remediation_recommendation
+        # (Phase 2 surfaced this field into rich metadata). This is the
+        # preferred source: it is already sentence-cleaned by the
+        # normalizer and never contains raw CLI/YAML code blocks.
+        for item in all_checks:
+            meta = _ensure_dict(item.metadata)
+            rec = meta.get("remediation_recommendation")
+            if isinstance(rec, str) and rec.strip():
+                practices.append(rec.strip())
 
-        if not practices_set and all_checks:
-            for item in all_checks:
-                meta = _ensure_dict(item.metadata)
-                raw_practices = meta.get("recommended_practices") or []
-                for p in raw_practices:
-                    practices_set.add(p)
-
-        if not practices_set and all_checks:
-            for item in all_checks:
-                meta = _ensure_dict(item.metadata)
-                remediation = meta.get("remediation")
-                if remediation:
-                    practices_set.add(remediation)
-
-        recommended_practices = [
-            _truncate_text(p, 150)
-            for p in sorted(list(practices_set))
-        ][:5]
+        seen_practices: set[str] = set()
+        recommended_practices: List[str] = []
+        for p in practices:
+            truncated = _truncate_at_sentence(p, max_chars=240)
+            if not truncated or truncated in seen_practices:
+                continue
+            seen_practices.add(truncated)
+            recommended_practices.append(truncated)
+            if len(recommended_practices) >= 8:
+                break
 
         return {
             "primary_topics": primary_topics,
             "key_findings": key_findings,
             "control_themes": control_themes,
             "recommended_practices": recommended_practices,
+            "capability_details": capability_details,
         }
 
     def evaluate_bundle_confidence(
@@ -284,9 +330,14 @@ class BundleFactory:
                 "primary_topics"
             ):
                 return "low"
-            if not report_bundle.get(
-                "control_themes"
-            ) or not report_bundle.get("recommended_practices"):
+            # capability_details is the richest signal for report-grade
+            # grounding. Missing it means the prompt will lean on
+            # findings-only context — confidence must reflect that.
+            if not report_bundle.get("capability_details"):
+                return "low"
+            practices = report_bundle.get("recommended_practices") or []
+            themes = report_bundle.get("control_themes") or []
+            if not themes or len(practices) < 3:
                 if base_conf == "high":
                     return "medium"
             return base_conf
@@ -323,6 +374,94 @@ def _truncate_text(
     if not text:
         return None
     return text[:max_length] + "..." if len(text) > max_length else text
+
+
+_SEVERITY_RANK = {
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 3,
+    "informational": 4,
+    "info": 4,
+}
+
+
+def _severity_rank(severity: Optional[str]) -> int:
+    """Ordinal rank for sorting (0 = most severe). Unknown severities sink."""
+    return _SEVERITY_RANK.get((severity or "").strip().lower(), 99)
+
+
+_CONFIDENCE_RANK = {"low": 0, "medium": 1, "high": 2}
+
+
+def _filter_confident_mappings(
+    mappings: Sequence[SelectedMappingContext],
+    min_level: str = "medium",
+) -> List[SelectedMappingContext]:
+    """Keep mappings whose confidence >= ``min_level``.
+
+    Mappings without a confidence value are dropped because an unreviewed
+    link between a check and a capability is exactly the kind of
+    ungrounded claim we want to keep out of the report.
+    """
+    threshold = _CONFIDENCE_RANK.get(min_level, 1)
+    kept: List[SelectedMappingContext] = []
+    for m in mappings:
+        conf = m.mapping_confidence
+        if conf is None:
+            continue
+        value = conf.value if hasattr(conf, "value") else conf
+        if _CONFIDENCE_RANK.get(str(value).lower(), -1) >= threshold:
+            kept.append(m)
+    return kept
+
+
+_SENTENCE_BREAKS = (". ", "; ", ", ")
+
+
+def _truncate_at_sentence(
+    text: Optional[str], max_chars: int = 500
+) -> Optional[str]:
+    """Truncate at a sentence boundary (. ; ,) close to ``max_chars`` rather
+    than mid-word, so prompt injection never cuts a thought in half."""
+    if not text:
+        return None
+    text = text.strip()
+    if len(text) <= max_chars:
+        return text
+
+    window = text[:max_chars]
+    best = -1
+    for brk in _SENTENCE_BREAKS:
+        idx = window.rfind(brk)
+        if idx > best:
+            best = idx + len(brk) - 1  # keep the punctuation, drop trailing space
+    if best <= 0:
+        # No boundary found — fall back to word boundary to avoid mid-word cut.
+        best = window.rfind(" ")
+        if best <= 0:
+            return window.rstrip() + "..."
+    return text[:best + 1].rstrip() + "..."
+
+
+def _split_guidance_questions(text: Optional[str]) -> List[str]:
+    """Split a how_to_check blob into assessment questions.
+
+    Capability docs often encode guidance as numbered/bulleted lists or
+    question sentences. This helper extracts each actionable line so
+    report prompts can present them as a checklist rather than prose.
+    """
+    if not text or not isinstance(text, str):
+        return []
+    raw = text.replace("\r", "\n")
+    lines: List[str] = []
+    for line in raw.split("\n"):
+        s = line.strip().lstrip("-*•").lstrip("0123456789.)").strip()
+        if len(s) >= 5:
+            lines.append(s)
+    if not lines and "?" in raw:
+        lines = [q.strip() + "?" for q in raw.split("?") if q.strip()]
+    return lines[:6]
 
 
 def _normalize_check_item(

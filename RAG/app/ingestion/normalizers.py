@@ -607,6 +607,22 @@ def _extract_recommendation_text(remediation: Any) -> str:
     return ""
 
 
+def _extract_recommendation_url(remediation: Any) -> str:
+    """Extract the official documentation URL from Remediation.Recommendation.Url.
+
+    Returns an empty string if the shape does not match or the URL is missing.
+    URLs are preserved verbatim (no normalization) so downstream consumers can
+    surface them as clickable links.
+    """
+    if not isinstance(remediation, dict):
+        return ""
+    rec = remediation.get("Recommendation") or remediation.get("recommendation") or {}
+    if not isinstance(rec, dict):
+        return ""
+    url = rec.get("Url") or rec.get("url") or ""
+    return url.strip() if isinstance(url, str) else ""
+
+
 def _truncate_words(text: str, max_words: int = 300) -> str:
     """Truncate text to max_words, preserving whole words."""
     words = text.split()
@@ -831,8 +847,10 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
     risk = _normalize_for_index(raw.get("Risk", ""))
     # Full remediation kept in doc field for downstream use
     remediation = _normalize_for_index(raw.get("Remediation", ""))
-    # Extract only human-readable recommendation text for retrieval
-    recommendation_text = _extract_recommendation_text(raw.get("Remediation", ""))
+    # Extract only human-readable recommendation text for retrieval + report rendering
+    raw_remediation = raw.get("Remediation", "")
+    recommendation_text = _extract_recommendation_text(raw_remediation)
+    recommendation_url = _extract_recommendation_url(raw_remediation)
     keywords = normalize_string_list(raw.get("Categories", []))
     tags = normalize_string_list(raw.get("tags", []))
 
@@ -914,6 +932,8 @@ def normalize_prowler_doc(raw: dict) -> ProwlerCheckDoc:
         description=description,
         risk=risk,
         remediation=remediation,
+        remediation_recommendation=recommendation_text or None,
+        remediation_url=recommendation_url or None,
         resource_type=_normalize_for_index(raw.get("ResourceType", "")) or None,
         keywords=keywords,
         synonyms=aliases,

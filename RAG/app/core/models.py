@@ -55,6 +55,8 @@ class ProwlerCheckDoc(BaseDoc):
     description: str
     risk: str
     remediation: str
+    remediation_recommendation: Optional[str] = None
+    remediation_url: Optional[str] = None
     resource_type: Optional[str] = None
     keywords: List[str] = Field(default_factory=list)
     synonyms: List[str] = Field(default_factory=list)
@@ -271,11 +273,30 @@ class ReportCapability(BaseModel):
     capability_name: Optional[str] = "Unknown capability"
     summary_short: str
 
+class ReportCapabilityDetail(BaseModel):
+    """Rich capability payload for report narrative generation.
+
+    Populated from MaturityCapabilityDoc metadata so that report prompts can
+    ground wording (risk explanation, remediation guidance, assessment
+    questions) against actual documentation rather than fabricating.
+    """
+    capability_id: str
+    capability_name: str = "Unknown capability"
+    domain: Optional[str] = None
+    stage: Optional[str] = None
+    summary: str
+    risk_explanation: Optional[str] = None
+    recommendation: Optional[str] = None
+    guidance_questions: List[str] = Field(default_factory=list)
+    url: Optional[str] = None
+
 class ReportBundle(BaseModel):
     primary_topics: List[str] = Field(default_factory=list)
     key_findings: List[ReportFinding] = Field(default_factory=list)
     control_themes: List[ReportCapability] = Field(default_factory=list)
     recommended_practices: List[str] = Field(default_factory=list)
+    capability_details: List[ReportCapabilityDetail] = Field(default_factory=list)
+    confidence: Optional[str] = None
 
 
 class ContextPayload(BaseModel):

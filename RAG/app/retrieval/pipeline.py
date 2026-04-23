@@ -642,6 +642,8 @@ class RetrievalPipeline:
             "description": doc.get("description"),
             "risk": doc.get("risk"),
             "remediation": doc.get("remediation"),
+            "remediation_recommendation": doc.get("remediation_recommendation"),
+            "remediation_url": doc.get("remediation_url"),
             "resource_type": doc.get("resource_type"),
             "keywords": doc.get("keywords"),
             "synonyms": doc.get("synonyms"),
