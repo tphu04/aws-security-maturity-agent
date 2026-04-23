@@ -1,6 +1,6 @@
 {
   "index_version": "rag-v5-2026-04-07",
-  "built_at": "2026-04-07T04:21:02+00:00",
+  "built_at": "2026-04-19T15:30:45+00:00",
   "embedding_model": "BAAI/bge-base-en-v1.5",
   "storage_layout": "multi_corpus",
   "corpora": {
