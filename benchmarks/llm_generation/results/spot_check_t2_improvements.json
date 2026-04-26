@@ -1,0 +1,484 @@
+{
+  "schema_version": 3,
+  "generated_at": "2026-04-24T12:05:07.314869+00:00",
+  "total_cases": 3,
+  "inference_dir": "benchmarks\\llm_generation\\inference_outputs\\report_v3_t2_improvements",
+  "summary": {
+    "overall": {
+      "structure_pass_rate": {
+        "mean": 1.0,
+        "n": 3
+      },
+      "off_scope_mention_rate": {
+        "mean": 0.0,
+        "n": 3
+      },
+      "scope_accuracy": {
+        "mean": 1.0,
+        "n": 3
+      },
+      "numerical_faithfulness": {
+        "mean": 1.0,
+        "n": 3
+      },
+      "capability_grounding_rate": {
+        "mean": 1.0,
+        "n": 3
+      },
+      "template_data_accuracy": {
+        "mean": 1.0,
+        "n": 3
+      },
+      "ndcg_at_5_severity": {
+        "mean": null,
+        "n": 0
+      }
+    },
+    "by_group": {
+      "C1_scope_detection": {
+        "n": 1,
+        "structure_pass_rate": 1.0,
+        "off_scope_mention_rate": 0.0,
+        "scope_accuracy": 1.0,
+        "numerical_faithfulness": 1.0,
+        "capability_grounding_rate": 1.0,
+        "template_data_accuracy": 1.0,
+        "ndcg_at_5_severity": null
+      },
+      "C2_hallucination_stress": {
+        "n": 1,
+        "structure_pass_rate": 1.0,
+        "off_scope_mention_rate": 0.0,
+        "scope_accuracy": 1.0,
+        "numerical_faithfulness": 1.0,
+        "capability_grounding_rate": 1.0,
+        "template_data_accuracy": 1.0,
+        "ndcg_at_5_severity": null
+      },
+      "C5_rag_grounding": {
+        "n": 1,
+        "structure_pass_rate": 1.0,
+        "off_scope_mention_rate": 0.0,
+        "scope_accuracy": 1.0,
+        "numerical_faithfulness": 1.0,
+        "capability_grounding_rate": 1.0,
+        "template_data_accuracy": 1.0,
+        "ndcg_at_5_severity": null
+      }
+    }
+  },
+  "release": {
+    "verdict": "PASS",
+    "hard_checks": [
+      {
+        "criterion": "structure_pass_rate_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "off_scope_mention_rate_max",
+        "threshold": 0.02,
+        "actual": 0.0,
+        "passed": true
+      },
+      {
+        "criterion": "scope_accuracy_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "numerical_faithfulness_min",
+        "threshold": 0.9,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "template_data_accuracy_min",
+        "threshold": 1.0,
+        "actual": 1.0,
+        "passed": true
+      }
+    ],
+    "soft_checks": [
+      {
+        "criterion": "capability_grounding_rate_min",
+        "threshold": 0.85,
+        "actual": 1.0,
+        "passed": true
+      },
+      {
+        "criterion": "claim_support_rate_min",
+        "threshold": 0.85,
+        "actual": null,
+        "passed": null
+      },
+      {
+        "criterion": "ndcg_at_5_severity_min",
+        "threshold": 0.85,
+        "actual": null,
+        "passed": null
+      },
+      {
+        "criterion": "actionability_likert_min",
+        "threshold": 3.5,
+        "actual": null,
+        "passed": null
+      }
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "c1_single_s3_dominant",
+      "group": "C1_scope_detection",
+      "metrics": {
+        "structure_pass_rate": {
+          "score": 1.0,
+          "details": {
+            "html_valid": true,
+            "section_presence_rate": 1.0,
+            "no_template_leak": true,
+            "no_none_display": true
+          }
+        },
+        "off_scope_mention_rate": {
+          "score": 0.0,
+          "sections_with_issue": 0,
+          "total_sections": 5,
+          "details": [
+            {
+              "section": "executive_summary",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "assessment_goals",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "pass_overview",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "fail_overview",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "recommendations",
+              "off_scope": [],
+              "forbidden_hits": []
+            }
+          ]
+        },
+        "scope_accuracy": {
+          "score": 1.0,
+          "detected": {
+            "primary_service": "s3",
+            "is_multi_service": false,
+            "service_list": [
+              "s3"
+            ]
+          },
+          "expected": {
+            "primary_service": "s3",
+            "is_multi_service": false,
+            "service_list": [
+              "s3"
+            ]
+          }
+        },
+        "numerical_faithfulness": {
+          "score": 1.0,
+          "clean_sections": 5,
+          "total_sections": 5,
+          "details": [
+            {
+              "section": "executive_summary",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "assessment_goals",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "pass_overview",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "fail_overview",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "recommendations",
+              "hallucinated_numbers": []
+            }
+          ]
+        },
+        "capability_grounding_rate": {
+          "score": 1.0,
+          "ungrounded_count": 0,
+          "candidate_count": 6,
+          "required_hits": 0,
+          "required_total": 1
+        },
+        "template_data_accuracy": {
+          "score": 1.0,
+          "components": {
+            "stats_accuracy": 1.0,
+            "findings_table_accuracy": 1.0,
+            "score_accuracy": 1.0,
+            "status_color_accuracy": 1.0
+          }
+        },
+        "ndcg_at_5_severity": {
+          "score": null,
+          "note": "no ground-truth ranking"
+        }
+      },
+      "debug": {
+        "html_length": 22128,
+        "html_status": "ok",
+        "latency_ms": 60815.4,
+        "error": null
+      }
+    },
+    {
+      "case_id": "c2_numbers_trap",
+      "group": "C2_hallucination_stress",
+      "metrics": {
+        "structure_pass_rate": {
+          "score": 1.0,
+          "details": {
+            "html_valid": true,
+            "section_presence_rate": 1.0,
+            "no_template_leak": true,
+            "no_none_display": true
+          }
+        },
+        "off_scope_mention_rate": {
+          "score": 0.0,
+          "sections_with_issue": 0,
+          "total_sections": 5,
+          "details": [
+            {
+              "section": "executive_summary",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "assessment_goals",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "pass_overview",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "fail_overview",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "recommendations",
+              "off_scope": [],
+              "forbidden_hits": []
+            }
+          ]
+        },
+        "scope_accuracy": {
+          "score": 1.0,
+          "detected": {
+            "primary_service": "ec2",
+            "is_multi_service": false,
+            "service_list": [
+              "ec2"
+            ]
+          },
+          "expected": {
+            "primary_service": "ec2",
+            "is_multi_service": false,
+            "service_list": [
+              "ec2"
+            ]
+          }
+        },
+        "numerical_faithfulness": {
+          "score": 1.0,
+          "clean_sections": 5,
+          "total_sections": 5,
+          "details": [
+            {
+              "section": "executive_summary",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "assessment_goals",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "pass_overview",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "fail_overview",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "recommendations",
+              "hallucinated_numbers": []
+            }
+          ]
+        },
+        "capability_grounding_rate": {
+          "score": 1.0,
+          "ungrounded_count": 0,
+          "candidate_count": 5,
+          "required_hits": 0,
+          "required_total": 1
+        },
+        "template_data_accuracy": {
+          "score": 1.0,
+          "components": {
+            "stats_accuracy": 1.0,
+            "findings_table_accuracy": 1.0,
+            "score_accuracy": 1.0,
+            "status_color_accuracy": 1.0
+          }
+        },
+        "ndcg_at_5_severity": {
+          "score": null,
+          "note": "no ground-truth ranking"
+        }
+      },
+      "debug": {
+        "html_length": 19552,
+        "html_status": "ok",
+        "latency_ms": 44833.9,
+        "error": null
+      }
+    },
+    {
+      "case_id": "c5_rich_rag_full_capdetails",
+      "group": "C5_rag_grounding",
+      "metrics": {
+        "structure_pass_rate": {
+          "score": 1.0,
+          "details": {
+            "html_valid": true,
+            "section_presence_rate": 1.0,
+            "no_template_leak": true,
+            "no_none_display": true
+          }
+        },
+        "off_scope_mention_rate": {
+          "score": 0.0,
+          "sections_with_issue": 0,
+          "total_sections": 5,
+          "details": [
+            {
+              "section": "executive_summary",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "assessment_goals",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "pass_overview",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "fail_overview",
+              "off_scope": [],
+              "forbidden_hits": []
+            },
+            {
+              "section": "recommendations",
+              "off_scope": [],
+              "forbidden_hits": []
+            }
+          ]
+        },
+        "scope_accuracy": {
+          "score": 1.0,
+          "detected": {
+            "primary_service": "s3",
+            "is_multi_service": false,
+            "service_list": [
+              "s3"
+            ]
+          },
+          "expected": {
+            "primary_service": "s3",
+            "is_multi_service": false,
+            "service_list": [
+              "s3"
+            ]
+          }
+        },
+        "numerical_faithfulness": {
+          "score": 1.0,
+          "clean_sections": 5,
+          "total_sections": 5,
+          "details": [
+            {
+              "section": "executive_summary",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "assessment_goals",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "pass_overview",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "fail_overview",
+              "hallucinated_numbers": []
+            },
+            {
+              "section": "recommendations",
+              "hallucinated_numbers": []
+            }
+          ]
+        },
+        "capability_grounding_rate": {
+          "score": 1.0,
+          "ungrounded_count": 0,
+          "candidate_count": 5,
+          "required_hits": 0,
+          "required_total": 1
+        },
+        "template_data_accuracy": {
+          "score": 1.0,
+          "components": {
+            "stats_accuracy": 1.0,
+            "findings_table_accuracy": 1.0,
+            "score_accuracy": 1.0,
+            "status_color_accuracy": 1.0
+          }
+        },
+        "ndcg_at_5_severity": {
+          "score": null,
+          "note": "no ground-truth ranking"
+        }
+      },
+      "debug": {
+        "html_length": 19388,
+        "html_status": "ok",
+        "latency_ms": 44489.6,
+        "error": null
+      }
+    }
+  ]
+}

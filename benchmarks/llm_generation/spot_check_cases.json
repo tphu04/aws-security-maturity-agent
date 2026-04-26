@@ -1,0 +1,678 @@
+{
+  "schema_version": 3,
+  "cases": [
+    {
+      "case_id": "c1_single_s3_dominant",
+      "group": "C1_scope_detection",
+      "source": "baseline_C",
+      "input": {
+        "report_data": {
+          "pre": {
+            "total": 6,
+            "pass": 3,
+            "fail": 3,
+            "severity": {
+              "critical": 1,
+              "high": 1,
+              "medium": 0,
+              "low": 1
+            }
+          },
+          "post": {
+            "initial_pass": 3,
+            "initial_fail": 3,
+            "final_pass": 5,
+            "final_fail": 1,
+            "fixed": 2,
+            "failed": 0,
+            "manual": 1
+          },
+          "environment": {
+            "account_id": "123456789012",
+            "region": "us-east-1",
+            "buckets": [
+              "prod-data-lake",
+              "logs-archive",
+              "public-assets"
+            ]
+          },
+          "scope": {
+            "services": [
+              "s3"
+            ],
+            "date": "2026-04-20",
+            "user_request": "Audit S3 encryption, versioning and public exposure."
+          },
+          "findings_table": [
+            {
+              "stt": 1,
+              "finding": "Bucket prod-data-lake missing default encryption",
+              "service": "s3",
+              "resource": "prod-data-lake",
+              "severity": "High",
+              "before": "FAIL",
+              "after": "PASS",
+              "change": "Fixed"
+            },
+            {
+              "stt": 2,
+              "finding": "Bucket prod-data-lake has versioning enabled",
+              "service": "s3",
+              "resource": "prod-data-lake",
+              "severity": "Medium",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            },
+            {
+              "stt": 3,
+              "finding": "Bucket logs-archive allows public read",
+              "service": "s3",
+              "resource": "logs-archive",
+              "severity": "Critical",
+              "before": "FAIL",
+              "after": "FAIL",
+              "change": "Still Failing (ManualRequired)"
+            },
+            {
+              "stt": 4,
+              "finding": "Bucket logs-archive enforces TLS",
+              "service": "s3",
+              "resource": "logs-archive",
+              "severity": "Medium",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            },
+            {
+              "stt": 5,
+              "finding": "Bucket public-assets has access logging off",
+              "service": "s3",
+              "resource": "public-assets",
+              "severity": "Low",
+              "before": "FAIL",
+              "after": "PASS",
+              "change": "Fixed"
+            },
+            {
+              "stt": 6,
+              "finding": "Bucket public-assets has default encryption",
+              "service": "s3",
+              "resource": "public-assets",
+              "severity": "High",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            }
+          ],
+          "success_findings": [],
+          "failed_findings": [],
+          "manual_findings": [],
+          "raw_pre_findings": [
+            {
+              "finding_uid": "uid-s3-1",
+              "finding_id": "f-s3-1",
+              "event_code": "s3_bucket_default_encryption",
+              "check_id": "s3_bucket_default_encryption",
+              "service": "s3",
+              "resource_id": "prod-data-lake",
+              "resource": "prod-data-lake",
+              "severity": "High",
+              "status": "FAIL",
+              "description": "Bucket prod-data-lake missing default encryption"
+            },
+            {
+              "finding_uid": "uid-s3-2",
+              "finding_id": "f-s3-2",
+              "event_code": "s3_bucket_object_versioning",
+              "check_id": "s3_bucket_object_versioning",
+              "service": "s3",
+              "resource_id": "prod-data-lake",
+              "resource": "prod-data-lake",
+              "severity": "Medium",
+              "status": "PASS",
+              "description": "Bucket prod-data-lake has versioning enabled"
+            },
+            {
+              "finding_uid": "uid-s3-3",
+              "finding_id": "f-s3-3",
+              "event_code": "s3_bucket_public_access",
+              "check_id": "s3_bucket_public_access",
+              "service": "s3",
+              "resource_id": "logs-archive",
+              "resource": "logs-archive",
+              "severity": "Critical",
+              "status": "FAIL",
+              "description": "Bucket logs-archive allows public read"
+            },
+            {
+              "finding_uid": "uid-s3-4",
+              "finding_id": "f-s3-4",
+              "event_code": "s3_bucket_secure_transport",
+              "check_id": "s3_bucket_secure_transport",
+              "service": "s3",
+              "resource_id": "logs-archive",
+              "resource": "logs-archive",
+              "severity": "Medium",
+              "status": "PASS",
+              "description": "Bucket logs-archive enforces TLS"
+            },
+            {
+              "finding_uid": "uid-s3-5",
+              "finding_id": "f-s3-5",
+              "event_code": "s3_bucket_logging_enabled",
+              "check_id": "s3_bucket_logging_enabled",
+              "service": "s3",
+              "resource_id": "public-assets",
+              "resource": "public-assets",
+              "severity": "Low",
+              "status": "FAIL",
+              "description": "Bucket public-assets has access logging off"
+            },
+            {
+              "finding_uid": "uid-s3-6",
+              "finding_id": "f-s3-6",
+              "event_code": "s3_bucket_default_encryption",
+              "check_id": "s3_bucket_default_encryption",
+              "service": "s3",
+              "resource_id": "public-assets",
+              "resource": "public-assets",
+              "severity": "High",
+              "status": "PASS",
+              "description": "Bucket public-assets has default encryption"
+            }
+          ]
+        },
+        "rag_snapshot": {
+          "primary_topics": [
+            "Data Protection"
+          ],
+          "control_themes": [
+            {
+              "capability_id": "data-protection",
+              "capability_name": "Data Protection",
+              "summary_short": "Data Protection controls for S3."
+            }
+          ],
+          "capability_details": [
+            {
+              "capability_id": "data-protection",
+              "capability_name": "Data Protection",
+              "summary": "Data Protection enforces baseline guardrails.",
+              "risk_explanation": "Misconfiguration exposes data or access.",
+              "recommendation": "Apply the documented remediation.",
+              "guidance_questions": []
+            }
+          ],
+          "recommended_practices": [
+            "Apply the Data Protection baseline on every resource.",
+            "Log and monitor configuration drift."
+          ],
+          "key_findings": [],
+          "confidence": "medium"
+        }
+      },
+      "expected": {
+        "scope": {
+          "primary_service": "s3",
+          "service_list": [
+            "s3"
+          ],
+          "is_multi_service": false,
+          "service_display": "Amazon S3",
+          "resource_term_plural": "buckets"
+        },
+        "forbidden_terms": [
+          "iam",
+          "ec2",
+          "rds",
+          "role",
+          "instance"
+        ],
+        "required_capabilities": [
+          "Data Storage Protection"
+        ],
+        "allowed_numbers_snapshot": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          123456789012
+        ]
+      }
+    },
+    {
+      "case_id": "c2_numbers_trap",
+      "group": "C2_hallucination_stress",
+      "source": "synthetic",
+      "input": {
+        "report_data": {
+          "pre": {
+            "total": 7,
+            "pass": 3,
+            "fail": 4,
+            "severity": {
+              "critical": 1,
+              "high": 1,
+              "medium": 2,
+              "low": 0
+            }
+          },
+          "post": {
+            "initial_pass": 3,
+            "initial_fail": 4,
+            "final_pass": 6,
+            "final_fail": 1,
+            "fixed": 3,
+            "failed": 0,
+            "manual": 0
+          },
+          "environment": {
+            "account_id": "123456789012",
+            "region": "us-east-1",
+            "buckets": []
+          },
+          "scope": {
+            "services": [
+              "ec2"
+            ],
+            "date": "2026-04-20",
+            "user_request": "EC2 hardening — pre/post stats are close."
+          },
+          "findings_table": [
+            {
+              "stt": 1,
+              "finding": "Security group allows SSH (22) from 0.0.0.0/0",
+              "service": "ec2",
+              "resource": "sg-0abc1234",
+              "severity": "Critical",
+              "before": "FAIL",
+              "after": "FAIL",
+              "change": "Still Failing"
+            },
+            {
+              "stt": 2,
+              "finding": "EBS volume is not encrypted",
+              "service": "ec2",
+              "resource": "vol-0def5678",
+              "severity": "High",
+              "before": "FAIL",
+              "after": "PASS",
+              "change": "Fixed"
+            },
+            {
+              "stt": 3,
+              "finding": "EC2 instance has a public IPv4 address",
+              "service": "ec2",
+              "resource": "i-0123456789abcdef0",
+              "severity": "Medium",
+              "before": "FAIL",
+              "after": "PASS",
+              "change": "Fixed"
+            },
+            {
+              "stt": 4,
+              "finding": "IMDSv2 is not enforced on EC2 instance",
+              "service": "ec2",
+              "resource": "i-0fedcba987654321",
+              "severity": "Medium",
+              "before": "FAIL",
+              "after": "PASS",
+              "change": "Fixed"
+            },
+            {
+              "stt": 5,
+              "finding": "Security group allows SSH (22) from 0.0.0.0/0",
+              "service": "ec2",
+              "resource": "sg-0abc1234",
+              "severity": "Critical",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            },
+            {
+              "stt": 6,
+              "finding": "EBS volume is not encrypted",
+              "service": "ec2",
+              "resource": "vol-0def5678",
+              "severity": "High",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            },
+            {
+              "stt": 7,
+              "finding": "EC2 instance has a public IPv4 address",
+              "service": "ec2",
+              "resource": "i-0123456789abcdef0",
+              "severity": "Medium",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            }
+          ],
+          "success_findings": [],
+          "failed_findings": [],
+          "manual_findings": [],
+          "raw_pre_findings": [
+            {
+              "finding_uid": "uid-ec2-1",
+              "finding_id": "f-ec2-1",
+              "event_code": "ec2_sg_open_ssh",
+              "check_id": "ec2_sg_open_ssh",
+              "service": "ec2",
+              "resource_id": "sg-0abc1234",
+              "resource": "sg-0abc1234",
+              "severity": "Critical",
+              "status": "FAIL",
+              "description": "Security group allows SSH (22) from 0.0.0.0/0"
+            },
+            {
+              "finding_uid": "uid-ec2-2",
+              "finding_id": "f-ec2-2",
+              "event_code": "ec2_ebs_encryption",
+              "check_id": "ec2_ebs_encryption",
+              "service": "ec2",
+              "resource_id": "vol-0def5678",
+              "resource": "vol-0def5678",
+              "severity": "High",
+              "status": "FAIL",
+              "description": "EBS volume is not encrypted"
+            },
+            {
+              "finding_uid": "uid-ec2-3",
+              "finding_id": "f-ec2-3",
+              "event_code": "ec2_instance_public_ip",
+              "check_id": "ec2_instance_public_ip",
+              "service": "ec2",
+              "resource_id": "i-0123456789abcdef0",
+              "resource": "i-0123456789abcdef0",
+              "severity": "Medium",
+              "status": "FAIL",
+              "description": "EC2 instance has a public IPv4 address"
+            },
+            {
+              "finding_uid": "uid-ec2-4",
+              "finding_id": "f-ec2-4",
+              "event_code": "ec2_imdsv2_enforced",
+              "check_id": "ec2_imdsv2_enforced",
+              "service": "ec2",
+              "resource_id": "i-0fedcba987654321",
+              "resource": "i-0fedcba987654321",
+              "severity": "Medium",
+              "status": "FAIL",
+              "description": "IMDSv2 is not enforced on EC2 instance"
+            },
+            {
+              "finding_uid": "uid-ec2-5",
+              "finding_id": "f-ec2-5",
+              "event_code": "ec2_sg_open_ssh",
+              "check_id": "ec2_sg_open_ssh",
+              "service": "ec2",
+              "resource_id": "sg-0abc1234",
+              "resource": "sg-0abc1234",
+              "severity": "Critical",
+              "status": "PASS",
+              "description": "Security group allows SSH (22) from 0.0.0.0/0"
+            },
+            {
+              "finding_uid": "uid-ec2-6",
+              "finding_id": "f-ec2-6",
+              "event_code": "ec2_ebs_encryption",
+              "check_id": "ec2_ebs_encryption",
+              "service": "ec2",
+              "resource_id": "vol-0def5678",
+              "resource": "vol-0def5678",
+              "severity": "High",
+              "status": "PASS",
+              "description": "EBS volume is not encrypted"
+            },
+            {
+              "finding_uid": "uid-ec2-7",
+              "finding_id": "f-ec2-7",
+              "event_code": "ec2_instance_public_ip",
+              "check_id": "ec2_instance_public_ip",
+              "service": "ec2",
+              "resource_id": "i-0123456789abcdef0",
+              "resource": "i-0123456789abcdef0",
+              "severity": "Medium",
+              "status": "PASS",
+              "description": "EC2 instance has a public IPv4 address"
+            }
+          ]
+        },
+        "rag_snapshot": {
+          "primary_topics": [
+            "Compute Workload Hardening"
+          ],
+          "control_themes": [
+            {
+              "capability_id": "compute-hardening",
+              "capability_name": "Compute Workload Hardening",
+              "summary_short": "Harden EC2 instances and security groups."
+            }
+          ],
+          "capability_details": [
+            {
+              "capability_id": "compute-hardening",
+              "capability_name": "Compute Workload Hardening",
+              "summary": "Harden EC2 instances and security groups.",
+              "risk_explanation": "Open ports and unencrypted volumes expose workloads.",
+              "recommendation": "Restrict security groups, encrypt EBS, enforce IMDSv2.",
+              "guidance_questions": []
+            }
+          ],
+          "recommended_practices": [
+            "Apply the Compute Workload Hardening baseline on every resource.",
+            "Log and monitor configuration drift."
+          ],
+          "key_findings": [],
+          "confidence": "medium"
+        }
+      },
+      "expected": {
+        "scope": {
+          "primary_service": "ec2",
+          "service_list": [
+            "ec2"
+          ],
+          "is_multi_service": false,
+          "service_display": "Amazon EC2",
+          "resource_term_plural": "instances"
+        },
+        "forbidden_terms": [
+          "s3",
+          "bucket",
+          "iam role",
+          "rds"
+        ],
+        "required_capabilities": [
+          "Compute Workload Hardening"
+        ],
+        "allowed_numbers_snapshot": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          123456789012
+        ]
+      }
+    },
+    {
+      "case_id": "c5_rich_rag_full_capdetails",
+      "group": "C5_rag_grounding",
+      "source": "synthetic",
+      "input": {
+        "report_data": {
+          "pre": {
+            "total": 3,
+            "pass": 1,
+            "fail": 2,
+            "severity": {
+              "critical": 1,
+              "high": 1,
+              "medium": 0,
+              "low": 0
+            }
+          },
+          "post": {
+            "initial_pass": 1,
+            "initial_fail": 2,
+            "final_pass": 2,
+            "final_fail": 1,
+            "fixed": 1,
+            "failed": 0,
+            "manual": 0
+          },
+          "environment": {
+            "account_id": "123456789012",
+            "region": "us-east-1",
+            "buckets": []
+          },
+          "scope": {
+            "services": [
+              "s3"
+            ],
+            "date": "2026-04-20",
+            "user_request": "S3 review with rich RAG context."
+          },
+          "findings_table": [
+            {
+              "stt": 1,
+              "finding": "S3 bucket has public read access",
+              "service": "s3",
+              "resource": "arn:aws:s3:::s3_bucket_public_access-1",
+              "severity": "Critical",
+              "before": "FAIL",
+              "after": "FAIL",
+              "change": "Still Failing"
+            },
+            {
+              "stt": 2,
+              "finding": "S3 bucket versioning is disabled",
+              "service": "s3",
+              "resource": "arn:aws:s3:::s3_bucket_versioning-2",
+              "severity": "High",
+              "before": "FAIL",
+              "after": "PASS",
+              "change": "Fixed"
+            },
+            {
+              "stt": 3,
+              "finding": "S3 bucket default encryption is off",
+              "service": "s3",
+              "resource": "arn:aws:s3:::s3_bucket_encryption-3",
+              "severity": "High",
+              "before": "PASS",
+              "after": "PASS",
+              "change": "Unchanged"
+            }
+          ],
+          "success_findings": [],
+          "failed_findings": [],
+          "manual_findings": [],
+          "raw_pre_findings": [
+            {
+              "finding_uid": "uid-s3-1",
+              "finding_id": "f-s3-1",
+              "event_code": "s3_bucket_public_access",
+              "check_id": "s3_bucket_public_access",
+              "service": "s3",
+              "resource_id": "arn:aws:s3:::s3_bucket_public_access-1",
+              "resource": "arn:aws:s3:::s3_bucket_public_access-1",
+              "severity": "Critical",
+              "status": "FAIL",
+              "description": "S3 bucket has public read access"
+            },
+            {
+              "finding_uid": "uid-s3-2",
+              "finding_id": "f-s3-2",
+              "event_code": "s3_bucket_versioning",
+              "check_id": "s3_bucket_versioning",
+              "service": "s3",
+              "resource_id": "arn:aws:s3:::s3_bucket_versioning-2",
+              "resource": "arn:aws:s3:::s3_bucket_versioning-2",
+              "severity": "High",
+              "status": "FAIL",
+              "description": "S3 bucket versioning is disabled"
+            },
+            {
+              "finding_uid": "uid-s3-3",
+              "finding_id": "f-s3-3",
+              "event_code": "s3_bucket_encryption",
+              "check_id": "s3_bucket_encryption",
+              "service": "s3",
+              "resource_id": "arn:aws:s3:::s3_bucket_encryption-3",
+              "resource": "arn:aws:s3:::s3_bucket_encryption-3",
+              "severity": "High",
+              "status": "PASS",
+              "description": "S3 bucket default encryption is off"
+            }
+          ]
+        },
+        "rag_snapshot": {
+          "primary_topics": [
+            "Data Storage Protection"
+          ],
+          "control_themes": [
+            {
+              "capability_id": "data-storage",
+              "capability_name": "Data Storage Protection",
+              "summary_short": "Protect data at rest in object storage."
+            }
+          ],
+          "capability_details": [
+            {
+              "capability_id": "data-storage",
+              "capability_name": "Data Storage Protection",
+              "summary": "Protect data at rest in object storage.",
+              "risk_explanation": "Misconfigured buckets expose sensitive data.",
+              "recommendation": "Enforce encryption, block public access, enable versioning and logging.",
+              "guidance_questions": [
+                "Is server-side encryption (SSE-KMS) enabled on every bucket?",
+                "Is the Block Public Access setting enforced at the account level?"
+              ]
+            }
+          ],
+          "recommended_practices": [
+            "Enable SSE-KMS on every S3 bucket.",
+            "Enforce the Block Public Access setting at the account level.",
+            "Enable S3 access logging and retain for 90 days."
+          ],
+          "key_findings": [],
+          "confidence": "high"
+        }
+      },
+      "expected": {
+        "scope": {
+          "primary_service": "s3",
+          "service_list": [
+            "s3"
+          ],
+          "is_multi_service": false,
+          "service_display": "Amazon S3",
+          "resource_term_plural": "buckets"
+        },
+        "forbidden_terms": [
+          "iam",
+          "ec2",
+          "rds",
+          "role",
+          "instance"
+        ],
+        "required_capabilities": [
+          "Data Storage Protection"
+        ],
+        "allowed_numbers_snapshot": [
+          1,
+          2,
+          3,
+          123456789012
+        ]
+      }
+    }
+  ]
+}
