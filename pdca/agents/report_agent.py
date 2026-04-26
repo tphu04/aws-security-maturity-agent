@@ -148,6 +148,17 @@ class ReportAgent:
             services_hint=scope.get("services") if isinstance(scope, dict) else None,
         )
 
+        # RAG context — prefer pre-computed (orchestrator path),
+        # fetch live when MULTI_QUERY_MODE=True and not already present.
+        _rag_ctx = data.get("rag_context") or {}
+        if not _rag_ctx:
+            _rag_ctx = self._fetch_rag_context(
+                raw_findings=data.get("raw_pre_findings", []),
+                scope_info=scope_info,
+            )
+            # Do not mutate caller's data dict
+        data = {**data, "rag_context": _rag_ctx}
+
         # NEW: Maturity data
         maturity = data.get("maturity_assessment")
         maturity_delta = data.get("maturity_delta")
@@ -568,12 +579,24 @@ class ReportAgent:
                 services_hint=scope.get("services") if isinstance(scope, dict) else None,
             )
 
+        # Sort fail_findings by severity so LLM and RAG formatter both see
+        # critical → high → medium → low order. Fixes ndcg@5 worst case where
+        # reversed input produced a severity-order score of 0.7489.
+        _SEV_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        fail_findings = sorted(
+            fail_findings or [],
+            key=lambda f: _SEV_RANK.get(
+                (f.get("severity") or "").strip().lower(), 4
+            ),
+        )
+
         # RAG view formatter — one instance, four per-section views. The
         # formatter handles the empty-context case internally (every view
         # returns "" when there is no data).
         rag_context = data.get("rag_context", {}) or {}
         rag_views = RAGViewFormatter(rag_context, scope_info)
         rag_exec = rag_views.for_executive()
+        rag_sys  = rag_views.for_system_overview()
         rag_pass = rag_views.for_pass_analysis()
         rag_fail = rag_views.for_fail_analysis()
         rag_reco = rag_views.for_recommendations()
@@ -653,7 +676,7 @@ class ReportAgent:
         sections = {
             "executive_summary": exec_summary,
             "system_overview": self.llm.write_system_overview(
-                system_data, scope_info=scope_info,
+                system_data, scope_info=scope_info, rag_knowledge=rag_sys,
             ),
             "assessment_goals": self.llm.write_assessment_goals(
                 scope.get("user_request", "")
@@ -749,6 +772,48 @@ class ReportAgent:
                         seen.add(title)
                         names.append(title)
         return names[:12]
+
+    # ----------------------------------------------------------
+    # RAG CONTEXT FETCHER (Phase 3 MVP)
+    # ----------------------------------------------------------
+    def _fetch_rag_context(self, raw_findings: list, scope_info: dict) -> dict:
+        """Fetch RAG context based on MULTI_QUERY_MODE flag.
+
+        Multi-query mode  (MULTI_QUERY_MODE=True): calls RAGQueryPlanner
+        → POST /v1/retrieve/report_context (Q1+Q2+Q3).
+        Legacy mode (default): returns empty dict so caller uses LLM-pure path.
+        """
+        try:
+            from pdca.config import MULTI_QUERY_MODE, RAG_API_URL
+            if not MULTI_QUERY_MODE:
+                return {}
+
+            from pdca.agents.shared.rag_client import RAGClient
+            from pdca.agents.report_module.rag_query_planner import RAGQueryPlanner
+
+            rag = RAGClient(base_url=RAG_API_URL, timeout=30.0, max_retries=2)
+            if not rag.is_healthy():
+                return {}
+
+            planner = RAGQueryPlanner(rag)
+            scope_domains = scope_info.get("service_list") or []
+            req = planner.plan(raw_findings, scope_domains)
+            bundle = planner.execute(req)
+
+            q1 = len(bundle.get("key_findings", []))
+            q2 = len(bundle.get("capability_themes", []))
+            q3 = len(bundle.get("remediations", []))
+            import logging as _log
+            _log.getLogger(__name__).info(
+                "[ReportAgent] Multi-query RAG: Q1=%d findings, Q2=%d themes, Q3=%d remediations",
+                q1, q2, q3,
+            )
+            return bundle
+
+        except Exception as exc:
+            import logging as _log
+            _log.getLogger(__name__).warning("[ReportAgent] _fetch_rag_context failed: %s", exc)
+            return {}
 
     # ----------------------------------------------------------
     # RAG KNOWLEDGE BUILDER

@@ -128,11 +128,11 @@ class MaturityEngine:
             for _, _, d in entries:
                 counts[d] += 1
             canonical[cap_id] = max(counts.items(), key=lambda kv: kv[1])[0]
-            logger.warning(
-                "MaturityEngine: capability '%s' has no approved mapping — "
-                "using majority domain '%s' from %d entries.",
-                cap_id, canonical[cap_id], len(entries),
-            )
+            # logger.warning(
+            #     "MaturityEngine: capability '%s' has no approved mapping — "
+            #     "using majority domain '%s' from %d entries.",
+            #     cap_id, canonical[cap_id], len(entries),
+            # )
         return canonical
 
     def _build_check_to_mappings(self) -> dict:
@@ -315,6 +315,8 @@ class MaturityEngine:
                 "total_checks": len(entries),
                 "status": status,
                 "guidance": info.get("guidance", ""),
+                "summary": info.get("summary", ""),
+                "risk_explanation": info.get("risk_explanation", ""),
             }
         return results
 

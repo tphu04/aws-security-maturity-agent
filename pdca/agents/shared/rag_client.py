@@ -232,6 +232,53 @@ class RAGClient:
         return result
 
     # ------------------------------------------------------------------
+    # Build Report Context — Multi-query (Phase 3 MVP)
+    # ------------------------------------------------------------------
+
+    def build_report_context(
+        self,
+        check_ids: List[str],
+        domains: List[str],
+        severity_map: Optional[Dict[str, str]] = None,
+        include_q2: bool = True,
+        include_q3: bool = True,
+        top_k_check: int = 10,
+        top_k_capability: int = 5,
+        top_k_remediation: int = 3,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        POST /v1/retrieve/report_context — Multi-query bundle (Q1+Q2+Q3).
+
+        Returns:
+            ReportContextBundle dict hoặc None khi fail.
+        """
+        url = f"{self.base_url}/v1/retrieve/report_context"
+        payload: Dict[str, Any] = {
+            "check_ids": check_ids,
+            "domains": domains,
+            "severity_map": severity_map or {},
+            "include_q2": include_q2,
+            "include_q3": include_q3,
+            "top_k_check": top_k_check,
+            "top_k_capability": top_k_capability,
+            "top_k_remediation": top_k_remediation,
+        }
+
+        # /retrieve/report_context returns ReportContextBundle directly,
+        # not wrapped in ResponseEnvelope, so we bypass _post() helper.
+        result = self._post_raw(url, payload, "build_report_context")
+        if result is not None:
+            diag = result.get("diagnostics", {})
+            logger.info(
+                "build_report_context: confidence=%s, q2_themes=%d, q3_remediations=%d, latency=%.0fms",
+                result.get("confidence"),
+                len(result.get("capability_themes", [])),
+                len(result.get("remediations", [])),
+                diag.get("total_latency_ms", 0),
+            )
+        return result
+
+    # ------------------------------------------------------------------
     # Resolve Mapping
     # ------------------------------------------------------------------
 
@@ -347,6 +394,40 @@ class RAGClient:
 
         except requests.exceptions.HTTPError as e:
             logger.warning("%s: HTTP error %s calling %s", method_name, e.response.status_code if e.response else "?", url)
+            return None
+        except Exception as e:
+            logger.warning("%s: unexpected error: %s", method_name, e)
+            return None
+
+    def _post_raw(self, url: str, payload: Dict[str, Any], method_name: str) -> Optional[Dict[str, Any]]:
+        """Like _post() but returns the full response JSON (no ResponseEnvelope unwrap).
+
+        Used for endpoints that return a model directly (not wrapped in ResponseEnvelope).
+        """
+        logger.debug("%s: POST %s payload_keys=%s", method_name, url, list(payload.keys()))
+        _conn_attempts = 3
+        resp = None
+        for _attempt in range(1, _conn_attempts + 1):
+            try:
+                resp = self._session.post(url, json=payload, timeout=self.timeout)
+                break
+            except requests.exceptions.ConnectionError as e:
+                if _attempt < _conn_attempts:
+                    import time as _t
+                    _t.sleep(0.5 * _attempt)
+                    continue
+                logger.warning("%s: connection error after %d attempts: %s", method_name, _conn_attempts, e)
+                return None
+            except requests.exceptions.Timeout:
+                logger.warning("%s: timeout after %.1fs", method_name, self.timeout)
+                return None
+        if resp is None:
+            return None
+        try:
+            resp.raise_for_status()
+            return resp.json()
+        except requests.exceptions.HTTPError as e:
+            logger.warning("%s: HTTP error %s", method_name, e.response.status_code if e.response else "?")
             return None
         except Exception as e:
             logger.warning("%s: unexpected error: %s", method_name, e)

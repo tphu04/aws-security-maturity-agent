@@ -713,6 +713,43 @@ def _fetch_rag_for_report(raw_pre_findings: list,
         return {}
 
 
+def _fetch_rag_multi_query(
+    raw_findings: list,
+    scope_info: dict,
+) -> dict:
+    """Multi-query RAG path (MULTI_QUERY_MODE=True).
+
+    Calls /v1/retrieve/report_context (Q1+Q2+Q3 parallel) via RAGQueryPlanner.
+    Returns bundle dict compatible with RAGViewFormatter (adds capability_themes
+    + remediations on top of existing rag_context shape).
+    """
+    try:
+        from pdca.agents.shared.rag_client import RAGClient
+        from pdca.agents.report_module.rag_query_planner import RAGQueryPlanner
+        from pdca.config import RAG_API_URL
+
+        rag = RAGClient(base_url=RAG_API_URL, timeout=30.0, max_retries=2)
+        planner = RAGQueryPlanner(rag)
+
+        scope_domains = scope_info.get("service_list") or []
+        req = planner.plan(raw_findings, scope_domains)
+        bundle = planner.execute(req)
+
+        q2_count = len(bundle.get("capability_themes", []))
+        q3_count = len(bundle.get("remediations", []))
+        q1_count = len(bundle.get("key_findings", []))
+        print(
+            f"[report_node] Multi-query RAG: Q1={q1_count} findings, "
+            f"Q2={q2_count} capability_themes, Q3={q3_count} remediations, "
+            f"confidence={bundle.get('confidence')}"
+        )
+        return bundle
+
+    except Exception as e:
+        print(f"[report_node] Multi-query RAG failed: {e} — falling back to empty context")
+        return {}
+
+
 def report_node(state: PDCAState):
     print("\n [Node: Report] Generating final report...")
     metrics = state.get("performance_metrics", {})
@@ -768,10 +805,22 @@ def report_node(state: PDCAState):
     )
 
     # --- RAG Context: enrich report với security knowledge ---
-    rag_context = _fetch_rag_for_report(
-        report_data.get("raw_pre_findings", []),
-        rag_available=state.get("rag_available", False),
-    )
+    from pdca.config import MULTI_QUERY_MODE
+    if MULTI_QUERY_MODE and state.get("rag_available", False):
+        print("[report_node] RAG mode: MULTI_QUERY (Q1+Q2+Q3)")
+        rag_context = _fetch_rag_multi_query(
+            raw_findings=report_data.get("raw_pre_findings", []),
+            scope_info=report_data.get("scope_info", {}),
+        )
+    else:
+        if MULTI_QUERY_MODE:
+            print("[report_node] RAG mode: MULTI_QUERY requested but RAG unavailable — fallback legacy")
+        else:
+            print("[report_node] RAG mode: LEGACY (single-query)")
+        rag_context = _fetch_rag_for_report(
+            report_data.get("raw_pre_findings", []),
+            rag_available=state.get("rag_available", False),
+        )
     report_data["rag_context"] = rag_context
 
     # --- Maturity Assessment ---
