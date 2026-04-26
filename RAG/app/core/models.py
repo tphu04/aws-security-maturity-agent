@@ -364,3 +364,82 @@ class ContextBuildResponse(BaseModel):
     errors: List[ErrorItem] = Field(default_factory=list) 
     
 BuildContextRequest = ContextBuildRequest
+
+
+# ============================================================
+# Multi-query RAG models (Phase 2 MVP)
+# ============================================================
+
+class Citation(BaseModel):
+    source: str
+    url: Optional[str] = None
+    section: Optional[str] = None
+
+
+class CapabilityQueryRequest(BaseModel):
+    domain: str
+    status: Literal["pass", "fail", "mixed"] = "mixed"
+    top_k: int = 5
+
+
+class CapabilityTheme(BaseModel):
+    domain: str
+    narrative: str
+    common_pitfalls: List[str] = Field(default_factory=list)
+    baselines: List[str] = Field(default_factory=list)
+    citations: List[Citation] = Field(default_factory=list)
+
+
+class RemediationStep(BaseModel):
+    order: int
+    type: Literal["cli", "iac", "console", "other"]
+    snippet: str
+    prerequisite: Optional[str] = None
+
+
+class RemediationGuide(BaseModel):
+    check_id: str
+    steps: List[RemediationStep] = Field(default_factory=list)
+    rollback: Optional[str] = None
+    effort: Literal["low", "medium", "high"] = "medium"
+    side_effects: List[str] = Field(default_factory=list)
+    citations: List[Citation] = Field(default_factory=list)
+
+
+class RemediationQueryRequest(BaseModel):
+    check_id: str
+    severity: Optional[Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]] = None
+    cloud_context: Optional[Dict[str, Any]] = None
+    top_k: int = 3
+
+
+class ReportContextRequest(BaseModel):
+    check_ids: List[str] = Field(default_factory=list)
+    domains: List[str] = Field(default_factory=list)
+    severity_map: Dict[str, str] = Field(default_factory=dict)
+    include_q2: bool = True
+    include_q3: bool = True
+    top_k_check: int = 10
+    top_k_capability: int = 5
+    top_k_remediation: int = 3
+
+    @model_validator(mode="after")
+    def validate_input(self):
+        if not self.check_ids and not self.domains:
+            raise ValueError("at least one of check_ids or domains must be provided")
+        return self
+
+
+class ReportContextBundle(BaseModel):
+    # Q1 — existing shape (pass-through from ContextService)
+    check_findings: List[ReportFinding] = Field(default_factory=list)
+    control_themes: List[ReportCapability] = Field(default_factory=list)
+    capability_details: List[ReportCapabilityDetail] = Field(default_factory=list)
+    recommended_practices: List[str] = Field(default_factory=list)
+    primary_topics: List[str] = Field(default_factory=list)
+    # Q2 — NEW
+    capability_themes: List[CapabilityTheme] = Field(default_factory=list)
+    # Q3 — NEW
+    remediations: List[RemediationGuide] = Field(default_factory=list)
+    confidence: str = "low"
+    diagnostics: Dict[str, Any] = Field(default_factory=dict)

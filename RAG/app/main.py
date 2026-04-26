@@ -26,6 +26,7 @@ from app.services.check_service import CheckService
 from app.services.context_service import ContextService
 from app.services.mapping_service import MappingService
 from app.services.maturity_service import MaturityService
+from app.services.report_context_service import ReportContextService
 
 
 def _load_manifest() -> Dict[str, Any]:
@@ -70,6 +71,11 @@ def _build_services() -> Dict[str, Any]:
         pipeline=retrieval_pipeline,
     )
 
+    report_context_service = ReportContextService(
+        context_service=context_service,
+        maturity_service=maturity_service,
+    )
+
     return {
         "lexical_index": lexical_indexes,
         "vector_index": vector_index,
@@ -78,6 +84,7 @@ def _build_services() -> Dict[str, Any]:
         "maturity_service": maturity_service,
         "mapping_service": mapping_service,
         "context_service": context_service,
+        "report_context_service": report_context_service,
     }
 
 
@@ -117,11 +124,14 @@ def root() -> dict[str, str]:
 
 if __name__ == "__main__":
     import uvicorn
+    from pathlib import Path as _Path
 
-    print("Starting RAG service...")
+    _app_dir = _Path(__file__).resolve().parent
+    print("Starting RAG service (auto-reload enabled)...")
     uvicorn.run(
         "app.main:app",
         host="127.0.0.1",
         port=8005,
-        reload=True
+        reload=True,
+        reload_dirs=[str(_app_dir)],
     )
