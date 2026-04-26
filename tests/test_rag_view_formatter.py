@@ -225,3 +225,319 @@ class TestPerFinding:
     def test_returns_empty_for_none_check(self):
         out = RAGViewFormatter(_ctx()).for_per_finding("")
         assert out == {"risk": "", "recommendation": "", "title": ""}
+
+
+# ----------------------------------------------------------------------
+# Multi-query mode: Q2 capability_themes in for_pass_analysis
+# ----------------------------------------------------------------------
+
+def _ctx_with_q2():
+    ctx = _ctx()
+    ctx["capability_themes"] = [
+        {
+            "domain": "s3",
+            "narrative": "S3 data protection requires block public access and encryption.",
+            "common_pitfalls": ["Missing bucket-level public access block", "No default encryption"],
+            "baselines": ["CIS AWS 2.1.5", "Well-Architected Security Pillar"],
+        },
+        {
+            "domain": "iam",
+            "narrative": "IAM least privilege must be enforced across all users and roles.",
+            "common_pitfalls": ["Root account usage"],
+            "baselines": ["CIS IAM 1.4"],
+        },
+    ]
+    return ctx
+
+
+class TestForPassAnalysisQ2:
+    def test_q2_narrative_appears_when_present(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_pass_analysis()
+        assert "S3 data protection" in out
+        assert "IAM least privilege" in out
+
+    def test_q2_domain_label_appears(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_pass_analysis()
+        assert "[S3]" in out or "s3" in out.lower()
+
+    def test_q2_pitfalls_appended(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_pass_analysis()
+        assert "public access block" in out.lower() or "lưu ý" in out
+
+    def test_legacy_control_themes_still_present(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_pass_analysis()
+        # Q1 control_themes should still appear
+        assert "CHỦ ĐỀ KIỂM SOÁT" in out or "Block Public Access" in out
+
+    def test_empty_q2_falls_back_to_q1_only(self):
+        ctx = _ctx()
+        ctx["capability_themes"] = []
+        out = RAGViewFormatter(ctx).for_pass_analysis()
+        assert "CHỦ ĐỀ KIỂM SOÁT" in out
+
+
+# ----------------------------------------------------------------------
+# Multi-query mode: Q3 remediations in for_recommendations
+# ----------------------------------------------------------------------
+
+def _ctx_with_q3():
+    ctx = _ctx()
+    ctx["remediations"] = [
+        {
+            "check_id": "s3_bucket_level_public_access_block",
+            "steps": [
+                {"order": 1, "type": "cli", "snippet": "aws s3api put-public-access-block --bucket BUCKET --public-access-block-configuration BlockPublicAcls=true"},
+                {"order": 2, "type": "iac", "snippet": "Resource: AWS::S3::BucketPublicAccessBlock"},
+            ],
+            "effort": "low",
+        }
+    ]
+    ctx["capability_themes"] = [
+        {
+            "domain": "s3",
+            "narrative": "Block public access at account level.",
+            "baselines": ["CIS AWS 2.1.5", "Well-Architected"],
+            "common_pitfalls": [],
+        }
+    ]
+    return ctx
+
+
+class TestForRecommendationsQ3:
+    def test_q3_cli_snippet_appears(self):
+        out = RAGViewFormatter(_ctx_with_q3()).for_recommendations()
+        assert "aws s3api" in out
+
+    def test_q3_step_type_labeled(self):
+        out = RAGViewFormatter(_ctx_with_q3()).for_recommendations()
+        assert "[CLI]" in out
+
+    def test_q3_effort_referenced(self):
+        out = RAGViewFormatter(_ctx_with_q3()).for_recommendations()
+        assert "low" in out or "effort" in out
+
+    def test_q2_baselines_appear(self):
+        out = RAGViewFormatter(_ctx_with_q3()).for_recommendations()
+        assert "CIS AWS 2.1.5" in out
+
+    def test_q1_practices_still_present(self):
+        out = RAGViewFormatter(_ctx_with_q3()).for_recommendations()
+        assert "THỰC HÀNH KHUYẾN NGHỊ" in out
+
+    def test_no_cli_dict_blob_leaks(self):
+        out = RAGViewFormatter(_ctx_with_q3()).for_recommendations()
+        assert "'CLI':" not in out
+
+    def test_empty_q3_falls_back_to_q1_only(self):
+        ctx = _ctx()
+        ctx["remediations"] = []
+        out = RAGViewFormatter(ctx).for_recommendations()
+        assert "THỰC HÀNH KHUYẾN NGHỊ" in out
+
+
+# ----------------------------------------------------------------------
+# T2-A: for_fail_analysis() — Q3 remediation steps + Q2 domain pitfalls
+# ----------------------------------------------------------------------
+
+def _ctx_with_fail_q3q2():
+    """rag_context with key_findings, remediations (Q3), capability_themes (Q2)."""
+    ctx = _ctx()
+    ctx["remediations"] = [
+        {
+            "check_id": "s3_bucket_public_access",
+            "steps": [
+                {
+                    "order": 1,
+                    "type": "cli",
+                    "snippet": "aws s3api put-public-access-block --bucket BUCKET --public-access-block-configuration BlockPublicAcls=true",
+                },
+                {"order": 2, "type": "iac", "snippet": "Resource: AWS::S3::BucketPublicAccessBlock"},
+            ],
+            "effort": "low",
+        },
+        {
+            "check_id": "iam_user_mfa_enabled",
+            "steps": [
+                {"order": 1, "type": "console", "snippet": "IAM → Users → select user → Security credentials → Assign MFA device"},
+            ],
+            "effort": "low",
+        },
+    ]
+    ctx["capability_themes"] = [
+        {
+            "domain": "s3",
+            "narrative": "S3 data protection requires block public access.",
+            "common_pitfalls": ["Missing bucket-level public access block", "No default encryption"],
+            "baselines": ["CIS AWS 2.1.5"],
+        },
+        {
+            "domain": "iam",
+            "narrative": "IAM least privilege must be enforced.",
+            "common_pitfalls": ["Root account usage without MFA"],
+            "baselines": ["CIS IAM 1.4"],
+        },
+    ]
+    return ctx
+
+
+class TestForFailAnalysisQ3Q2:
+    def test_q3_cli_snippet_appears(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "aws s3api put-public-access-block" in out
+
+    def test_q3_step_type_labeled(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "[CLI]" in out
+
+    def test_q3_section_heading(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "BƯỚC KHẮC PHỤC TRỌNG TÂM" in out
+
+    def test_q3_matched_by_check_id(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "s3_bucket_public_access" in out
+
+    def test_q2_pitfalls_for_failing_domain(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "Missing bucket-level public access block" in out or "public access" in out.lower()
+
+    def test_q2_domain_label(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "[S3]" in out or "[IAM]" in out
+
+    def test_q2_section_heading(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "SAI LẦM PHỔ BIẾN" in out
+
+    def test_q1_findings_still_present(self):
+        out = RAGViewFormatter(_ctx_with_fail_q3q2()).for_fail_analysis()
+        assert "RỦI RO CHI TIẾT" in out
+        assert "S3 bucket publicly accessible" in out
+
+    def test_legacy_no_q3_no_q2_blocks(self):
+        """Legacy mode: remediations=[] → no Q3/Q2 blocks, Q1 still present."""
+        ctx = _ctx()
+        ctx["remediations"] = []
+        ctx["capability_themes"] = []
+        out = RAGViewFormatter(ctx).for_fail_analysis()
+        assert "BƯỚC KHẮC PHỤC TRỌNG TÂM" not in out
+        assert "SAI LẦM PHỔ BIẾN" not in out
+        assert "RỦI RO CHI TIẾT" in out
+
+    def test_q3_domain_not_in_findings_skipped(self):
+        """Q2 pitfall for 'ec2' domain should NOT appear when no EC2 findings."""
+        ctx = _ctx_with_fail_q3q2()
+        ctx["capability_themes"].append({
+            "domain": "ec2",
+            "common_pitfalls": ["IMDSv1 still enabled"],
+            "narrative": "EC2 metadata service risks.",
+            "baselines": [],
+        })
+        out = RAGViewFormatter(ctx).for_fail_analysis()
+        assert "IMDSv1" not in out
+
+
+# ----------------------------------------------------------------------
+# T1-B: for_executive() — Q2 domain narratives
+# ----------------------------------------------------------------------
+
+class TestForExecutiveQ2:
+    def test_q2_domain_narrative_appears(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_executive()
+        assert "S3 data protection" in out
+
+    def test_q2_domain_label(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_executive()
+        assert "[S3]" in out or "[IAM]" in out
+
+    def test_q2_section_heading(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_executive()
+        assert "BỐI CẢNH BẢO MẬT THEO DOMAIN" in out
+
+    def test_q2_max_domains_respected(self):
+        ctx = _ctx_with_q2()
+        ctx["capability_themes"].append(
+            {"domain": "ec2", "narrative": "EC2 metadata risks.", "common_pitfalls": [], "baselines": []}
+        )
+        out = RAGViewFormatter(ctx).for_executive(max_domains=2)
+        # Only 2 domains should appear — [S3] and [IAM], not [EC2]
+        assert out.count("[EC2]") == 0
+
+    def test_q2_pitfalls_not_in_exec(self):
+        """Pitfalls are too technical — exec view should not include them."""
+        out = RAGViewFormatter(_ctx_with_q2()).for_executive()
+        assert "Missing bucket-level public access block" not in out
+
+    def test_q1_findings_still_present(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_executive()
+        assert "RỦI RO NGHIÊM TRỌNG" in out
+
+    def test_q1_control_themes_still_present(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_executive()
+        assert "CHỦ ĐỀ KIỂM SOÁT" in out
+
+    def test_legacy_no_q2_block(self):
+        """Legacy mode: capability_themes=[] → no Q2 block in exec view."""
+        ctx = _ctx()
+        ctx["capability_themes"] = []
+        out = RAGViewFormatter(ctx).for_executive()
+        assert "BỐI CẢNH BẢO MẬT THEO DOMAIN" not in out
+        assert "RỦI RO NGHIÊM TRỌNG" in out
+
+
+# ----------------------------------------------------------------------
+# T2-B: for_system_overview() — Q2 domain narratives + baselines
+# ----------------------------------------------------------------------
+
+class TestForSystemOverview:
+    def test_domain_narrative_appears(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_system_overview()
+        assert "S3 data protection" in out
+
+    def test_domain_label_present(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_system_overview()
+        assert "[S3]" in out or "[IAM]" in out
+
+    def test_section_heading(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_system_overview()
+        assert "PHẠM VI BẢO MẬT THEO DOMAIN" in out
+
+    def test_baselines_appear(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_system_overview()
+        assert "CIS AWS 2.1.5" in out or "Well-Architected" in out
+
+    def test_baselines_section_heading(self):
+        out = RAGViewFormatter(_ctx_with_q2()).for_system_overview()
+        assert "TIÊU CHUẨN ĐÁNH GIÁ" in out
+
+    def test_max_domains_respected(self):
+        ctx = _ctx_with_q2()
+        ctx["capability_themes"].append(
+            {"domain": "ec2", "narrative": "EC2 instance risks.", "baselines": ["CIS EC2 3.1"], "common_pitfalls": []}
+        )
+        out = RAGViewFormatter(ctx).for_system_overview(max_domains=2)
+        assert "[EC2]" not in out
+
+    def test_pitfalls_not_in_system_overview(self):
+        """Pitfalls are fail-specific — system overview should not include them."""
+        out = RAGViewFormatter(_ctx_with_q2()).for_system_overview()
+        assert "Missing bucket-level public access block" not in out
+
+    def test_baselines_deduplicated(self):
+        ctx = _ctx_with_q2()
+        # Add duplicate baseline across two domains
+        ctx["capability_themes"][0]["baselines"] = ["CIS AWS 2.1.5", "Well-Architected"]
+        ctx["capability_themes"][1]["baselines"] = ["CIS AWS 2.1.5", "CIS IAM 1.4"]
+        out = RAGViewFormatter(ctx).for_system_overview()
+        assert out.count("CIS AWS 2.1.5") == 1
+
+    def test_legacy_no_capability_themes_returns_empty(self):
+        """Legacy mode: no capability_themes → returns '' (no crash)."""
+        ctx = _ctx()
+        ctx["capability_themes"] = []
+        out = RAGViewFormatter(ctx).for_system_overview()
+        assert out == ""
+
+    def test_empty_context_returns_empty(self):
+        out = RAGViewFormatter({}).for_system_overview()
+        assert out == ""
