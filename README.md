@@ -118,6 +118,8 @@ cp .env.example .env            # rồi điền service URLs + AWS keys
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama endpoint |
 | `OLLAMA_MODEL` | `gemma3:4b` | LLM model name |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` | — | AWS credentials |
+| `MULTI_QUERY_MODE` | `false` | Bật multi-query RAG (Q1+Q2+Q3). Set `true` để dùng `/v1/retrieve/report_context` thay vì single-query. Xem [docs/rag-integration.md §8](docs/rag-integration.md). |
+| `GROQ_API_KEY` | — | API key cho LLM judge (benchmark Day 2). Lấy tại [console.groq.com](https://console.groq.com). |
 
 ## Chạy hệ thống
 
@@ -130,12 +132,21 @@ ollama serve
 
 ### 2. RAG service (port 8005)
 ```bash
-cd RAG
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8005
+# Khuyến nghị: dùng start.py để có auto-reload khi dev
+python RAG/start.py
+
+# Hoặc không reload (production):
+python RAG/start.py --no-reload
 ```
 Lần đầu chạy cần build index:
 ```bash
 python RAG/scripts/build_all.py
+```
+
+**Multi-query mode** (Q1+Q2+Q3 — xem [docs/rag-integration.md §8](docs/rag-integration.md)):
+```bash
+MULTI_QUERY_MODE=true python -m pdca.orchestrator
+# hoặc thêm vào .env: MULTI_QUERY_MODE=true
 ```
 
 ### 3. Scanner API (port 8000)
