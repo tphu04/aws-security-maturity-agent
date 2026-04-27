@@ -9,6 +9,7 @@ langchain
 langchain-core
 langchain-ollama
 langgraph
+langgraph-checkpoint-sqlite
 
 # AWS
 boto3
