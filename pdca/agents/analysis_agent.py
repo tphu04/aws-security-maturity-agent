@@ -1,54 +1,63 @@
+import inspect
 import json
 import os
-from typing import List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List
 
-import inspect
+from pdca.observability.logger import get_logger
 from pdca.tools import REMEDIATION_TOOLS
+
+logger = get_logger(__name__)
+
+# Phase B8: default file paths giữ ở module-level cho `load()` backward
+# compat. AnalysisAgent KHÔNG còn nhận path qua __init__ — orchestrator
+# truyền `pre_scan`/`post_scan` dict trực tiếp.
+_DEFAULT_PRE_PATH = "data/artifacts/pre_scan.json"
+_DEFAULT_POST_PATH = "data/artifacts/post_scan.json"
 
 
 class AnalysisAgent:
-    """
-    AnalysisAgent (Custom Formatter Version)
-    ------------------------------
-    Nhiệm vụ:
-    1. So sánh Pre vs Post scan.
-    2. Phân loại trạng thái (Fixed, Manual, Failed...).
-    3. In log theo đúng format yêu cầu (Summary, Breakdown, Remediation Results...).
+    """So sánh pre vs post scan, phân loại trạng thái remediation.
+
+    Phase B8: API thống nhất — chỉ nhận data trực tiếp qua `run(pre_scan,
+    post_scan, pipeline_context)`. `__init__` không còn tham số. Method
+    `load()` giữ làm helper backward-compat (đọc từ default artifact paths).
     """
 
-    def __init__(
-        self, before_path="data/artifacts/pre_scan.json", after_path="data/artifacts/post_scan.json"
-    ):
-        self.before_path = before_path
-        self.after_path = after_path
+    def __init__(self) -> None:
+        # Không còn before_path/after_path — orchestrator chịu trách nhiệm
+        # đọc file & truyền dict vào run().
+        self.last_stats: Dict[str, Any] = {}
 
     def load(self):
-        """Load dữ liệu scan thô từ file"""
-        if not os.path.exists(self.before_path) or not os.path.exists(self.after_path):
-            print("[AnalysisAgent] ⚠️ Warning: Scan files not found.")
-            return [], []
+        """Backward-compat: đọc từ default artifact paths (DEPRECATED).
 
-        with open(self.before_path, "r", encoding="utf-8") as f:
+        Phase B8: Giữ method để test cũ không break, nhưng caller mới
+        nên truyền `pre_scan` + `post_scan` dict thẳng vào `run()`.
+        """
+        before_path = _DEFAULT_PRE_PATH
+        after_path = _DEFAULT_POST_PATH
+        if not os.path.exists(before_path) or not os.path.exists(after_path):
+            logger.warning("Scan files not found",
+                           extra={"pre": before_path, "post": after_path})
+            return [], []
+        with open(before_path, "r", encoding="utf-8") as f:
             before = json.load(f).get("findings", [])
-        with open(self.after_path, "r", encoding="utf-8") as f:
+        with open(after_path, "r", encoding="utf-8") as f:
             after = json.load(f).get("findings", [])
         return before, after
 
     def run(self, pre_scan: dict = None, post_scan: dict = None,
             pipeline_context: List[Dict] = None) -> dict:
-        """
-        Phân tích diff giữa pre-scan và post-scan.
+        """Phân tích diff giữa pre-scan và post-scan.
 
         Input:  raw scan data + execution context
         Output: dict chứa ĐẦY ĐỦ kết quả phân tích (single source of truth)
-                Không chứa metadata (account_id, region...) — đó là việc của orchestrator.
+                Không chứa metadata (account_id, region...) — orchestrator lo.
 
-        Hỗ trợ 2 cách gọi:
-        - run(pre_scan, post_scan, pipeline_context)  ← MỚI (nhận data trực tiếp)
-        - run(pipeline_context=pipeline_context)       ← CŨ (đọc file từ path)
+        Backward compat: nếu pre_scan/post_scan = None → đọc default file
+        (chỉ cho test cũ; pipeline mới luôn truyền dict).
         """
-        # Nếu không truyền pre_scan/post_scan, đọc từ file (backward compat)
         if pre_scan is None or post_scan is None:
             before, after = self.load()
         else:
@@ -57,7 +66,8 @@ class AnalysisAgent:
 
         pipeline_context = pipeline_context or []
 
-        print(f"\n[AnalysisAgent] 🤖 Aggregating data...")
+        logger.info("Aggregating analysis data",
+                    extra={"pre_count": len(before), "post_count": len(after)})
 
         # 1. Map dữ liệu
         before_map = {f["finding_uid"]: f for f in before}
@@ -424,50 +434,30 @@ class AnalysisAgent:
             with open("data/artifacts/analysis_diff.json", "w", encoding="utf-8") as f:
                 json.dump(output, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"   ❌ Lỗi lưu file: {e}")
+            logger.error("Failed to save analysis_diff.json", extra={"error": str(e)})
 
     def _print_custom_log(self, s):
-        """In log theo format chính xác của user"""
-        print("")
-        print("-" * 40)
-        print(" FINDINGS SUMMARY")
-        print("-" * 40)
-        print(f"• Total findings (pre)  : {s['total_pre']}")
-        print(f"• Total findings (post) : {s['total_post']}")
-        print("")
-
-        print("-" * 40)
-        print(" STATUS BREAKDOWN")
-        print("-" * 40)
-        print(f"• PASS (pre)  : {s['pass_pre']}")
-        print(f"• FAIL (pre)  : {s['fail_pre']}")
-        print(f"• PASS (post) : {s['pass_post']}")
-        print(f"• FAIL (post) : {s['fail_post']}")
-        print("")
-
-        print("-" * 40)
-        print(" REMEDIATION RESULTS")
-        print("-" * 40)
-        print(f"• Remediate Pass      : {s['remediate_pass']}")
-        print(f"• Remediate Fail      : {s['remediate_fail']}")
-        print(f"• Manual Required     : {s['manual_required']}")
-        print("")
-
-        print("-" * 40)
-        print(" CHANGES AFTER REMEDIATION")
-        print("-" * 40)
-        print(f"• Fixed (FAIL → PASS)       : {s['fixed']}")
-        print(f"• New FAIL (PASS → FAIL)    : {s['new_fail']}")
-        print(f"• PASS unchanged            : {s['pass_unchanged']}")
-        print(f"• FAIL unchanged            : {s['fail_unchanged']}")
-        print("")
-
-        print("-" * 40)
-        print(" OUTPUT")
-        print("-" * 40)
-        print(f"• Enriched diff saved to: data/artifacts/analysis_diff.json")
-        print("")
-        print("[AnalysisAgent] Completed.")
+        """Log summary qua structured logger (Phase B8 — không print)."""
+        logger.info(
+            "Analysis summary",
+            extra={
+                "findings": {"pre": s["total_pre"], "post": s["total_post"]},
+                "status": {
+                    "pass_pre": s["pass_pre"], "fail_pre": s["fail_pre"],
+                    "pass_post": s["pass_post"], "fail_post": s["fail_post"],
+                },
+                "remediation": {
+                    "pass": s["remediate_pass"], "fail": s["remediate_fail"],
+                    "manual_required": s["manual_required"],
+                },
+                "changes": {
+                    "fixed": s["fixed"], "new_fail": s["new_fail"],
+                    "pass_unchanged": s["pass_unchanged"],
+                    "fail_unchanged": s["fail_unchanged"],
+                },
+                "output_path": "data/artifacts/analysis_diff.json",
+            },
+        )
 
     def _load_tool_description(self, tool_name: str) -> dict:
         """
