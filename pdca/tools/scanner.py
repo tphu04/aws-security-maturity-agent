@@ -1,7 +1,9 @@
-"""Scanner tools — gọi Prowler scanner HTTP API (B13).
+"""Scanner tools — gọi Prowler scanner HTTP API.
 
-URL đọc từ `settings.scanner_api_url` (B2). Bỏ `start_scan_by_file` (B18 —
-zero-usage trong pipeline).
+URL đọc từ `settings.scanner_api_url`. Endpoints (Phase D2):
+- POST `/v1/scan/group`     (body: {group})
+- POST `/v1/scan/checks`    (body: {check_ids})
+- GET  `/v1/job/{job_id}`
 """
 
 from __future__ import annotations
@@ -26,11 +28,14 @@ def start_scan_by_check_ids(check_ids: str) -> dict:
     """[TOOL] Quét hệ thống AWS theo các Check ID cụ thể (nhanh hơn quét Group).
     Dùng tool này khi người dùng chỉ định rõ vấn đề (vd: logging, mfa, encryption).
     """
-    logger.info("Calling scanner API",
-                extra={"endpoint": "/scan/specific", "check_ids": check_ids})
+    logger.info(
+        "Calling scanner API",
+        extra={"endpoint": "/v1/scan/checks", "check_ids": check_ids},
+    )
     try:
-        resp = requests.get(
-            f"{_api_url()}/scan/specific", params={"check_ids": check_ids},
+        resp = requests.post(
+            f"{_api_url()}/v1/scan/checks",
+            json={"check_ids": check_ids},
             timeout=settings.rag_timeout_s,
         )
         resp.raise_for_status()
@@ -42,11 +47,14 @@ def start_scan_by_check_ids(check_ids: str) -> dict:
 @tool(args_schema=ScanGroupInput)
 def start_scan_by_group(group: str) -> dict:
     """[TOOL] Bắt đầu một công việc quét tài khoản AWS theo TÊN SERVICE."""
-    logger.info("Calling scanner API",
-                extra={"endpoint": "/scan/check", "group": group})
+    logger.info(
+        "Calling scanner API",
+        extra={"endpoint": "/v1/scan/group", "group": group},
+    )
     try:
-        resp = requests.get(
-            f"{_api_url()}/scan/check", params={"group": group},
+        resp = requests.post(
+            f"{_api_url()}/v1/scan/group",
+            json={"group": group},
             timeout=settings.rag_timeout_s,
         )
         resp.raise_for_status()
@@ -64,11 +72,13 @@ def start_scan_by_group(group: str) -> dict:
 @tool(args_schema=JobStatusInput)
 def check_job_status(job_id: str) -> dict:
     """[TOOL] Kiểm tra trạng thái của một công việc (job) đang chạy."""
-    logger.info("Calling scanner API",
-                extra={"endpoint": "/job/status", "job_id": job_id})
+    logger.info(
+        "Calling scanner API",
+        extra={"endpoint": "/v1/job/{job_id}", "job_id": job_id},
+    )
     try:
         resp = requests.get(
-            f"{_api_url()}/job/status", params={"job_id": job_id},
+            f"{_api_url()}/v1/job/{job_id}",
             timeout=settings.rag_timeout_s,
         )
         resp.raise_for_status()

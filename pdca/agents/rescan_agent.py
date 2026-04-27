@@ -57,8 +57,8 @@ class RescanAgent:
     def start_job(self, group: str) -> Optional[str]:
         """Khởi tạo job scan theo Group (s3, iam,...)."""
         try:
-            url = f"{self.scanner_base_url}/scan/check?group={group}"
-            resp = requests.get(url).json()
+            url = f"{self.scanner_base_url}/v1/scan/group"
+            resp = requests.post(url, json={"group": group}).json()
             return resp.get("job_id")
         except Exception as e:
             logger.error("start_job failed", extra={"group": group, "error": str(e)})
@@ -68,8 +68,8 @@ class RescanAgent:
         """Khởi tạo job scan theo danh sách Check ID."""
         try:
             ids_str = ",".join(check_ids_list)
-            url = f"{self.scanner_base_url}/scan/specific?check_ids={ids_str}"
-            resp = requests.get(url).json()
+            url = f"{self.scanner_base_url}/v1/scan/checks"
+            resp = requests.post(url, json={"check_ids": ids_str}).json()
             return resp.get("job_id")
         except Exception as e:
             logger.error(
@@ -84,7 +84,7 @@ class RescanAgent:
 
     def poll(self, job_id: str) -> Optional[Dict[str, Any]]:
         """Poll job đến khi `completed`/`failed` hoặc timeout. Raise khi vượt giới hạn."""
-        url = f"{self.scanner_base_url}/job/status?job_id={job_id}"
+        url = f"{self.scanner_base_url}/v1/job/{job_id}"
         iteration = 0
         started_at = time.monotonic()
 
