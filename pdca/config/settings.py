@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     multi_query_mode: bool = False
 
     # ------------------------------------------------------------------
+    # Scanner whitelist (B17) — None = no filter (allow tất cả Prowler groups)
+    # ------------------------------------------------------------------
+    scanner_allowed_services: Optional[List[str]] = None
+
+    # ------------------------------------------------------------------
     # AWS (dùng cho api_server.py — Phase D)
     # ------------------------------------------------------------------
     aws_profile: str = "default"

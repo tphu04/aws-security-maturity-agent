@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional
 
+from pdca.config import settings
 from pdca.observability.logger import get_logger
 from pdca.tools import SCANNER_AGENT_TOOLS
 
@@ -27,19 +28,12 @@ logger = get_logger(__name__)
 
 
 class ScannerAgent:
-    """Deterministic scan trigger — không gọi LLM ở bước này."""
+    """Deterministic scan trigger — không gọi LLM ở bước này.
 
-    ALLOWED_GROUPS = {
-        "s3",
-        "iam",
-        "ec2",
-        "rds",
-        "cloudtrail",
-        "eks",
-        "vpc",
-        "lambda",
-        "kms",
-    }
+    B17: bỏ class attr `ALLOWED_GROUPS` (hardcode 9 services) — whitelist
+    đọc từ `settings.scanner_allowed_services`. Default `None` = không filter
+    (cho phép mọi group Prowler hỗ trợ).
+    """
 
     def __init__(self) -> None:
         self.tools_map = {tool.name: tool for tool in SCANNER_AGENT_TOOLS}
@@ -125,6 +119,8 @@ class ScannerAgent:
     def _normalize_groups(self, groups: List[str]) -> List[str]:
         if not isinstance(groups, list):
             return []
+        # B17: whitelist từ settings (None = no filter)
+        allowed = settings.scanner_allowed_services
         cleaned: List[str] = []
         seen: set = set()
         for raw in groups:
@@ -133,8 +129,8 @@ class ScannerAgent:
             group = raw.strip().lower()
             if not group:
                 continue
-            if group not in self.ALLOWED_GROUPS:
-                logger.warning("Unsupported group skipped", extra={"group": group})
+            if allowed is not None and group not in allowed:
+                logger.warning("Skipping unsupported group", extra={"group": group})
                 continue
             if group not in seen:
                 seen.add(group)
