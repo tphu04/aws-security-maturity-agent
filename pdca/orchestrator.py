@@ -26,7 +26,7 @@ from pdca.agents.report_agent import ReportAgent
 from pdca.agents.shared.normalizer import normalize_results
 from pdca.agents.shared.rag_client import RAGClient
 
-from pdca.tools import ALL_TOOLS  # Import danh sách tool gốc
+from pdca.tools import ALL_TOOLS, REGISTRY  # B14: REGISTRY là source of truth
 from pdca.config import (
     RAG_API_URL,
     SCANNER_API_URL,
@@ -35,7 +35,8 @@ from pdca.config import (
     OLLAMA_API_KEY,
 )
 
-# Tạo một Dictionary để tra cứu nhanh: { "tên_tool": tool_object }
+# DEPRECATED (B14): dùng `REGISTRY.get(name)` thay cho `TOOLS_MAP[name]`.
+# Giữ làm shim cho `route_review_task` xem mô tả tool — sẽ xóa sau Phase C.
 TOOLS_MAP = {t.name: t for t in ALL_TOOLS}
 
 load_dotenv()
@@ -310,12 +311,14 @@ def operational_planning_node(state: PDCAState):
         tasks = []
 
         for i, plan in enumerate(generated_plans, 1):
+            # B16: planner đã trả canonical keys (tool_name / tool_params) —
+            # không còn translate. ai_reasoning derive từ plan.reasoning.
             tasks.append(
                 {
                     "task_id": f"task_{i}",
                     "finding_id": plan["finding_id"],
-                    "tool_name": plan["tool_id"],
-                    "tool_params": plan["params"],
+                    "tool_name": plan["tool_name"],
+                    "tool_params": plan["tool_params"],
                     "description": plan.get("description", ""),
                     "priority": 1,
                     "ai_reasoning": plan.get("reasoning", ""),
@@ -734,7 +737,7 @@ def handle_task_review_interaction(app, config):
     tool_name = task["tool_name"]
 
     # 2. HIỂN THỊ THÔNG TIN CHI TIẾT (Logic được chuyển từ Node ra đây)
-    tool_obj = TOOLS_MAP.get(tool_name)
+    tool_obj = REGISTRY.get(tool_name)
     description = tool_obj.description if tool_obj else "⚠️ Không tìm thấy mô tả tool."
 
     finding_id = task["finding_id"]

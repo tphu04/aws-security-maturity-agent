@@ -7,19 +7,13 @@ from langchain_ollama import ChatOllama
 
 from pdca.agents.shared.callbacks import TimerCallback
 from pdca.observability.logger import get_logger
-from pdca.tools import REMEDIATION_TOOLS
+from pdca.tools import REGISTRY, REMEDIATION_TOOLS
 
 from .base_agent import BaseAgent
 
 logger = get_logger(__name__)
 
-ALWAYS_MANUAL_TOOLS = {
-    "s3_enable_object_lock",
-    "s3_enable_mfa_delete",
-    "s3_prepare_replication",
-    "s3_remove_cross_account_principals",
-    "s3_enable_intelligent_tiering",
-}
+# B14: manual_only flag là metadata trong REGISTRY (`REGISTRY.is_manual_only`).
 
 
 def build_params_from_signature(tool, finding: Dict, aws_context: Dict):
@@ -97,6 +91,8 @@ class RemediationPlannerAgent(BaseAgent):
             [f"- {tool.name}: {tool.description}" for tool in REMEDIATION_TOOLS]
         )
 
+        # B14: REGISTRY là single source of truth. Giữ tools_map làm cache nhỏ
+        # cho hot path (LLM response loop) — tránh dict comprehension mỗi finding.
         self.tools_map = {t.name: t for t in REMEDIATION_TOOLS}
 
     def get_llm_metrics(self) -> Dict[str, Any]:
@@ -184,13 +180,17 @@ class RemediationPlannerAgent(BaseAgent):
                         aws_context=self.aws_context,
                     )
 
-                    is_manual = tool_name in ALWAYS_MANUAL_TOOLS
+                    # B14: REGISTRY là source of truth cho manual_only flag
+                    is_manual = REGISTRY.is_manual_only(tool_name)
 
+                    # B16: canonical key = `tool_name` / `tool_params`
+                    # (thay cho `tool_id` / `params` cũ). Orchestrator giờ
+                    # spread `**plan` vào task — không còn translate keys.
                     plans.append(
                         {
                             "finding_id": finding_id,
-                            "tool_id": tool_name,
-                            "params": tool_params,
+                            "tool_name": tool_name,
+                            "tool_params": tool_params,
                             "reasoning": parsed.get("reasoning", "Không có giải thích"),
                             "manual_required": is_manual,
                             "compliance": compliance_list,

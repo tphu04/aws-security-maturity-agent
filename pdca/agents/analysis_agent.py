@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from pdca.observability.logger import get_logger
-from pdca.tools import REMEDIATION_TOOLS
+from pdca.tools import REGISTRY  # B14: source of truth thay REMEDIATION_TOOLS
 
 logger = get_logger(__name__)
 
@@ -473,10 +473,10 @@ class AnalysisAgent:
             }
 
         try:
-            tool = next((t for t in REMEDIATION_TOOLS if t.name == tool_name), None)
+            tool = REGISTRY.get(tool_name)
             if tool is None:
                 return {
-                    "error": f"Tool '{tool_name}' not found in REMEDIATION_TOOLS."
+                    "error": f"Tool '{tool_name}' not found in REGISTRY."
                 }
 
             func = getattr(tool, "func", None)
@@ -545,7 +545,7 @@ class AnalysisAgent:
             return None
 
         try:
-            tool = next((t for t in REMEDIATION_TOOLS if t.name == tool_name), None)
+            tool = REGISTRY.get(tool_name)
             if not tool:
                 return f"Tool not found: {tool_name}"
 

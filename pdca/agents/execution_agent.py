@@ -1,8 +1,16 @@
 """ExecutionAgent — DO phase: thực thi remediation tools.
 
-Phase B9: thay toàn bộ `print()` → `logger.info/warning/error`. Logic
-classify/parse/execute giữ nguyên (B15 sẽ chuẩn hóa tool return type +
-thêm REGISTRY guards trong Phase B.2).
+Phase B9: thay toàn bộ `print()` → `logger.info/warning/error`.
+
+Phase B15 (v1.7):
+- Tool layer đã đảm bảo invariant "luôn return dict" (decision #35) — branch
+  parse JSON-string trong `parse_tool_output` chỉ còn safety net.
+- Thêm 3 guard trong `execute_task` (defense-in-depth):
+  GUARD 1: tool_name phải tồn tại trong REGISTRY.
+  GUARD 2: tool category phải = "remediation" (chặn scanner/knowledge tool
+           bị lẫn vào execution path).
+  GUARD 3: manual_only tool — REGISTRY là source of truth, KHÔNG tin
+           task["manual_required"] (HITL UI có thể override).
 """
 
 from __future__ import annotations
@@ -15,7 +23,7 @@ from typing import Any, Dict, List
 from botocore.exceptions import BotoCoreError, ClientError
 
 from pdca.observability.logger import get_logger
-from pdca.tools import REMEDIATION_TOOLS
+from pdca.tools import REGISTRY
 
 logger = get_logger(__name__)
 
@@ -25,11 +33,10 @@ class ExecutionAgent:
 
     def __init__(self, aws_context: Dict[str, Any]):
         self.aws_context = aws_context or {}
-        self.tools_map = {tool.name: tool for tool in REMEDIATION_TOOLS}
         logger.info(
             "ExecutionAgent initialized",
             extra={"region": self.aws_context.get("region"),
-                   "tool_count": len(self.tools_map)},
+                   "tool_count": len(REGISTRY.for_category("remediation"))},
         )
 
     def _timestamp(self):
@@ -47,9 +54,14 @@ class ExecutionAgent:
         return "failed"
 
     def parse_tool_output(self, raw_result: Any):
-        """Tool có thể trả về JSON string → parse thành dict."""
+        """B15: tool layer đã chuẩn hóa return dict. Branch JSON-string giờ
+        chỉ là safety net cho legacy hoặc tool 3rd-party tương lai."""
         if isinstance(raw_result, dict):
             return raw_result
+        logger.warning(
+            "Tool returned non-dict — should be fixed in tools layer (B15 invariant)",
+            extra={"type": type(raw_result).__name__},
+        )
         if isinstance(raw_result, str):
             try:
                 return json.loads(raw_result)
@@ -63,17 +75,44 @@ class ExecutionAgent:
         tool_name = task["tool_name"]
         tool_params = dict(task["tool_params"])
 
+        # GUARD 0: decision != approve → skip
         if decision != "approve":
             msg = f"Task {task_id} skipped (decision={decision})."
             logger.info("Task skipped",
                         extra={"task_id": task_id, "decision": decision})
             return self._build_log(task_id, tool_name, "skipped", msg, 0)
 
-        tool = self.tools_map.get(tool_name)
-        if not tool:
-            logger.error("Tool not found",
+        # GUARD 1 (B15 v1.7): tool phải tồn tại trong REGISTRY
+        meta = REGISTRY.meta(tool_name)
+        if meta is None:
+            logger.error("Refused: tool not registered",
                          extra={"task_id": task_id, "tool_name": tool_name})
-            return self._build_log(task_id, tool_name, "error", "Tool not found", 0)
+            return self._build_log(
+                task_id, tool_name, "error",
+                f"Tool '{tool_name}' không tồn tại trong REGISTRY", 0,
+            )
+
+        # GUARD 2 (B15 v1.7): chỉ category="remediation" được execute ở đây
+        if meta.category != "remediation":
+            logger.error("Refused: non-remediation tool in execution path",
+                         extra={"task_id": task_id, "tool_name": tool_name,
+                                "category": meta.category})
+            return self._build_log(
+                task_id, tool_name, "error",
+                f"Category '{meta.category}' không được execute ở remediation path",
+                0,
+            )
+
+        # GUARD 3 (B15 v1.7): manual_only — REGISTRY là source of truth
+        if meta.manual_only:
+            logger.warning("Refused: manual_only tool",
+                           extra={"task_id": task_id, "tool_name": tool_name})
+            return self._build_log(
+                task_id, tool_name, "manual_required",
+                "Tool yêu cầu thao tác thủ công — execution refused", 0,
+            )
+
+        tool = meta.tool
 
         # Inject region + account ID
         if "region" not in tool_params and self.aws_context.get("region"):
