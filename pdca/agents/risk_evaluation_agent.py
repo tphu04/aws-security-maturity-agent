@@ -30,10 +30,10 @@ import logging
 import time
 from typing import Any, Dict, List, TYPE_CHECKING
 
-from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
+from pdca.agents.shared.callbacks import TimerCallback
 from pdca.agents.shared.utils import extract_check_id, parse_llm_json
 from .base_agent import BaseAgent
 
@@ -41,28 +41,6 @@ if TYPE_CHECKING:
     from pdca.agents.shared.rag_client import RAGClient
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# CALLBACK: Timer cho LLM calls
-# ---------------------------------------------------------------------------
-
-
-class TimerCallback(BaseCallbackHandler):
-    def __init__(self):
-        self.total_duration = 0.0
-        self.call_history = []
-        self.start_time = 0.0
-
-    def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ) -> Any:
-        self.start_time = time.perf_counter()
-
-    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
-        duration = time.perf_counter() - self.start_time
-        self.total_duration += duration
-        self.call_history.append(duration)
-
 
 # ---------------------------------------------------------------------------
 # VALID SEVERITY VALUES

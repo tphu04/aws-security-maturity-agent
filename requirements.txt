@@ -30,6 +30,7 @@ urllib3
 
 # Validation & config
 pydantic
+pydantic-settings>=2.0
 python-dotenv
 
 # Templates & reports

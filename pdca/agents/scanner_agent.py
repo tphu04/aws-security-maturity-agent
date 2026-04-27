@@ -4,26 +4,9 @@ from typing import List, Dict, Any, Optional
 
 from .base_agent import BaseAgent
 from langchain_ollama import ChatOllama
-from langchain_core.callbacks import BaseCallbackHandler
 
+from pdca.agents.shared.callbacks import TimerCallback
 from pdca.tools import SCANNER_AGENT_TOOLS
-
-
-class TimerCallback(BaseCallbackHandler):
-    def __init__(self):
-        self.total_duration = 0.0
-        self.call_history = []
-        self.start_time = 0.0
-
-    def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ) -> Any:
-        self.start_time = time.perf_counter()
-
-    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
-        duration = time.perf_counter() - self.start_time
-        self.total_duration += duration
-        self.call_history.append(duration)
 
 
 class ScannerAgent(BaseAgent):

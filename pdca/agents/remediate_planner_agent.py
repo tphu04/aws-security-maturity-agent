@@ -7,7 +7,8 @@ from .base_agent import BaseAgent
 # Import LangChain Ollama và Message Types
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.callbacks import BaseCallbackHandler
+
+from pdca.agents.shared.callbacks import TimerCallback
 
 # Import danh sách tool (để lấy mô tả cho AI hiểu)
 from pdca.tools import REMEDIATION_TOOLS
@@ -47,23 +48,6 @@ def build_params_from_signature(tool, finding: Dict, aws_context: Dict):
             continue  # Bỏ qua các tham số không rõ nguồn gốc
 
     return params
-
-
-class TimerCallback(BaseCallbackHandler):
-    def __init__(self):
-        self.total_duration = 0.0
-        self.call_history = []
-        self.start_time = 0.0
-
-    def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ) -> Any:
-        self.start_time = time.perf_counter()
-
-    def on_llm_end(self, response: Any, **kwargs: Any) -> Any:
-        duration = time.perf_counter() - self.start_time
-        self.total_duration += duration
-        self.call_history.append(duration)
 
 
 class RemediationPlannerAgent(BaseAgent):

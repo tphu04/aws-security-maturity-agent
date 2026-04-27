@@ -1,61 +1,80 @@
-import boto3
+"""EnvironmentAgent — Lấy AWS account context.
+
+Phase A4: Degrade thay vì raise khi thiếu credentials hoặc lỗi AWS;
+trả thêm key `buckets` vào success branch.
+"""
+
+from __future__ import annotations
+
 import os
-from botocore.exceptions import NoCredentialsError, ClientError
-from typing import Dict, Any
+from typing import Any, Dict
+
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+
+from pdca.observability.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+_DEGRADED_CONTEXT: Dict[str, Any] = {
+    "account_id": "unknown",
+    "region": "us-east-1",
+    "identity_arn": "unknown",
+    "buckets": [],
+    "_degraded": True,
+}
 
 
 class EnvironmentAgent:
-    def __init__(self):
-        """Khởi tạo session AWS."""
-        # boto3 sẽ tự động tìm credentials trong biến môi trường hoặc ~/.aws/credentials
+    def __init__(self) -> None:
+        # boto3 sẽ tự động tìm credentials trong env vars hoặc ~/.aws/credentials
         self.session = boto3.Session()
 
     def get_aws_context(self) -> Dict[str, Any]:
-        """
-        Lấy thông tin Account ID, Region và Identity ARN hiện tại.
+        """Trả AWS context: account_id, region, identity_arn, buckets.
+
+        Khi thiếu credentials hoặc lỗi AWS API, return dict có `_degraded=True`
+        thay vì raise — graph có thể tiếp tục với context giả lập.
         """
         try:
-            # 1. Kết nối STS để lấy thông tin Identity (Who am I?)
             sts_client = self.session.client("sts")
             identity = sts_client.get_caller_identity()
 
-            # 2. Xác định Region
-            # Ưu tiên region của session, nếu không có thì fallback sang biến môi trường hoặc default
-            region = self.session.region_name
-            if not region:
-                region = os.environ.get("AWS_REGION", "us-east-1")
+            region = self.session.region_name or os.environ.get("AWS_REGION", "us-east-1")
 
-            # Lấy danh sách S3 Buckets
             bucket_names = []
             try:
                 s3_client = self.session.client("s3", region_name=region)
                 response = s3_client.list_buckets()
-                # Trích xuất danh sách tên bucket
                 bucket_names = [b["Name"] for b in response.get("Buckets", [])]
-                # print(f"   [EnvAgent] Found {len(bucket_names)} S3 Buckets.")
-            except ClientError as e:
-                print(f"   [EnvAgent] ⚠️ Warning: Không thể list S3 buckets (Thiếu quyền?).")
+            except (BotoCoreError, ClientError) as e:
+                logger.warning(
+                    "Cannot list S3 buckets — keeping empty list",
+                    extra={"error_type": type(e).__name__, "error": str(e)},
+                )
 
-            # print(
-            #     f"   [EnvAgent] Connected to AWS Account: {identity['Account']} ({region})"
-            # )
-
+            logger.info(
+                "Connected to AWS",
+                extra={
+                    "account_id": identity["Account"],
+                    "region": region,
+                    "bucket_count": len(bucket_names),
+                },
+            )
             return {
                 "account_id": identity["Account"],
                 "region": region,
                 "identity_arn": identity["Arn"],
+                "buckets": bucket_names,
             }
 
-        except NoCredentialsError:
-            print("   [EnvAgent] ❌ LỖI: Không tìm thấy AWS Credentials.")
-            raise Exception(
-                "AWS Credentials missing. Please run 'aws configure' or set env vars."
+        except (BotoCoreError, ClientError) as e:
+            # BotoCoreError bao trùm: NoCredentialsError, PartialCredentialsError,
+            # EndpointConnectionError, ConnectTimeoutError, ReadTimeoutError, ...
+            # ClientError = lỗi từ AWS API (4xx/5xx).
+            logger.warning(
+                "AWS unavailable — degrading EnvironmentAgent",
+                extra={"error_type": type(e).__name__, "error": str(e)},
             )
-
-        except ClientError as e:
-            print(f"   [EnvAgent] ❌ LỖI: Không thể kết nối AWS. Chi tiết: {e}")
-            raise e
-
-        except Exception as e:
-            print(f"   [EnvAgent] ❌ LỖI KHÔNG XÁC ĐỊNH: {e}")
-            raise e
+            return dict(_DEGRADED_CONTEXT)

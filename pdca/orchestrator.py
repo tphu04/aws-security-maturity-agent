@@ -350,27 +350,35 @@ def operational_planning_node(state: PDCAState):
 
 
 def review_task_node(state: PDCAState):
+    # Phase A6: trả empty dict — không return field rác `_hitl_pause`.
+    # HITL pause được kích hoạt bằng `interrupt_before=["review_task"]` ở build_graph().
+    return {}
 
-    return {"_hitl_pause": True}
 
+def reset_index_node(state: PDCAState) -> Dict[str, Any]:
+    """Reset `current_task_index` → 0 trước khi vào execution.
 
-def route_review_next_task(state: PDCAState) -> Literal["review_task", "execution"]:
+    Phase A6: Tách khỏi router — router CHỈ đọc state, không mutate.
+    State update phải đi qua node return dict (LangGraph convention).
     """
-    Logic quyết định đi đâu tiếp theo:
-    - Nếu index < tổng số task => Vẫn còn task chưa duyệt => Quay lại 'review_task'
-    - Nếu index == tổng số task => Đã duyệt xong hết => Sang 'execution'
+    return {"current_task_index": 0}
+
+
+def route_review_next_task(
+    state: PDCAState,
+) -> Literal["review_task", "reset_then_execute"]:
+    """Quyết định đi đâu tiếp theo (read-only — KHÔNG mutate state).
+
+    - Nếu còn task chưa duyệt → 'review_task'
+    - Nếu đã duyệt xong / không có auto task → 'reset_then_execute' (qua reset_index node)
     """
     tasks = [t for t in state["remediation_tasks"] if not t.get("manual_required")]
-
     if not tasks:
-        state["current_task_index"] = 0
-        return "execution"
+        return "reset_then_execute"
 
     idx = state.get("current_task_index", 0)
-
     if idx >= len(tasks):
-        state["current_task_index"] = 0
-        return "execution"
+        return "reset_then_execute"
 
     return "review_task"
 
@@ -899,6 +907,7 @@ def build_graph():
 
     wf.add_node("operational_planning", operational_planning_node)
     wf.add_node("review_task", review_task_node)
+    wf.add_node("reset_index", reset_index_node)
     wf.add_node("execution", execution_node)
 
     wf.add_node("verification", verification_node)
@@ -920,15 +929,16 @@ def build_graph():
     # Operational planning → review_task
     wf.add_edge("operational_planning", "review_task")
 
-    # Review task → (loop or execution)
+    # Review task → (loop or reset_index → execution)
     wf.add_conditional_edges(
         "review_task",
         route_review_next_task,
         {
             "review_task": "review_task",
-            "execution": "execution",
+            "reset_then_execute": "reset_index",
         },
     )
+    wf.add_edge("reset_index", "execution")
 
     wf.add_edge("execution", "verification")
     wf.add_edge("verification", "report")

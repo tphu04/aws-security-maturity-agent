@@ -1,12 +1,16 @@
 # state.py (PDCAState V2)
 import operator
-from typing import TypedDict, List, Dict, Optional, Any, Annotated
+from typing import TypedDict, List, Dict, Optional, Any, Annotated, NotRequired
 
 
 class AWSEnvironment(TypedDict):
     account_id: str
     region: str
     identity_arn: str
+    buckets: List[str]
+    # Phase A4: True khi EnvironmentAgent không lấy được context (no creds, AWS down)
+    # và rơi về placeholder. Optional vì thường vắng mặt khi success.
+    _degraded: NotRequired[bool]
 
 
 class AssessmentPlan(TypedDict):
