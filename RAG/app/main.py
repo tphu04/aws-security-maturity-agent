@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.health import router as health_router
 from app.api.routes.resolve import router as resolve_router
@@ -101,11 +102,42 @@ async def lifespan(app: FastAPI):
     yield
 
 
+def _cors_settings() -> tuple[list[str], bool]:
+    """Read CORS config from env (RAG service is standalone — no pdca import).
+
+    `CORS_ORIGINS` is a JSON list (e.g. `["*"]`) or comma-separated string.
+    Wildcard origin forces `allow_credentials=False` (CORS spec — see Phase A2).
+    """
+    import os as _os
+
+    raw = _os.getenv("CORS_ORIGINS", '["*"]').strip()
+    try:
+        origins = json.loads(raw)
+        if not isinstance(origins, list):
+            raise ValueError
+    except Exception:
+        origins = [o.strip() for o in raw.split(",") if o.strip()]
+    allow_credentials = _os.getenv("CORS_ALLOW_CREDENTIALS", "false").lower() == "true"
+    if "*" in origins and allow_credentials:
+        allow_credentials = False
+    return origins, allow_credentials
+
+
+_cors_origins, _cors_credentials = _cors_settings()
+
 app = FastAPI(
     title=SERVICE_NAME,
     version=SERVICE_VERSION,
     description="RAG retrieval service for AWS assessment context building.",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_credentials,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(health_router)
