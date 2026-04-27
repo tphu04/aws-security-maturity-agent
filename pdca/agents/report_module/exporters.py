@@ -6,6 +6,10 @@
 import os
 import tempfile
 
+from pdca.observability.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def write_file(path: str, content: str) -> str:
     """Write content to file, creating directories as needed."""
@@ -41,12 +45,12 @@ def export_pdf(html: str, path: str) -> str | None:
     try:
         from weasyprint import HTML
         HTML(string=html).write_pdf(path)
-        print(f"[exporters] PDF exported (weasyprint): {path}")
+        logger.info("PDF exported", extra={"backend": "weasyprint", "path": path})
         return path
     except ImportError:
         pass
     except Exception as e:
-        print(f"[exporters] weasyprint failed: {e}")
+        logger.warning("weasyprint export failed", extra={"error": str(e)})
 
     # Fallback: wkhtmltopdf
     return _export_pdf_wkhtmltopdf(html, path)
@@ -57,7 +61,7 @@ def _export_pdf_wkhtmltopdf(html: str, path: str) -> str | None:
     try:
         import pdfkit
     except ImportError:
-        print("[exporters] No PDF library installed — PDF skipped.")
+        logger.info("No PDF library installed — PDF skipped")
         return None
 
     # Write to temp file (auto-cleanup via finally)
@@ -78,7 +82,7 @@ def _export_pdf_wkhtmltopdf(html: str, path: str) -> str | None:
         ]
         wk = next((p for p in possible if os.path.exists(p)), None)
         if not wk:
-            print("[exporters] wkhtmltopdf not found — PDF skipped.")
+            logger.info("wkhtmltopdf not found — PDF skipped")
             return None
 
         config = pdfkit.configuration(wkhtmltopdf=wk)
@@ -90,10 +94,10 @@ def _export_pdf_wkhtmltopdf(html: str, path: str) -> str | None:
                 "load-error-handling": "ignore",
             },
         )
-        print(f"[exporters] PDF exported (wkhtmltopdf): {path}")
+        logger.info("PDF exported", extra={"backend": "wkhtmltopdf", "path": path})
         return path
     except Exception as e:
-        print(f"[exporters] PDF export error: {e}")
+        logger.warning("PDF export error", extra={"error": str(e)})
         return None
     finally:
         # Always cleanup temp file

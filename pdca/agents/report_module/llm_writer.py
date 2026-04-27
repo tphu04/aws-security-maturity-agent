@@ -104,20 +104,26 @@ class LLMWriter:
     )
 
     def __init__(self, llm=None, model="gemma3:4b", api_key=None,
-                 base_url=None, temperature=0.3):
+                 base_url=None, temperature=0.3, callbacks=None):
         """
         Hỗ trợ 2 cách khởi tạo:
         - LLMWriter(llm=instance)              ← inject (từ ReportAgent mới)
         - LLMWriter(model=..., base_url=...)   ← auto-create (backward compat)
 
         temperature mặc định 0.3 (deterministic hơn cho report).
+
+        Phase B10: `callbacks` propagate xuống ChatOllama khi auto-create.
+        Khi caller inject `llm=instance` thì callbacks đã được attach từ
+        ReportAgent — không cần handle ở đây.
         """
+        self.callbacks = list(callbacks or [])
         if llm is not None:
             self.llm = llm
         else:
             from langchain_ollama import ChatOllama
             self.llm = ChatOllama(
-                model=model, base_url=base_url, temperature=temperature
+                model=model, base_url=base_url, temperature=temperature,
+                callbacks=self.callbacks,
             )
 
     # ----------------------------------------------------------
@@ -163,13 +169,14 @@ class LLMWriter:
         try:
             res = self.llm.invoke(legacy_prompt)
             if res is None or not hasattr(res, "content"):
-                print("[LLMWriter] LLM returned None or invalid response")
+                logger.warning("LLM returned None or invalid response (legacy path)")
                 return fallback
             text = res.content or ""
             cleaned = self._clean(text)
             return cleaned if cleaned else fallback
         except Exception as e:
-            print(f"[LLMWriter] LLM call failed ({type(e).__name__}): {e}")
+            logger.error("LLM call failed (legacy path)",
+                         extra={"error_type": type(e).__name__, "error": str(e)})
             return fallback
 
     def _build_messages(self, prompt: str, word_limit: int = 300):

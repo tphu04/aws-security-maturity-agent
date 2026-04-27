@@ -74,8 +74,12 @@ class ReportAgent:
                  api_key: Optional[str] = None,
                  base_url: Optional[str] = None,
                  output_path: Optional[str] = None,
-                 llm_config: Optional[Dict[str, Any]] = None):
+                 llm_config: Optional[Dict[str, Any]] = None,
+                 callbacks: Optional[list] = None):
         self.timer = ReportTimer()
+        # Phase B10: callbacks (Langfuse handler) propagate xuống LLMWriter
+        # → ChatOllama. Mặc định [] khi caller không truyền.
+        self.callbacks = list(callbacks or [])
         # Populated by ``_write_llm_sections`` so ``_render`` can emit
         # ``validation_report.json`` next to the HTML output. Reset on
         # every ``run()`` call.
@@ -84,7 +88,10 @@ class ReportAgent:
 
         # LLM setup (injectable for testing)
         llm_instance = self._create_llm(model, api_key, base_url, llm_config)
-        self.llm = LLMTimerProxy(LLMWriter(llm=llm_instance), self.timer)
+        self.llm = LLMTimerProxy(
+            LLMWriter(llm=llm_instance, callbacks=self.callbacks),
+            self.timer,
+        )
 
         # Output paths
         self.output_path = output_path or "reports/final_report.md"
@@ -96,6 +103,8 @@ class ReportAgent:
     # ----------------------------------------------------------
     def _create_llm(self, model, api_key, base_url, llm_config):
         """Support injecting LLM instance or auto-create Ollama.
+
+        Phase B10: nếu auto-create, propagate self.callbacks xuống ChatOllama.
         api_key kept for backward compat with orchestrator constructor call.
         """
         _ = api_key  # reserved for future OpenAI/Claude backends
@@ -107,6 +116,7 @@ class ReportAgent:
             model=model or "gemma3:4b",
             base_url=base_url,
             temperature=0.5,
+            callbacks=self.callbacks,
         )
 
     # ----------------------------------------------------------
@@ -114,120 +124,133 @@ class ReportAgent:
     # ----------------------------------------------------------
     def run(self, data: dict = None, report_context: dict = None,
             **_kwargs) -> dict:
-        """
-        INPUT:  data (từ build_report_data) — đầy đủ, read-only
+        """Thin orchestration: normalize input → build template ctx → render.
+
+        INPUT:  data (từ ReportDataBuilder.build) — đầy đủ, read-only
         OUTPUT: {"markdown": path, "html": path, "pdf": path}
 
-        Backward compat: accepts report_context= and meta= kwargs
-        from old orchestrator interface.
+        Backward compat: accepts `report_context=` kwarg from old
+        orchestrator interface.
         """
-        # Backward compat: support report_context kwarg
-        if data is None:
-            if report_context is None:
-                raise ValueError("Missing data or report_context")
-            data = report_context
-
+        data = self._normalize_input(data, report_context)
         self._validate_input(data)
-        # Reset validation state per run so a prior job doesn't leak issues.
+        self._reset_validation_state()
+        template_ctx = self._build_template_context(data)
+        return self._render(template_ctx)
+
+    # ----------------------------------------------------------
+    # INPUT NORMALIZATION
+    # ----------------------------------------------------------
+    @staticmethod
+    def _normalize_input(data: Optional[dict],
+                         report_context: Optional[dict]) -> dict:
+        if data is not None:
+            return data
+        if report_context is None:
+            raise ValueError("Missing data or report_context")
+        return report_context
+
+    def _reset_validation_state(self) -> None:
+        # Reset per-run so a prior job doesn't leak issues into next render.
         self._validation_issues = []
         self._validation_sections_run = []
 
-        # 1. Read input (KHÔNG mutate data)
+    # ----------------------------------------------------------
+    # TEMPLATE CONTEXT BUILDER
+    # ----------------------------------------------------------
+    def _build_template_context(self, data: dict) -> dict:
+        """Compose tất cả derived data + LLM content + enriched findings
+        thành template_ctx cho `_render()`.
+
+        Phase B10 review: extract khỏi `run()` để giữ run() thuần
+        orchestration. Mọi side effect (LLM, chart) gom ở đây để render
+        path không bao giờ trigger LLM call.
+        """
         pre = data["pre"]
         post = data["post"]
         env = data["environment"]
         scope = data["scope"]
 
-        # Scope detection — prefer value already computed by orchestrator,
-        # otherwise derive it here so the agent remains callable in isolation
-        # (e.g. from unit tests). Service terminology flows from this dict
-        # down into every LLM prompt and data-aggregation call below.
+        # Scope: prefer pre-computed (orchestrator/builder), else derive
+        # tại chỗ để agent vẫn callable trong unit test isolation.
         scope_info = data.get("scope_info") or detect_scope(
             findings=data.get("raw_pre_findings") or [],
             env=env,
             services_hint=scope.get("services") if isinstance(scope, dict) else None,
         )
 
-        # RAG context — prefer pre-computed (orchestrator path),
-        # fetch live when MULTI_QUERY_MODE=True and not already present.
-        _rag_ctx = data.get("rag_context") or {}
-        if not _rag_ctx:
-            _rag_ctx = self._fetch_rag_context(
-                raw_findings=data.get("raw_pre_findings", []),
-                scope_info=scope_info,
-            )
-            # Do not mutate caller's data dict
-        data = {**data, "rag_context": _rag_ctx}
+        # RAG context: ReportAgent KHÔNG fetch (Phase B12 fix). Caller
+        # phải pre-compute qua ReportDataBuilder.build() và truyền vào
+        # `data["rag_context"]`. Empty dict = LLM-pure path.
+        rag_ctx = data.get("rag_context") or {}
+        data = {**data, "rag_context": rag_ctx}
 
-        # NEW: Maturity data
         maturity = data.get("maturity_assessment")
         maturity_delta = data.get("maturity_delta")
         report_mode = self._determine_report_mode(maturity)
 
-        # 2. Derived data
+        # Derived data + charts
         pass_findings, fail_findings = self._split_by_status(data["raw_pre_findings"])
         charts = self._make_charts(pre, self.output_dir)
 
-        # NEW: Maturity charts (only for full/partial modes)
-        maturity_charts = {}
+        maturity_charts: dict = {}
         if maturity and report_mode in ("full", "partial"):
-            maturity_charts = self._make_maturity_charts(maturity, report_mode, self.output_dir)
+            maturity_charts = self._make_maturity_charts(
+                maturity, report_mode, self.output_dir,
+            )
         if maturity_delta and report_mode in ("full", "partial"):
-            maturity_charts.update(self._make_post_remediation_charts(maturity_delta, self.output_dir))
+            maturity_charts.update(
+                self._make_post_remediation_charts(maturity_delta, self.output_dir)
+            )
 
-        # NEW: Maturity-based score (fallback to old score)
+        # Score: maturity-based khi có, fallback sang pass/fail percent
         if maturity and report_mode in ("full", "partial"):
             score = round(maturity["overall_score"])
         else:
             score = self._calc_score(pre, post)
 
-        # NEW: Fix metrics + residual risks
         fix_metrics = self._compute_fix_metrics(data)
         residual_risks = self._classify_residual_risks(data)
-
         report_id = self._make_report_id(scope["date"])
 
-        # 3. LLM content
+        # LLM content (3 groups: pre-remediation, maturity, post-remediation)
         llm = self._write_llm_sections(
             data, pre, post, env, scope, pass_findings, fail_findings,
             scope_info=scope_info,
         )
-
-        # NEW: Maturity LLM sections (pre-remediation)
         if maturity and report_mode in ("full", "partial"):
             llm.update(self._write_maturity_llm_sections(maturity, report_mode))
-
-        # NEW: Post-remediation LLM sections
         llm.update(self._write_post_remediation_llm_sections(
-            fix_metrics, residual_risks, maturity_delta, report_mode
+            fix_metrics, residual_risks, maturity_delta, report_mode,
         ))
 
-        # 4. Enrich findings (COPY, không mutate gốc)
-        rag_finding_map = self._build_rag_finding_map(data.get("rag_context", {}))
-        success = [self._enrich_success(f, rag_finding_map) for f in data["success_findings"]]
-        failed = [self._enrich_failed(f, rag_finding_map) for f in data["failed_findings"]]
-        manual = [self._enrich_manual(f, rag_finding_map) for f in data["manual_findings"]]
+        # Enrich findings (immutable copies)
+        rag_finding_map = self._build_rag_finding_map(rag_ctx)
+        success = [self._enrich_success(f, rag_finding_map)
+                   for f in data["success_findings"]]
+        failed = [self._enrich_failed(f, rag_finding_map)
+                  for f in data["failed_findings"]]
+        manual = [self._enrich_manual(f, rag_finding_map)
+                  for f in data["manual_findings"]]
 
-        # 5. Render
-        template_ctx = {
+        return {
             "env": env, "scope": scope, "scope_info": scope_info,
             "pre": pre, "post": post,
             "score": score, "report_id": report_id,
             "charts": charts, "table": data["findings_table"],
-            "unchanged_count": sum(1 for r in data["findings_table"] if r["change"] == "Unchanged"),
+            "unchanged_count": sum(
+                1 for r in data["findings_table"] if r["change"] == "Unchanged"
+            ),
             "success": success, "failed": failed, "manual": manual,
             "llm": llm,
-            # NEW — Maturity
             "maturity": maturity,
             "maturity_post": data.get("maturity_post"),
             "maturity_delta": maturity_delta,
             "maturity_charts": maturity_charts,
             "report_mode": report_mode,
-            # NEW — Post-remediation
             "fix_metrics": fix_metrics,
             "residual_risks": residual_risks,
         }
-        return self._render(template_ctx)
 
     # ----------------------------------------------------------
     # VALIDATION
@@ -772,48 +795,6 @@ class ReportAgent:
                         seen.add(title)
                         names.append(title)
         return names[:12]
-
-    # ----------------------------------------------------------
-    # RAG CONTEXT FETCHER (Phase 3 MVP)
-    # ----------------------------------------------------------
-    def _fetch_rag_context(self, raw_findings: list, scope_info: dict) -> dict:
-        """Fetch RAG context based on MULTI_QUERY_MODE flag.
-
-        Multi-query mode  (MULTI_QUERY_MODE=True): calls RAGQueryPlanner
-        → POST /v1/retrieve/report_context (Q1+Q2+Q3).
-        Legacy mode (default): returns empty dict so caller uses LLM-pure path.
-        """
-        try:
-            from pdca.config import MULTI_QUERY_MODE, RAG_API_URL
-            if not MULTI_QUERY_MODE:
-                return {}
-
-            from pdca.agents.shared.rag_client import RAGClient
-            from pdca.agents.report_module.rag_query_planner import RAGQueryPlanner
-
-            rag = RAGClient(base_url=RAG_API_URL, timeout=30.0, max_retries=2)
-            if not rag.is_healthy():
-                return {}
-
-            planner = RAGQueryPlanner(rag)
-            scope_domains = scope_info.get("service_list") or []
-            req = planner.plan(raw_findings, scope_domains)
-            bundle = planner.execute(req)
-
-            q1 = len(bundle.get("key_findings", []))
-            q2 = len(bundle.get("capability_themes", []))
-            q3 = len(bundle.get("remediations", []))
-            import logging as _log
-            _log.getLogger(__name__).info(
-                "[ReportAgent] Multi-query RAG: Q1=%d findings, Q2=%d themes, Q3=%d remediations",
-                q1, q2, q3,
-            )
-            return bundle
-
-        except Exception as exc:
-            import logging as _log
-            _log.getLogger(__name__).warning("[ReportAgent] _fetch_rag_context failed: %s", exc)
-            return {}
 
     # ----------------------------------------------------------
     # RAG KNOWLEDGE BUILDER

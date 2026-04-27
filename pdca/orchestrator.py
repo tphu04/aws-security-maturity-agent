@@ -197,13 +197,17 @@ def scanning_node(state: PDCAState):
     print(f"\n [Node: Scanning] Triggering scans: groups={target_groups}, checks={checks_to_scan}")
     metrics = state.get("performance_metrics", {})
 
-    scanner = ScannerAgent(OLLAMA_MODEL, OLLAMA_API_KEY, OLLAMA_BASE_URL)
+    scanner = ScannerAgent()
 
     with measure_time() as timer:
-        job_ids = scanner.run_batch(
+        job_metas = scanner.run_batch(
             target_groups=target_groups,
-            specific_checks=checks_to_scan
+            specific_checks=checks_to_scan,
         )
+        # Phase B2: run_batch trả List[Dict] {job_id, task_type, task_value}.
+        # scanning_node hiện tại chỉ cần job_ids cho monitoring_node — Phase C
+        # (scan_submit/scan_poll) sẽ giữ full meta vào pending_jobs dict.
+        job_ids = [m["job_id"] for m in job_metas if m.get("job_id")]
 
     # 2. GHI NHẬN THỜI GIAN CHẠY NODE
     metrics = update_metrics(metrics, "step_duration", "scanning_trigger", timer())
@@ -538,298 +542,48 @@ def verification_node(state: PDCAState):
 
 def build_report_data(analysis: dict, aws_context: dict,
                       plan: dict, user_request: str) -> dict:
+    """Thin wrapper — delegate to `ReportDataBuilder.build_context` (Phase B12).
+
+    Logic moved sang `pdca/agents/report_module/data_builder.py`. Hàm này
+    giữ lại để các test (`test_orchestrator_maturity.py`, `test_report_rebuild.py`)
+    không break. Sẽ được removed cuối Phase C.
     """
-    Hàm THUẦN TÚY — không side effect, không truy cập file.
-    NƠI DUY NHẤT biết "report cần gì, state có gì".
-    Testable: truyền mock data vào, verify output.
-
-    Maps:
-    - analysis  → pre/post stats, findings, table
-    - aws_context → environment info (account, region, buckets)
-    - plan → scan scope (target services)
-    - user_request → scope context
-    """
-    pre = analysis.get("pre_stats", {})
-    post_stats = analysis.get("post_stats", {})
-    rem = analysis.get("remediation_stats", {})
-
-    return {
-        # --- Số liệu (đã tính bởi AnalysisAgent, KHÔNG tính lại) ---
-        "pre": {
-            "total": pre.get("total", 0),
-            "pass": pre.get("pass", 0),
-            "fail": pre.get("fail", 0),
-            "severity": pre.get("severity", {"critical": 0, "high": 0, "medium": 0, "low": 0}),
-        },
-        "post": {
-            "initial_pass": pre.get("pass", 0),
-            "initial_fail": pre.get("fail", 0),
-            "final_pass": post_stats.get("pass", 0),
-            "final_fail": post_stats.get("fail", 0),
-            "fixed": rem.get("fixed", 0),
-            "failed": rem.get("failed", 0),
-            "manual": rem.get("manual", 0),
-        },
-
-        # --- Findings ---
-        "findings_table": analysis.get("findings_table", []),
-        "success_findings": analysis.get("success_findings", []),
-        "failed_findings": analysis.get("failed_findings", []),
-        "manual_findings": analysis.get("manual_findings", []),
-        "raw_pre_findings": analysis.get("raw_pre_findings", []),
-        "raw_post_findings": _extract_post_findings(analysis),
-
-        # --- Environment (từ state, KHÔNG từ AnalysisAgent) ---
-        "environment": {
-            "account_id": aws_context.get("account_id", "Unknown"),
-            "region": aws_context.get("region", "us-east-1"),
-            "buckets": aws_context.get("buckets", []),
-        },
-
-        # --- Scope (từ state, KHÔNG từ AnalysisAgent) ---
-        "scope": {
-            "services": plan.get("target_services", ["s3"]),
-            "date": datetime.now().strftime("%Y-%m-%d"),
-            "user_request": user_request,
-        },
-    }
+    from pdca.agents.report_module.data_builder import ReportDataBuilder
+    return ReportDataBuilder.build_context(analysis, aws_context, plan, user_request)
 
 
 def _extract_post_findings(analysis: dict) -> list:
-    """
-    Tạo danh sách findings dựa trên post-scan results.
-    Mỗi finding có event_code và status (PASS/FAIL) từ KẾT QUẢ SAU remediation.
-    Pure function — không side effect.
-    """
-    post_findings = []
-    for row in analysis.get("findings_table", []):
-        post_findings.append({
-            "event_code": row.get("check_id", ""),
-            "status": row.get("after", "UNKNOWN"),
-            "severity": row.get("severity", ""),
-            "resource_id": row.get("resource", ""),
-            "service": row.get("service", ""),
-            "change": row.get("change", ""),
-        })
-    return post_findings
-
-
-def _fetch_rag_for_report(raw_pre_findings: list,
-                          rag_available: bool = False) -> dict:
-    """
-    Gọi RAG API lấy security knowledge cho report.
-    Graceful degradation: RAG down → return empty dict → report vẫn hoạt động.
-
-    Returns:
-        {
-            "primary_topics":        [str],
-            "key_findings":          [{check_id, title, severity, risk_summary,
-                                       remediation}],
-            "control_themes":        [{capability_id, capability_name,
-                                       summary_short}],
-            "recommended_practices": [str],
-            "capability_details":    [{capability_id, capability_name, summary,
-                                       risk_explanation, recommendation,
-                                       guidance_questions, url}],
-            "confidence":            "high" | "medium" | "low" | None,
-        }
-        hoặc {} nếu RAG không khả dụng.
-    """
-    if not rag_available:
-        print("[report_node] RAG not available — report sẽ dùng LLM thuần")
-        return {}
-
-    try:
-        from pdca.agents.shared.rag_client import RAGClient
-        rag = RAGClient(base_url=RAG_API_URL, timeout=30.0, max_retries=3)
-
-        # Extract unique check_ids từ findings
-        check_ids = list({
-            f.get("event_code") or f.get("finding_id", "")
-            for f in raw_pre_findings
-        } - {""})
-
-        if not check_ids:
-            return {}
-
-        # App-level retry loop because urllib3 Retry does not always cover
-        # ConnectionError on fresh sessions under Windows TCP conditions.
-        result = None
-        for attempt in range(1, 4):
-            result = rag.build_context(
-                consumer="report",
-                check_ids=check_ids,
-                include_mappings=True,
-                include_maturity=True,
-                top_k=10,
-                retrieval_mode="hybrid",
-            )
-            if result is not None:
-                break
-            print(f"[report_node] RAG attempt {attempt}/3 returned None — retrying...")
-            time.sleep(0.5 * attempt)
-
-        if result is None:
-            print(
-                f"[report_node] RAG build_context returned None. "
-                f"Requested {len(check_ids)} check_ids (first 5: {check_ids[:5]}). "
-                f"See RAG server log / rag_client warnings for the error code."
-            )
-            try:
-                debug_dump = {
-                    "consumer": "report",
-                    "check_ids_requested": check_ids,
-                    "include_mappings": True,
-                    "include_maturity": True,
-                }
-                os.makedirs("data/artifacts", exist_ok=True)
-                with open("data/artifacts/rag_debug_last.json", "w", encoding="utf-8") as f:
-                    json.dump(debug_dump, f, indent=2, ensure_ascii=False)
-            except Exception:
-                pass
-            return {}
-
-        # Extract report_bundle từ response
-        bundle = result.get("payload", {}).get("report_bundle", {})
-        confidence = (
-            bundle.get("confidence")
-            or result.get("_meta", {}).get("confidence")
-        )
-
-        context = {
-            "primary_topics": bundle.get("primary_topics", []),
-            "key_findings": bundle.get("key_findings", []),
-            "control_themes": bundle.get("control_themes", []),
-            "recommended_practices": bundle.get("recommended_practices", []),
-            "capability_details": bundle.get("capability_details", []),
-            "confidence": confidence,
-        }
-
-        finding_count = len(context["key_findings"])
-        theme_count = len(context["control_themes"])
-        detail_count = len(context["capability_details"])
-        print(
-            f"[report_node] RAG context: {finding_count} findings, "
-            f"{theme_count} themes, {detail_count} capability_details, "
-            f"confidence={confidence}"
-        )
-
-        return context
-
-    except Exception as e:
-        print(f"[report_node] RAG query failed: {e} — report sẽ dùng LLM thuần")
-        return {}
-
-
-def _fetch_rag_multi_query(
-    raw_findings: list,
-    scope_info: dict,
-) -> dict:
-    """Multi-query RAG path (MULTI_QUERY_MODE=True).
-
-    Calls /v1/retrieve/report_context (Q1+Q2+Q3 parallel) via RAGQueryPlanner.
-    Returns bundle dict compatible with RAGViewFormatter (adds capability_themes
-    + remediations on top of existing rag_context shape).
-    """
-    try:
-        from pdca.agents.shared.rag_client import RAGClient
-        from pdca.agents.report_module.rag_query_planner import RAGQueryPlanner
-        from pdca.config import RAG_API_URL
-
-        rag = RAGClient(base_url=RAG_API_URL, timeout=30.0, max_retries=2)
-        planner = RAGQueryPlanner(rag)
-
-        scope_domains = scope_info.get("service_list") or []
-        req = planner.plan(raw_findings, scope_domains)
-        bundle = planner.execute(req)
-
-        q2_count = len(bundle.get("capability_themes", []))
-        q3_count = len(bundle.get("remediations", []))
-        q1_count = len(bundle.get("key_findings", []))
-        print(
-            f"[report_node] Multi-query RAG: Q1={q1_count} findings, "
-            f"Q2={q2_count} capability_themes, Q3={q3_count} remediations, "
-            f"confidence={bundle.get('confidence')}"
-        )
-        return bundle
-
-    except Exception as e:
-        print(f"[report_node] Multi-query RAG failed: {e} — falling back to empty context")
-        return {}
+    """Thin wrapper — delegate to `ReportDataBuilder._extract_post_findings`."""
+    from pdca.agents.report_module.data_builder import ReportDataBuilder
+    return ReportDataBuilder._extract_post_findings(analysis)
 
 
 def report_node(state: PDCAState):
+    """Generate final report.
+
+    Phase B12: data assembly + RAG fetch đã được move sang
+    `ReportDataBuilder.build()` (single entry point). Node giờ chỉ còn
+    orchestration logic: build data → maturity → ReportAgent.run().
+    """
     print("\n [Node: Report] Generating final report...")
     metrics = state.get("performance_metrics", {})
 
-    # Lấy analysis_results từ state (single source of truth)
-    analysis = state.get("analysis_results")
+    # --- Build report context (analysis + RAG) qua ReportDataBuilder ---
+    from pdca.agents.report_module.data_builder import ReportDataBuilder
+    rag_client = None
+    if state.get("rag_available", False):
+        rag_client = RAGClient(base_url=RAG_API_URL, timeout=30.0, max_retries=2)
 
-    # Trường hợp no FAIL → skip verification → không có analysis_results
-    # Build analysis tối thiểu từ raw_findings đã có trong state (KHÔNG đọc file lại)
-    if not analysis:
-        pre_findings = state.get("raw_findings", [])
-        sev = {"critical": 0, "high": 0, "medium": 0, "low": 0}
-        for f in pre_findings:
-            s = (f.get("severity") or "").lower()
-            if s in sev:
-                sev[s] += 1
-
-        pass_count = sum(1 for f in pre_findings if f.get("status") == "PASS")
-        fail_count = sum(1 for f in pre_findings if f.get("status") == "FAIL")
-
-        analysis = {
-            "pre_stats": {
-                "total": len(pre_findings),
-                "pass": pass_count,
-                "fail": fail_count,
-                "severity": sev,
-            },
-            "post_stats": {"pass": pass_count, "fail": fail_count},
-            "remediation_stats": {"fixed": 0, "failed": 0, "manual": 0},
-            "success_findings": [],
-            "failed_findings": [],
-            "manual_findings": [],
-            "findings_table": [],
-            "raw_pre_findings": pre_findings,
-        }
-
-    # Gom data 1 NƠI DUY NHẤT qua hàm thuần túy
-    report_data = build_report_data(
-        analysis=analysis,
-        aws_context=state.get("aws_context") or {},
-        plan=state.get("assessment_plan") or {},
-        user_request=state.get("user_request", ""),
+    report_data = ReportDataBuilder.build(
+        state_data={
+            "analysis_results": state.get("analysis_results"),
+            "raw_findings": state.get("raw_findings", []),
+            "aws_context": state.get("aws_context") or {},
+            "assessment_plan": state.get("assessment_plan") or {},
+            "user_request": state.get("user_request", ""),
+        },
+        rag_client=rag_client,
     )
-
-    # --- Scope detection (Phase 1 — de-S3 bias) ---
-    # Compute before RAG so the scope is available for any upstream consumer
-    # that may want it later (e.g. the upcoming validator in Phase 5).
-    from pdca.agents.report_module.scope_detector import detect_scope
-    report_data["scope_info"] = detect_scope(
-        findings=report_data.get("raw_pre_findings", []),
-        env=report_data.get("environment"),
-        services_hint=report_data.get("scope", {}).get("services"),
-    )
-
-    # --- RAG Context: enrich report với security knowledge ---
-    from pdca.config import MULTI_QUERY_MODE
-    if MULTI_QUERY_MODE and state.get("rag_available", False):
-        print("[report_node] RAG mode: MULTI_QUERY (Q1+Q2+Q3)")
-        rag_context = _fetch_rag_multi_query(
-            raw_findings=report_data.get("raw_pre_findings", []),
-            scope_info=report_data.get("scope_info", {}),
-        )
-    else:
-        if MULTI_QUERY_MODE:
-            print("[report_node] RAG mode: MULTI_QUERY requested but RAG unavailable — fallback legacy")
-        else:
-            print("[report_node] RAG mode: LEGACY (single-query)")
-        rag_context = _fetch_rag_for_report(
-            report_data.get("raw_pre_findings", []),
-            rag_available=state.get("rag_available", False),
-        )
-    report_data["rag_context"] = rag_context
 
     # --- Maturity Assessment ---
     try:

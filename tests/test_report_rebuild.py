@@ -512,10 +512,12 @@ def test_file_count():
     core_total = len(core_files) + 1
     # Ceiling bumped across phases: +1 for llm_validator.py (fact-checker),
     # +1 for scope_detector.py (Phase 1 De-S3-bias), +1 for rag_formatter.py
-    # (Phase 4 view-based RAG injection) and +1 for validators.py (Phase 5
-    # output validation gate). The report module still stays flat — every
-    # file has a single clear role.
-    assert core_total <= 10, f"Expected <=10 core files, got {core_total}: {core_files}"
+    # (Phase 4 view-based RAG injection), +1 for validators.py (Phase 5
+    # output validation gate), +1 for rag_query_planner.py (multi-query RAG)
+    # and +1 for data_builder.py (Phase B12 — single-source-of-truth
+    # orchestrate). The report module still stays flat — every file has a
+    # single clear role.
+    assert core_total <= 12, f"Expected <=12 core files, got {core_total}: {core_files}"
     print(f"  [PASS] 10.6 {core_total} core files (report_agent + {core_files})")
 
 
