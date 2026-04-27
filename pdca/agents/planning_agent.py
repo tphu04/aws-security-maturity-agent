@@ -233,13 +233,18 @@ class PlanningAgent:
         api_key: str = None,
         base_url: str = "http://localhost:11434",
         rag_client: "RAGClient" = None,
+        callbacks: list = None,
     ):
         self.rag_client = rag_client
+        self.callbacks = list(callbacks or [])
+        # Langfuse hook (B5.5): planning_agent không có local TimerCallback
+        # — chỉ propagate external callbacks (Langfuse handler).
         self.llm = ChatOllama(
             model=model_name,
             base_url=base_url,
             temperature=0,
             format="json",
+            callbacks=self.callbacks,
         )
         if self.rag_client is None:
             logger.warning(

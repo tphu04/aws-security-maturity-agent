@@ -1,5 +1,9 @@
 """MonitoringAgent — Poll scanner job status cho đến khi hoàn tất.
 
+DEPRECATED (Phase B6, quyết định #20): file này sẽ bị XÓA sau Phase C5.
+Logic poll đã được thay thế bởi inline node `pdca/graph/nodes/scan_poll.py`
+trong Phase C4. KHÔNG bổ sung tính năng / cleanup logging cho file này.
+
 Phase A5: Thêm `max_iterations` + `timeout_s` để chặn infinite loop. Dùng
 `time.monotonic()` đo elapsed (chỉ có nghĩa trong process hiện tại — agent
 này không persist qua restart, MemorySaver/SqliteSaver checkpoint nằm ở

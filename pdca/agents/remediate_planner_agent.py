@@ -1,19 +1,18 @@
-import json
-import time
-from typing import List, Dict, Any
 import inspect
-from .base_agent import BaseAgent
+import json
+from typing import Any, Dict, List
 
-# Import LangChain Ollama và Message Types
-from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_ollama import ChatOllama
 
 from pdca.agents.shared.callbacks import TimerCallback
-
-# Import danh sách tool (để lấy mô tả cho AI hiểu)
+from pdca.observability.logger import get_logger
 from pdca.tools import REMEDIATION_TOOLS
 
-# Đây là danh sách tool luôn yêu cầu sửa thủ công
+from .base_agent import BaseAgent
+
+logger = get_logger(__name__)
+
 ALWAYS_MANUAL_TOOLS = {
     "s3_enable_object_lock",
     "s3_enable_mfa_delete",
@@ -75,14 +74,19 @@ class RemediationPlannerAgent(BaseAgent):
         "reasoning": "<lý do chọn tool + nhắc đến compliance>"
         }}
         """
-    def __init__(self, model_name, api_key, base_url, aws_context=None):
-        super().__init__(model_name, api_key, base_url)
+    def __init__(self, model_name, api_key, base_url, aws_context=None,
+                 callbacks: list = None):
+        super().__init__(model_name, api_key, base_url, callbacks=callbacks)
         self.timer = TimerCallback()
         self.aws_context = aws_context or {}
 
-        # Init LLM
+        # Langfuse hook (B4): timer đo latency, self.callbacks propagate
+        # external handlers (eg. CallbackHandler từ langfuse).
         self.lc_llm = ChatOllama(
-            model=model_name, base_url=base_url, temperature=0, callbacks=[self.timer]
+            model=model_name,
+            base_url=base_url,
+            temperature=0,
+            callbacks=[self.timer] + self.callbacks,
         )
 
         # Bind tools để LLM biết schema, nhưng KHÔNG dùng để invoke trực tiếp
@@ -108,7 +112,7 @@ class RemediationPlannerAgent(BaseAgent):
             Output: Danh sách Remediation Plans có chứa thông tin Compliance
             """
             plans = []
-            print(f"[RemediationPlanner] Đang lập kế hoạch cho {len(findings)} findings...")
+            logger.info("Planning remediation", extra={"finding_count": len(findings)})
 
             for finding in findings:
                 if finding.get("status") != "FAIL":
@@ -158,14 +162,17 @@ class RemediationPlannerAgent(BaseAgent):
                     try:
                         clean_content = self._clean_json_text(response.content)
                         parsed = json.loads(clean_content)
-                    except:
-                        print(f"[RemediationPlanner] ❌ Response không phải JSON hợp lệ.")
+                    except Exception:
+                        logger.warning("LLM response is not valid JSON",
+                                       extra={"event_code": event_code})
                         continue
 
                     tool_name = parsed.get("tool_name")
 
                     if not tool_name or tool_name not in self.tools_map:
-                        print(f"[Planner] ⚠️ Không tìm thấy tool phù hợp cho: {event_code}")
+                        logger.warning("No matching tool found",
+                                       extra={"event_code": event_code,
+                                              "tool_name": tool_name})
                         continue
 
                     tool_obj = self.tools_map[tool_name]
@@ -179,7 +186,6 @@ class RemediationPlannerAgent(BaseAgent):
 
                     is_manual = tool_name in ALWAYS_MANUAL_TOOLS
 
-                    # THÊM: Lưu thông tin compliance vào task để hiển thị ở bước Review
                     plans.append(
                         {
                             "finding_id": finding_id,
@@ -187,16 +193,17 @@ class RemediationPlannerAgent(BaseAgent):
                             "params": tool_params,
                             "reasoning": parsed.get("reasoning", "Không có giải thích"),
                             "manual_required": is_manual,
-                            "compliance": compliance_list, # Quan trọng: Để in ra màn hình
-                            "severity": finding.get("severity"), # Lấy từ Risk Agent luôn
-                            "risk_score": finding.get("risk_score")
+                            "compliance": compliance_list,
+                            "severity": finding.get("severity"),
+                            "risk_score": finding.get("risk_score"),
                         }
                     )
 
                 except Exception as e:
-                    print(f"[RemediationPlanner] ❌ Lỗi khi suy luận tool: {e}")
+                    logger.error("Tool reasoning failed",
+                                 extra={"event_code": event_code, "error": str(e)})
 
-            print(f"[RemediationPlanner] Generated remediation plan với {len(plans)} task(s).")
+            logger.info("Remediation plan generated", extra={"task_count": len(plans)})
             return plans
     def _clean_json_text(self, text: str) -> str:
         text = text.strip()

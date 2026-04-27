@@ -115,18 +115,21 @@ class RiskEvaluationAgent(BaseAgent):
     """Agent đánh giá rủi ro: nhận findings đã chuẩn hóa → chấm điểm AI + RAG context."""
 
     def __init__(self, model_name: str, api_key: str, base_url: str,
-                 rag_client: "RAGClient" = None):
-        super().__init__(model_name, api_key, base_url)
+                 rag_client: "RAGClient" = None,
+                 callbacks: list = None):
+        super().__init__(model_name, api_key, base_url, callbacks=callbacks)
         self.rag_client = rag_client
         if self.rag_client is None:
             logger.warning("RiskEvaluationAgent created without rag_client — RAG context disabled")
         self.timer = TimerCallback()
+        # Langfuse hook (B3): TimerCallback đo latency, self.callbacks (từ
+        # BaseAgent) chứa Langfuse handler khi caller truyền vào.
         self.llm = ChatOllama(
             model=model_name,
             base_url=base_url,
             temperature=0,
             format="json",
-            callbacks=[self.timer],
+            callbacks=[self.timer] + self.callbacks,
         )
         self._no_think = False  # /no_think không tương thích format="json" của Ollama
         # SLICE-2.2: in-memory cache + metrics
