@@ -5,11 +5,13 @@ uvicorn
 # LLM & AI
 openai
 ollama
-langchain
-langchain-core
-langchain-ollama
+langfuse>=3.0,<4.0
+langchain>=1.0,<2.0
+langchain-core>=1.0,<2.0
+langchain-ollama>=1.0,<2.0
 langgraph
 langgraph-checkpoint-sqlite
+opentelemetry-exporter-otlp-proto-grpc>=1.41.1,<2.0
 
 # AWS
 boto3

@@ -12,7 +12,13 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from langchain_core.callbacks import BaseCallbackHandler
+try:
+    from langchain_core.callbacks import BaseCallbackHandler
+except Exception:  # pragma: no cover - dependency may be absent in minimal CI
+    class BaseCallbackHandler:  # type: ignore[no-redef]
+        pass
+
+from pdca.observability.langfuse_client import get_langfuse_handler
 
 
 class TimerCallback(BaseCallbackHandler):
@@ -35,13 +41,14 @@ class TimerCallback(BaseCallbackHandler):
 
 
 def get_callbacks(extra: Optional[List[BaseCallbackHandler]] = None) -> List[BaseCallbackHandler]:
-    """Return default callback list `[TimerCallback()] + extra`.
+    """Return TimerCallback plus Langfuse handler and optional callbacks.
 
     Mỗi caller nên TỰ tạo TimerCallback riêng để giữ state cô lập (latency
-    metrics tính riêng cho từng agent). Factory này tiện cho call site nào
-    chỉ cần "callbacks chuẩn + (Langfuse handler nếu có)".
+    metrics tính riêng cho từng agent). TimerCallback giữ song song Langfuse
+    theo decision D12.
     """
-    return [TimerCallback()] + list(extra or [])
+    handler = get_langfuse_handler()
+    return [TimerCallback()] + ([handler] if handler else []) + list(extra or [])
 
 
 __all__ = ["TimerCallback", "get_callbacks"]

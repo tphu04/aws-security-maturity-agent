@@ -6,7 +6,7 @@ Single source of truth cho mọi service URL, timeout, feature flag.
 NOTE: Yêu cầu `pydantic-settings>=2.0` trong requirements.txt (decision #29).
 """
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -62,11 +62,20 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = False       # AUTO-OVERRIDE nếu cors_origins=["*"]
 
     # ------------------------------------------------------------------
-    # Langfuse (empty now — hook cho tương lai)
+    # Langfuse observability (Phase F foundation; disabled by default)
     # ------------------------------------------------------------------
+    langfuse_enabled: bool = False
     langfuse_secret_key: Optional[str] = None
     langfuse_public_key: Optional[str] = None
     langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_redact_mode: Literal["full", "internal", "off"] = "full"
+    langfuse_environment: Literal["dev", "staging", "prod"] = "dev"
+    langfuse_flush_at_node: bool = True
+    langfuse_circuit_breaker_threshold: int = 5
+    langfuse_circuit_breaker_window_s: int = 60
+    langfuse_bench_enabled: bool = False
+    langfuse_sample_rate: float = Field(default=1.0, ge=0.0, le=1.0)
+    langfuse_request_timeout_s: float = Field(default=2.0, gt=0.0)
 
     # ------------------------------------------------------------------
     # Validators
@@ -85,6 +94,21 @@ class Settings(BaseSettings):
                 "Để bật credentials, set cors_origins thành explicit domain list."
             )
             object.__setattr__(self, "cors_allow_credentials", False)
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_langfuse_fail_safe(self) -> "Settings":
+        """Langfuse is best-effort: missing credentials disables it safely."""
+        if self.langfuse_enabled and (
+            not self.langfuse_public_key or not self.langfuse_secret_key
+        ):
+            import warnings
+
+            warnings.warn(
+                "LANGFUSE_ENABLED=true nhưng thiếu LANGFUSE_PUBLIC_KEY hoặc "
+                "LANGFUSE_SECRET_KEY. Forcing langfuse_enabled=False."
+            )
+            object.__setattr__(self, "langfuse_enabled", False)
         return self
 
 

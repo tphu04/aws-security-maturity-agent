@@ -1,8 +1,5 @@
-"""Observability layer — structured logging + run_id correlation.
+"""Observability layer — structured logging + Langfuse foundation."""
 
-Sau này extend cho Langfuse trace export, Prometheus metrics.
-"""
+from pdca.observability.logger import get_logger, get_run_id, set_run_id
 
-from pdca.observability.logger import get_logger, set_run_id
-
-__all__ = ["get_logger", "set_run_id"]
+__all__ = ["get_logger", "get_run_id", "set_run_id"]

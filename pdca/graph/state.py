@@ -105,3 +105,7 @@ class PDCAState(TypedDict):
 
     # --- Error accumulation ---
     errors: Annotated[List[Dict], operator.add]
+
+    # --- Observability resume context (Langfuse Phase F/I) ---
+    _langfuse_parent_span_id: NotRequired[Optional[str]]
+    _langfuse_trace_id: NotRequired[Optional[str]]
