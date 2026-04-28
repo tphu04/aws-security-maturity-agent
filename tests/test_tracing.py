@@ -179,3 +179,20 @@ def test_v3_span_without_active_trace_uses_run_id_trace_context(monkeypatch):
     assert client.spans[0].payload["trace_context"] == {
         "trace_id": "1234567812344abc9def1234567890ac"
     }
+
+
+def test_v3_span_can_attach_to_persisted_parent(monkeypatch):
+    client = FakeV3Client()
+    monkeypatch.setattr(tracing, "get_langfuse_client", lambda: client)
+
+    with span(
+        "hitl:wait",
+        trace_id="12345678-1234-4abc-9def-1234567890ad",
+        parent_span_id="obs-parent",
+    ):
+        pass
+
+    assert client.spans[0].payload["trace_context"] == {
+        "trace_id": "1234567812344abc9def1234567890ad",
+        "parent_span_id": "obs-parent",
+    }

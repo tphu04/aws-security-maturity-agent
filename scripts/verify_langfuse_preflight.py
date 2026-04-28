@@ -22,6 +22,7 @@ Exit code:
 from __future__ import annotations
 
 import os
+import importlib.metadata
 import subprocess
 import sys
 from pathlib import Path
@@ -36,6 +37,7 @@ for _stream in (sys.stdout, sys.stderr):
             pass
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+GIT = ["git", "-c", f"safe.directory={PROJECT_ROOT.as_posix()}"]
 
 # ---------------------------------------------------------------------------
 # Output helpers — stdlib only, no color dep
@@ -81,7 +83,7 @@ def check_git_clean() -> bool:
     """
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            [*GIT, "status", "--porcelain"],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
@@ -92,7 +94,9 @@ def check_git_clean() -> bool:
         return False
 
     modified = [
-        line for line in result.stdout.splitlines() if line and line[0] in "MARCD"
+        line
+        for line in result.stdout.splitlines()
+        if line and not line.startswith("??")
     ]
     if not modified:
         _ok("P0.3 git working tree clean (no modified tracked files)")
@@ -107,7 +111,7 @@ def check_current_branch() -> bool:
     """P0.5 — informational: current branch."""
     try:
         result = subprocess.run(
-            ["git", "branch", "--show-current"],
+            [*GIT, "branch", "--show-current"],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
@@ -224,7 +228,10 @@ def check_langfuse_sdk_installed() -> bool:
     try:
         import langfuse  # noqa: F401
 
-        _ok(f"Langfuse SDK installed: {langfuse.__version__}")
+        version = getattr(langfuse, "__version__", None)
+        if version is None:
+            version = importlib.metadata.version("langfuse")
+        _ok(f"Langfuse SDK installed: {version}")
         return True
     except ImportError:
         _info(

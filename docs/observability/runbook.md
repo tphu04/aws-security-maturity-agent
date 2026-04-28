@@ -128,13 +128,32 @@ KHÔNG branch chéo từ feat → feat. Luôn rebase lên `main` mới nhất.
 
 ---
 
-## 8. Dashboard placeholder
+## 8. Dashboard
 
-Sẽ điền sau Phase I — xem `docs/observability/dashboard.md` (TBD).
+5 view + filter recipes + score schema: [docs/observability/dashboard.md](dashboard.md).
 
-5 view planned theo [INTEGRATION_GUIDE §6](../LANGFUSE_INTEGRATION_GUIDE.md):
-1. Run timeline (trace tree).
-2. Per-node latency.
-3. Token usage (model breakdown).
-4. Error explorer.
-5. HITL latency distribution.
+Quick reference:
+- **Trace topology** — root `pdca.run` → `node:*` → `agent:*` → `tool:*` / `rag:*` / `aws:*` / generation.
+- **Outcome tag** — filter `metadata.pdca.outcome.tag ∈ {success, partial_failure, degraded}` ở report_node.
+- **Score signals** — `planning_top_score`, `risk_severity_*`, `outcome_fixed_ratio`, `validation_issues`.
+- **HITL** — span `hitl:wait` carry `output.latency_human_ms` cho real human-decision latency.
+
+---
+
+## 9. Phase I additions (instrumentation map)
+
+| Layer | Span name | Owner |
+|---|---|---|
+| Orchestrator root | `pdca.run` | [orchestrator.py](../../pdca/orchestrator.py) `start_trace` |
+| Node | `node:<name>` | [graph/nodes/*.py](../../pdca/graph/nodes/) via `_tracing_helpers.node_span` |
+| Agent | `agent:<Class>` | planning/risk_eval/remediate/report/analysis agents |
+| LLM section | `report.section.<id>` | [llm_writer.py](../../pdca/agents/report_module/llm_writer.py) `_ask` |
+| External RAG | `rag:<method>` | [rag_client.py](../../pdca/agents/shared/rag_client.py) `_post`/`_post_raw` |
+| External scanner | `scanner:<func>` | [tools/scanner.py](../../pdca/tools/scanner.py) |
+| External knowledge | `tool:lookup_security_knowledge` | [tools/knowledge.py](../../pdca/tools/knowledge.py) |
+| AWS | `aws:sts:get_caller_identity`, `aws:s3:list_buckets` | [environment_agent.py](../../pdca/agents/environment_agent.py) |
+| Remediation tool | `tool:<tool_name>` | [execution_agent.py](../../pdca/agents/execution_agent.py) `execute_task` |
+| HITL | `hitl:wait` | [orchestrator.py](../../pdca/orchestrator.py) `handle_task_review_interaction` |
+| Maturity | `maturity:assess` | [graph/nodes/report.py](../../pdca/graph/nodes/report.py) |
+
+Cross-process HITL resume: `PDCAState._langfuse_parent_span_id` + `_langfuse_trace_id` is persisted by the node before the interrupt ([graph/nodes/remediation.py](../../pdca/graph/nodes/remediation.py)) and refreshed by [graph/nodes/review_task.py](../../pdca/graph/nodes/review_task.py), so a future chatbot UI can resume from checkpoint with the same trace context.

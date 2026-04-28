@@ -688,3 +688,78 @@ Items KHÔNG làm trong 2 phase này, document để future work:
 1. Tạo PR `feat/langfuse-foundation` từ `main` → squash merge.
 2. Sau merge, branch `feat/langfuse-instrumentation` cho Phase I (theo §Phase I).
 3. Phase I.1 (orchestrator lifecycle) là entry — xem [docs/LANGFUSE_INTEGRATION_GUIDE.md §4](LANGFUSE_INTEGRATION_GUIDE.md) cho trace topology.
+
+
+---
+
+## Phase I — Result log (2026-04-28)
+
+> Branch: `feat/langfuse-instrumentation`. Phase I implementation closed; ready for review/merge.
+
+### Files delivered
+
+| Slice | File | Status |
+|---|---|---|
+| S1 | `pdca/observability/langfuse_client.py` (`score_safe()` helper) | OK |
+| S2 (I1+I5) | `pdca/orchestrator.py` (root `start_trace` + `hitl:wait` span + flush/shutdown finally) + `pdca/graph/nodes/remediation.py` (persist parent before interrupt) | OK |
+| S3 (I2+I6) | 12 node file in `pdca/graph/nodes/*.py` + `pdca/graph/_tracing_helpers.py` | OK |
+| S4 (I3) | `pdca/agents/{planning,risk_evaluation,remediate_planner,report,analysis}_agent.py` `agent:*` spans | OK |
+| S5 (I4) | `pdca/agents/shared/rag_client.py` `rag:*`; `pdca/tools/{scanner,knowledge}.py` `scanner:*`/`tool:*`; `pdca/agents/{environment,execution}_agent.py` `aws:*`/`tool:*` | OK |
+| S6 (I7) | `pdca/agents/report_module/llm_writer.py` per-section span `report.section.<id>` (auto-derived from caller name) | OK |
+| S7 (I8+I9) | `tests/test_langfuse_integration.py` (7 case) + `docs/observability/dashboard.md` + extended runbook section 9 | OK |
+
+### Acceptance gate I1-I7 + performance
+
+| Gate | Result |
+|---|---|
+| I1 — root trace + nested span tree ở Langfuse UI | PASS code-level via FakeLangfuse (`test_environment_node_emits_node_span_and_redacted_metadata` confirms `node:environment` nested under trace; production UI smoke pending Langfuse key) |
+| I2 — generation có prompt + completion + token + ARN redacted | PASS (mask=safe_redact wired ở `Langfuse(mask=...)` từ Phase F; account_id `123456789012` không leak ra payloads) |
+| I3 — filter `outcome=partial_failure` hoạt động | PASS (`metadata.pdca.outcome.tag` set ở report_node) |
+| I4 — `LANGFUSE_HOST=http://invalid.local` pipeline complete | PASS (`test_pipeline_continues_when_langfuse_handler_raises` — span/score/flush đều no-op khi client raise) |
+| I5 — HITL pause/resume span | PASS (`remediation_node` persists parent/trace before interrupt; `test_hitl_wait_span_records_decision_and_latency` verifies decision + latency_human_ms + parent attach) |
+| I6 — bench OFF mặc định | unchanged from Phase F (16 runners đã setdefault) |
+| I7 — security audit (no secret leak) | PASS (mask=safe_redact double-layer + `test_environment_node_emits_node_span_and_redacted_metadata` integration test asserts no `123456789012` in any payload) |
+| Performance overhead | Code-level guard PASS — node helper is no-op khi disabled; formal benchmark still pending real env |
+
+### Test summary
+
+```
+tests/test_phase_c_graph.py       22 passed   (regression preserved after callbacks contract change)
+tests/test_phase_d_api.py         34 passed
+tests/test_redaction.py           10 passed
+tests/test_observability_context.py  4 passed
+tests/test_langfuse_client.py      10 passed
+tests/test_tracing.py              8 passed
+tests/test_langfuse_integration.py 7 passed
+TOTAL                             95 passed, 1 warning (unrelated datetime.utcnow deprecation)
+```
+
+### Issues encountered & resolved
+
+1. **Callbacks contract change** — Phase F.6 plan said get_callbacks giu Langfuse handler injection at the swap point. Phase I.2 nodes now call `get_callbacks(extra=cfg.callbacks)` so handlers reach ChatOllama via TimerCallback + handler chain. Old test `test_llm_nodes_pass_callbacks_to_agents` asserted `callbacks IS sentinel` (legacy behaviour). Updated to assert `TimerCallback in list AND sentinel in list` per new architecture.
+2. **scan_poll long body + multiple returns** — wrapping in `with node_span` required pulling timeout-return inside the span body to ensure span closes correctly. Refactored cleanly with single span per iteration (decision per implementation plan §I2 special-case).
+3. **`update_trace_metadata` no-op without active trace** — integration test had to wrap node body inside `start_trace(...)` mirroring real orchestrator flow. Fixed in test, not in helper (helper behaviour is correct per design).
+4. **LLMWriter section name plumbing** — 15+ `write_*` methods called `_ask`. Instead of editing 15 sites, added auto-derive from caller frame in `_ask` (`inspect.currentframe().f_back.f_code.co_name`). Single non-hot-path inspect call; sections still pluggable via explicit `section=` kwarg.
+5. **ExecutionAgent.execute_task signature** — wrapping `tool:<name>` span around the original 100-line body created indent issues. Extracted body into `_execute_task_impl()` and wrapped only the public method. Same pattern applied to `PlanningAgent.run` -> `_run_impl`, `RemediationPlannerAgent.plan_remediation` -> `_plan_remediation_impl`.
+6. **report node: `with` chained over multiple subspans** — manual `node_ctx.__enter__/__exit__` pattern uses `try/except/else` so node span surrounds maturity:assess subspan + agent:ReportAgent + outcome tag computation and still closes on exceptions.
+7. **Langfuse trace id normalization** — `score_safe()` initially used raw UUID while trace spans use 32 lowercase hex. Added shared `langfuse_trace_id()` helper so spans and scores target the same Langfuse trace.
+8. **HITL parent before graph interrupt** — `review_task_node` cannot persist before the first pause because the graph interrupts before entering it. `remediation_node` now stores `_langfuse_parent_span_id`/`_langfuse_trace_id` before the interrupt; `review_task_node` can refresh later when executed.
+
+### Risks giai quyet theo bang risk register
+
+| Risk | Mitigation applied |
+|---|---|
+| Langfuse SDK v3 API thay doi | All call sites use introspection (Phase F). Phase I adds no new SDK direct calls outside `score_safe` (which also introspects `create_score`/`score`). |
+| Span tall o scan_poll | Accepted per plan §I2. Each iteration = 1 span carrying `iteration` attribute. Optimisation deferred. |
+| Performance regression > 5% | Helpers no-op khi disabled. `get_langfuse_client()` early-returns. Bench formal pending real env. |
+| Redaction false negative | Double-layer: manual `safe_redact` ở `tracing.span` + SDK-level `mask=` callback. Integration test asserts no leak. |
+| Cross-process resume | `PDCAState._langfuse_parent_span_id` + `_langfuse_trace_id` persisted by `remediation_node` before interrupt and refreshed by `review_task_node`, ready for chatbot UI phase. |
+| Test mock complexity | `FakeLangfuse` ~80 LoC covers `start_as_current_span` + `update_current_trace` + `create_score` + `flush`. |
+
+### Next steps
+
+1. Cài key Langfuse cloud thật, chạy 1 E2E run với `LANGFUSE_ENABLED=true` để smoke trace tree trên UI và confirm token usage hiển thị (acceptance I1+I2 production check).
+2. Performance benchmark — 1 run with vs without Langfuse, verify diff < 5% (acceptance Performance gate).
+3. Audit thủ công 1 trace export bằng `grep -E "AKIA[0-9A-Z]{16}|[0-9]{12}"` (acceptance I7 final check).
+4. Tạo PR `feat/langfuse-instrumentation` từ `main` -> code review 2 reviewer.
+5. Sau merge, update `MEMORY.md` project_direction note với observability stack.

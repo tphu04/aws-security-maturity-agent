@@ -280,16 +280,26 @@ def test_scan_collect_does_not_emit_job_keys_when_no_pending(tmp_path, monkeypat
 
 
 def test_llm_nodes_pass_callbacks_to_agents():
-    """Hook 1+3: callbacks from RunnableConfig must reach agent constructors.
+    """Phase I.2 + D12: nodes assemble callbacks via `get_callbacks(extra=cfg)`.
 
-    Decision #31 — without this Langfuse silently drops traces.
+    Each agent constructor must receive a list that contains:
+    - a TimerCallback (per-call latency, runs before Langfuse)
+    - any handlers from RunnableConfig (e.g. test sentinel)
+    With Langfuse disabled (test default), no handler is appended.
     """
     from unittest.mock import MagicMock, patch
 
+    from pdca.agents.shared.callbacks import TimerCallback
     from pdca.graph.nodes import planning, remediation, report, risk_eval
 
-    sentinel = [MagicMock(name="langfuse_handler")]
-    cfg = {"callbacks": sentinel}
+    sentinel = MagicMock(name="langfuse_handler")
+    cfg = {"callbacks": [sentinel]}
+
+    def _assert_callbacks(call_kwargs):
+        callbacks = call_kwargs["callbacks"]
+        assert isinstance(callbacks, list)
+        assert any(isinstance(cb, TimerCallback) for cb in callbacks)
+        assert sentinel in callbacks
 
     with patch("pdca.graph.nodes.planning.PlanningAgent") as P, \
          patch("pdca.graph.nodes.planning.RAGClient"):
@@ -298,8 +308,7 @@ def test_llm_nodes_pass_callbacks_to_agents():
             {"user_request": "x", "performance_metrics": {}, "rag_available": False},
             cfg,
         )
-        kw = P.call_args.kwargs
-        assert kw["callbacks"] is sentinel
+        _assert_callbacks(P.call_args.kwargs)
 
     with patch("pdca.graph.nodes.risk_eval.RiskEvaluationAgent") as R, \
          patch("pdca.graph.nodes.risk_eval.RAGClient"):
@@ -309,7 +318,7 @@ def test_llm_nodes_pass_callbacks_to_agents():
             {"raw_findings": [], "normalized_findings": [], "performance_metrics": {}},
             cfg,
         )
-        assert R.call_args.kwargs["callbacks"] is sentinel
+        _assert_callbacks(R.call_args.kwargs)
 
     with patch("pdca.graph.nodes.remediation.RemediationPlannerAgent") as Rm:
         Rm.return_value.plan_remediation.return_value = []
@@ -322,7 +331,7 @@ def test_llm_nodes_pass_callbacks_to_agents():
             },
             cfg,
         )
-        assert Rm.call_args.kwargs["callbacks"] is sentinel
+        _assert_callbacks(Rm.call_args.kwargs)
 
     with patch("pdca.graph.nodes.report.ReportAgent") as Rp, \
          patch("pdca.graph.nodes.report.ReportDataBuilder") as Db:
@@ -341,7 +350,7 @@ def test_llm_nodes_pass_callbacks_to_agents():
             },
             cfg,
         )
-        assert Rp.call_args.kwargs["callbacks"] is sentinel
+        _assert_callbacks(Rp.call_args.kwargs)
 
 
 def test_scan_collect_normalizes_and_sets_snapshot(tmp_path, monkeypatch):

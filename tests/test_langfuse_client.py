@@ -140,3 +140,29 @@ def test_get_callbacks_includes_langfuse_handler_and_extra(monkeypatch):
 
     assert isinstance(result[0], callbacks.TimerCallback)
     assert result[1:] == [handler, extra]
+
+
+def test_score_safe_normalizes_uuid_trace_id(monkeypatch):
+    calls = []
+
+    class Client:
+        def create_score(self, *, trace_id, name, value, comment=None):
+            calls.append(
+                {
+                    "trace_id": trace_id,
+                    "name": name,
+                    "value": value,
+                    "comment": comment,
+                }
+            )
+
+    monkeypatch.setattr(settings, "langfuse_enabled", True)
+    monkeypatch.setattr(lf, "_langfuse", Client())
+
+    lf.score_safe(
+        trace_id="12345678-1234-4abc-9def-1234567890ab",
+        name="x",
+        value=1.0,
+    )
+
+    assert calls[0]["trace_id"] == "1234567812344abc9def1234567890ab"
