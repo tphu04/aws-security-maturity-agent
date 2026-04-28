@@ -8,6 +8,12 @@ Reads benchmark run JSON files and produces a Markdown dashboard
 comparing 4 configurations: llama3.2 vs qwen3:8b, w/RAG vs no-RAG.
 """
 
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 import json
 import sys
 from collections import Counter

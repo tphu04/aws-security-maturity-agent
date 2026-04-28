@@ -14,6 +14,12 @@ Chạy ReportAgent thật với Ollama, so sánh chất lượng text output.
 Usage:
     python benchmarks/llm_generation/benchmark_rag_text_quality.py
 """
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 import copy
 import json
 import os

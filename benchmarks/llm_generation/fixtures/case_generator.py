@@ -20,6 +20,12 @@ Each case schema:
 
 Run as a script: ``python -m benchmarks.llm_generation.fixtures.case_generator``.
 """
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 from __future__ import annotations
 
 import json

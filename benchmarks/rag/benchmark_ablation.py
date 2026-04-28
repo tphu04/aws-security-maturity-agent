@@ -5,6 +5,12 @@ Runs the Tier 1 benchmark (benchmark_cases.json) with three different
 retrieval_mode settings and compares MRR, Top-1, Top-5 across modes.
 """
 
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 from __future__ import annotations
 
 import io

@@ -15,6 +15,12 @@ Usage:
     python benchmarks/llm_generation/run_planning_benchmark.py --mode full --no-rag
 """
 
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 import argparse
 import logging
 import sys

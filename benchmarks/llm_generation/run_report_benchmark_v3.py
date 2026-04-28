@@ -16,6 +16,12 @@ metrics-only Skip inference; expect ``--inference-dir/<case_id>.html``
 Only the 7 deterministic metrics run here. LLM-judge (Day 2) is a
 separate entry-point — it reads the same inference artefacts.
 """
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 from __future__ import annotations
 
 import argparse

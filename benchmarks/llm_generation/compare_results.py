@@ -6,6 +6,12 @@ Usage
         --baseline results/baseline_single_query.json \
         --mvp     results/mvp_multi_query.json
 """
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 from __future__ import annotations
 
 import argparse

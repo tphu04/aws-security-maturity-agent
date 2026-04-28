@@ -10,6 +10,12 @@ Output: Cap nhat rag_context_snapshot trong benchmark_gen_cases.json
 voi du lieu thuc te tu RAG (official_severity, compliance_mappings, confidence).
 """
 
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 import json
 import logging
 import sys

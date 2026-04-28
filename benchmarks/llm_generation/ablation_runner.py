@@ -28,6 +28,12 @@ running the agent again — e.g. after Day 1 we already have the no_rag
 artifacts in ``inference_outputs/report_v3/``, which is copied into
 ``report_v3_no_rag/`` on first run.
 """
+# ---------------------------------------------------------------------------
+# Langfuse bench guard (Phase F.7) — runner default OFF, dev có thể override.
+# ---------------------------------------------------------------------------
+import os as _os_bench_guard
+_os_bench_guard.environ.setdefault("LANGFUSE_ENABLED", "false")
+
 from __future__ import annotations
 
 import argparse

@@ -120,6 +120,17 @@ cp .env.example .env            # rồi điền service URLs + AWS keys
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` | — | AWS credentials |
 | `MULTI_QUERY_MODE` | `false` | Bật multi-query RAG (Q1+Q2+Q3). Set `true` để dùng `/v1/retrieve/report_context` thay vì single-query. Xem [docs/rag-integration.md §8](docs/rag-integration.md). |
 | `GROQ_API_KEY` | — | API key cho LLM judge (benchmark Day 2). Lấy tại [console.groq.com](https://console.groq.com). |
+| `LANGFUSE_ENABLED` | `false` | Master switch cho observability layer (Phase F). Pipeline chạy nguyên khi off. |
+| `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | — | Bắt buộc khi `LANGFUSE_ENABLED=true`. Thiếu key → settings tự fail-safe về `false`. |
+| `LANGFUSE_HOST` | `https://cloud.langfuse.com` | Cloud hoặc self-host URL. Setup: [docs/observability/langfuse_setup.md](docs/observability/langfuse_setup.md). |
+| `LANGFUSE_REDACT_MODE` | `full` | `full`/`internal`/`off`. Cloud BẮT BUỘC `full` để mask account_id/ARN/bucket. |
+| `LANGFUSE_ENVIRONMENT` | `dev` | Filter UI: `dev`/`staging`/`prod`. |
+| `LANGFUSE_FLUSH_AT_NODE` | `true` | Flush sau mỗi node để HITL pause không mất trace. |
+| `LANGFUSE_CIRCUIT_BREAKER_THRESHOLD` / `_WINDOW_S` | `5` / `60` | Trip breaker khi N fail liên tiếp trong window — pipeline tiếp tục chạy. |
+| `LANGFUSE_BENCH_ENABLED` | `false` | Bench runner OFF mặc định để bảo vệ quota cloud free tier. |
+| `LANGFUSE_SAMPLE_RATE` | `1.0` | Tỉ lệ trace gửi (0.0–1.0). Self-host nên giữ `1.0`. |
+
+Observability docs chi tiết: [docs/observability/runbook.md](docs/observability/runbook.md).
 
 ## Chạy hệ thống
 
