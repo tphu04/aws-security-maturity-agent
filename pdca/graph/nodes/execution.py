@@ -6,6 +6,7 @@ from langchain_core.runnables import RunnableConfig
 
 from pdca.agents.execution_agent import ExecutionAgent
 from pdca.graph._metrics import measure_time, update_metrics
+from pdca.graph._tracing_helpers import flush_at_node, node_span
 from pdca.graph.state import PDCAState
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ def execution_node(state: PDCAState, config: RunnableConfig) -> dict:
     metrics = state.get("performance_metrics", {})
     logger.info("execution start", extra={"run_id": run_id})
 
-    with measure_time() as timer:
+    with node_span("execution", run_id) as node_sp, measure_time() as timer:
         all_tasks = state.get("remediation_tasks", []) or []
         decisions = state.get("task_execution_plan", {}) or {}
         prioritized_findings = state.get("prioritized_findings", []) or []
@@ -103,7 +104,22 @@ def execution_node(state: PDCAState, config: RunnableConfig) -> dict:
                     }
                 )
 
-    metrics = update_metrics(metrics, "step_duration", "execution_node", timer())
+        metrics = update_metrics(metrics, "step_duration", "execution_node", timer())
+        success_count = sum(1 for log in execution_logs if log.get("status") == "success")
+        failed_count = sum(
+            1 for log in execution_logs if log.get("status") in ("failed", "error")
+        )
+        skipped_count = sum(1 for log in execution_logs if log.get("status") == "skipped")
+        node_sp.update(
+            output={
+                "log_count": len(execution_logs),
+                "success": success_count,
+                "failed": failed_count,
+                "skipped": skipped_count,
+            }
+        )
+        flush_at_node()
+
     logger.info(
         "execution done",
         extra={"run_id": run_id, "log_count": len(execution_logs)},

@@ -3,21 +3,23 @@
 from __future__ import annotations
 
 import inspect
-import hashlib
-import re
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Any, Optional
 
 from pdca.config import settings
-from pdca.observability.langfuse_client import flush_safe, get_langfuse_client, record_failure
+from pdca.observability.langfuse_client import (
+    flush_safe,
+    get_langfuse_client,
+    langfuse_trace_id,
+    record_failure,
+)
 from pdca.observability.logger import get_logger, get_run_id
 from pdca.observability.redaction import safe_redact
 
 logger = get_logger(__name__)
 
 SCHEMA_VERSION = "1.0"
-_LANGFUSE_TRACE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 _current_trace: ContextVar[Optional["TraceHandle"]] = ContextVar("langfuse_trace", default=None)
 
 
@@ -118,12 +120,7 @@ def _has_explicit_kw(params: Any, name: str) -> bool:
 
 
 def _trace_context(run_id: str) -> dict[str, str]:
-    candidate = run_id.replace("-", "").lower()
-    if _LANGFUSE_TRACE_ID_RE.match(candidate):
-        trace_id = candidate
-    else:
-        trace_id = hashlib.md5(run_id.encode("utf-8")).hexdigest()
-    return {"trace_id": trace_id}
+    return {"trace_id": langfuse_trace_id(run_id)}
 
 
 @contextmanager
@@ -133,6 +130,8 @@ def _span_impl(
     metadata: Optional[dict[str, Any]],
     kind: str,
     captured_run_id: str,
+    parent_span_id: Optional[str] = None,
+    trace_id: Optional[str] = None,
 ):
     client = get_langfuse_client()
     if client is None:
@@ -151,26 +150,32 @@ def _span_impl(
         if hasattr(client, "start_as_current_span"):
             params = inspect.signature(client.start_as_current_span).parameters
             if (
-                captured_run_id
-                and _current_trace.get() is None
+                (trace_id or captured_run_id)
+                and (_current_trace.get() is None or parent_span_id)
                 and _has_explicit_kw(params, "trace_context")
             ):
-                payload["trace_context"] = _trace_context(captured_run_id)
+                payload["trace_context"] = _trace_context(trace_id or captured_run_id)
+                if parent_span_id:
+                    payload["trace_context"]["parent_span_id"] = parent_span_id
             elif captured_run_id and _accepts_kw(params, "trace_id"):
                 payload["trace_id"] = captured_run_id
             manager = client.start_as_current_span(**payload)
             raw = manager.__enter__()
         elif hasattr(client, kind):
             params = inspect.signature(getattr(client, kind)).parameters
-            if captured_run_id and _has_explicit_kw(params, "trace_context"):
-                payload["trace_context"] = _trace_context(captured_run_id)
+            if (trace_id or captured_run_id) and _has_explicit_kw(params, "trace_context"):
+                payload["trace_context"] = _trace_context(trace_id or captured_run_id)
+                if parent_span_id:
+                    payload["trace_context"]["parent_span_id"] = parent_span_id
             elif captured_run_id and _accepts_kw(params, "trace_id"):
                 payload["trace_id"] = captured_run_id
             raw = getattr(client, kind)(**payload)
         elif hasattr(client, "span"):
             params = inspect.signature(client.span).parameters
-            if captured_run_id and _has_explicit_kw(params, "trace_context"):
-                payload["trace_context"] = _trace_context(captured_run_id)
+            if (trace_id or captured_run_id) and _has_explicit_kw(params, "trace_context"):
+                payload["trace_context"] = _trace_context(trace_id or captured_run_id)
+                if parent_span_id:
+                    payload["trace_context"]["parent_span_id"] = parent_span_id
             elif captured_run_id:
                 payload["trace_id"] = captured_run_id
             raw = client.span(**payload)
@@ -206,6 +211,8 @@ def span(
     input: Any = None,
     metadata: Optional[dict[str, Any]] = None,
     kind: str = "span",
+    parent_span_id: Optional[str] = None,
+    trace_id: Optional[str] = None,
 ):
     """Create a best-effort Langfuse span context manager.
 
@@ -213,7 +220,7 @@ def span(
     `run_with_context()` block and still observe the right `trace_id` once
     the `with` clause actually enters the body.
     """
-    return _span_impl(name, input, metadata, kind, get_run_id())
+    return _span_impl(name, input, metadata, kind, get_run_id(), parent_span_id, trace_id)
 
 
 def traced(name: str, capture_args: bool = False, capture_return: bool = False):

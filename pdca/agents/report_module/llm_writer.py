@@ -2,12 +2,15 @@
 # - Inject BaseChatModel (done Sprint 2)
 # - _ask() with fallback + _clean() post-processing
 # - Output constraints appended to all prompts
+import contextlib
+import inspect
 import re
 import json
 import logging
 import markdown
 
 from pdca.agents.report_module.llm_validator import FactValidator
+from pdca.observability.tracing import span as obs_span
 
 try:  # langchain is always available in prod but tests can mock the LLM
     from langchain_core.messages import HumanMessage, SystemMessage
@@ -131,7 +134,8 @@ class LLMWriter:
     # ----------------------------------------------------------
     def _ask(self, prompt: str,
              fallback: str = "*Nội dung không khả dụng.*",
-             word_limit: int = None) -> str:
+             word_limit: int = None,
+             section: str = None) -> str:
         """Gọi LLM với error handling + clean output.
 
         Gửi system-level constraints (word limit + style rules) qua
@@ -145,6 +149,29 @@ class LLMWriter:
             # call.
             word_limit = getattr(self, "_pending_word_limit", 300)
             self._pending_word_limit = 300
+        if section is None:
+            section = getattr(self, "_pending_section", None)
+            self._pending_section = None
+            if not section:
+                # Derive section from caller's method name. Each public
+                # `write_<id>` method maps cleanly to a Langfuse generation
+                # name, so we don't have to plumb `section=` through 15 sites.
+                frame = inspect.currentframe()
+                try:
+                    caller = frame.f_back if frame is not None else None
+                    name = caller.f_code.co_name if caller is not None else ""
+                    section = name[len("write_"):] if name.startswith("write_") else name or "unspecified"
+                finally:
+                    del frame
+        with obs_span(
+            f"report.section.{section}",
+            input={"prompt_chars": len(prompt or ""), "word_limit": word_limit},
+        ) as section_sp:
+            answer = self._ask_inner(prompt, fallback, word_limit)
+            section_sp.update(output={"answer_chars": len(answer or "")})
+            return answer
+
+    def _ask_inner(self, prompt: str, fallback: str, word_limit: int) -> str:
         messages = self._build_messages(prompt, word_limit=word_limit)
         try:
             res = self.llm.invoke(messages)

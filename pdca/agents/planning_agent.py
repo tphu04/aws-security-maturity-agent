@@ -25,6 +25,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
 from pdca.agents.shared.utils import parse_llm_json, sanitize_check_id
+from pdca.observability.tracing import span as obs_span
 
 if TYPE_CHECKING:
     from pdca.agents.shared.rag_client import RAGClient
@@ -269,6 +270,21 @@ class PlanningAgent:
           4b. Some/no valid IDs → enrich query with valid hints → RETRIEVAL_PATH
           5. Classify: GROUP_SCAN vs RETRIEVAL_PATH → retrieve → score → gate
         """
+        with obs_span(
+            "agent:PlanningAgent",
+            input={"request_chars": len(user_request) if isinstance(user_request, str) else 0},
+        ) as _agent_sp:
+            result = self._run_impl(user_request)
+            _agent_sp.update(
+                output={
+                    "checks_count": len(result.get("checks_to_scan", []) or []),
+                    "groups_count": len(result.get("groups_to_scan", []) or []),
+                    "fast_track": bool(result.get("fast_track")),
+                }
+            )
+            return result
+
+    def _run_impl(self, user_request: str) -> Dict[str, Any]:
         if not user_request or not isinstance(user_request, str) or not user_request.strip():
             return self._make_error_output("Empty or invalid user request.")
 

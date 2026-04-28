@@ -16,6 +16,7 @@ from typing import Dict, Any, Optional
 
 from jinja2 import Template
 from pdca.agents.report_module.llm_writer import LLMWriter
+from pdca.observability.tracing import span as obs_span
 from pdca.agents.report_module.exporters import write_file, export_pdf
 from pdca.agents.report_module.chart_util import (
     make_pass_fail_pie, make_severity_bar,
@@ -132,11 +133,20 @@ class ReportAgent:
         Backward compat: accepts `report_context=` kwarg from old
         orchestrator interface.
         """
-        data = self._normalize_input(data, report_context)
-        self._validate_input(data)
-        self._reset_validation_state()
-        template_ctx = self._build_template_context(data)
-        return self._render(template_ctx)
+        with obs_span("agent:ReportAgent") as agent_sp:
+            data = self._normalize_input(data, report_context)
+            self._validate_input(data)
+            self._reset_validation_state()
+            template_ctx = self._build_template_context(data)
+            result = self._render(template_ctx)
+            agent_sp.update(
+                output={
+                    "validation_issues": len(self._validation_issues or []),
+                    "sections_validated": len(self._validation_sections_run or []),
+                    "report_mode": template_ctx.get("report_mode"),
+                }
+            )
+            return result
 
     # ----------------------------------------------------------
     # INPUT NORMALIZATION

@@ -35,6 +35,7 @@ from langchain_ollama import ChatOllama
 
 from pdca.agents.shared.callbacks import TimerCallback
 from pdca.agents.shared.utils import extract_check_id, parse_llm_json
+from pdca.observability.tracing import span as obs_span
 from .base_agent import BaseAgent
 
 if TYPE_CHECKING:
@@ -402,19 +403,33 @@ class RiskEvaluationAgent(BaseAgent):
 
     def run(self, normalized_findings: list) -> list:
         """Entry point: filter FAIL → fetch RAG context → score → sort."""
-        # SLICE-2.2: reset per-run cache
-        self._rag_cache.clear()
-        self._rag_confidence = "unknown"
-        self._cache_hits = 0
-        self._cache_misses = 0
-        logger.info("Starting risk evaluation for %d findings", len(normalized_findings))
-        fail_findings = self._filter_fail_findings(normalized_findings)
-        if not fail_findings:
-            logger.info("No FAIL findings found. System is secure.")
-            return []
-        logger.info("Scoring %d FAIL findings", len(fail_findings))
-        rag_context = self._fetch_rag_context(fail_findings)
-        scored = self._score_findings(fail_findings, rag_context)
-        result = self._sort_by_priority(scored)
-        logger.info("Risk evaluation complete: %d findings scored", len(result))
-        return result
+        with obs_span(
+            "agent:RiskEvaluationAgent",
+            input={"findings_count": len(normalized_findings or [])},
+        ) as agent_sp:
+            # SLICE-2.2: reset per-run cache
+            self._rag_cache.clear()
+            self._rag_confidence = "unknown"
+            self._cache_hits = 0
+            self._cache_misses = 0
+            logger.info("Starting risk evaluation for %d findings", len(normalized_findings))
+            fail_findings = self._filter_fail_findings(normalized_findings)
+            if not fail_findings:
+                logger.info("No FAIL findings found. System is secure.")
+                agent_sp.update(output={"prioritized_count": 0, "fail_count": 0})
+                return []
+            logger.info("Scoring %d FAIL findings", len(fail_findings))
+            with obs_span("risk.pass1", input={"fail_count": len(fail_findings)}):
+                rag_context = self._fetch_rag_context(fail_findings)
+            with obs_span("risk.pass2_rag", input={"confidence": self._rag_confidence}):
+                scored = self._score_findings(fail_findings, rag_context)
+            result = self._sort_by_priority(scored)
+            logger.info("Risk evaluation complete: %d findings scored", len(result))
+            agent_sp.update(
+                output={
+                    "prioritized_count": len(result),
+                    "fail_count": len(fail_findings),
+                    "rag_confidence": self._rag_confidence,
+                }
+            )
+            return result

@@ -15,7 +15,11 @@ import uuid
 
 from dotenv import load_dotenv
 
+from pdca.config import settings
 from pdca.graph.graph import build_graph
+from pdca.observability.context import set_run_id
+from pdca.observability.langfuse_client import flush_safe, shutdown
+from pdca.observability.tracing import end_trace, span, start_trace
 from pdca.tools import REGISTRY
 
 load_dotenv()
@@ -49,6 +53,10 @@ def _extract_post_findings(analysis: dict) -> list:
 def handle_task_review_interaction(app, config) -> None:
     """Pause-time interaction handler: prints the pending task and asks for
     approval/skip via stdin. Updates state via `app.update_state(...)`.
+
+    Wraps the human wait inside a Langfuse `hitl:wait` span (Phase I.5) so
+    the dashboard reports real human-decision latency. The span attaches to
+    the trace persisted by `review_task_node`.
     """
     snapshot = app.get_state(config)
     state = snapshot.values
@@ -64,6 +72,7 @@ def handle_task_review_interaction(app, config) -> None:
 
     task = tasks[idx]
     tool_name = task["tool_name"]
+    set_run_id(state.get("run_id", ""))
 
     tool_obj = REGISTRY.get(tool_name)
     description = tool_obj.description if tool_obj else "Tool description not found."
@@ -92,8 +101,21 @@ def handle_task_review_interaction(app, config) -> None:
     print(f"  AI Reasoning: {task.get('ai_reasoning', 'N/A')}")
     print("=" * 60)
 
-    choice = input("   [Y]es (run) / [N]o (skip): ").strip().lower()
-    decision = "approve" if choice in ("y", "yes") else "skip"
+    hitl_started = time.perf_counter()
+    with span(
+        "hitl:wait",
+        metadata={
+            "task_id": task["task_id"],
+            "task_index": idx,
+            "tool_name": tool_name,
+        },
+        trace_id=state.get("_langfuse_trace_id") or state.get("run_id", ""),
+        parent_span_id=state.get("_langfuse_parent_span_id"),
+    ) as sp:
+        choice = input("   [Y]es (run) / [N]o (skip): ").strip().lower()
+        decision = "approve" if choice in ("y", "yes") else "skip"
+        latency_ms = int((time.perf_counter() - hitl_started) * 1000)
+        sp.update(output={"decision": decision, "latency_human_ms": latency_ms})
     print(f"   -> Saved: {decision.upper()}")
 
     current_plan = state.get("task_execution_plan", {})
@@ -112,6 +134,7 @@ def run_interactive_session() -> None:
     app = build_graph()
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
+    set_run_id(thread_id)
 
     print("\n" + "=" * 50)
     print("  PDCA SECURITY AGENT — INTERACTIVE SESSION")
@@ -136,27 +159,38 @@ def run_interactive_session() -> None:
     }
     current_input = initial_input
 
-    while True:
-        try:
-            for _event in app.stream(current_input, config=config):
-                pass
+    trace = start_trace(
+        thread_id,
+        user_request=user_request_text,
+        environment=settings.langfuse_environment,
+    )
+    try:
+        while True:
+            try:
+                for _event in app.stream(current_input, config=config):
+                    pass
 
-            snapshot = app.get_state(config)
-            if not snapshot.next:
-                print("\n  Pipeline completed.")
+                snapshot = app.get_state(config)
+                if not snapshot.next:
+                    print("\n  Pipeline completed.")
+                    break
+
+                if snapshot.next[0] == "review_task":
+                    handle_task_review_interaction(app, config)
+                    current_input = None
+                else:
+                    current_input = None
+            except Exception as e:
+                import traceback
+
+                trace.set_status("error", f"{type(e).__name__}: {e}")
+                print(f" Error in main loop: {e}")
+                traceback.print_exc()
                 break
-
-            if snapshot.next[0] == "review_task":
-                handle_task_review_interaction(app, config)
-                current_input = None
-            else:
-                current_input = None
-        except Exception as e:
-            import traceback
-
-            print(f" Error in main loop: {e}")
-            traceback.print_exc()
-            break
+    finally:
+        end_trace(trace)
+        flush_safe()
+        shutdown()
 
 
 if __name__ == "__main__":

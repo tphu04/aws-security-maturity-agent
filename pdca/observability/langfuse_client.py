@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import atexit
+import hashlib
 import inspect
 import random
+import re
 import time
 from typing import Any, Optional
 
@@ -22,6 +24,7 @@ _breaker_state: dict[str, Optional[float] | int] = {
     "first_failure_at": None,
     "tripped_at": None,
 }
+_LANGFUSE_TRACE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 
 def _now() -> float:
@@ -88,6 +91,19 @@ def _mask_for_langfuse(*, data: Any, **kwargs: Any) -> Any:
     return safe_redact(data)
 
 
+def langfuse_trace_id(run_id: str) -> str:
+    """Return the SDK v3 trace id used for a PDCA run id.
+
+    Langfuse v3 requires 32 lowercase hex chars. PDCA run_id is usually a UUID
+    string with hyphens, so we preserve the same 128-bit value via ``uuid.hex``.
+    Non-UUID IDs are deterministically hashed.
+    """
+    candidate = (run_id or "").replace("-", "").lower()
+    if _LANGFUSE_TRACE_ID_RE.match(candidate):
+        return candidate
+    return hashlib.md5((run_id or "").encode("utf-8")).hexdigest()
+
+
 def get_langfuse_client() -> Optional[Any]:
     """Return a singleton Langfuse client, or None when disabled/unavailable."""
     global _langfuse
@@ -146,6 +162,42 @@ def get_langfuse_handler() -> Optional[Any]:
         return None
 
 
+def score_safe(
+    *,
+    trace_id: Optional[str],
+    name: str,
+    value: float,
+    comment: Optional[str] = None,
+) -> None:
+    """Best-effort score emission. No-op when Langfuse disabled or unavailable.
+
+    Used by node-level quality signals (Phase I.6): planning_top_score,
+    risk_severity_*, outcome_fixed_ratio, validation_issues, ...
+    """
+    if not trace_id:
+        return
+    client = get_langfuse_client()
+    if client is None:
+        return
+    try:
+        scorer = (
+            getattr(client, "create_score", None)
+            or getattr(client, "score", None)
+        )
+        if not callable(scorer):
+            return
+        params = inspect.signature(scorer).parameters
+        payload: dict[str, Any] = {"name": name, "value": value}
+        if "trace_id" in params:
+            payload["trace_id"] = langfuse_trace_id(trace_id)
+        if comment and "comment" in params:
+            payload["comment"] = comment
+        scorer(**payload)
+    except Exception as exc:
+        record_failure()
+        logger.debug("Langfuse score emit failed (%s): %s", name, exc)
+
+
 def flush_safe() -> None:
     """Flush buffered observations without letting Langfuse break the pipeline."""
     client = get_langfuse_client()
@@ -191,7 +243,9 @@ __all__ = [
     "get_langfuse_client",
     "get_langfuse_handler",
     "is_tripped",
+    "langfuse_trace_id",
     "record_failure",
     "reset_breaker",
+    "score_safe",
     "shutdown",
 ]

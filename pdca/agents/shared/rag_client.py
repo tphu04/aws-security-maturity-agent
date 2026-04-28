@@ -21,6 +21,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from pdca.observability.tracing import span as obs_span
+
 logger = logging.getLogger(__name__)
 
 
@@ -316,6 +318,31 @@ class RAGClient:
         Returns:
             Parsed "data" field từ ResponseEnvelope, hoặc None khi fail.
         """
+        rag_ctx = obs_span(
+            f"rag:{method_name}",
+            input={"url": url, "payload_keys": list(payload.keys())},
+        )
+        rag_sp = rag_ctx.__enter__()
+        result = self._post_inner(url, payload, method_name, include_meta)
+        try:
+            if result is None:
+                rag_sp.set_status("error", "rag returned None")
+                rag_sp.update(output={"ok": False})
+            else:
+                count = 0
+                if isinstance(result, dict):
+                    payload_d = result.get("payload") or result
+                    for key in ("results", "findings"):
+                        if isinstance(payload_d.get(key), list):
+                            count = len(payload_d[key])
+                            break
+                rag_sp.update(output={"ok": True, "count": count})
+        finally:
+            rag_ctx.__exit__(None, None, None)
+        return result
+
+    def _post_inner(self, url: str, payload: Dict[str, Any], method_name: str,
+                    include_meta: bool) -> Optional[Dict[str, Any]]:
         logger.debug("%s: POST %s payload=%s", method_name, url, payload)
 
         # App-level retry for transient ConnectionError. urllib3 Retry inside
@@ -404,6 +431,23 @@ class RAGClient:
 
         Used for endpoints that return a model directly (not wrapped in ResponseEnvelope).
         """
+        rag_ctx = obs_span(
+            f"rag:{method_name}",
+            input={"url": url, "payload_keys": list(payload.keys())},
+        )
+        rag_sp = rag_ctx.__enter__()
+        result = self._post_raw_inner(url, payload, method_name)
+        try:
+            if result is None:
+                rag_sp.set_status("error", "rag returned None")
+                rag_sp.update(output={"ok": False})
+            else:
+                rag_sp.update(output={"ok": True})
+        finally:
+            rag_ctx.__exit__(None, None, None)
+        return result
+
+    def _post_raw_inner(self, url: str, payload: Dict[str, Any], method_name: str) -> Optional[Dict[str, Any]]:
         logger.debug("%s: POST %s payload_keys=%s", method_name, url, list(payload.keys()))
         _conn_attempts = 3
         resp = None

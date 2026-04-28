@@ -7,6 +7,7 @@ from langchain_ollama import ChatOllama
 
 from pdca.agents.shared.callbacks import TimerCallback
 from pdca.observability.logger import get_logger
+from pdca.observability.tracing import span as obs_span
 from pdca.tools import REGISTRY, REMEDIATION_TOOLS
 
 from .base_agent import BaseAgent
@@ -103,10 +104,24 @@ class RemediationPlannerAgent(BaseAgent):
         }
 
     def plan_remediation(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-            """
-            Input: Danh sách Fail Findings (Đã được enriched bởi RiskEvaluationAgent)
-            Output: Danh sách Remediation Plans có chứa thông tin Compliance
-            """
+        """
+        Input: Danh sách Fail Findings (Đã được enriched bởi RiskEvaluationAgent)
+        Output: Danh sách Remediation Plans có chứa thông tin Compliance
+        """
+        with obs_span(
+            "agent:RemediationPlannerAgent",
+            input={"findings_count": len(findings or [])},
+        ) as agent_sp:
+            result = self._plan_remediation_impl(findings)
+            agent_sp.update(
+                output={
+                    "plan_count": len(result),
+                    "manual_count": sum(1 for p in result if p.get("manual_required")),
+                }
+            )
+            return result
+
+    def _plan_remediation_impl(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             plans = []
             logger.info("Planning remediation", extra={"finding_count": len(findings)})
 

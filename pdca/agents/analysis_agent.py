@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from pdca.observability.logger import get_logger
+from pdca.observability.tracing import span as obs_span
 from pdca.tools import REGISTRY  # B14: source of truth thay REMEDIATION_TOOLS
 
 logger = get_logger(__name__)
@@ -58,6 +59,8 @@ class AnalysisAgent:
         Backward compat: nếu pre_scan/post_scan = None → đọc default file
         (chỉ cho test cũ; pipeline mới luôn truyền dict).
         """
+        agent_ctx = obs_span("agent:AnalysisAgent")
+        agent_sp = agent_ctx.__enter__()
         if pre_scan is None or post_scan is None:
             before, after = self.load()
         else:
@@ -227,7 +230,7 @@ class AnalysisAgent:
         # TRẢ VỀ ANALYSIS RESULTS ĐẦY ĐỦ — single source of truth
         # Không chứa metadata (account_id, region...) — việc của orchestrator
         # ============================================================
-        return {
+        result = {
             "pre_stats": {
                 "total": len(before),
                 "pass": stats["pass_pre"],
@@ -252,6 +255,16 @@ class AnalysisAgent:
             "diff_result": diff_result,
             "stats": stats,
         }
+        agent_sp.update(
+            output={
+                "diff_count": len(diff_result),
+                "fixed": result["remediation_stats"]["fixed"],
+                "failed": result["remediation_stats"]["failed"],
+                "manual": result["remediation_stats"]["manual"],
+            }
+        )
+        agent_ctx.__exit__(None, None, None)
+        return result
 
         # ==================================================================
 

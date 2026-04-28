@@ -13,6 +13,7 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from pdca.observability.logger import get_logger
+from pdca.observability.tracing import span as obs_span
 
 logger = get_logger(__name__)
 
@@ -38,16 +39,20 @@ class EnvironmentAgent:
         thay vì raise — graph có thể tiếp tục với context giả lập.
         """
         try:
-            sts_client = self.session.client("sts")
-            identity = sts_client.get_caller_identity()
+            with obs_span("aws:sts:get_caller_identity") as sts_sp:
+                sts_client = self.session.client("sts")
+                identity = sts_client.get_caller_identity()
+                sts_sp.update(output={"account_present": bool(identity.get("Account"))})
 
             region = self.session.region_name or os.environ.get("AWS_REGION", "us-east-1")
 
             bucket_names = []
             try:
-                s3_client = self.session.client("s3", region_name=region)
-                response = s3_client.list_buckets()
-                bucket_names = [b["Name"] for b in response.get("Buckets", [])]
+                with obs_span("aws:s3:list_buckets", metadata={"region": region}) as s3_sp:
+                    s3_client = self.session.client("s3", region_name=region)
+                    response = s3_client.list_buckets()
+                    bucket_names = [b["Name"] for b in response.get("Buckets", [])]
+                    s3_sp.update(output={"bucket_count": len(bucket_names)})
             except (BotoCoreError, ClientError) as e:
                 logger.warning(
                     "Cannot list S3 buckets — keeping empty list",

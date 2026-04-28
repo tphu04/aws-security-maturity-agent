@@ -7,6 +7,7 @@ from langchain_core.runnables import RunnableConfig
 
 from pdca.agents.scanner_agent import ScannerAgent
 from pdca.graph._metrics import measure_time, update_metrics
+from pdca.graph._tracing_helpers import flush_at_node, node_span
 from pdca.graph.state import PDCAState
 
 logger = logging.getLogger(__name__)
@@ -20,24 +21,28 @@ def scan_submit_node(state: PDCAState, config: RunnableConfig) -> dict:
 
     logger.info("scan_submit start", extra={"run_id": run_id})
 
-    with measure_time() as timer:
-        agent = ScannerAgent()
-        submitted = agent.run_batch(
-            target_groups=plan.get("groups_to_scan", []),
-            specific_checks=plan.get("checks_to_scan", []),
-        )
+    with node_span("scan_submit", run_id) as sp:
+        with measure_time() as timer:
+            agent = ScannerAgent()
+            submitted = agent.run_batch(
+                target_groups=plan.get("groups_to_scan", []),
+                specific_checks=plan.get("checks_to_scan", []),
+            )
 
-    pending: dict = {
-        item["job_id"]: {
-            "task_type": item.get("task_type", "unknown"),
-            "task_value": item.get("task_value", ""),
-            "status": "pending",
+        pending: dict = {
+            item["job_id"]: {
+                "task_type": item.get("task_type", "unknown"),
+                "task_value": item.get("task_value", ""),
+                "status": "pending",
+            }
+            for item in submitted
+            if item.get("job_id")
         }
-        for item in submitted
-        if item.get("job_id")
-    }
 
-    metrics = update_metrics(metrics, "step_duration", "scan_submit", timer())
+        metrics = update_metrics(metrics, "step_duration", "scan_submit", timer())
+        sp.update(output={"pending_jobs_count": len(pending)})
+        flush_at_node()
+
     logger.info(
         "scan_submit done",
         extra={"run_id": run_id, "job_count": len(pending)},

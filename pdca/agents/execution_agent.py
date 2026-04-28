@@ -23,6 +23,8 @@ from typing import Any, Dict, List
 from botocore.exceptions import BotoCoreError, ClientError
 
 from pdca.observability.logger import get_logger
+from pdca.observability.redaction import safe_redact
+from pdca.observability.tracing import span as obs_span
 from pdca.tools import REGISTRY
 
 logger = get_logger(__name__)
@@ -74,7 +76,34 @@ class ExecutionAgent:
         task_id = task["task_id"]
         tool_name = task["tool_name"]
         tool_params = dict(task["tool_params"])
+        finding_id = task.get("finding_id")
 
+        with obs_span(
+            f"tool:{tool_name}",
+            input=safe_redact(tool_params),
+            metadata={
+                "task_id": task_id,
+                "finding_id": finding_id,
+                "decision": decision,
+            },
+        ) as tool_sp:
+            result = self._execute_task_impl(task, decision, tool_params, tool_name, task_id)
+            tool_sp.update(
+                output={
+                    "status": result.get("status"),
+                    "success": result.get("success", False),
+                }
+            )
+            return result
+
+    def _execute_task_impl(
+        self,
+        task: Dict[str, Any],
+        decision: str,
+        tool_params: Dict[str, Any],
+        tool_name: str,
+        task_id: str,
+    ) -> Dict[str, Any]:
         # GUARD 0: decision != approve → skip
         if decision != "approve":
             msg = f"Task {task_id} skipped (decision={decision})."

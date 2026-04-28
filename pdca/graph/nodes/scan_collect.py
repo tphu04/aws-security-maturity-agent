@@ -10,6 +10,7 @@ from langchain_core.runnables import RunnableConfig
 from pdca.agents.shared.normalizer import normalize_results
 from pdca.config import settings
 from pdca.graph._metrics import measure_time, update_metrics
+from pdca.graph._tracing_helpers import flush_at_node, node_span
 from pdca.graph.state import PDCAState
 
 logger = logging.getLogger(__name__)
@@ -62,32 +63,49 @@ def scan_collect_node(state: PDCAState, config: RunnableConfig) -> dict:
     run_id = state.get("run_id", "")
     metrics = state.get("performance_metrics", {})
 
-    pending_after, completed_after = _finalize_pending(state)
+    with node_span("scan_collect", run_id) as sp:
+        pending_after, completed_after = _finalize_pending(state)
 
-    raw = state.get("raw_findings") or []
-    with measure_time() as timer:
-        normalized_pkg = normalize_results(raw) if raw else {"findings": []}
-    findings = normalized_pkg.get("findings", []) if isinstance(normalized_pkg, dict) else []
+        raw = state.get("raw_findings") or []
+        with measure_time() as timer:
+            normalized_pkg = normalize_results(raw) if raw else {"findings": []}
+        findings = (
+            normalized_pkg.get("findings", [])
+            if isinstance(normalized_pkg, dict)
+            else []
+        )
 
-    logger.info(
-        "scan_collect done",
-        extra={
-            "run_id": run_id,
-            "raw_count": len(raw),
-            "normalized_count": len(findings),
-            "completed_jobs": len(completed_after),
-        },
-    )
+        logger.info(
+            "scan_collect done",
+            extra={
+                "run_id": run_id,
+                "raw_count": len(raw),
+                "normalized_count": len(findings),
+                "completed_jobs": len(completed_after),
+            },
+        )
 
-    # Optional artifact for backward-compat (RescanAgent.load_initial_config + debug).
-    try:
-        os.makedirs("data/artifacts", exist_ok=True)
-        with open("data/artifacts/pre_scan.json", "w", encoding="utf-8") as f:
-            json.dump(normalized_pkg, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        logger.warning("Could not write pre_scan artifact", extra={"error": str(e)})
+        # Optional artifact for backward-compat (RescanAgent.load_initial_config + debug).
+        try:
+            os.makedirs("data/artifacts", exist_ok=True)
+            with open("data/artifacts/pre_scan.json", "w", encoding="utf-8") as f:
+                json.dump(normalized_pkg, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.warning(
+                "Could not write pre_scan artifact", extra={"error": str(e)}
+            )
 
-    metrics = update_metrics(metrics, "step_duration", "scan_collect", timer())
+        metrics = update_metrics(metrics, "step_duration", "scan_collect", timer())
+
+        drained_pending = state.get("pending_jobs") or {}
+        sp.update(
+            output={
+                "normalized_count": len(findings),
+                "raw_count": len(raw),
+                "drained_count": len(drained_pending),
+            }
+        )
+        flush_at_node()
 
     out = {
         "normalized_findings": findings,
