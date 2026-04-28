@@ -128,9 +128,10 @@ KHÔNG branch chéo từ feat → feat. Luôn rebase lên `main` mới nhất.
 
 ---
 
-## 8. Dashboard
+## 8. Dashboard & UI
 
-5 view + filter recipes + score schema: [docs/observability/dashboard.md](dashboard.md).
+- 5 view + filter recipes + score schema: [docs/observability/dashboard.md](dashboard.md).
+- Hướng dẫn navigation/đọc trace/use case trên UI: [docs/observability/langfuse_ui_guide.md](langfuse_ui_guide.md).
 
 Quick reference:
 - **Trace topology** — root `pdca.run` → `node:*` → `agent:*` → `tool:*` / `rag:*` / `aws:*` / generation.
