@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Run Details - Prowler AI Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#161d1e",
+                        "bg-base": "#0B0E14",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#a8afff",
+                        "on-tertiary-container": "#6e4600",
+                        "status-warning": "#FBBF24",
+                        "severity-low": "#3B82F6",
+                        "inverse-primary": "#006877",
+                        "surface-bright": "#343a3c",
+                        "severity-high": "#EF4444",
+                        "on-secondary": "#131e8c",
+                        "primary": "#8aebff",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed": "#e0e0ff",
+                        "on-background": "#dde4e5",
+                        "primary-fixed": "#a2eeff",
+                        "on-tertiary-fixed-variant": "#643f00",
+                        "primary-container": "#22d3ee",
+                        "secondary-container": "#2f3aa3",
+                        "on-secondary-fixed-variant": "#2f3aa3",
+                        "bg-surface": "#161B22",
+                        "outline-variant": "#3c494c",
+                        "outline": "#859397",
+                        "tertiary-fixed": "#ffddb5",
+                        "tertiary": "#ffd6a3",
+                        "text-muted": "#484F58",
+                        "error": "#ffb4ab",
+                        "text-primary": "#F0F6FC",
+                        "surface-container-lowest": "#090f11",
+                        "tertiary-container": "#ffb13b",
+                        "border-muted": "#30363D",
+                        "bg-elevated": "#21262D",
+                        "surface-container-high": "#242b2d",
+                        "surface-container-highest": "#2f3638",
+                        "background": "#0e1416",
+                        "on-primary": "#00363e",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "on-primary-container": "#005763",
+                        "on-surface-variant": "#bbc9cd",
+                        "on-error": "#690005",
+                        "on-tertiary": "#462b00",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "secondary": "#bdc2ff",
+                        "inverse-on-surface": "#2b3233",
+                        "surface-dim": "#0e1416",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "on-secondary-fixed": "#000767",
+                        "inverse-surface": "#dde4e5",
+                        "surface-tint": "#2fd9f4",
+                        "surface-container": "#1a2122",
+                        "status-success": "#34D399",
+                        "surface-variant": "#2f3638",
+                        "on-tertiary-fixed": "#2a1800",
+                        "on-primary-fixed": "#001f25",
+                        "severity-medium": "#F97316",
+                        "surface": "#0e1416",
+                        "tertiary-fixed-dim": "#ffb957",
+                        "on-surface": "#dde4e5",
+                        "status-error": "#F87171",
+                        "text-secondary": "#8B949E"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-padding": "1.25rem",
+                        "sidebar-width": "260px",
+                        "container-gap": "1.5rem",
+                        "trace-panel-width": "380px",
+                        "gutter": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "display": ["Manrope"],
+                        "mono-label": ["Space Grotesk"],
+                        "code-sm": ["monospace"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display": ["48px", { "lineHeight": "1.2", "fontWeight": "800" }],
+                        "mono-label": ["13px", { "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "code-sm": ["12px", { "lineHeight": "1.5" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md h-screen flex overflow-hidden antialiased">
+<!-- TopAppBar -->
+<nav class="bg-slate-900/80 backdrop-blur-md text-cyan-400 font-manrope tracking-tight border-b border-slate-800/50 fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 shadow-none">
+<div class="text-lg font-black tracking-widest text-cyan-400 uppercase">Prowler AI Agent</div>
+<div class="flex items-center space-x-6">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-2 text-slate-400 text-xl pointer-events-none">search</span>
+<input class="bg-slate-950 border border-slate-800 rounded-full py-1.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all w-64" placeholder="Search insights..." type="text"/>
+</div>
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined hover:bg-slate-800/50 hover:text-cyan-300 transition-colors cursor-pointer active:scale-95 transition-transform p-1.5 rounded-md">notifications</span>
+<span class="material-symbols-outlined hover:bg-slate-800/50 hover:text-cyan-300 transition-colors cursor-pointer active:scale-95 transition-transform p-1.5 rounded-md">settings</span>
+<span class="material-symbols-outlined hover:bg-slate-800/50 hover:text-cyan-300 transition-colors cursor-pointer active:scale-95 transition-transform p-1.5 rounded-md">cloud_done</span>
+</div>
+<img alt="Security Analyst Profile" class="w-8 h-8 rounded-full border border-slate-700" data-alt="Close up portrait of a serious male cybersecurity professional in a dark glowing operations center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGvcx5DPh8z6uvfnoCbXxwAfVIIeetAclSppoh_YDlBAt4n3k-7nTIBZf3EOF6qP5OYnQTN2bVwMO34An4KGSEPHTALz76wT1cqK0OX4TVIK3vvRaBnnaHAQ1psHFAuBCkL20OchtUHdZyxkT4Bk7xb7tgWQK8y2PjSYR-a3uT25axffYRCRTZ0qWzrbGX4EzYdNL3ssb4vlfKbEYQLpXGT5iVyYRU4aNYxYcJVWBJR6UUfNd6pB2bGIGmew_kypRQI3gJhhZPZ9g"/>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="bg-slate-950 font-manrope text-sm font-medium fixed left-0 h-full w-64 border-r border-slate-800/60 shadow-none flex flex-col py-6 px-4 space-y-8 z-40 mt-16 pb-20">
+<div class="flex items-center space-x-3 mt-2 px-2">
+<div class="w-10 h-10 rounded bg-cyan-900/30 flex items-center justify-center border border-cyan-800/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+<span class="material-symbols-outlined">memory</span>
+</div>
+<div>
+<h2 class="text-slate-200 font-bold tracking-wide">PDCA Engine</h2>
+<p class="text-xs text-slate-500">v2.4.0-Stable</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1.5">
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md bg-cyan-950/30 text-cyan-400 border-r-2 border-cyan-400" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">memory</span>
+<span>Agent Runs</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">security</span>
+<span>Findings</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">build_circle</span>
+<span>Remediation</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">description</span>
+<span>Reports</span>
+</a>
+</nav>
+<div class="px-2">
+<button class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 rounded-md font-bold transition-colors flex items-center justify-center space-x-2 shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+<span class="material-symbols-outlined text-sm font-bold">add</span>
+<span>New Scan</span>
+</button>
+</div>
+<div class="pt-4 border-t border-slate-800/60 space-y-1.5">
+<a class="flex items-center space-x-3 px-3 py-2 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">help</span>
+<span class="text-xs">Documentation</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">contact_support</span>
+<span class="text-xs">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Workspace Core -->
+<main class="flex-1 ml-64 mt-16 h-[calc(100vh-4rem)] overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-surface-container-low via-background to-background p-8">
+<div class="max-w-6xl mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+<div>
+<div class="flex items-center gap-4 mb-2">
+<h1 class="font-headline-lg text-headline-lg text-text-primary tracking-tight">Run: <span class="font-mono-label text-mono-label text-2xl tracking-normal text-on-surface">run_2026_0427_s3_001</span></h1>
+<span class="px-2.5 py-1 rounded-md text-xs font-bold bg-status-success/10 text-status-success border border-status-success/20 flex items-center gap-1.5 shadow-[0_0_8px_rgba(52,211,153,0.1)]">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            COMPLETED
+                        </span>
+</div>
+<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-text-secondary text-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                            Apr 27, 2026 • 14:32:05 UTC
+                        </div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">timer</span>
+                            Duration: 42.8s
+                        </div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">folder_open</span>
+                            Target: aws/s3/prod-core
+                        </div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 rounded-md border border-outline-variant text-text-primary hover:bg-surface-container-high transition-colors font-mono-label text-mono-label flex items-center gap-2 text-sm">
+<span class="material-symbols-outlined text-[18px]">download</span> Export JSON
+                    </button>
+<button class="px-4 py-2 rounded-md bg-surface-container border border-outline-variant text-primary hover:bg-surface-container-high transition-colors font-mono-label text-mono-label flex items-center gap-2 text-sm">
+<span class="material-symbols-outlined text-[18px]">restart_alt</span> Rerun Graph
+                    </button>
+</div>
+</div>
+<!-- Main Two-Column Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left: Graph Timeline -->
+<div class="lg:col-span-2">
+<h2 class="font-headline-lg text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">account_tree</span> LangGraph Trace
+                    </h2>
+<div class="relative pl-8 border-l-2 border-border-muted/50 space-y-6 pb-12">
+<!-- Node 1: environment -->
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 shadow-[0_0_12px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-5 shadow-sm hover:border-outline transition-colors">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-3">
+<span class="font-mono-label text-mono-label text-primary">environment</span>
+</div>
+<span class="font-code-sm text-code-sm text-text-secondary bg-surface-container-high px-2 py-0.5 rounded">1.2s</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-3">
+<div class="bg-bg-elevated p-3 rounded-md border border-border-muted/50">
+<div class="text-[10px] text-text-secondary uppercase tracking-wider mb-1.5 font-semibold">Input</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant truncate">auth_profile: 'prod-read'</div>
+</div>
+<div class="bg-bg-elevated p-3 rounded-md border border-border-muted/50">
+<div class="text-[10px] text-text-secondary uppercase tracking-wider mb-1.5 font-semibold">Output</div>
+<div class="font-code-sm text-code-sm text-status-success truncate">client_ready: True</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 2: planning -->
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 shadow-[0_0_12px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-5 shadow-sm hover:border-outline transition-colors">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-3">
+<span class="font-mono-label text-mono-label text-primary">planning</span>
+</div>
+<span class="font-code-sm text-code-sm text-text-secondary bg-surface-container-high px-2 py-0.5 rounded">3.5s</span>
+</div>
+<div class="bg-bg-elevated p-3 rounded-md border border-border-muted/50 mt-2">
+<div class="text-[10px] text-text-secondary uppercase tracking-wider mb-1.5 font-semibold">Generated Plan</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">Step 1: List Buckets<br/>Step 2: Check Public Access Block<br/>Step 3: Analyze Bucket Policies</div>
+</div>
+</div>
+</div>
+<!-- Node 3: scan_submit -->
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">scan_submit</span>
+<span class="font-code-sm text-code-sm text-text-secondary">0.8s</span>
+</div>
+</div>
+<!-- Node 4: scan_poll (Iterations) -->
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 shadow-[0_0_12px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded-lg p-5 shadow-md ring-1 ring-primary/10">
+<div class="flex justify-between items-center mb-4 border-b border-border-muted/50 pb-3">
+<div class="flex items-center gap-3">
+<span class="font-mono-label text-mono-label text-primary text-base">scan_poll</span>
+<span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-surface-bright text-text-secondary border border-outline-variant">4 Iterations</span>
+</div>
+<span class="font-code-sm text-code-sm text-text-secondary bg-surface-container-high px-2 py-0.5 rounded">22.4s total</span>
+</div>
+<div class="space-y-2.5 pl-2">
+<div class="bg-bg-elevated p-2.5 rounded border border-border-muted/30 flex justify-between items-center opacity-70">
+<span class="font-code-sm text-code-sm text-text-secondary flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">autorenew</span> Iteration 1</span>
+<span class="font-code-sm text-[11px] text-status-warning uppercase tracking-widest">Pending</span>
+</div>
+<div class="bg-bg-elevated p-2.5 rounded border border-border-muted/30 flex justify-between items-center opacity-70">
+<span class="font-code-sm text-code-sm text-text-secondary flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">autorenew</span> Iteration 2</span>
+<span class="font-code-sm text-[11px] text-status-warning uppercase tracking-widest">Pending</span>
+</div>
+<div class="bg-bg-elevated p-2.5 rounded border border-border-muted/30 flex justify-between items-center opacity-70">
+<span class="font-code-sm text-code-sm text-text-secondary flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">autorenew</span> Iteration 3</span>
+<span class="font-code-sm text-[11px] text-status-warning uppercase tracking-widest">Pending</span>
+</div>
+<div class="bg-surface-container-high p-2.5 rounded border border-status-success/30 flex justify-between items-center">
+<span class="font-code-sm text-code-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[14px] text-status-success">check_circle</span> Iteration 4</span>
+<span class="font-code-sm text-[11px] text-status-success uppercase tracking-widest">Resolved</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Nodes 5-10: Condensed -->
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">scan_collect</span>
+<span class="font-code-sm text-code-sm text-text-secondary">2.1s</span>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">risk_evaluation</span>
+<span class="font-code-sm text-code-sm text-text-secondary">4.6s</span>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">review_task</span>
+<span class="font-code-sm text-code-sm text-text-secondary">1.0s</span>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">execution</span>
+<span class="font-code-sm text-code-sm text-text-secondary">5.3s</span>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">verification</span>
+<span class="font-code-sm text-code-sm text-text-secondary">1.2s</span>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -left-[41px] top-4 w-8 h-8 rounded-full bg-surface flex items-center justify-center border-[2.5px] border-status-success text-status-success z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex justify-between items-center">
+<span class="font-mono-label text-mono-label text-primary">report</span>
+<span class="font-code-sm text-code-sm text-text-secondary">0.7s</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Summary & Details Panel -->
+<div class="lg:col-span-1 space-y-6">
+<div class="bg-surface-container border border-border-muted rounded-xl p-card-padding shadow-md sticky top-0">
+<h3 class="font-mono-label text-mono-label uppercase tracking-widest text-text-secondary mb-6 border-b border-border-muted pb-2">Results Summary</h3>
+<div class="mb-8 flex flex-col items-center justify-center p-6 bg-bg-elevated rounded-lg border border-border-muted/50">
+<span class="text-text-secondary font-body-md text-sm mb-2">Total Risk Score</span>
+<span class="font-display text-5xl font-black text-severity-high drop-shadow-[0_0_15px_rgba(239,68,68,0.2)]">84</span>
+<span class="text-xs text-text-secondary mt-2 flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-severity-high">trending_up</span> +12 since last run</span>
+</div>
+<div class="space-y-4">
+<h4 class="font-mono-label text-[11px] uppercase text-text-secondary tracking-widest">Findings Breakdown</h4>
+<div class="flex items-center justify-between p-3 bg-bg-elevated rounded border-l-4 border-severity-high">
+<span class="text-sm font-medium text-on-surface">Critical</span>
+<span class="font-code-sm text-base font-bold text-text-primary">2</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-bg-elevated rounded border-l-4 border-severity-medium">
+<span class="text-sm font-medium text-on-surface">Medium</span>
+<span class="font-code-sm text-base font-bold text-text-primary">5</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-bg-elevated rounded border-l-4 border-severity-low">
+<span class="text-sm font-medium text-on-surface">Low / Info</span>
+<span class="font-code-sm text-base font-bold text-text-primary">14</span>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-border-muted">
+<button class="w-full bg-transparent border border-primary text-primary hover:bg-primary/10 py-2.5 rounded-md font-mono-label text-sm transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">visibility</span> View Full Report
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

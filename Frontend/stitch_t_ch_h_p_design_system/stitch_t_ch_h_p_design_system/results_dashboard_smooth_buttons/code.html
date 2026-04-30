@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Results Dashboard - Sentinel Cloud Security</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;family=Space+Grotesk:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "text-primary": "#F0F6FC",
+                      "tertiary-container": "#ffb13b",
+                      "surface-container-lowest": "#090f11",
+                      "bg-base": "#0B0E14",
+                      "on-primary-fixed-variant": "#004e5a",
+                      "surface-container-highest": "#2f3638",
+                      "surface-container": "#1a2122",
+                      "on-tertiary-fixed-variant": "#643f00",
+                      "on-surface": "#dde4e5",
+                      "bg-surface": "#161B22",
+                      "on-secondary-fixed-variant": "#2f3aa3",
+                      "status-error": "#F87171",
+                      "on-tertiary-fixed": "#2a1800",
+                      "on-tertiary": "#462b00",
+                      "on-secondary": "#131e8c",
+                      "status-success": "#34D399",
+                      "primary-fixed": "#a2eeff",
+                      "text-muted": "#484F58",
+                      "on-primary": "#00363e",
+                      "tertiary-fixed-dim": "#ffb957",
+                      "on-error-container": "#ffdad6",
+                      "status-warning": "#FBBF24",
+                      "on-surface-variant": "#bbc9cd",
+                      "severity-high": "#EF4444",
+                      "outline-variant": "#3c494c",
+                      "severity-low": "#3B82F6",
+                      "on-error": "#690005",
+                      "inverse-surface": "#dde4e5",
+                      "tertiary": "#ffd6a3",
+                      "surface-dim": "#0e1416",
+                      "on-primary-fixed": "#001f25",
+                      "inverse-primary": "#006877",
+                      "secondary": "#bdc2ff",
+                      "on-primary-container": "#005763",
+                      "bg-elevated": "#21262D",
+                      "surface-variant": "#2f3638",
+                      "error-container": "#93000a",
+                      "secondary-fixed": "#e0e0ff",
+                      "on-background": "#dde4e5",
+                      "inverse-on-surface": "#2b3233",
+                      "secondary-fixed-dim": "#bdc2ff",
+                      "severity-medium": "#F97316",
+                      "surface-container-low": "#161d1e",
+                      "surface": "#0e1416",
+                      "on-secondary-fixed": "#000767",
+                      "tertiary-fixed": "#ffddb5",
+                      "on-tertiary-container": "#6e4600",
+                      "surface-bright": "#343a3c",
+                      "border-muted": "#30363D",
+                      "primary-fixed-dim": "#2fd9f4",
+                      "primary": "#8aebff",
+                      "primary-container": "#22d3ee",
+                      "on-secondary-container": "#a8afff",
+                      "secondary-container": "#2f3aa3",
+                      "text-secondary": "#8B949E",
+                      "surface-container-high": "#242b2d",
+                      "error": "#ffb4ab",
+                      "background": "#0e1416",
+                      "outline": "#859397",
+                      "surface-tint": "#2fd9f4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "trace-panel-width": "380px",
+                      "sidebar-width": "260px",
+                      "card-padding": "1.25rem",
+                      "gutter": "1rem",
+                      "container-gap": "1.5rem"
+              },
+              "fontFamily": {
+                      "display": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Manrope"
+                      ],
+                      "mono-label": [
+                              "Space Grotesk"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "code-sm": [
+                              "monospace"
+                      ]
+              },
+              "fontSize": {
+                      "display": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "mono-label": [
+                              "13px",
+                              {
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.5"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-slate-950 font-manrope text-sm docked fixed left-0 h-full w-64 border-r border-slate-800 flat no shadows flex flex-col h-screen pt-20 z-40">
+<div class="px-6 pb-6">
+<h2 class="text-lg font-black text-cyan-500 mb-2">AI Security Agent</h2>
+<div class="flex items-center space-x-2 text-slate-400">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+</span>
+<span class="font-mono-label text-mono-label text-xs">Active: Scanning S3</span>
+</div>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full bg-primary text-on-primary py-2 px-4 rounded-full font-semibold flex items-center justify-center space-x-2 hover:bg-primary-container transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+<span>New Scan</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto px-4 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-cyan-950/30 text-cyan-400 border-r-2 border-cyan-400 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">security_update_good</span>
+<span>Security Queue</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span>Tool Trace</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">database</span>
+<span>Evidence Vault</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Audit Logs</span>
+</a>
+</div>
+<div class="p-4 border-t border-slate-800 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Support</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Documentation</span>
+</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 ml-[260px] flex flex-col h-screen overflow-hidden bg-bg-base relative">
+<!-- Header -->
+<header class="h-20 px-8 flex items-center justify-between border-b border-border-muted bg-surface-dim/80 backdrop-blur-sm sticky top-0 z-30">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-text-primary">PDCA Prowler Results</h1>
+<p class="text-text-muted text-sm mt-1">Scan ID: PRW-8829-S3 • Completed 2 mins ago</p>
+</div>
+<div class="flex items-center space-x-4">
+<button class="bg-surface-variant text-on-surface py-2 px-4 rounded-full border border-border-muted hover:bg-surface-bright transition-colors flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">download</span>
+<span class="font-mono-label text-mono-label">EXPORT JSON</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Workspace -->
+<div class="flex-1 overflow-y-auto p-8 space-y-container-gap">
+<!-- Summary Stats -->
+<div class="grid grid-cols-5 gap-4">
+<!-- Total Card -->
+<div class="bg-surface-container p-card-padding rounded-xl border border-border-muted">
+<div class="text-text-muted font-mono-label text-mono-label mb-2 uppercase">Total Checks</div>
+<div class="text-3xl font-display font-bold text-text-primary">28</div>
+</div>
+<!-- High Card -->
+<div class="bg-surface-container p-card-padding rounded-xl border border-border-muted relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-severity-high"></div>
+<div class="text-text-muted font-mono-label text-mono-label mb-2 uppercase flex items-center justify-between">
+                        High
+                        <span class="bg-surface-bright text-severity-high px-2 py-0.5 rounded text-xs">1 Remediated</span>
+</div>
+<div class="text-3xl font-display font-bold text-text-primary">1</div>
+</div>
+<!-- Medium Card -->
+<div class="bg-surface-container p-card-padding rounded-xl border border-border-muted relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-severity-medium"></div>
+<div class="text-text-muted font-mono-label text-mono-label mb-2 uppercase flex items-center justify-between">
+                        Medium
+                        <span class="bg-surface-bright text-severity-medium px-2 py-0.5 rounded text-xs">2 Open</span>
+</div>
+<div class="text-3xl font-display font-bold text-text-primary">2</div>
+</div>
+<!-- Low Card -->
+<div class="bg-surface-container p-card-padding rounded-xl border border-border-muted relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-severity-low"></div>
+<div class="text-text-muted font-mono-label text-mono-label mb-2 uppercase flex items-center justify-between">
+                        Low
+                        <span class="bg-surface-bright text-severity-low px-2 py-0.5 rounded text-xs">2 Open</span>
+</div>
+<div class="text-3xl font-display font-bold text-text-primary">2</div>
+</div>
+<!-- Report Card -->
+<div class="bg-cyan-950/20 p-card-padding rounded-xl border border-primary-container/30 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-cyan-950/40 transition-colors">
+<span class="material-symbols-outlined text-primary mb-2" style="font-variation-settings: 'FILL' 1;">description</span>
+<div class="text-primary font-mono-label text-mono-label uppercase">1 Report Ready</div>
+</div>
+</div>
+<!-- Findings Table Section -->
+<div class="bg-surface-container rounded-xl border border-border-muted overflow-hidden flex flex-col">
+<div class="px-6 py-4 border-b border-border-muted flex justify-between items-center bg-surface-dim">
+<h3 class="font-headline-lg text-lg text-text-primary">Detailed Findings</h3>
+<div class="flex space-x-2">
+<button class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-variant transition-colors"><span class="material-symbols-outlined">filter_list</span></button>
+<button class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-variant transition-colors"><span class="material-symbols-outlined">search</span></button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-muted text-text-muted font-mono-label text-mono-label uppercase bg-surface-container-low">
+<th class="p-4 font-medium pl-6">Severity</th>
+<th class="p-4 font-medium">Status</th>
+<th class="p-4 font-medium">Check ID</th>
+<th class="p-4 font-medium">Service</th>
+<th class="p-4 font-medium">Resource ARN</th>
+<th class="p-4 font-medium text-right pr-6">Action</th>
+</tr>
+</thead>
+<tbody class="font-code-sm text-code-sm divide-y divide-border-muted">
+<!-- Row 1: High -->
+<tr class="hover:bg-surface-bright/50 transition-colors group">
+<td class="p-4 pl-6">
+<span class="inline-flex items-center space-x-1.5 text-severity-high bg-severity-high/10 px-2.5 py-1 rounded-md font-mono-label text-xs uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-severity-high"></span>
+<span>High</span>
+</span>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center text-status-success bg-status-success/10 border border-status-success/20 px-2 py-0.5 rounded text-xs font-mono-label uppercase">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span>
+                                        Remediated
+                                    </span>
+</td>
+<td class="p-4 text-text-primary">s3_bucket_public_access</td>
+<td class="p-4 text-text-muted">S3</td>
+<td class="p-4 text-text-secondary truncate max-w-xs" title="s3://project-demo-public-assets">s3://project-demo-public-assets</td>
+<td class="p-4 text-right pr-6">
+<button class="text-primary hover:text-primary-fixed border border-primary/30 hover:border-primary px-3 py-1.5 rounded-full bg-transparent transition-colors font-mono-label text-xs uppercase">
+                                        View Evidence
+                                    </button>
+</td>
+</tr>
+<!-- Row 2: Medium -->
+<tr class="hover:bg-surface-bright/50 transition-colors group">
+<td class="p-4 pl-6">
+<span class="inline-flex items-center space-x-1.5 text-severity-medium bg-severity-medium/10 px-2.5 py-1 rounded-md font-mono-label text-xs uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-severity-medium"></span>
+<span>Medium</span>
+</span>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center text-status-warning bg-status-warning/10 border border-status-warning/20 px-2 py-0.5 rounded text-xs font-mono-label uppercase">
+<span class="material-symbols-outlined text-[14px] mr-1">error</span>
+                                        Open
+                                    </span>
+</td>
+<td class="p-4 text-text-primary">s3_bucket_server_side_encryption</td>
+<td class="p-4 text-text-muted">S3</td>
+<td class="p-4 text-text-secondary truncate max-w-xs" title="s3://project-demo-logs">s3://project-demo-logs</td>
+<td class="p-4 text-right pr-6">
+<button class="bg-primary text-on-primary hover:bg-primary-container px-3 py-1.5 rounded-full transition-colors font-mono-label text-xs uppercase font-bold shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                                        Remediate
+                                    </button>
+</td>
+</tr>
+<!-- Row 3: Low -->
+<tr class="hover:bg-surface-bright/50 transition-colors group">
+<td class="p-4 pl-6">
+<span class="inline-flex items-center space-x-1.5 text-severity-low bg-severity-low/10 px-2.5 py-1 rounded-md font-mono-label text-xs uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-severity-low"></span>
+<span>Low</span>
+</span>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center text-status-warning bg-status-warning/10 border border-status-warning/20 px-2 py-0.5 rounded text-xs font-mono-label uppercase">
+<span class="material-symbols-outlined text-[14px] mr-1">error</span>
+                                        Open
+                                    </span>
+</td>
+<td class="p-4 text-text-primary">s3_bucket_versioning</td>
+<td class="p-4 text-text-muted">S3</td>
+<td class="p-4 text-text-secondary truncate max-w-xs" title="s3://project-demo-temp">s3://project-demo-temp</td>
+<td class="p-4 text-right pr-6">
+<button class="text-text-muted hover:text-text-primary px-3 py-1.5 rounded-full bg-surface-variant hover:bg-surface-bright transition-colors font-mono-label text-xs uppercase">
+                                        View
+                                    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body></html>

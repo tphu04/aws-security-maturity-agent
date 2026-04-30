@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PDCA Prowler Agent</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@400;600;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-low": "#161d1e",
+                      "bg-base": "#0B0E14",
+                      "error-container": "#93000a",
+                      "on-secondary-container": "#a8afff",
+                      "on-tertiary-container": "#6e4600",
+                      "status-warning": "#FBBF24",
+                      "severity-low": "#3B82F6",
+                      "inverse-primary": "#006877",
+                      "surface-bright": "#343a3c",
+                      "severity-high": "#EF4444",
+                      "on-secondary": "#131e8c",
+                      "primary": "#8aebff",
+                      "on-error-container": "#ffdad6",
+                      "secondary-fixed": "#e0e0ff",
+                      "on-background": "#dde4e5",
+                      "primary-fixed": "#a2eeff",
+                      "on-tertiary-fixed-variant": "#643f00",
+                      "primary-container": "#22d3ee",
+                      "secondary-container": "#2f3aa3",
+                      "on-secondary-fixed-variant": "#2f3aa3",
+                      "bg-surface": "#161B22",
+                      "outline-variant": "#3c494c",
+                      "outline": "#859397",
+                      "tertiary-fixed": "#ffddb5",
+                      "tertiary": "#ffd6a3",
+                      "text-muted": "#484F58",
+                      "error": "#ffb4ab",
+                      "text-primary": "#F0F6FC",
+                      "surface-container-lowest": "#090f11",
+                      "tertiary-container": "#ffb13b",
+                      "border-muted": "#30363D",
+                      "bg-elevated": "#21262D",
+                      "surface-container-high": "#242b2d",
+                      "surface-container-highest": "#2f3638",
+                      "background": "#0e1416",
+                      "on-primary": "#00363e",
+                      "on-primary-fixed-variant": "#004e5a",
+                      "on-primary-container": "#005763",
+                      "on-surface-variant": "#bbc9cd",
+                      "on-error": "#690005",
+                      "on-tertiary": "#462b00",
+                      "secondary-fixed-dim": "#bdc2ff",
+                      "secondary": "#bdc2ff",
+                      "inverse-on-surface": "#2b3233",
+                      "surface-dim": "#0e1416",
+                      "primary-fixed-dim": "#2fd9f4",
+                      "on-secondary-fixed": "#000767",
+                      "inverse-surface": "#dde4e5",
+                      "surface-tint": "#2fd9f4",
+                      "surface-container": "#1a2122",
+                      "status-success": "#34D399",
+                      "surface-variant": "#2f3638",
+                      "on-tertiary-fixed": "#2a1800",
+                      "on-primary-fixed": "#001f25",
+                      "severity-medium": "#F97316",
+                      "surface": "#0e1416",
+                      "tertiary-fixed-dim": "#ffb957",
+                      "on-surface": "#dde4e5",
+                      "status-error": "#F87171",
+                      "text-secondary": "#8B949E"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "card-padding": "1.25rem",
+                      "sidebar-width": "260px",
+                      "container-gap": "1.5rem",
+                      "trace-panel-width": "380px",
+                      "gutter": "1rem"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Manrope"
+                      ],
+                      "mono-label": [
+                              "Space Grotesk"
+                      ],
+                      "code-sm": [
+                              "monospace"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "mono-label": [
+                              "13px",
+                              {
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "code-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.5"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-16">
+<!-- TopAppBar from JSON -->
+<nav class="bg-slate-900/80 backdrop-blur-md font-manrope antialiased tracking-tight border-b border-slate-800/50 fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16">
+<div class="flex items-center gap-4">
+<span class="text-lg font-black tracking-widest text-cyan-400 uppercase">
+                Prowler AI Agent
+            </span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-4 text-slate-400">
+<span class="material-symbols-outlined cursor-pointer hover:text-cyan-300 transition-colors active:scale-95 transition-transform">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-cyan-300 transition-colors active:scale-95 transition-transform">settings</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-cyan-300 transition-colors active:scale-95 transition-transform">cloud_done</span>
+</div>
+<img alt="Security Analyst Profile" class="w-8 h-8 rounded-full border border-slate-800 cursor-pointer active:scale-95 transition-transform" data-alt="professional headshot of a cyber security analyst in a dark server room setting with subtle cyan lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4qCRiDHmQpS1xzGtshhx38e4shyZ2c4a1BVBQciw_yD9KmsfZzct9cmL5MnnfR5_-Gj3egCREBm0xGt_aEtESgcj6244JL6zaGlzsOmm4VLejn7dYSzMEXRKukrXHwVyVqJoRsb5dAtIlP4Iyu1dv10Plb4pyjS9sk4YOsiFLwFf8uykL8w0i-aE9O9X4RqRVuZC1MrupTpzR0stZvXp3kAtDkFVs4LmBCsiZezB9-DgsBOpMWW5w3lj0RC4feG03sazSM6oesS8"/>
+</div>
+</nav>
+<main class="flex-grow flex flex-col">
+<!-- Hero Section -->
+<section class="relative w-full py-24 px-6 md:px-12 flex flex-col items-center justify-center text-center border-b border-border-muted overflow-hidden">
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background -z-10"></div>
+<div class="max-w-4xl mx-auto space-y-8 z-10">
+<h1 class="font-display text-display text-text-primary">
+                    Run AWS Security Scans Through a <span class="text-primary">Transparent AI Agent</span>
+</h1>
+<p class="font-body-md text-body-md text-text-secondary max-w-2xl mx-auto">
+                    Replace complex CLI commands and manual report generation with an executive-ready, autonomous agent that plans, executes, and verifies Prowler security scans.
+                </p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+<button class="bg-primary text-on-primary font-mono-label text-mono-label px-8 py-3 rounded-full hover:bg-primary-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined icon-fill">rocket_launch</span>
+                        Deploy Agent
+                    </button>
+<button class="bg-transparent border border-primary text-primary font-mono-label text-mono-label px-8 py-3 rounded-full hover:bg-primary/10 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">menu_book</span>
+                        View Documentation
+                    </button>
+</div>
+</div>
+<!-- Abstract Visual -->
+<div class="w-full max-w-5xl mt-16 rounded-xl border border-border-muted bg-surface/50 backdrop-blur-sm shadow-2xl overflow-hidden flex flex-col">
+<div class="h-8 bg-surface-container-high border-b border-border-muted flex items-center px-4 gap-2">
+<div class="w-3 h-3 rounded-full bg-border-muted"></div>
+<div class="w-3 h-3 rounded-full bg-border-muted"></div>
+<div class="w-3 h-3 rounded-full bg-border-muted"></div>
+<span class="font-mono-label text-code-sm text-text-muted ml-4">agent-trace-v2.4.log</span>
+</div>
+<div class="p-6 font-code-sm text-code-sm text-text-secondary whitespace-pre-wrap text-left flex gap-4">
+<div class="text-border-muted select-none text-right w-8">
+                        1<br/>2<br/>3<br/>4<br/>5
+                    </div>
+<div><span class="text-primary">[System]</span> Initializing PDCA Workflow...
+<span class="text-status-warning">[Plan]</span> Analyzing request: "Scan production S3 buckets for public access"
+<span class="text-status-success">[Do]</span> Formulating Prowler command: <span class="text-text-primary">prowler aws --services s3 --checks s3_bucket_public_access</span>
+<span class="text-severity-low">[Check]</span> Executing API Job id: job-8f92a...
+<span class="text-primary">[Act]</span> Generating executive DOCX report...</div>
+</div>
+</div>
+</section>
+<!-- Problem Section -->
+<section class="py-24 px-6 md:px-12 bg-surface-container-low border-b border-border-muted">
+<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+<div class="space-y-6">
+<h2 class="font-headline-lg text-headline-lg text-text-primary">The CLI is Hard. Visibility is Harder.</h2>
+<p class="font-body-md text-body-md text-text-secondary">
+                        Running comprehensive cloud security scans shouldn't require memorizing complex flags, managing brittle bash scripts, or manually parsing thousands of lines of JSON output. 
+                    </p>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-severity-high mt-1">cancel</span>
+<span class="text-text-secondary">Complex IAM role assumptions and session management.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-severity-high mt-1">cancel</span>
+<span class="text-text-secondary">Opaque execution processes—you hit 'enter' and wait.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-severity-high mt-1">cancel</span>
+<span class="text-text-secondary">Raw output that requires hours to translate into actionable reports.</span>
+</li>
+</ul>
+</div>
+<div class="relative bg-surface rounded-lg border border-severity-high/30 p-1">
+<div class="absolute inset-0 bg-severity-high/5 rounded-lg blur-xl -z-10"></div>
+<div class="bg-bg-base rounded-md border border-border-muted p-4 font-code-sm text-code-sm text-text-secondary overflow-x-auto">
+<span class="text-severity-medium">user@workstation:~$</span> prowler aws --profile prod-admin --role arn:aws:iam::123456789012:role/SecurityAudit --services s3 ec2 iam --severity critical high --output-formats html json csv<br/><br/>
+<span class="text-severity-high">Error:</span> Invalid parameters provided. Cross-account assumption failed for role arn:aws:iam::123456789012:role/SecurityAudit. Ensure session token is valid and STS region matches.<br/>
+<span class="text-severity-high">FATAL:</span> Cannot continue execution. Check logs in /var/tmp/prowler/...
+                    </div>
+</div>
+</div>
+</section>
+<!-- Solution Section: PDCA Workflow -->
+<section class="py-24 px-6 md:px-12 bg-background border-b border-border-muted">
+<div class="max-w-6xl mx-auto space-y-16">
+<div class="text-center space-y-4 max-w-3xl mx-auto">
+<h2 class="font-headline-lg text-headline-lg text-text-primary">The PDCA Agent Workflow</h2>
+<p class="font-body-md text-body-md text-text-secondary">
+                        Our agent operates on the proven Plan-Do-Check-Act cycle, providing total transparency at every step of the security assessment.
+                    </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- Plan -->
+<div class="bg-surface border border-border-muted rounded-lg p-card-padding flex flex-col items-center text-center space-y-4 hover:border-primary/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-muted text-primary">
+<span class="material-symbols-outlined text-3xl">psychology</span>
+</div>
+<h3 class="font-mono-label text-mono-label text-text-primary uppercase tracking-wider">Plan</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Translates natural language into specific Prowler CLI parameters and target scopes.</p>
+</div>
+<!-- Do -->
+<div class="bg-surface border border-border-muted rounded-lg p-card-padding flex flex-col items-center text-center space-y-4 hover:border-primary/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-muted text-status-warning">
+<span class="material-symbols-outlined text-3xl">play_circle</span>
+</div>
+<h3 class="font-mono-label text-mono-label text-text-primary uppercase tracking-wider">Do</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Dispatches jobs via the Prowler API, managing infrastructure and execution state.</p>
+</div>
+<!-- Check -->
+<div class="bg-surface border border-border-muted rounded-lg p-card-padding flex flex-col items-center text-center space-y-4 hover:border-primary/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-muted text-severity-low">
+<span class="material-symbols-outlined text-3xl">rule</span>
+</div>
+<h3 class="font-mono-label text-mono-label text-text-primary uppercase tracking-wider">Check</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Polls for completion, ingests JSON outputs, and validates findings against baselines.</p>
+</div>
+<!-- Act -->
+<div class="bg-surface border border-border-muted rounded-lg p-card-padding flex flex-col items-center text-center space-y-4 hover:border-primary/50 transition-colors">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-muted text-status-success">
+<span class="material-symbols-outlined text-3xl">task_alt</span>
+</div>
+<h3 class="font-mono-label text-mono-label text-text-primary uppercase tracking-wider">Act</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Compiles actionable insights into standardized, executive-ready DOCX reports.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-24 px-6 md:px-12 bg-surface-container-low">
+<div class="max-w-6xl mx-auto space-y-12">
+<h2 class="font-headline-lg text-headline-lg text-text-primary">Platform Capabilities</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-container-gap auto-rows-[280px]">
+<!-- Natural Language (Large Card) -->
+<div class="md:col-span-2 bg-surface border border-border-muted rounded-xl p-card-padding flex flex-col justify-between overflow-hidden relative group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent z-0"></div>
+<div class="relative z-10 space-y-2">
+<span class="material-symbols-outlined text-primary mb-2">chat</span>
+<h3 class="font-headline-lg text-headline-lg text-text-primary">Natural Language Interface</h3>
+<p class="font-body-md text-body-md text-text-secondary max-w-md">Command complex scans using plain English. The agent parses intent and formulates precise security audits without syntax errors.</p>
+</div>
+<div class="relative z-10 bg-bg-base border border-border-muted rounded-lg p-4 mt-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-sm text-text-muted">person</span>
+</div>
+<span class="font-body-md text-body-md text-text-primary text-sm">"Check our production VPC for open security groups."</span>
+</div>
+</div>
+</div>
+<!-- AWS Settings -->
+<div class="bg-surface border border-border-muted rounded-xl p-card-padding flex flex-col justify-between group">
+<div class="space-y-2">
+<span class="material-symbols-outlined text-status-warning mb-2">cloud</span>
+<h3 class="font-headline-lg text-headline-lg text-text-primary text-xl">AWS Settings</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Seamlessly integrate with your AWS accounts using managed credentials and assumed roles.</p>
+</div>
+<div class="mt-4 flex flex-wrap gap-2">
+<span class="bg-surface-container-highest px-3 py-1 rounded-full font-mono-label text-code-sm text-text-muted border border-border-muted">IAM Roles</span>
+<span class="bg-surface-container-highest px-3 py-1 rounded-full font-mono-label text-code-sm text-text-muted border border-border-muted">STS Assume</span>
+</div>
+</div>
+<!-- LangGraph Trace -->
+<div class="bg-surface border border-border-muted rounded-xl p-card-padding flex flex-col justify-between group">
+<div class="space-y-2">
+<span class="material-symbols-outlined text-severity-low mb-2">account_tree</span>
+<h3 class="font-headline-lg text-headline-lg text-text-primary text-xl">LangGraph Trace</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Verifiable AI thought processes. Every node, tool call, and decision is logged.</p>
+</div>
+<div class="mt-4 border-l-2 border-border-muted pl-4 space-y-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-mono-label text-code-sm text-text-secondary">Node: Tool_Select</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-border-muted"></div>
+<span class="font-mono-label text-code-sm text-text-muted">Node: Format_Output</span>
+</div>
+</div>
+</div>
+<!-- Prowler API Jobs -->
+<div class="bg-surface border border-border-muted rounded-xl p-card-padding flex flex-col justify-between group">
+<div class="space-y-2">
+<span class="material-symbols-outlined text-primary-container mb-2">api</span>
+<h3 class="font-headline-lg text-headline-lg text-text-primary text-xl">Prowler API Jobs</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Dispatches scalable background jobs to the Prowler execution engine.</p>
+</div>
+<div class="mt-4 bg-surface-container-lowest border border-border-muted rounded p-3 flex justify-between items-center">
+<span class="font-mono-label text-code-sm text-text-muted">Job_ID: #8921A</span>
+<span class="font-mono-label text-code-sm text-status-success bg-status-success/10 px-2 py-0.5 rounded">RUNNING</span>
+</div>
+</div>
+<!-- DOCX Reports -->
+<div class="bg-surface border border-border-muted rounded-xl p-card-padding flex flex-col justify-between group">
+<div class="space-y-2">
+<span class="material-symbols-outlined text-text-primary mb-2">description</span>
+<h3 class="font-headline-lg text-headline-lg text-text-primary text-xl">DOCX Reports</h3>
+<p class="font-body-md text-body-md text-text-secondary text-sm">Automatically compiles raw JSON findings into formatted, executive-ready documents.</p>
+</div>
+<div class="mt-4 flex items-center justify-center h-12 bg-white rounded-full border border-border-muted">
+<span class="font-headline-lg text-body-md text-bg-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-severity-low">picture_as_pdf</span> Executive_Summary
+                            </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Simple Footer -->
+<footer class="bg-bg-base border-t border-border-muted py-8 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2">
+<span class="text-sm font-black tracking-widest text-cyan-400 uppercase font-manrope">
+                Prowler AI
+            </span>
+<span class="font-mono-label text-code-sm text-text-muted">v2.4.0</span>
+</div>
+<p class="font-body-md text-code-sm text-text-secondary">
+            © 2024 Prowler Security. Executive-Ready SaaS.
+        </p>
+</footer>
+</body></html>

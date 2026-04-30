@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Verification View - Sentinel Cloud Security</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "text-primary": "#F0F6FC",
+                        "tertiary-container": "#ffb13b",
+                        "surface-container-lowest": "#090f11",
+                        "bg-base": "#0B0E14",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "surface-container-highest": "#2f3638",
+                        "surface-container": "#1a2122",
+                        "on-tertiary-fixed-variant": "#643f00",
+                        "on-surface": "#dde4e5",
+                        "bg-surface": "#161B22",
+                        "on-secondary-fixed-variant": "#2f3aa3",
+                        "status-error": "#F87171",
+                        "on-tertiary-fixed": "#2a1800",
+                        "on-tertiary": "#462b00",
+                        "on-secondary": "#131e8c",
+                        "status-success": "#34D399",
+                        "primary-fixed": "#a2eeff",
+                        "text-muted": "#484F58",
+                        "on-primary": "#00363e",
+                        "tertiary-fixed-dim": "#ffb957",
+                        "on-error-container": "#ffdad6",
+                        "status-warning": "#FBBF24",
+                        "on-surface-variant": "#bbc9cd",
+                        "severity-high": "#EF4444",
+                        "outline-variant": "#3c494c",
+                        "severity-low": "#3B82F6",
+                        "on-error": "#690005",
+                        "inverse-surface": "#dde4e5",
+                        "tertiary": "#ffd6a3",
+                        "surface-dim": "#0e1416",
+                        "on-primary-fixed": "#001f25",
+                        "inverse-primary": "#006877",
+                        "secondary": "#bdc2ff",
+                        "on-primary-container": "#005763",
+                        "bg-elevated": "#21262D",
+                        "surface-variant": "#2f3638",
+                        "error-container": "#93000a",
+                        "secondary-fixed": "#e0e0ff",
+                        "on-background": "#dde4e5",
+                        "inverse-on-surface": "#2b3233",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "severity-medium": "#F97316",
+                        "surface-container-low": "#161d1e",
+                        "surface": "#0e1416",
+                        "on-secondary-fixed": "#000767",
+                        "tertiary-fixed": "#ffddb5",
+                        "on-tertiary-container": "#6e4600",
+                        "surface-bright": "#343a3c",
+                        "border-muted": "#30363D",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "primary": "#8aebff",
+                        "primary-container": "#22d3ee",
+                        "on-secondary-container": "#a8afff",
+                        "secondary-container": "#2f3aa3",
+                        "text-secondary": "#8B949E",
+                        "surface-container-high": "#242b2d",
+                        "error": "#ffb4ab",
+                        "background": "#0e1416",
+                        "outline": "#859397",
+                        "surface-tint": "#2fd9f4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "trace-panel-width": "380px",
+                        "sidebar-width": "260px",
+                        "card-padding": "1.25rem",
+                        "gutter": "1rem",
+                        "container-gap": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "display": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "mono-label": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "code-sm": ["monospace"]
+                    },
+                    "fontSize": {
+                        "display": ["48px", { "lineHeight": "1.2", "fontWeight": "800" }],
+                        "headline-lg": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "mono-label": ["13px", { "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "code-sm": ["12px", { "lineHeight": "1.5" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-base text-text-primary font-body-md text-body-md antialiased overflow-hidden flex h-screen">
+<!-- SideNavBar -->
+<nav class="bg-slate-950 text-cyan-400 font-manrope text-sm docked fixed left-0 h-full w-64 border-r border-slate-800 flat no shadows flex flex-col pt-20 z-40 hidden md:flex">
+<div class="px-6 pb-8 border-b border-slate-800">
+<h1 class="text-lg font-black text-cyan-500 mb-1">AI Security Agent</h1>
+<div class="flex items-center gap-2 text-slate-400">
+<span class="w-2 h-2 rounded-full bg-status-success shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+<span class="font-mono-label text-mono-label">Active: Scanning S3</span>
+</div>
+<button class="mt-6 w-full py-2 px-4 bg-primary text-on-primary rounded-full font-mono-label text-mono-label hover:bg-primary-fixed-dim transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Scan
+            </button>
+</div>
+<ul class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+<li>
+<a class="text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+                    Overview
+                </a>
+</li>
+<li>
+<a class="text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="security_update_good">security_update_good</span>
+                    Security Queue
+                </a>
+</li>
+<li>
+<a class="text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="terminal">terminal</span>
+                    Tool Trace
+                </a>
+</li>
+<li>
+<a class="bg-cyan-950/30 text-cyan-400 border-r-2 border-cyan-400 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="database">database</span>
+                    Evidence Vault
+                </a>
+</li>
+<li>
+<a class="text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+                    Audit Logs
+                </a>
+</li>
+</ul>
+<div class="p-4 border-t border-slate-800">
+<ul class="space-y-1">
+<li>
+<a class="text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help">help</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="text-slate-500 hover:text-slate-300 hover:bg-slate-900/80 active:scale-95 transition-transform flex items-center gap-3 px-3 py-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="description">description</span>
+                        Documentation
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-64 bg-bg-base overflow-y-auto h-full flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-30 bg-bg-base/90 backdrop-blur-md border-b border-border-muted px-8 py-5 flex items-center justify-between">
+<div>
+<div class="flex items-center gap-2 text-text-secondary text-sm mb-1">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<a class="hover:text-primary transition-colors" href="#">Back to Security Queue</a>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-text-primary">Verification View</h2>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-label text-mono-label text-text-secondary">Scan ID: s3-eu-west-1-8829</span>
+<button class="bg-surface-variant hover:bg-surface-bright text-text-primary px-4 py-2 rounded-full font-mono-label text-mono-label transition-colors border border-border-muted">Export Report</button>
+</div>
+</header>
+<div class="p-8 max-w-6xl mx-auto w-full space-y-container-gap pb-20">
+<!-- Success Banner -->
+<div class="bg-status-success/10 border border-status-success/30 rounded-lg p-card-padding flex items-start gap-4">
+<div class="bg-status-success/20 p-2 rounded-full mt-1">
+<span class="material-symbols-outlined text-status-success" data-weight="fill">verified_user</span>
+</div>
+<div>
+<h3 class="font-headline-lg text-[20px] text-status-success mb-1">Verification Successful</h3>
+<p class="text-text-secondary">The automated remediation plan was executed successfully. The resource state has been verified by the PDCA Prowler Agent and matches the required security baseline.</p>
+</div>
+</div>
+<!-- Comparison Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Before Card -->
+<div class="bg-bg-surface border border-border-muted rounded-lg flex flex-col overflow-hidden relative">
+<div class="absolute top-0 left-0 w-1 h-full bg-severity-high"></div>
+<div class="p-card-padding border-b border-border-muted bg-surface-container-low flex justify-between items-center pl-6">
+<span class="font-mono-label text-mono-label text-text-secondary uppercase tracking-wider">Before Remediation</span>
+<div class="flex gap-2">
+<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-severity-high/20 text-severity-high uppercase tracking-wide border border-severity-high/30">Severity High</span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-status-error/20 text-status-error uppercase tracking-wide border border-status-error/30">Fail</span>
+</div>
+</div>
+<div class="p-card-padding flex-1 pl-6">
+<h4 class="text-lg font-semibold text-text-primary mb-2">S3 Public Access</h4>
+<p class="text-text-secondary mb-6">Public access block incomplete</p>
+<div class="bg-surface-container rounded p-4 border border-border-muted">
+<pre class="font-code-sm text-code-sm text-text-muted overflow-x-auto"><code>{
+  "BlockPublicAcls": true,
+  "IgnorePublicAcls": true,
+  <span class="text-status-error">"BlockPublicPolicy": false,</span>
+  <span class="text-status-error">"RestrictPublicBuckets": false</span>
+}</code></pre>
+</div>
+</div>
+</div>
+<!-- After Card -->
+<div class="bg-bg-surface border border-status-success/30 rounded-lg flex flex-col overflow-hidden relative shadow-[0_0_15px_rgba(52,211,153,0.05)]">
+<div class="absolute top-0 left-0 w-1 h-full bg-status-success"></div>
+<div class="p-card-padding border-b border-border-muted bg-surface-container-low flex justify-between items-center pl-6">
+<span class="font-mono-label text-mono-label text-text-secondary uppercase tracking-wider">After Remediation</span>
+<div class="flex gap-2">
+<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/20 text-primary uppercase tracking-wide border border-primary/30 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">build</span> Remediated</span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-status-success/20 text-status-success uppercase tracking-wide border border-status-success/30 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span> Passed</span>
+</div>
+</div>
+<div class="p-card-padding flex-1 pl-6">
+<h4 class="text-lg font-semibold text-text-primary mb-2">S3 Public Access</h4>
+<p class="text-text-secondary mb-6">Block Public Access enabled</p>
+<div class="bg-surface-container rounded p-4 border border-border-muted">
+<pre class="font-code-sm text-code-sm text-text-muted overflow-x-auto"><code>{
+  "BlockPublicAcls": true,
+  "IgnorePublicAcls": true,
+  <span class="text-status-success">"BlockPublicPolicy": true,</span>
+  <span class="text-status-success">"RestrictPublicBuckets": true</span>
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<!-- LangGraph Log Entry -->
+<div class="bg-bg-elevated border border-border-muted rounded-lg overflow-hidden">
+<div class="px-card-padding py-3 border-b border-border-muted bg-surface-container-high flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">account_tree</span>
+<h4 class="font-mono-label text-mono-label text-text-secondary">LangGraph Node: <span class="text-primary">verification</span></h4>
+</div>
+<div class="p-card-padding">
+<div class="bg-surface-dim rounded border border-outline-variant p-4 overflow-x-auto">
+<pre class="font-code-sm text-code-sm text-on-surface-variant leading-relaxed"><code><span class="text-text-muted"># PDCA Agent Run: b9f2a1</span>
+<span class="text-text-muted">[TIMESTAMP]</span> INIT verification node
+<span class="text-text-muted">[TIMESTAMP]</span> Executing tool: aws_s3_get_public_access_block
+<span class="text-text-muted">[TIMESTAMP]</span> Target: arn:aws:s3:::prod-customer-data-backup-01
+<span class="text-text-muted">[TIMESTAMP]</span> Tool response received (latency: 142ms)
+<span class="text-text-muted">[TIMESTAMP]</span> Evaluating policy requirements against response...
+<span class="text-status-success">[TIMESTAMP] All 4 block settings confirmed TRUE</span>
+<span class="text-text-muted">[TIMESTAMP]</span> Node 'verification' completed. Status: <span class="text-status-success font-bold">SUCCESS</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
