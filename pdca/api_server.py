@@ -281,24 +281,8 @@ def _run_prowler_command_worker(job_id: str) -> None:
 
     # Build argv list directly (no shell, no shlex). Re-validate task_value at
     # worker boundary as defence-in-depth — DB row could be tampered with.
-    # PROWLER_PYTHON env var lets ops point at a separate interpreter that has
-    # Prowler installed (Prowler 5.x requires Python <= 3.12, while the rest
-    # of the project may run on Python 3.13).
-    prowler_python = os.getenv("PROWLER_PYTHON", sys.executable)
-    if not os.path.isfile(prowler_python):
-        logger.error(
-            "PROWLER_PYTHON does not point to a real interpreter",
-            extra={"job_id": job_id, "path": prowler_python},
-        )
-        _update_job(
-            job_id,
-            status="failed",
-            ended_at=time.time(),
-            error_json=json.dumps({"error": f"PROWLER_PYTHON invalid: {prowler_python}"}),
-        )
-        return
     argv: List[str] = [
-        prowler_python, "-m", "prowler", "aws",
+        sys.executable, "-m", "prowler", "aws",
         "--profile", profile,
         "--region", region,
         "--output-mode", "json-ocsf",
