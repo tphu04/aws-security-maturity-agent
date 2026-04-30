@@ -54,3 +54,25 @@ benchmarks/llm_generation/inference_outputs/
 RAG/data/indexes/chroma/
 RAG/data/indexes/chroma_backup_*/
 RAG/data/raw/maturity_mapping_candidates.json
+
+# ---------------------------------------------------------------------------
+# Frontend (Node / Vite / TypeScript build artifacts)
+# ---------------------------------------------------------------------------
+node_modules/
+Frontend/dist/
+Chatbot-Frontend/dist/
+*.tsbuildinfo
+# Compiled JS/TS declaration files emitted next to .ts sources
+Frontend/vite.config.js
+Frontend/vite.config.d.ts
+
+# ---------------------------------------------------------------------------
+# Local databases & runtime state (regenerated, never commit)
+# ---------------------------------------------------------------------------
+data/jobs/*.db
+data/jobs/*.db-shm
+data/jobs/*.db-wal
+data/runs/*.db
+data/runs/*.db-shm
+data/runs/*.db-wal
+data/runs/run_state.json
