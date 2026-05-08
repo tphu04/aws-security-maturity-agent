@@ -5,7 +5,7 @@ import logging
 from langchain_core.runnables import RunnableConfig
 
 from pdca.agents.risk_evaluation_agent import RiskEvaluationAgent
-from pdca.agents.shared.callbacks import get_callbacks
+from pdca.agents.shared.callbacks import extract_config_callbacks, get_callbacks
 from pdca.agents.shared.rag_client import RAGClient
 from pdca.config import settings
 from pdca.graph._metrics import measure_time, update_metrics
@@ -30,12 +30,7 @@ def _severity_distribution(findings: list[dict]) -> dict[str, int]:
 
 def risk_eval_node(state: PDCAState, config: RunnableConfig) -> dict:
     run_id = state.get("run_id", "")
-    extra_callbacks = (
-        config.get("callbacks")
-        or config.get("configurable", {}).get("callbacks", [])
-        or []
-    )
-    callbacks = get_callbacks(extra=list(extra_callbacks))
+    callbacks = get_callbacks(extra=extract_config_callbacks(config))
     metrics = state.get("performance_metrics", {})
     logger.info("risk_eval start", extra={"run_id": run_id})
 

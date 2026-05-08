@@ -38,7 +38,11 @@ def _finalize_pending(state: PDCAState) -> tuple[dict, dict]:
         # holds OR pending is empty. Use "timeout" as the safe default.
         terminal_status = "timeout"
 
-    drained = {jid: {**meta, "status": terminal_status} for jid, meta in pending.items()}
+    now_ts = time.time()
+    drained = {
+        jid: {**meta, "status": terminal_status, "completed_at": now_ts}
+        for jid, meta in pending.items()
+    }
     completed = {**(state.get("completed_jobs") or {}), **drained}
     logger.warning(
         "scan_collect draining unfinished jobs",

@@ -37,6 +37,7 @@ def scan_poll_node(state: PDCAState, config: RunnableConfig) -> dict:
         "scan_poll", run_id, iteration=iteration, pending_count=len(pending)
     ) as sp:
         elapsed = time.time() - state.get("scan_started_at", 0)
+        now_ts = time.time()
         if elapsed > settings.poll_timeout_s:
             logger.warning(
                 "scan timeout",
@@ -47,7 +48,11 @@ def scan_poll_node(state: PDCAState, config: RunnableConfig) -> dict:
                 },
             )
             for jid, meta in pending.items():
-                completed_meta_delta[jid] = {**meta, "status": "timeout"}
+                completed_meta_delta[jid] = {
+                    **meta,
+                    "status": "timeout",
+                    "completed_at": now_ts,
+                }
             sp.update(output={"reason": "timeout", "drained": len(pending)})
             flush_at_node()
             return {
@@ -72,12 +77,20 @@ def scan_poll_node(state: PDCAState, config: RunnableConfig) -> dict:
                         new_raw.extend(result)
                     elif result:
                         new_raw.append(result)
-                    completed_meta_delta[job_id] = {**meta, "status": "completed"}
+                    completed_meta_delta[job_id] = {
+                        **meta,
+                        "status": "completed",
+                        "completed_at": time.time(),
+                    }
                     logger.info(
                         "job completed", extra={"run_id": run_id, "job_id": job_id}
                     )
                 elif status == "failed":
-                    completed_meta_delta[job_id] = {**meta, "status": "failed"}
+                    completed_meta_delta[job_id] = {
+                        **meta,
+                        "status": "failed",
+                        "completed_at": time.time(),
+                    }
                     logger.warning(
                         "job failed", extra={"run_id": run_id, "job_id": job_id}
                     )
