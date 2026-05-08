@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     # Service URLs
     # ------------------------------------------------------------------
-    rag_api_url: str = "http://localhost:8005"
-    scanner_api_url: str = "http://127.0.0.1:8000"
+    rag_api_url: str = "http://localhost:9005"
+    scanner_api_url: str = "http://127.0.0.1:9001"
 
     # OLLAMA_URL alias cho backward-compat với .env cũ (decision #30)
     ollama_base_url: str = Field(

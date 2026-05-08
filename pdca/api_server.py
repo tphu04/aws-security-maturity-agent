@@ -541,4 +541,4 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info("Starting Prowler Scan API server")
-    uvicorn.run("pdca.api_server:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("pdca.api_server:app", host="127.0.0.1", port=9001, reload=True)
