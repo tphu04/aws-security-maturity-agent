@@ -1,0 +1,241 @@
+\documentclass[a4paper]{report}      % <--- BẮT BUỘC PHẢI CÓ
+% \input{components/global/layout}     % <--- GỌI FILE LAYOUT ĐÃ SỬA VÀO ĐÂY
+\usepackage{amssymb,epsfig,latexsym,array,hhline,fancyhdr}
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{lstautogobble}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{vntex}            % Hỗ trợ tiếng Việt
+\usepackage{makecell}
+\usepackage{changepage}
+\usepackage{indentfirst}      % Thụt đầu dòng đoạn văn đầu tiên
+\usepackage{algpseudocode}
+\usepackage{pifont}
+\newcommand{\xmark}{\ding{55}} % Định nghĩa dấu X-mark
+\usepackage{lstautogobble}
+\usepackage{parskip}          % Tạo khoảng cách giữa các đoạn văn
+\usepackage{pgfgantt}         % Vẽ biểu đồ Gantt
+\usepackage{xcolor}
+\definecolor{titlecolor}{RGB}{0,51,102}
+\usepackage{multirow}
+% --- 2. QUẢN LÝ TÀI LIỆU THAM KHẢO ---
+\usepackage{biblatex}
+\addbibresource{ref.bib}
+\AtBeginBibliography{\footnotesize}
+\setlength{\bibitemsep}{0pt}
+\setlength{\bibparsep}{0pt}
+
+% --- 3. MÀU SẮC & CODE ---
+% \usepackage[smartEllipses]{markdown}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{fvextra}
+\usepackage{tcolorbox}
+\usepackage{xcolor,colortbl}
+% Patch mismatch giữa colortbl 2024 (cần \insert@pcolumn) và array 2023 (chỉ có \insert@column)
+\makeatletter
+\providecommand{\insert@pcolumn}{\insert@column}
+\makeatother
+
+% Định nghĩa màu
+\definecolor{barblue}{RGB}{153,204,254}
+\definecolor{groupblue}{RGB}{51,102,254}
+\definecolor{linkred}{RGB}{165,0,33}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{xam}{rgb}{0.95, 0.95, 0.95}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{lightblue}{rgb}{0.8, 0.35, 0.9}
+\definecolor{light-gray}{gray}{0.92}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+
+% Style cho code
+\lstdefinestyle{mystyle}{
+  language=python,
+  backgroundcolor=\color{light-gray},
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  columns=fullflexible,
+  autogobble=true
+}
+\lstset{style=mystyle}
+
+% Định nghĩa ngôn ngữ JSON cho listings
+\lstdefinelanguage{json}{
+  basicstyle=\ttfamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  stepnumber=1,
+  numbersep=8pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  literate=
+    *{:}{{{\color{codepurple}{:}}}}{1}
+     {,}{{{\color{codepurple}{,}}}}{1}
+     {\{}{{{\color{blue}{\{}}}}{1}
+     {\}}{{{\color{blue}{\}}}}}{1}
+     {[}{{{\color{blue}{[}}}}{1}
+     {]}{{{\color{blue}{]}}}}{1},
+}
+
+% --- 4. CẤU HÌNH TRANG (GEOMETRY) ---
+\usepackage{geometry}
+\usepackage[Bjornstrup]{fncychap}
+
+% Các gói phụ trợ khác
+\usepackage[makeroom]{cancel}
+\usepackage{nicefrac}
+\usepackage{multicol,longtable,amscd}
+\usepackage{diagbox}
+\usepackage{booktabs}
+\usepackage{alltt}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds,calc}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\usepackage{caption}
+\usepackage{lastpage}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{setspace}
+
+\usepackage[hidelinks]{hyperref}
+
+% --- 5. ĐỊNH NGHĨA LAYOUT CHÍNH (THESIS LAYOUT) ---
+\def\thesislayout{
+  \geometry{
+    a4paper,
+    total={160mm,240mm},
+    left=30mm,
+    top=30mm,
+    bottom=25mm,
+    right=20mm
+  }
+}
+\thesislayout
+
+% --- 6. CÁC THIẾT LẬP KHÁC ---
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesection{\thechapter.\arabic{section}}
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+  {-3.25ex\@plus -1ex \@minus -.2ex}%
+  {1.5ex \@plus .2ex}%
+{\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\usepackage{algorithm}
+\sloppy
+\captionsetup[figure]{labelfont={small,bf},textfont={small},belowskip=-1pt,aboveskip=-9pt}
+\captionsetup[table]{labelfont={small,bf},textfont={small},belowskip=-1pt,aboveskip=7pt}
+
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+% --- PHẦN ĐỊNH NGHĨA BIẾN CỦA BẠN ---
+\def\SUBJECT{GRADUATION THESIS}
+\def\Subject{Graduation Thesis}
+\def\SubjectCode{}
+\def\AcademicYear{Academic Year 2025-2026}
+\def\Lecturer{Nguyễn An Khương, PhD}
+\def\Lecturern{Nguyễn Lê Quốc Anh}
+
+\def\ReportType{GRADUATION THESIS}
+\def\ReportTitle{TEACHING - LEARNING}
+\def\SubTitle{}
+
+\def\SubmitTime{Tháng 04/2026}
+
+% --- ĐỊNH DANH HỆ THỐNG (dùng xuyên suốt báo cáo) ---
+\newcommand{\sysname}{AWS Security Maturity Agent (ASMA)}
+\newcommand{\sysnameshort}{ASMA}
+
+% ========= MAIN CONTENT ====================
+
+\begin{document}
+
+% \arrayrulecolor{black}
+
+\input{components/global/title}
+\newpage
+
+% \input{components/global/sign}
+
+\newpage
+%\thispagestyle{empty}
+\pagenumbering{roman}
+
+\tableofcontents
+\newpage
+\setcounter{page}{1}
+\input{components/contents/Declaration}
+\newpage
+
+\input{components/contents/Acknowledgements}
+\newpage
+
+\input{components/contents/Abstract}
+\newpage
+
+\input{components/contents/Acronyms}
+\newpage
+
+\listoffigures
+\addcontentsline{toc}{chapter}{Danh sách hình}
+\newpage
+
+\listoftables
+\addcontentsline{toc}{chapter}{Danh sách bảng}
+\newpage
+
+\pagenumbering{arabic}
+
+\input{components/contents/Introduction}
+% \newpage
+\input{components/contents/Preliminary}
+% \newpage
+\input{components/contents/Related work and tool}
+% \newpage
+\input{components/contents/Approach}
+% \newpage
+\input{components/contents/Initial Implementation}
+\newpage
+\input{components/contents/Evaluation}
+\newpage
+\input{components/contents/Future Plans}
+\newpage
+\printbibliography[
+  heading=bibintoc,
+  title={Tài liệu tham khảo}
+]
+\newpage
+\appendix
+\input{components/contents/AppendixB_ModelBenchmark}
+\end{document}

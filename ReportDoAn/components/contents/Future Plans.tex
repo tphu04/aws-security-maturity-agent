@@ -1,0 +1,152 @@
+\chapter{Kết luận và Hướng phát triển}
+
+\section{Kết luận}
+\label{sec:conclusion}
+
+\subsection{Công việc đã thực hiện}
+\label{subsec:summary-work}
+
+Đồ án giải quyết bài toán tự động hóa quy trình đánh giá và khắc phục bảo mật trên nền tảng Amazon Web Services theo chu trình PDCA, với ràng buộc bảo vệ tính riêng tư của dữ liệu cấu hình hạ tầng người dùng. Khối lượng công việc trải dài từ khảo sát công trình liên quan, thiết kế kiến trúc, hiện thực toàn bộ stack phần mềm, đến xây dựng khung đánh giá định lượng và thực nghiệm trên môi trường AWS thực tế. Phần này tổng kết các nhóm việc chính đã được hoàn tất.
+
+\textbf{Khảo sát công trình liên quan và định vị đề tài.} Nhóm tác giả đã hệ thống hoá ba hướng nghiên cứu liên quan --- các nền tảng Cloud Security Posture Management (CSPM) truyền thống, các kiến trúc tác tử LLM (\textit{agentic LLM}) và các nghiên cứu sử dụng LLM cho kiểm toán bảo mật và tuân thủ --- để chỉ rõ khoảng trống mà đề tài hướng tới: thiếu một hệ closed-loop kết hợp phát hiện, lập kế hoạch khắc phục dựa trên ngữ nghĩa và xác minh hậu khắc phục mà vẫn giữ được tính riêng tư qua Local Inference. Trên cơ sở đó, năm câu hỏi nghiên cứu (RQ1--RQ5) được phát biểu để định hướng toàn bộ phần thiết kế và đánh giá của đồ án.
+
+\textbf{Thiết kế hệ thống theo mô hình PDCA.} Kiến trúc tổng thể được hình thành xoay quanh một đồ thị trạng thái LangGraph gồm 13 node, ánh xạ trực tiếp tới bốn pha Plan--Do--Check--Act. Các quyết định thiết kế then chốt gồm: (i) lựa chọn mô hình ngôn ngữ nhỏ Gemma 3 4B IT vận hành cục bộ qua Ollama sau quá trình so sánh định lượng với Qwen 2.5-7B, DeepSeek-R1-Distill-7B và Llama 3.2-3B; (ii) cơ chế Multi-Query Hybrid RAG (BM25 trên metadata, vector search trên chunk văn bản, cross-encoder reranker) cho mô-đun làm giàu ngữ cảnh; (iii) cơ chế Two-Pass Risk Evaluation tách phần rule-based rubric khỏi phần LLM judgment; và (iv) Human-in-the-Loop gate được kiểm soát qua Web API thay vì CLI để mỗi phê duyệt được lưu cùng định danh phiên chạy và có thể audit.
+
+\textbf{Hiện thực hệ thống end-to-end.} Toàn bộ stack đã được hiện thực thành các thành phần độc lập: lớp API trung gian bao bọc Prowler v4 và AWS Boto3 SDK; ba dịch vụ FastAPI nội bộ (Scanner API, RAG API, Chatbot API); orchestrator dựa trên LangGraph với checkpoint persistence; bốn agent chính (Planning, Risk Evaluation, Remediation Planner, Report); registry tool remediation với cơ chế nhãn thủ công bắt buộc; mô-đun Maturity Engine; lớp quan sát vận hành bằng Langfuse self-host. Phía người dùng, một giao diện Web React (cùng dịch vụ chatbot và Runs API) cho phép quản trị viên gửi yêu cầu bằng ngôn ngữ tự nhiên, theo dõi tiến trình theo thời gian thực, phê duyệt từng tác vụ remediation và tải báo cáo cuối ở ba định dạng Markdown / HTML / PDF.
+
+\textbf{Xây dựng khung đánh giá định lượng và thực nghiệm.} Một bộ khung đánh giá riêng đã được xây dựng trên nhiều trục: chất lượng truy hồi của tầng RAG (72 case), năng lực của ba agent sinh nội dung (50 case Planning, 30 case Risk, 30 case Report), hiệu năng end-to-end của pipeline trên 5 phiên D1 broad-scan, đánh giá toàn diện chất lượng deliverable và độ chính xác trajectory, cùng các ablation cho từng quyết định thiết kế chính (BM25 vs Vector vs Hybrid; No-RAG vs Single-pass vs Two-Pass; trước và sau khi hiệu chỉnh nhiệt độ sinh cho Report Agent). Toàn bộ thực nghiệm được thực hiện trên môi trường AWS thực, lặp lại theo quy trình \textit{degrade $\rightarrow$ run $\rightarrow$ revert} để đảm bảo tính tái lập, và kết quả được báo cáo dưới dạng trung bình kèm độ lệch chuẩn thay vì single-run.
+
+Toàn bộ thiết kế chi tiết được trình bày ở Chương~4, hiện thực kỹ thuật ở Chương~5, và kết quả thực nghiệm định lượng ở Chương~6.
+
+\subsection{Đối chiếu kết quả với mục tiêu nghiên cứu}
+\label{subsec:rq-verdict}
+
+Năm câu hỏi nghiên cứu (Research Questions, RQ) đã được phát biểu ở §\ref{subsec:research-questions} và được ánh xạ ba chiều thiết kế--module--đánh giá ở Bảng~\ref{tab:rq_mapping} (cuối Chương~4). Bảng~\ref{tab:rq-verdict} dưới đây đối chiếu mỗi RQ với phương pháp đo và kết quả thực nghiệm tương ứng.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Đối chiếu câu hỏi nghiên cứu với phương pháp đo và kết quả}
+  \label{tab:rq-verdict}
+  \renewcommand{\arraystretch}{1.25}
+  \footnotesize
+  \begin{tabular}{|p{0.8cm}|p{4cm}|p{4.5cm}|p{4.5cm}|}
+    \hline
+    \textbf{RQ} & \textbf{Tóm tắt câu hỏi} & \textbf{Phương pháp đo} & \textbf{Kết quả} \\ \hline
+    RQ1 & Tác tử có khép kín được chu trình PDCA cho CSPM trên AWS một cách nhất quán không? & End-to-end trên AWS Sandbox với S3: hiệu năng pipeline (§\ref{sec:e2e_eval}); trajectory + state-handoff invariants (§\ref{subsec:trajectory_eval}); maturity delta (§\ref{subsec:deliverable_quality}). & 5/5 phiên hoàn tất chu trình đánh giá--khắc phục--xác minh; 100\% trajectory bám đúng đường đi 13 node; điểm maturity post-remediation $78{,}10$ so với baseline $46{,}43$, đồng nhất trên cả 5 phiên (CV $= 0\%$). \\ \hline
+    RQ2 & Đánh giá rủi ro có RAG + LLM có tin cậy hơn rule-only không? & Ablation No-RAG / Single-pass / Two-Pass trên 30 case Risk (§\ref{sec:llm_generation_eval}). & Cấu hình có RAG (Two-Pass) đạt Accuracy $83{,}3\%$ và QWK $0{,}941$, cao hơn No-RAG ($76{,}7\%$) và Single-pass ($66{,}7\%$); Faithfulness reasoning $0{,}950$. \\ \hline
+    RQ3 & Truy hồi tri thức có cải thiện ngữ cảnh CSPM chuyên ngành không? & Retrieval metrics + ablation BM25 / Vector / Hybrid trên 72 case (§\ref{sec:rag_retrieval_eval}); RAGAS faithfulness ở Report Agent (§\ref{sec:llm_generation_eval}). & Hybrid đạt Top-1 $79{,}7\%$ và MRR $0{,}8464$, cao hơn BM25/Vector đơn lẻ ($71\%$); cải thiện đồng nhất trên truy vấn định danh và ngôn ngữ tự nhiên; ablation Report cho thấy $\Delta > 0$ trên 4/4 chỉ số SOFT. \\ \hline
+    RQ4 & Cơ chế kiểm soát của con người có bảo đảm an toàn cho remediation tự động không? & Kịch bản HITL (§\ref{subsec:scenario_hitl}); cơ chế Safety Guards (§\ref{subsec:scenario_safety}); trajectory eval (§\ref{subsec:trajectory_eval}). & Trên 5/5 phiên: tác vụ tự động được phê duyệt đúng, 6 tác vụ thủ công bắt buộc bị guard từ chối với mã \textit{manual\_required}; không có trường hợp ``rò'' sang nhánh tự động; 0 unauthorized writes. \\ \hline
+    RQ5 & Hệ thống có khả thi trên hạ tầng tài nguyên hạn chế và bảo đảm riêng tư không? & Hardware spec (§\ref{app:model_benchmark_method}); thời gian end-to-end (§\ref{subsec:perf_e2e}); footprint VRAM/RAM. & Toàn bộ pipeline chạy trên RTX 3060 6\,GB với Gemma 3 4B IT (Q4\_K\_M, $\sim 4{,}85$\,GB VRAM); thời gian phiên $432{,}1 \pm 45{,}1$\,s (CV $\sim 10\%$, không kể thời gian chờ phê duyệt HITL); không gửi finding ra third-party. \\ \hline
+  \end{tabular}
+\end{table}
+
+Hai mục đo bổ trợ — chất lượng Maturity Engine và độ phủ trace của Langfuse — không được phát biểu thành RQ riêng vì là kết quả phụ trợ cho RQ1 (maturity delta minh chứng tính nhất quán của chu trình) và là công cụ vận hành cho phép trích số liệu cho mọi RQ. Số liệu chi tiết của hai mục này nằm trong các phần tương ứng của Chương~6.
+
+\subsection{Đóng góp của đề tài}
+\label{subsec:contributions-recap}
+
+Đồ án có sáu đóng góp chính, chia thành hai nhóm: ba đóng góp nghiên cứu (đề xuất các thiết kế mới có giá trị tham khảo cho cộng đồng) và ba đóng góp kỹ thuật/hiện thực (sản phẩm phần mềm hoàn chỉnh có thể tái sử dụng).
+
+\medskip
+\noindent\textbf{(A) Đóng góp nghiên cứu}
+\medskip
+
+\textit{Thứ nhất, thiết kế Two-Pass Risk Evaluation} cho các pipeline đánh giá rủi ro bảo mật dựa trên LLM. Cơ chế này tách rạch ròi pha rule-based rubric (định lượng rủi ro theo các thuộc tính khách quan của finding) khỏi pha LLM judgment có ngữ cảnh từ RAG (hiệu chỉnh dựa trên tri thức chuyên môn). Cách tổ chức hai pha độc lập giúp giảm phương sai điểm rủi ro khi LLM phải xử lý đồng thời nhiều nguồn tín hiệu, đồng thời tạo điểm chèn rõ ràng để audit từng quyết định.
+
+\textit{Thứ hai, thiết kế Multi-Query Hybrid RAG} cho miền Cloud Security Posture Management. Tầng truy hồi kết hợp ba thành phần bổ trợ: BM25 trên metadata định danh kỹ thuật, vector search trên chunk văn bản mô tả, và cross-encoder reranker để tinh chỉnh thứ hạng cuối cùng. Một câu hỏi gốc được sinh thành ba biến thể truy vấn để tạo ngữ cảnh ba chiều (Q1 root-cause, Q2 compliance mapping, Q3 fix-guide), kết quả được hợp nhất bằng \textit{Reciprocal Rank Fusion} trước khi rerank. Thiết kế này phù hợp với đặc điểm của miền CSPM, nơi truy vấn có thể là định danh chính xác (check ID), mô tả ngôn ngữ tự nhiên hoặc tiếng Việt.
+
+\textit{Thứ ba, mô hình Human-in-the-Loop gate} cho remediation closed-loop. Mỗi tool remediation được gắn nhãn ở tầng đăng ký (tự động hoá được hay thủ công bắt buộc) thay vì để Agent quyết định tại runtime, đảm bảo các thao tác không thể đảo ngược (như bật MFA Delete, object lock) luôn dừng lại tại gate phê duyệt. Cơ chế \textit{default-safe} đảm bảo khi LLM không đủ chắc chắn, hệ thống mặc định chuyển sang nhánh thủ công thay vì gọi API AWS. Quyết định phê duyệt được lưu cùng định danh phiên chạy, cho phép audit và resume từ máy khác mà không mất ngữ cảnh.
+
+\medskip
+\noindent\textbf{(B) Đóng góp kỹ thuật và hiện thực}
+\medskip
+
+\textit{Thứ nhất, hệ thống end-to-end hoàn chỉnh} chạy được trên phần cứng cá nhân (RTX 3060 6 GB) với mô hình ngôn ngữ nhỏ Gemma 3 4B IT vận hành cục bộ qua Ollama. Toàn bộ chu trình PDCA được hiện thực thành 13 node LangGraph với checkpoint persistence, có thể chạy đầy đủ một phiên broad-scan trong khoảng $432$ giây (không kể thời gian chờ phê duyệt HITL) mà không cần kết nối tới bất kỳ dịch vụ LLM thương mại nào --- một bằng chứng định lượng cho tính khả thi của hướng Local Inference đối với các đội bảo mật quy mô vừa.
+
+\textit{Thứ hai, lớp giao diện người dùng và quan sát vận hành.} Giao diện Web dựa trên React cùng dịch vụ chatbot và Runs API cho phép quản trị viên gửi yêu cầu bằng ngôn ngữ tự nhiên, theo dõi tiến trình thời gian thực qua Server-Sent Events, phê duyệt từng tác vụ remediation và tải báo cáo cuối. Lớp quan sát vận hành dựa trên Langfuse self-host ghi nhận đầy đủ trace của từng node, từng lời gọi LLM và từng truy vấn RAG, phục vụ cả việc gỡ lỗi lẫn truy vết các phiên đánh giá đã chạy.
+
+\textit{Thứ ba, bộ khung đánh giá định lượng đa trục} cho các hệ agentic workflow. Khung này bao gồm bốn nhóm chính: chất lượng truy hồi của tầng RAG, năng lực sinh nội dung của các agent (Planning, Risk Evaluation, Report), hiệu năng end-to-end của pipeline, và đánh giá toàn diện chất lượng deliverable cộng độ chính xác trajectory. Mỗi nhóm có bộ test case riêng, ground truth được kiểm duyệt thủ công, các chỉ số định lượng phù hợp với đặc thù tác vụ (Hit@k, MRR, NDCG, F1, QWK, Faithfulness) và các ablation cô lập từng quyết định thiết kế chính. Khung này có thể được tái sử dụng để đánh giá các hệ agentic workflow tương tự trong tương lai.
+
+\section{Hạn chế của nghiên cứu}
+\label{sec:limitations}
+
+Bên cạnh các kết quả đạt được, đồ án còn một số hạn chế cần được nhìn nhận một cách trung thực để định hình phạm vi của các nghiên cứu kế tiếp. Năm nhóm hạn chế dưới đây được nhóm tác giả tổng hợp dựa trên cả khía cạnh kiến trúc và khía cạnh thực nghiệm.
+
+\textbf{Thứ nhất, độ phủ và tính cập nhật của kho tri thức RAG.}
+Hệ thống đã sử dụng RAG để giảm hiện tượng hallucination khi sinh đề xuất khắc phục, song chất lượng của các phản hồi vẫn phụ thuộc vào ranh giới của kho văn bản (corpus) được nạp vào cơ sở dữ liệu vector. Hiện tại corpus được lập chỉ mục là tĩnh (Prowler checks, AWS Security Maturity Model, một phần CIS AWS Benchmarks); chưa có cơ chế tìm kiếm theo thời gian thực hoặc cập nhật liên tục. Khi xuất hiện các lỗ hổng mới hoặc các dịch vụ AWS mới ra mắt, kho tri thức cần được người phụ trách dọn dẹp và tái lập chỉ mục định kỳ; nếu không, độ tin cậy của khối truy hồi sẽ suy giảm.
+
+\textbf{Thứ hai, phạm vi remediation lệch về Amazon S3.}
+Mô-đun khắc phục tự động được hiện thực và kiểm thử kỹ trên Amazon S3 (cấu hình mã hoá, public access block, versioning, logging) và một phần IAM. Đối với các kịch bản phức tạp ở cấp tổ chức (AWS Organizations Service Control Policies) hoặc các mối quan hệ tin cậy giữa nhiều tài khoản (cross-account trust policies), phạm vi tự động hoá còn hạn chế và chủ yếu dừng ở mức đề xuất, chưa thực thi tự động.
+
+\textbf{Thứ ba, chưa có Long-term Memory cho phiên PDCA.}
+Hệ thống hiện vận hành theo cơ chế chạy đơn lẻ (one-shot execution) cho từng phiên PDCA. Kết quả của các phiên trước chỉ được dùng để xuất báo cáo cuối phiên, chưa được đưa trở lại như một dạng bộ nhớ dài hạn để hỗ trợ pha lập kế hoạch của các phiên sau. Hệ quả là hệ thống chưa thể tự học được cách lờ đi các cảnh báo đã được người vận hành xác nhận là false positive trong các phiên lịch sử.
+
+\textbf{Thứ tư, khả năng tiếng Việt còn yếu.}
+Mô hình Gemma 3 4B IT là một mô hình ngôn ngữ nhỏ và chất lượng tiếng Việt phụ thuộc vào tokenizer cũng như tỷ lệ ngữ liệu Việt trong quá trình huấn luyện. Trên bộ test tiếng Việt, các chỉ số \textit{capability\_vi} và \textit{user\_query\_vi} (Top-1) đạt mức khiêm tốn (chi tiết tại §6.x). Hệ quả là một số truy vấn tiếng Việt dạng dài hoặc dùng từ chuyên ngành không phổ biến chưa được hệ thống xử lý tốt; đây là động lực cho hướng nghiên cứu fine-tuning chuyên biệt được đề xuất ở §\ref{sec:future-work}.
+
+\textbf{Thứ năm, phạm vi và quy mô thực nghiệm.}
+Mặc dù các nhóm thực nghiệm chính đã được thực hiện với mẫu lặp đủ để báo cáo trung bình kèm độ lệch chuẩn (5 phiên D1 cho hiệu năng end-to-end và đánh giá toàn diện ở §\ref{sec:e2e_eval}; 72 case cho RAG ở §\ref{sec:rag_retrieval_eval}; 30 case cho Risk và 30 case cho Report ở §\ref{sec:llm_generation_eval}), phạm vi thực nghiệm vẫn bị giới hạn ở một AWS account duy nhất ở vùng \texttt{us-east-1} với scope đánh giá là dịch vụ S3 và bộ scan dừng ở $\sim 11$ finding/phiên. Tính bền vững của hệ thống khi mở rộng sang các dịch vụ khác (IAM, EC2, RDS, VPC), khi quy mô finding tăng vài chục lần, hoặc khi xuất hiện các kịch bản multi-account / multi-region chưa được kiểm chứng định lượng.
+Các hạn chế này định hình phạm vi mà các nghiên cứu kế tiếp cần mở rộng, đặc biệt về tính tổng quát hoá ngoài phạm vi Amazon S3 và độ chặt thống kê của thực nghiệm.
+
+\section{Hướng phát triển}
+\label{sec:future-work}
+
+Dựa trên các hạn chế đã phân tích ở §\ref{sec:limitations}, các hướng phát triển được tổ chức thành ba nhóm theo độ trưởng thành và mốc thời gian dự kiến. Mỗi nhóm được đính kèm tiêu chí nghiệm thu (\textit{acceptance criterion}) để có thể đánh giá độc lập mức độ hoàn thành.
+
+\subsection{Nhóm P1 --- Tự động cập nhật kho tri thức RAG (2--3 tháng)}
+\label{subsec:fw-p1}
+
+Nhóm này hướng tới việc giải quyết hạn chế thứ nhất ở §\ref{sec:limitations} (độ phủ và tính cập nhật của kho tri thức RAG). Hiện tại corpus được lập chỉ mục là tĩnh: gồm các Prowler checks, AWS Security Maturity Model và một phần CIS AWS Benchmarks ở thời điểm xây dựng đồ án. Khi xuất hiện check mới (do Prowler bổ sung) hoặc dịch vụ AWS mới ra mắt, người phụ trách phải dọn dẹp và tái lập chỉ mục thủ công, dẫn đến rủi ro độ tin cậy của khối truy hồi suy giảm theo thời gian. Mục tiêu của P1 là đưa quy trình cập nhật corpus về dạng tự động, có lịch sử thay đổi và có cơ chế phòng vệ về chất lượng.
+
+\begin{itemize}
+  \item \textbf{Pipeline đồng bộ corpus từ nguồn gốc} (Prowler repository và tài liệu AWS public): lập lịch định kỳ (daily/weekly), tải các bản phát hành mới, chuẩn hoá về cùng schema mà ChromaDB đang sử dụng, và đánh dấu các check / capability mới so với phiên bản trước.
+
+  \item \textbf{Versioning kho tri thức}: mỗi lần tái lập chỉ mục được gắn nhãn phiên bản kèm hash của corpus đầu vào; lưu lại diff (check thêm mới, check bị xoá, capability thay đổi mô tả) dưới dạng changelog có thể đọc được. Thiết kế này cho phép truy vết một finding cụ thể quay lại đúng phiên bản knowledge base đã được dùng tại thời điểm sinh.
+
+  \item \textbf{Cron task tái lập chỉ mục ChromaDB} với thuộc tính \emph{atomic}: collection mới được build trong một thư mục staging, kiểm thử pass mới swap vào production, để các phiên PDCA đang chạy không bị gãy giữa chừng. Cơ chế này cũng cho phép rollback nhanh nếu phát hiện regression sau khi swap.
+
+  \item \textbf{Cơ chế phát hiện và thông báo check mới}: khi pipeline đồng bộ phát hiện check / capability chưa từng xuất hiện trong phiên bản trước, hệ thống gửi cảnh báo qua kênh quản trị (chatbot hoặc email) kèm tóm tắt do LLM sinh ra, để người vận hành nhanh chóng đánh giá ý nghĩa nghiệp vụ và quyết định có cần tinh chỉnh hành vi của Planning hay Risk Eval Agent không.
+
+  \item \textbf{Test regression cho RAG sau mỗi lần tái-index}: chạy lại bộ test 72 case của §\ref{sec:rag_retrieval_eval} ngay sau khi swap; nếu các chỉ số chính (Top-1, MRR, NDCG@5) suy giảm vượt ngưỡng đã định, pipeline chặn việc swap và giữ corpus phiên bản trước. Bộ test này đóng vai trò "guard" định lượng cho mỗi lần cập nhật, tránh trường hợp corpus mới làm hỏng chất lượng truy hồi mà không bị phát hiện.
+\end{itemize}
+
+\noindent\textit{Tiêu chí nghiệm thu của P1:}
+\begin{itemize}
+  \item Pipeline đồng bộ chạy được không giám sát trong tối thiểu một tháng và tạo ít nhất hai phiên bản knowledge base có versioning đầy đủ.
+  \item Khi xuất hiện check mới ở upstream, hệ thống phát hiện và thông báo trong vòng 24 giờ kể từ khi được công bố.
+  \item Bộ test regression 72 case chạy tự động sau mỗi lần tái-index và có khả năng chặn swap khi phát hiện suy giảm chất lượng.
+  \item Có khả năng rollback về phiên bản knowledge base trước trong tối đa 5 phút khi phát hiện sự cố.
+\end{itemize}
+
+\subsection{Nhóm P2 --- Mở rộng phạm vi dịch vụ AWS (2--3 tháng)}
+\label{subsec:fw-p2}
+
+Nhóm này hướng tới việc mở rộng phạm vi remediation ra ngoài Amazon S3 nhằm giải quyết hạn chế thứ hai (phạm vi remediation lệch về S3). Các dịch vụ ưu tiên được lựa chọn dựa trên phổ rủi ro thực tế trong các CIS AWS Benchmarks và mức độ phức tạp khi tự động hoá:
+
+\begin{itemize}
+  \item \textbf{IAM:} bổ sung các checks và remediation liên quan đến MFA bắt buộc cho người dùng IAM, IAM Access Analyzer, các chính sách kèm điều kiện không an toàn (ví dụ \texttt{Resource: "*"}), tự động vô hiệu hoá người dùng không hoạt động sau ngưỡng thời gian.
+  \item \textbf{EC2:} đóng các cổng rủi ro (22/3389) trên Security Group được public, kiểm tra và sửa cấu hình EBS volume encryption, IMDSv2 enforcement.
+  \item \textbf{RDS:} bật mã hoá ở mức storage, cấu hình backup retention, ràng buộc public accessibility.
+  \item \textbf{VPC:} bật VPC Flow Logs, kiểm tra default security group, kiểm soát các Network ACL có rule mở rộng.
+\end{itemize}
+
+\noindent\textit{Tiêu chí nghiệm thu của P2:} mỗi dịch vụ trên có ít nhất ba checks Prowler được hỗ trợ remediation tự động (đối với các thao tác có thể đảo ngược) hoặc đề xuất khắc phục có HITL (đối với các thao tác không thể đảo ngược); bộ test tích hợp được mở rộng thêm tối thiểu 20 ca cho phạm vi mới; tài liệu hoá rõ ràng các thao tác bị giữ lại ở HITL gate.
+
+\subsection{Nhóm P3 --- Hướng nghiên cứu sâu (6--12 tháng)}
+\label{subsec:fw-p3}
+
+Nhóm này tập hợp các hướng nghiên cứu mở, mỗi hướng giải quyết một hạn chế kiến trúc đã nêu ở §\ref{sec:limitations}.
+
+\begin{itemize}
+  \item \textbf{Hỗ trợ Multi-cloud (Azure, Google Cloud Platform).} Tách lớp tích hợp dịch vụ đám mây thành abstraction để tái sử dụng kiến trúc Hybrid RAG và HITL cho các nhà cung cấp khác. Đây là hướng giải quyết khoảng cách giữa đề tài và các giải pháp CSPM thương mại đa-cloud.
+
+  \item \textbf{Long-term Memory kiểu Reflexion.} Bổ sung mô-đun bộ nhớ dài hạn để hệ thống có thể đọc lại các phiên PDCA trước và rẽ nhánh kế hoạch dựa trên lịch sử (ví dụ: tự động bỏ qua các cảnh báo đã được xác nhận là false positive trong nhiều phiên trước). Hướng này trực tiếp giải quyết hạn chế thứ ba.
+
+  \item \textbf{Fine-tuning Gemma 3 với LoRA cho miền CSPM tiếng Việt.} Xây dựng tập dữ liệu hướng dẫn (instruction dataset) gồm các cặp (mô tả lỗi bảo mật, kế hoạch khắc phục JSON chuẩn) bằng tiếng Việt, sau đó fine-tune mô hình bằng kỹ thuật LoRA hoặc QLoRA \cite{dettmers2023qlora}. Mục tiêu là cải thiện chất lượng tiếng Việt (giải quyết hạn chế thứ năm) và tăng độ chính xác chọn công cụ trên các tác vụ chuyên biệt của CSPM.
+\end{itemize}
+
+\noindent\textit{Tiêu chí nghiệm thu của P3:} ít nhất một trong ba hướng có prototype chạy được trên một nhánh phụ (feature branch) với tài liệu mô tả thiết kế và kết quả thực nghiệm sơ bộ, đủ làm bằng chứng cho việc tiếp tục triển khai trong các nghiên cứu kế tiếp.
+
+\medskip
+
+\noindent Ba nhóm P1, P2, P3 sắp xếp theo thứ tự tăng dần về độ rủi ro nghiên cứu và mốc thời gian: P1 tự động hoá vòng đời cập nhật kho tri thức RAG để hệ thống không bị lệch theo thời gian; P2 mở rộng phạm vi thực thi sang các dịch vụ AWS khác ngoài S3; P3 mở các hướng nghiên cứu trung và dài hạn để giải quyết các hạn chế kiến trúc còn lại.

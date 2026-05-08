@@ -1,0 +1,740 @@
+% =============================================================================
+% CHƯƠNG 2 — Cơ sở lý thuyết
+% Cấu trúc 10 mục, 3 cụm:
+%   [A] DOMAIN FOUNDATIONS  — §2.1 CSPM, §2.2 Maturity, §2.3 Compliance,
+%                             §2.4 PDCA, §2.5 Risk
+%   [B] AI FOUNDATIONS      — §2.6 LLM/SLM, §2.7 LLM-based AI Agent,
+%                             §2.8 RAG, §2.9 Retrieval & Re-ranking
+%   [C] EVALUATION          — §2.10 Evaluation Methodology
+%
+% Định hướng: trình bày khung lý thuyết và khái niệm nền tảng. Tránh đưa
+% chi tiết hiện thực (tên model, framework, tên class/node, hằng số cấu hình);
+% mọi chi tiết đó được trình bày tại Chương 4 (Approach) và Chương 5 (Implementation).
+% =============================================================================
+
+\chapter{Cơ sở lý thuyết}
+\label{ch:preliminary}
+
+Chương này thiết lập nền tảng lý thuyết cho toàn bộ đồ án. Nội dung được tổ chức thành ba cụm tương ứng với ba trục của đề tài: \textbf{(A) Nền tảng miền ứng dụng} --- quản lý tư thế bảo mật đám mây, mô hình trưởng thành bảo mật, các khung tuân thủ, chu trình PDCA và đánh giá rủi ro; \textbf{(B) Nền tảng trí tuệ nhân tạo} --- mô hình ngôn ngữ và suy luận cục bộ, tác tử AI dựa trên mô hình ngôn ngữ lớn, sinh tăng cường truy hồi, các phương pháp truy hồi và tái xếp hạng; \textbf{(C) Nền tảng đánh giá} --- phương pháp luận đo lường chất lượng truy hồi, chất lượng sinh, chỉ tiêu đặc thù bảo mật và đánh giá toàn cục. Chương này giới hạn ở các khái niệm và phương pháp lý thuyết; mọi chi tiết hiện thực (lựa chọn mô hình cụ thể, framework, tham số) được trình bày tại Chương~4 và Chương~5.
+
+% =============================================================================
+% [A] DOMAIN FOUNDATIONS
+% =============================================================================
+
+\section*{Cụm A --- Nền tảng miền ứng dụng}
+\addcontentsline{toc}{section}{Cụm A --- Nền tảng miền ứng dụng}
+
+Cụm A xác lập \textit{bài toán} mà hệ thống cần giải. Mục §\ref{sec:cspm} đặt CSPM trong bối cảnh Mô hình Trách nhiệm Chia sẻ và lý do bài toán cấu hình sai trở thành nguyên nhân chính của các sự cố đám mây. Mục §\ref{sec:maturity} giới thiệu các mô hình trưởng thành dùng để định lượng "mức độ trưởng thành bảo mật" --- khái niệm mà mọi CSPM hiện đại đều cố gắng tiệm cận. Mục §\ref{sec:compliance} trình bày các khung tuân thủ làm cơ sở cho rule-set kiểm tra. Mục §\ref{sec:pdca} đưa ra mô hình chu trình lặp được dùng để cấu trúc luồng vận hành. Cuối cùng, §\ref{sec:risk} thảo luận các khung chấm điểm rủi ro để chuyển các phát hiện thành ưu tiên hành động.
+
+\section{Quản lý Tư thế Bảo mật Đám mây (CSPM)}
+\label{sec:cspm}
+
+\subsection{Mô hình Trách nhiệm Chia sẻ và bài toán cấu hình sai}
+\label{subsec:shared-responsibility}
+
+Trong các nền tảng đám mây công cộng, ranh giới trách nhiệm giữa nhà cung cấp dịch vụ (Cloud Service Provider --- CSP) và khách hàng được định nghĩa qua \textbf{Mô hình Trách nhiệm Chia sẻ} (Shared Responsibility Model) \cite{aws_shared_responsibility}. Nhà cung cấp chịu trách nhiệm cho \textit{security \textbf{of} the cloud} (phần cứng, hạ tầng mạng, lớp ảo hóa), trong khi khách hàng chịu trách nhiệm cho \textit{security \textbf{in} the cloud} (cấu hình dịch vụ, quản lý danh tính, phân quyền, mã hóa, ghi log, vá lỗ hổng ứng dụng).
+
+Phần lớn các sự cố lộ dữ liệu trên đám mây trong giai đoạn 2019--2024 không xuất phát từ lỗ hổng nội tại của CSP mà từ \textbf{cấu hình sai do người dùng} (cloud misconfiguration) --- bucket lưu trữ phơi công khai, IAM policy quá rộng, khóa truy cập bị rò rỉ, log không được bật \cite{verizon_dbir_2024,ibm_cost_breach_2024}. Bản chất bài toán là một không gian cấu hình rất lớn, tài liệu phân tán theo từng dịch vụ, và sự thay đổi liên tục của cả hạ tầng lẫn khung tuân thủ. Đây là động lực thúc đẩy sự hình thành lớp công cụ \textit{Cloud Security Posture Management}.
+
+\subsection{Định nghĩa và phân loại CSPM}
+\label{subsec:cspm-def}
+
+\textit{Cloud Security Posture Management} (CSPM) được Gartner đề xuất năm 2019 \cite{gartner_cspm} như một danh mục công cụ tự động hóa việc \textbf{khám phá tài nguyên đám mây}, \textbf{đánh giá cấu hình so với các chuẩn bảo mật}, \textbf{phát hiện sai lệch} và \textbf{khuyến nghị hoặc thực thi khắc phục}. CSPM hướng tới việc rút ngắn khoảng cách giữa thay đổi cấu hình và phát hiện rủi ro, hỗ trợ duy trì \textit{tuân thủ liên tục} (continuous compliance) thay vì kiểm toán định kỳ.
+
+Theo NIST SP~800-204 \cite{nist_sp_800_204} và các khảo sát học thuật về kiểm toán cấu hình đám mây \cite{cloud_audit_survey_2023}, công cụ CSPM có thể phân loại theo nhiều trục:
+
+\begin{itemize}
+  \item \textbf{Theo cách tiếp cận triển khai:}
+    \begin{itemize}
+      \item \textit{Agentless} --- truy vấn API/SDK của CSP, không cài đặt tác nhân nào trên tài nguyên. Triển khai nhanh, không xâm nhập, nhưng giới hạn ở dữ liệu CSP cung cấp.
+      \item \textit{Agent-based} --- cài đặt tác nhân trên máy ảo hoặc container để thu thập dữ liệu thời gian thực. Dữ liệu giàu hơn nhưng chi phí vận hành cao hơn.
+    \end{itemize}
+  \item \textbf{Theo phạm vi đánh giá:} chỉ phát hiện (\textit{detection-only}) so với phát hiện kèm khắc phục tự động (\textit{detect-and-remediate}).
+  \item \textbf{Theo nguồn quy tắc:} dựa trên rule-set tĩnh hay khả năng học/sinh quy tắc động. Hai hướng này không loại trừ nhau và có thể kết hợp.
+\end{itemize}
+
+\subsection{Các thách thức cốt lõi của bài toán CSPM}
+\label{subsec:cspm-challenges}
+
+Khác với kiểm toán bảo mật truyền thống trên hạ tầng tĩnh, CSPM phải đối mặt với một số đặc trưng làm cho bài toán khó:
+
+\begin{itemize}
+  \item \textbf{Tính thay đổi liên tục (drift)}: tài nguyên đám mây được tạo, sửa, xóa qua API, IaC, hoặc thao tác thủ công bất kỳ lúc nào. Một cấu hình tuân thủ tại thời điểm $t$ có thể không còn tuân thủ tại $t+\Delta t$. Đây là động lực buộc phải chuyển từ kiểm toán định kỳ sang kiểm toán liên tục \cite{continuous_compliance_2022}.
+  \item \textbf{Quy mô và độ phân tán của tài liệu}: mỗi nhà cung cấp đám mây có hàng trăm dịch vụ, mỗi dịch vụ lại có hàng chục thuộc tính cấu hình. Tri thức cần thiết để phán đoán \textit{một} cấu hình là sai phân tán trong tài liệu CSP, các khung tuân thủ (CIS, NIST), và best practices cộng đồng.
+  \item \textbf{Khoảng cách giữa phát hiện và khắc phục}: một check fail mới chỉ là tín hiệu thô. Người vận hành cần biết \textit{tại sao} cấu hình đó nguy hiểm, \textit{trong ngữ cảnh nào} nó nguy hiểm, và \textit{khắc phục thế nào không gây gián đoạn dịch vụ}. CSPM dựa trên rule tĩnh thường dừng ở bước phát hiện và để khoảng cách này cho con người.
+  \item \textbf{Alert fatigue}: rule tĩnh sinh số lượng phát hiện rất lớn trên các tổ chức quy mô lớn, trong đó tỷ lệ phát hiện thực sự rủi ro thấp. Hậu quả là người vận hành mất khả năng phân biệt phát hiện quan trọng với phát hiện thông thường, làm giảm hiệu quả của toàn bộ quá trình kiểm toán \cite{nist_sp_800_204}.
+  \item \textbf{Đa khung tuân thủ}: cùng một tài sản có thể đồng thời chịu sự điều chỉnh của CIS, NIST 800-53, ISO 27001, PCI-DSS. Việc duy trì các báo cáo theo nhiều khung mà không lặp lại quá trình quét là một yêu cầu kỹ thuật không tầm thường.
+\end{itemize}
+
+Năm thách thức này định hình các yêu cầu thiết kế cốt lõi cho mọi giải pháp CSPM hiện đại: kiểm toán liên tục, tổng hợp tri thức từ nguồn phân tán, sinh khuyến nghị có ngữ cảnh, ưu tiên hóa rủi ro, và tách dữ liệu kiểm tra khỏi định dạng báo cáo --- là cơ sở để giới thiệu các thành phần lý thuyết tiếp theo.
+
+\section{Mô hình Trưởng thành Bảo mật (Security Maturity Models)}
+\label{sec:maturity}
+
+\subsection{Khái niệm Maturity Model}
+\label{subsec:maturity-concept}
+
+\textit{Mô hình trưởng thành} (maturity model) bắt nguồn từ Capability Maturity Model của SEI \cite{sei_cmm_1993}, là một khung định nghĩa các \textbf{mức độ} (maturity levels) để đánh giá năng lực của một tổ chức trong một lĩnh vực cụ thể. Trong an toàn thông tin, mô hình trưởng thành được sử dụng để (i) định vị hiện trạng, (ii) định hướng cải tiến theo lộ trình, và (iii) hỗ trợ ra quyết định đầu tư an ninh.
+
+Một mô hình trưởng thành tiêu biểu có ba thành phần cốt lõi: tập \textbf{lĩnh vực kiểm soát} (control domains), thang \textbf{mức độ} (thường 4--5 mức từ \textit{Initial} đến \textit{Optimizing}), và \textbf{tiêu chí chuyển mức} (rubrics). Việc định lượng hóa thường dựa trên tỷ lệ kiểm soát đạt yêu cầu, mức độ tự động hóa, độ phủ tài sản và độ ổn định của quy trình.
+
+\subsection{Các khung tham chiếu chính}
+\label{subsec:maturity-frameworks}
+
+\begin{itemize}
+  \item \textbf{NIST Cybersecurity Framework v2.0} \cite{nist_csf_2024} --- chia thành sáu chức năng (Govern, Identify, Protect, Detect, Respond, Recover) và bốn \textit{Implementation Tiers} (Partial, Risk Informed, Repeatable, Adaptive). Phiên bản 2024 bổ sung trục Govern so với v1.1 và là khung tham chiếu phổ biến nhất hiện nay.
+  \item \textbf{CIS Controls v8} \cite{cis_controls_v8} --- 18 nhóm kiểm soát, mỗi nhóm gồm các \textit{Safeguards} được xếp vào ba \textit{Implementation Groups} (IG1--IG3) tương ứng với mức độ trưởng thành tăng dần.
+  \item \textbf{AWS Security Maturity Model} \cite{aws_smm} --- mô hình do AWS đề xuất với bốn giai đoạn (Quick Wins, Foundational, Efficient, Optimized) ánh xạ trực tiếp tới các dịch vụ AWS, phù hợp cho ngữ cảnh đám mây AWS.
+\end{itemize}
+
+\subsection{So sánh ba khung tham chiếu}
+\label{subsec:maturity-compare}
+
+Ba khung trên không thay thế nhau mà phục vụ các mục tiêu khác nhau (Bảng~\ref{tab:maturity-compare}). NIST CSF mang tính \textit{định hướng quản trị}, phù hợp đối tượng lãnh đạo và kiểm toán; CIS Controls thiên về \textit{kiểm soát kỹ thuật được ưu tiên hóa}, phù hợp đội ngũ vận hành an ninh; AWS SMM gắn chặt với \textit{lộ trình triển khai dịch vụ}, phù hợp giai đoạn đầu áp dụng đám mây. Trong thực tế, các tổ chức thường dùng đồng thời: NIST CSF làm khung tổng thể, CIS Controls làm chuẩn kỹ thuật, AWS SMM làm lộ trình thực thi.
+
+\begin{table}[!htb]
+\centering
+\caption{So sánh ba khung trưởng thành bảo mật theo bốn trục.}
+\label{tab:maturity-compare}
+\small
+\begin{tabularx}{\textwidth}{p{2.6cm} X X X}
+\toprule
+\textbf{Trục} & \textbf{NIST CSF v2.0} & \textbf{CIS Controls v8} & \textbf{AWS SMM} \\
+\midrule
+Cấu trúc & 6 chức năng × 4 Implementation Tiers & 18 Controls, 153 Safeguards × 3 IG & 4 giai đoạn tuần tự \\
+Mức độ chi tiết & Trừu tượng cao (mô tả mục tiêu) & Kỹ thuật vừa (mô tả kiểm soát) & Cụ thể theo dịch vụ AWS \\
+Đối tượng chính & Quản trị, kiểm toán & Vận hành, kỹ sư bảo mật & Đội triển khai đám mây AWS \\
+Định lượng & Định tính (theo tier) & Định lượng (đếm safeguard đạt) & Định tính (giai đoạn) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Khi áp dụng các khung này cho mục đích định lượng, người triển khai cần \textit{thao tác hóa} (operationalization) khái niệm trưởng thành thành một bộ chỉ tiêu đo được. Một thao tác hóa khả thi gồm bốn thành phần: (i) tỷ lệ kiểm soát đạt yêu cầu trên tổng số kiểm soát thuộc phạm vi đánh giá, (ii) phân bố mức độ nghiêm trọng của các phát hiện chưa khắc phục, (iii) tỷ lệ khắc phục thành công sau một chu kỳ kiểm toán, và (iv) biến thiên của ba chỉ tiêu trên qua các chu kỳ liên tiếp --- chỉ tiêu cuối phản ánh \textit{xu hướng cải tiến}, vốn là tinh thần của mô hình trưởng thành.
+
+\section{Khung tuân thủ áp dụng cho đám mây}
+\label{sec:compliance}
+
+\subsection{CIS Benchmarks}
+\label{subsec:cis-benchmarks}
+
+CIS Benchmarks \cite{cis_aws_foundations} là tập tài liệu kỹ thuật do Center for Internet Security công bố, mô tả các yêu cầu cấu hình bảo mật cụ thể cho từng nền tảng và dịch vụ đám mây. Mỗi yêu cầu trong CIS được phân thành \textit{Profile Level 1} (kiểm soát tối thiểu) và \textit{Profile Level 2} (kiểm soát chuyên sâu, có thể ảnh hưởng usability). Mỗi yêu cầu có ID, mô tả, audit procedure, và remediation steps --- cấu trúc dữ liệu thuận lợi cho tự động hóa.
+
+\subsection{NIST 800-53 và mapping đa-khung}
+\label{subsec:nist-800-53}
+
+NIST SP 800-53 Rev 5 \cite{nist_800_53_r5} là một danh mục kiểm soát rất rộng, được tổ chức thành 20 nhóm (AC, AU, IA, SC, \dots). Trong CSPM, NIST 800-53 thường không được dùng trực tiếp ở mức kiểm tra (vì độ trừu tượng cao) mà ở mức \textit{mapping}: một check kỹ thuật cụ thể có thể được ánh xạ tới nhiều control NIST 800-53. Việc duy trì mapping đa-khung trên cùng một check là chìa khóa để cùng một quá trình quét có thể sinh báo cáo theo các yêu cầu kiểm toán khác nhau.
+
+\subsection{Mapping đa-khung và ví dụ}
+\label{subsec:multi-framework-mapping}
+
+Mapping đa-khung là kỹ thuật ánh xạ một \textit{check kỹ thuật} (đơn vị nhỏ nhất có thể tự động kiểm tra trên hạ tầng) tới các \textit{kiểm soát} thuộc nhiều khung tuân thủ. Cấu trúc dữ liệu điển hình của một check chuẩn hóa bao gồm: định danh duy nhất, mô tả kiểm tra, thủ tục kiểm tra (audit procedure), thủ tục khắc phục (remediation), mức nghiêm trọng mặc định, và tập \textit{tham chiếu chéo} (cross-references) đến các khung. Ví dụ một check yêu cầu \textit{"chặn truy cập công khai ở mức tài khoản cho dịch vụ lưu trữ đối tượng"} có thể được ánh xạ tới CIS AWS Foundations Benchmark mục 2.1.5, NIST 800-53 control SC-7 (Boundary Protection) và AC-3 (Access Enforcement), ISO/IEC 27001:2022 control A.8.20 (Network security), và PCI-DSS yêu cầu 1.4.
+
+Hai vai trò chính của mapping đa-khung gồm: (i) \textit{re-use kiểm tra}: cùng một thực thi quét sinh dữ liệu phục vụ nhiều báo cáo tuân thủ khác nhau, tránh quét trùng lặp; (ii) \textit{evidence trail}: khi kiểm toán viên hỏi "control X của khung Y được kiểm tra như thế nào", hệ thống có thể trả về danh sách check kỹ thuật cùng kết quả mới nhất. Tổ chức Center for Internet Security duy trì các \textit{CIS Critical Security Controls Mapping} công khai \cite{cis_controls_v8} là tham chiếu chuẩn cho công nghiệp.
+
+Lưu ý lý thuyết: mapping không phải là quan hệ một-một. Một check có thể đáp ứng \textit{một phần} của một control rộng (NIST AC-2 về quản lý tài khoản gồm hàng chục yêu cầu con); ngược lại một control có thể được kiểm tra bởi nhiều check khác nhau. Vì vậy, độ phủ tuân thủ chỉ có nghĩa khi định nghĩa rõ \textit{ngữ cảnh phạm vi} (scope) và \textit{độ chi tiết} (granularity) của ánh xạ.
+
+\section{Chu trình PDCA cho vận hành bảo mật}
+\label{sec:pdca}
+
+\subsection{Khái niệm và ý nghĩa}
+\label{subsec:pdca-concept}
+
+Chu trình \textit{Plan--Do--Check--Act} (PDCA), còn gọi là chu trình Shewhart hoặc Deming \cite{deming1986pdca}, là một mô hình lặp bốn bước nhằm cải tiến chất lượng liên tục:
+
+\begin{itemize}
+  \item \textbf{Plan} --- xác định mục tiêu, phân tích hiện trạng, lập kế hoạch hành động và chuẩn đo.
+  \item \textbf{Do} --- triển khai kế hoạch trên một phạm vi kiểm soát được.
+  \item \textbf{Check} --- đo kết quả, so sánh với mục tiêu, phát hiện sai lệch.
+  \item \textbf{Act} --- chuẩn hóa các cải tiến đã hiệu nghiệm, điều chỉnh kế hoạch cho chu kỳ kế tiếp.
+\end{itemize}
+
+\vspace{10pt}
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\small},
+  phase/.style={draw, rounded corners=4pt, minimum width=2.6cm, minimum height=1.0cm,
+                align=center, thick, fill=blue!8},
+  arr/.style={->, >=stealth, very thick}
+]
+  \node[phase] (P) at ( 0,  2.0) {\textbf{Plan}\\\footnotesize Lập kế hoạch};
+  \node[phase] (D) at ( 3.4, 0)  {\textbf{Do}\\\footnotesize Thực hiện};
+  \node[phase] (C) at ( 0, -2.0) {\textbf{Check}\\\footnotesize Đo và đánh giá};
+  \node[phase] (A) at (-3.4, 0)  {\textbf{Act}\\\footnotesize Chuẩn hóa, cải tiến};
+
+  \draw[arr] (P) to[bend left=20]  (D);
+  \draw[arr] (D) to[bend left=20]  (C);
+  \draw[arr] (C) to[bend left=20]  (A);
+  \draw[arr] (A) to[bend left=20]  (P);
+
+  \node[font=\itshape\small] at (0, 0.2) {Continuous};
+  \node[font=\itshape\small] at (0, -0.2) {improvement};
+\end{tikzpicture}
+\vspace{15pt}
+\caption{Chu trình PDCA bốn pha cho cải tiến chất lượng liên tục.}
+\label{fig:pdca-cycle}
+\end{figure}
+\vspace{10pt}
+
+\subsection{PDCA trong ISO/IEC 27001 và quản lý ATTT}
+\label{subsec:pdca-iso27001}
+
+ISO/IEC 27001 \cite{iso_27001_2022} sử dụng PDCA làm mô hình tham chiếu cho hệ thống quản lý an toàn thông tin (ISMS). Trong phiên bản 2013, PDCA được ghi rõ trong cấu trúc tiêu chuẩn; trong phiên bản 2022, dù không xuất hiện ở mức \textit{normative}, tinh thần PDCA vẫn được giữ qua cấu trúc \textit{Plan} (Hoạch định, điều khoản 6), \textit{Do} (Thực hiện và vận hành, điều khoản 7--8), \textit{Check} (Đánh giá kết quả, điều khoản 9), \textit{Act} (Cải tiến, điều khoản 10).
+
+\subsection{PDCA cho continuous compliance}
+\label{subsec:pdca-cc}
+
+Các nghiên cứu về \textit{continuous compliance} \cite{continuous_compliance_2022} chỉ ra rằng kiểm toán theo chu kỳ dài (quarterly, yearly) không còn phù hợp với hạ tầng đám mây thay đổi liên tục. PDCA được ánh xạ tự nhiên sang continuous compliance: \textit{Plan} là chính sách kiểm soát và mục tiêu compliance, \textit{Do} là quét đánh giá tự động, \textit{Check} là phân tích sai lệch, \textit{Act} là khắc phục và chuẩn hóa quy tắc mới.
+
+\subsection{So sánh với các mô hình lặp khác}
+\label{subsec:pdca-vs-others}
+
+PDCA không phải là mô hình lặp duy nhất được dùng trong tự động hóa vận hành. Hai mô hình gần gũi và đáng so sánh:
+
+\begin{itemize}
+  \item \textbf{OODA loop} (Observe--Orient--Decide--Act) \cite{boyd_ooda_1996} bắt nguồn từ lý thuyết quân sự, nhấn mạnh tốc độ ra quyết định trong môi trường đối kháng. Khác PDCA ở chỗ OODA tập trung vào \textit{vòng lặp ngắn} và \textit{nhận thức tình huống} (situational awareness), phù hợp cho phản ứng sự cố thời gian thực hơn là cải tiến chất lượng có kế hoạch.
+  \item \textbf{MAPE-K} (Monitor--Analyze--Plan--Execute over Knowledge) \cite{ibm_mapek_2003} là khung tham chiếu trong autonomic computing, mô tả cách một hệ thống tự quản lý duy trì trạng thái mục tiêu. So với PDCA, MAPE-K bổ sung trục \textit{Knowledge} dùng chung làm trung tâm --- một thiết kế gần với khái niệm \textit{trạng thái dùng chung} của agentic workflows hiện đại.
+\end{itemize}
+
+Trong các hệ thống AI có khả năng tự vận hành, ranh giới giữa ba mô hình mờ đi: pha \textit{Plan} của PDCA tương đương \textit{Orient}+\textit{Decide} của OODA và \textit{Analyze}+\textit{Plan} của MAPE-K. Sự lựa chọn giữa các mô hình thường mang tính ngữ nghĩa hơn là kỹ thuật: PDCA gần với \textit{quy trình quản lý chất lượng}, OODA gần với \textit{phản ứng thời gian thực}, MAPE-K gần với \textit{cấu trúc kỹ thuật của hệ thống tự quản lý}. PDCA được chọn cho ngữ cảnh CSPM vì cung cấp ngôn ngữ chung với các tiêu chuẩn quản lý ATTT (ISO 27001) và các mô hình trưởng thành.
+
+\section{Khung đánh giá rủi ro (Risk Assessment Frameworks)}
+\label{sec:risk}
+
+\subsection{CVSS --- Common Vulnerability Scoring System}
+\label{subsec:cvss}
+
+CVSS v3.1 \cite{cvss_v3_1} là chuẩn de-facto của FIRST.org để chấm điểm mức độ nghiêm trọng của lỗ hổng, trên thang $[0.0, 10.0]$ chia thành năm nhóm Critical/High/Medium/Low/None. Nhóm metric \textit{Base} của CVSS là bất biến theo thời gian và môi trường, gồm AV (Attack Vector), AC (Attack Complexity), PR (Privileges Required), UI (User Interaction), S (Scope), và C/I/A (Confidentiality/Integrity/Availability impact).
+
+CVSS phù hợp cho lỗ hổng phần mềm có CVE, nhưng không hoàn toàn phù hợp cho \textit{misconfiguration}: một bucket lưu trữ phơi công khai không có CVE và không có exploit code maturity, nhưng vẫn rất nghiêm trọng. Các khung khác như DREAD \cite{howard_leblanc_2003} (chấm rủi ro năm chiều, đơn giản nhưng chủ quan) và FAIR \cite{fair_jones_2005} (định lượng rủi ro qua phân phối xác suất) tồn tại nhưng đòi hỏi dữ liệu lịch sử và phù hợp ở cấp tổ chức hơn là cấp cấu hình kỹ thuật.
+
+\subsection{Mô hình chấm điểm hai vòng}
+\label{subsec:two-pass-risk}
+
+Đối với CSPM, một thiết kế hợp lý là kết hợp hai vòng chấm điểm:
+\begin{enumerate}
+  \item \textit{Pass~1 --- Rule-based scoring}: ánh xạ severity từ rule-set tĩnh sang điểm số ban đầu, tham chiếu CVSS-style cho các check liên quan lỗ hổng và mức nghiêm trọng do khung tuân thủ quy định cho cấu hình.
+  \item \textit{Pass~2 --- Context-aware re-scoring}: lớp suy luận dựa trên mô hình ngôn ngữ đánh giá lại trong ngữ cảnh tài nguyên cụ thể (ví dụ: cùng một check trên môi trường thử nghiệm và môi trường sản xuất có hệ quả khác nhau). Đầu ra là severity tinh chỉnh kèm chứng cứ.
+\end{enumerate}
+
+Cơ sở của thiết kế hai vòng: rule-based cho tính nhất quán và khả năng giải thích; LLM-based bổ sung khả năng cân chỉnh theo ngữ cảnh mà rule tĩnh không bao quát hết. Hai vòng được tách biệt để vẫn truy vết được điểm gốc trước khi LLM can thiệp.
+
+\vspace{10pt}
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\footnotesize},
+  box/.style={draw, rounded corners=3pt, minimum width=2.4cm, minimum height=0.95cm, align=center, thick},
+  inb/.style={box, fill=gray!10},
+  p1/.style={box, fill=blue!10},
+  p2/.style={box, fill=orange!12},
+  outb/.style={box, fill=green!10},
+  arr/.style={->, >=stealth, thick}
+]
+  \node[inb] (find) at (0, 0)    {Phát hiện\\ thô};
+  \node[p1] (rule)  at (3.2, 0)  {Pass 1\\ Rule-based};
+  \node[p2] (llm)   at (6.6, 0)  {Pass 2\\ Context-aware};
+  \node[outb] (sev) at (10.0, 0) {Severity\\ tinh chỉnh};
+
+  \draw[arr] (find) -- (rule);
+  \draw[arr] (rule) -- node[above, font=\scriptsize\itshape] {điểm gốc} (llm);
+  \draw[arr] (llm)  -- (sev);
+
+  \node[font=\scriptsize\itshape] at (3.2, -1.2) {CVSS, severity rule};
+  \node[font=\scriptsize\itshape] at (6.6, -1.2) {ngữ cảnh tài nguyên};
+
+  \draw[->, >=stealth, dashed, thick]
+    (rule.south) to[bend right=25] node[below, font=\scriptsize] {audit trail} (sev.south);
+\end{tikzpicture}
+\vspace{15pt}
+\caption{Mô hình chấm điểm rủi ro hai vòng: vòng một dựa trên rule tĩnh giữ điểm gốc; vòng hai tinh chỉnh theo ngữ cảnh; điểm gốc được giữ song song phục vụ truy vết.}
+\label{fig:two-pass-risk}
+\end{figure}
+\vspace{10pt}
+
+\subsection{Hạn chế và rủi ro của tinh chỉnh dựa trên LLM}
+\label{subsec:llm-rescoring-risks}
+
+Việc đưa LLM vào quy trình chấm điểm rủi ro mang lại linh hoạt nhưng kèm theo nhiều rủi ro lý thuyết cần được tính đến trong thiết kế:
+
+\begin{itemize}
+  \item \textbf{Hiệu chuẩn (calibration) kém}: LLM thường tự tin quá mức, đặc biệt khi không có cơ chế sinh xác suất hiệu chuẩn. Một severity High do LLM gán có thể không phản ánh xác suất rủi ro thực sự bằng một severity High dựa trên CVSS có cấu trúc \cite{guo_calibration_2017}. Hệ quả: các thống kê toàn cục (phân bố Critical/High) bị méo nếu chỉ dựa trên kết quả LLM.
+  \item \textbf{Thiên kiến chiều dài và thiên kiến vị trí}: tài liệu càng dài, ngữ cảnh càng giàu, LLM càng có xu hướng đẩy severity lên; bên cạnh đó, LLM chú ý mạnh nhất ở phần \textit{đầu} và \textit{cuối} của prompt, suy giảm chú ý ở \textit{giữa} (đường cong U-shape) \cite{liu_lost_middle_2023}. Cả hai thiên kiến đều không liên quan tới rủi ro thực tế.
+  \item \textbf{Nhạy cảm với prompt và tính tái lập}: cùng một check nhưng với hai cách phát biểu khác nhau có thể nhận hai severity khác nhau. Đây là hệ quả trực tiếp của tính ngẫu nhiên trong sinh ngôn ngữ và là rào cản cho các bài kiểm toán đòi hỏi tính tái lập.
+  \item \textbf{Prompt injection qua dữ liệu môi trường}: nội dung tài nguyên (tên bucket, tag, log message) có thể chứa chỉ thị giả mạo nhằm thao túng đầu ra LLM \cite{greshake_prompt_injection_2023}. Trong CSPM, tài nguyên do người dùng tạo có khả năng bị kẻ tấn công chèn payload có chủ đích vào trường tự do.
+  \item \textbf{Chi phí tính toán và độ trễ}: chấm điểm vòng hai cho một tập phát hiện lớn có thể vượt ngưỡng độ trễ chấp nhận được, buộc phải thiết kế cơ chế lựa chọn đối tượng chấm lại (chỉ áp dụng cho tập con có nguy cơ cao theo vòng một).
+\end{itemize}
+
+Các rủi ro này không phủ định giá trị của LLM-based rescoring, mà chỉ ra rằng thiết kế đúng đắn phải bao gồm: (i) giữ lại \textit{điểm gốc} (rule-based) để truy vết, (ii) ràng buộc đầu ra của LLM bằng một schema có cấu trúc với các giá trị rời rạc thay vì điểm số liên tục, và (iii) đặt rào chắn trên độ lệch tối đa cho phép giữa hai vòng.
+
+% =============================================================================
+% [B] AI FOUNDATIONS
+% =============================================================================
+
+\section*{Cụm B --- Nền tảng trí tuệ nhân tạo}
+\addcontentsline{toc}{section}{Cụm B --- Nền tảng trí tuệ nhân tạo}
+
+Cụm B trình bày các nền tảng AI cần thiết để xây dựng tác tử suy luận cho bài toán đã được đặt ở Cụm A. Mục §\ref{sec:llm-slm} bắt đầu từ nền tảng mô hình ngôn ngữ và lý do mô hình nhỏ chạy cục bộ trở thành lựa chọn khả thi cho ngữ cảnh đòi hỏi quyền riêng tư dữ liệu. Mục §\ref{sec:ai-agent} mở rộng từ mô hình ngôn ngữ sang \textit{tác tử} có khả năng lập kế hoạch và hành động qua công cụ. Mục §\ref{sec:rag} giới thiệu sinh tăng cường truy hồi như một cơ chế bù đắp các hạn chế cố hữu của LLM. Mục §\ref{sec:retrieval} đi sâu vào các phương pháp truy hồi và tái xếp hạng --- thành phần quyết định chất lượng của RAG. Bốn mục này tổ hợp lại thành khung lý thuyết cho một hệ thống AI \textit{có truy hồi, có công cụ, có trạng thái}.
+
+\section{Mô hình ngôn ngữ và suy luận cục bộ}
+\label{sec:llm-slm}
+
+\subsection{Từ LLM đến SLM}
+\label{subsec:llm-to-slm}
+
+Các Mô hình Ngôn ngữ Lớn (Large Language Models --- LLMs) như GPT-4 \cite{openai2023gpt4} hay Gemini \cite{google2023gemini} đạt hiệu năng cao trên nhiều tác vụ ngôn ngữ tự nhiên nhưng yêu cầu tài nguyên tính toán lớn và phụ thuộc dịch vụ trên đám mây. Lý thuyết \textit{scaling laws} của Kaplan và cộng sự \cite{kaplan2020scaling} cho thấy tổn thất giảm theo hàm lũy thừa của số tham số, dữ liệu và compute; tuy nhiên kết quả của Hoffmann và cộng sự (Chinchilla) \cite{hoffmann2022chinchilla} chỉ ra nhiều LLM trước đó \textit{quá lớn so với dữ liệu huấn luyện}, gợi ý rằng các mô hình nhỏ hơn được huấn luyện đủ dữ liệu có thể đạt hiệu quả tương đương ở nhiều tác vụ.
+
+Các Mô hình Ngôn ngữ Nhỏ (Small Language Models --- SLMs, $\le$ 7B tham số) như Llama 3 \cite{meta2024llama32}, Gemma 3 \cite{google2025gemma3}, hoặc Phi-3 \cite{phi3_tech_report} là sản phẩm của hướng nghiên cứu này. Khi kết hợp với lượng tử hóa và inference engine tối ưu, SLM cho phép suy luận cục bộ trên phần cứng tiêu dùng --- điều kiện tiên quyết cho yêu cầu \textit{quyền riêng tư dữ liệu} của bài toán đánh giá cấu hình bảo mật.
+
+\subsection{Lượng tử hóa và inference engine}
+\label{subsec:quantization}
+
+Lượng tử hóa giảm độ chính xác biểu diễn trọng số (từ FP16/BF16 xuống INT8/INT4/INT3) nhằm giảm dung lượng mô hình và bộ nhớ video (VRAM) khi suy luận. Có hai họ phương pháp chính:
+
+\begin{itemize}
+  \item \textbf{Post-Training Quantization (PTQ)}: lượng tử hóa sau khi huấn luyện mà không cần dữ liệu nhãn. GPTQ \cite{frantar2022gptq} sử dụng tối ưu hessian per-block để tối thiểu sai số tái tạo trên một tập calibration nhỏ; AWQ \cite{lin_awq_2024} bảo toàn các kênh trọng số nhạy cảm dựa trên phân phối kích hoạt; họ \textit{K-Quants} block-wise của runtime \texttt{llama.cpp} \cite{llamacpp_kquants} áp dụng các sơ đồ lượng tử hóa khác nhau cho các nhóm trọng số khác nhau (Q4\_K\_M, Q5\_K\_M\dots).
+  \item \textbf{Quantization-Aware Training (QAT)}: huấn luyện hoặc fine-tune mô hình trong khi mô phỏng hiệu ứng lượng tử hóa, cho chất lượng tốt hơn nhưng đòi hỏi tài nguyên huấn luyện. Phương pháp này phù hợp khi nhà phát hành mô hình tự lượng tử hóa (Gemma 3 QAT, Llama Guard QAT).
+\end{itemize}
+
+Đánh đổi cốt lõi của lượng tử hóa là giữa \textit{kích thước/tốc độ} và \textit{chất lượng sinh}. Bảng~\ref{tab:quantization-tradeoff} ước lượng đánh đổi cho một mô hình $\sim$7B tham số:
+
+\begin{table}[!htb]
+\centering
+\caption{Đánh đổi của các mức lượng tử hóa cho mô hình $\sim$7B tham số (ước lượng định tính).}
+\label{tab:quantization-tradeoff}
+\small
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{Bit-width} & \textbf{Dung lượng} & \textbf{Chất lượng} & \textbf{Ngữ cảnh phù hợp} \\
+\midrule
+FP16/BF16  & $\sim$14 GB  & Chuẩn (baseline)               & Phục vụ độ chính xác cao \\
+INT8       & $\sim$7 GB   & Suy giảm rất nhỏ ($<$1\%)      & Cân bằng nếu VRAM đủ \\
+INT4 (Q4\_K\_M) & $\sim$4 GB & Suy giảm nhỏ (1--3\%)        & Triển khai phổ biến trên phần cứng tiêu dùng \\
+INT3       & $\sim$3 GB   & Suy giảm rõ rệt ($>$5\%)       & Thiết bị biên hạn chế VRAM \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Đối với các tác vụ có đầu ra cấu trúc (JSON, danh sách điểm số), suy giảm chất lượng do lượng tử hóa thường nhỏ hơn so với tác vụ sinh văn bản tự do dài, vì không gian đầu ra hợp lệ hẹp hơn và mô hình dễ ràng buộc bằng schema.
+
+Inference engine cho SLM cục bộ có nhiều lựa chọn, từ thư viện thấp cấp (\texttt{llama.cpp}) tới các runtime đóng gói cao cấp (\texttt{vLLM}, \texttt{TGI}, \texttt{Ollama}) cung cấp giao diện HTTP và quản lý mô hình thuận tiện. Lựa chọn cụ thể phụ thuộc vào ràng buộc triển khai: VRAM khả dụng, độ trễ chấp nhận được, mức tích hợp với ngăn xếp công cụ.
+
+\subsection{Instruction tuning và đầu ra có cấu trúc}
+\label{subsec:instruction-tuning}
+
+Instruction tuning điều chỉnh mô hình ngôn ngữ để tuân thủ chỉ thị có cấu trúc \cite{ouyang2022instructgpt}, là điều kiện cần để SLM có thể đảm nhận các vai trò chuyên trách trong workflow agentic với đầu ra có cấu trúc (JSON, YAML). Các bản đã instruction-tuned (ký hiệu \texttt{-IT} hoặc \texttt{-Instruct}) thường được lựa chọn cho ứng dụng có nhiều bước phụ thuộc lẫn nhau, trong đó đầu ra của một bước được mô-đun phía sau parse và sử dụng. Để ép buộc đầu ra hợp lệ, các kỹ thuật \textit{constrained decoding} như grammar-based sampling (GBNF của \texttt{llama.cpp}) hoặc \textit{outlines} \cite{willard_outlines_2023} ràng buộc xác suất sinh tại mỗi bước theo grammar đã định, biến yêu cầu định dạng từ "khuyến cáo qua prompt" thành "ràng buộc cứng tại bước decoding".
+
+\section{Tác tử AI dựa trên mô hình ngôn ngữ lớn}
+\label{sec:ai-agent}
+
+Đồ án xây dựng một \textbf{tác tử AI tự hành} (autonomous AI agent) chuyên trách bài toán đánh giá và khắc phục cấu hình bảo mật. Mục này thiết lập nền tảng lý thuyết cho khái niệm tác tử dựa trên mô hình ngôn ngữ lớn (LLM-based agent), các thành phần kiến trúc, các mẫu suy luận tiêu biểu, cơ chế hành động qua công cụ, và cơ chế tổ chức luồng thực thi có trạng thái.
+
+\subsection{Khái niệm tác tử AI dựa trên LLM}
+\label{subsec:agent-concept}
+
+Theo các khảo sát của Wang và cộng sự \cite{wang_llm_agent_survey_2024} cùng Xi và cộng sự \cite{xi_rise_agents_2023}, một \textit{LLM-based agent} là một thực thể tính toán sử dụng mô hình ngôn ngữ lớn làm lõi suy luận, có khả năng \textbf{cảm nhận} ngữ cảnh, \textbf{lập kế hoạch} hành động dựa trên mục tiêu, \textbf{thực hiện} hành động qua các công cụ bên ngoài, và \textbf{học từ phản hồi} của môi trường. Cách hiểu này phân biệt rõ tác tử với một chatbot: tác tử có thể tự chủ chọn hành động trong một không gian công cụ và điều chỉnh theo kết quả, trong khi chatbot chỉ sinh phản hồi văn bản theo lượt.
+
+Mô hình kiến trúc bốn thành phần được đề xuất phổ biến trong các khảo sát \cite{wang_llm_agent_survey_2024,xi_rise_agents_2023} gồm:
+\begin{itemize}
+  \item \textbf{Brain (Mô-đun suy luận)} --- mô hình ngôn ngữ lớn đóng vai trò bộ não, thực hiện suy luận, lập kế hoạch và ra quyết định.
+  \item \textbf{Perception (Mô-đun cảm nhận)} --- thu thập và biểu diễn trạng thái môi trường và ngữ cảnh truy hồi.
+  \item \textbf{Action (Mô-đun hành động)} --- thực hiện hành động lên môi trường qua các công cụ với chữ ký rõ ràng.
+  \item \textbf{Memory (Mô-đun trí nhớ)} --- lưu giữ trạng thái dùng chung trong vòng đời của tác vụ và lịch sử quyết định.
+\end{itemize}
+
+\vspace{10pt}
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\small},
+  comp/.style={draw, rounded corners=4pt, minimum width=2.8cm, minimum height=1.1cm, align=center, thick},
+  brain/.style={comp, fill=red!10},
+  perc/.style={comp, fill=blue!10},
+  act/.style={comp, fill=green!10},
+  mem/.style={comp, fill=orange!10},
+  arr/.style={->, >=stealth, thick}
+]
+  \node[brain] (B) at (0, 1.0)    {\textbf{Brain}\\\footnotesize Mô hình ngôn ngữ\\\footnotesize lập kế hoạch \& suy luận};
+  \node[perc]  (P) at (-3.4,-0.6) {\textbf{Perception}\\\footnotesize Trạng thái môi trường\\\footnotesize ngữ cảnh truy hồi};
+  \node[act]   (A) at (3.4, -0.6) {\textbf{Action}\\\footnotesize Công cụ tương tác\\\footnotesize với môi trường};
+  \node[mem]   (M) at (0, -1.6)   {\textbf{Memory}\\\footnotesize Trạng thái dùng chung\\\footnotesize lịch sử quyết định};
+
+  \draw[arr] (P.north east) -- (B.south west) node[midway, sloped, above, font=\scriptsize] {observe};
+  \draw[arr] (B.south east) -- (A.north west) node[midway, sloped, above, font=\scriptsize] {decide};
+  \draw[arr] (A.south) -- (M.east) node[midway, sloped, above, font=\scriptsize] {update};
+  \draw[arr] (M.west) -- (P.south) node[midway, sloped, above, font=\scriptsize] {recall};
+\end{tikzpicture}
+\vspace{15pt}
+\caption{Bốn thành phần kiến trúc của tác tử AI dựa trên LLM.}
+\label{fig:agent-arch}
+\end{figure}
+\vspace{10pt}
+
+Mialon và cộng sự \cite{mialon_alm_survey_2023} đặt khái niệm này trong khung \textit{augmented language models}, làm rõ ba trục mở rộng năng lực mô hình: truy hồi tri thức, sử dụng công cụ, và suy luận có cấu trúc. Ở góc nhìn rộng hơn, Zaharia và cộng sự \cite{zaharia_compound_2024} đặt các hệ thống dạng tác tử như một trường hợp của \textit{compound AI system}, nơi chất lượng đầu ra phụ thuộc nhiều vào thiết kế quy trình quanh mô hình hơn là chỉ vào năng lực mô hình.
+
+\subsection{Mẫu suy luận của tác tử}
+\label{subsec:agent-patterns}
+
+Khả năng \textit{lập kế hoạch và suy luận} là đặc điểm phân biệt tác tử với chatbot. Ba mẫu suy luận tiêu biểu trong tài liệu hiện nay, bổ trợ nhau theo độ dài tác vụ và yêu cầu kiểm chứng:
+
+\begin{itemize}
+  \item \textbf{ReAct} \cite{yao2023react} xen kẽ \textit{reasoning trace} và \textit{action}: tác tử sinh một suy luận ngắn rồi chọn một hành động (gọi công cụ); kết quả được đưa lại ngữ cảnh và tác tử tiếp tục. Phù hợp cho tác vụ ngắn, ít phụ thuộc giữa các bước.
+  \item \textbf{Plan-and-Execute} \cite{plan_and_execute_2023} tách giai đoạn \textit{lập kế hoạch toàn cục} khỏi giai đoạn \textit{thực thi từng bước}. Tác tử lập kế hoạch một lần, sau đó thực thi tuần tự, có khả năng \textit{re-plan} nếu phát hiện sai lệch. Phù hợp cho tác vụ dài, nhiều bước phụ thuộc, cần điểm dừng kiểm soát.
+  \item \textbf{Reflexion} \cite{shinn_reflexion_2023} bổ sung vòng tự đánh giá: sau mỗi lần thử, tác tử phản ánh về kết quả và lưu bài học vào bộ nhớ làm việc, phục vụ lần thử tiếp theo. Hữu ích khi có tín hiệu phản hồi rõ về đúng/sai.
+\end{itemize}
+
+\subsection{Hành động qua công cụ (Tool Use)}
+\label{subsec:tool-use}
+
+\textit{Tool use} (còn gọi là \textit{function calling}) \cite{schick2023toolformer,yao2023react} là cơ chế cho phép tác tử tác động lên môi trường thông qua các hàm có chữ ký rõ ràng, thay vì chỉ sinh văn bản. Quy trình điển hình gồm ba bước:
+\begin{enumerate}
+  \item \textit{Khai báo schema}: hệ thống cung cấp cho tác tử danh sách công cụ kèm chữ ký dạng JSON Schema (tên, mô tả, các tham số có kiểu, ràng buộc).
+  \item \textit{Suy luận và chọn công cụ}: tác tử sinh ra tên công cụ và bộ đối số phù hợp dựa trên ngữ cảnh; tác tử \textbf{không} trực tiếp thực thi công cụ.
+  \item \textit{Thực thi và phản hồi}: môi trường thực thi gọi công cụ với đối số đã suy luận, đưa kết quả trở lại ngữ cảnh để tác tử tiếp tục lập kế hoạch hoặc kết thúc.
+\end{enumerate}
+
+Việc tách bạch \textit{vai trò suy luận} của tác tử khỏi \textit{vai trò thực thi} của môi trường là then chốt cho một tác tử thao tác trên hạ tầng đám mây thật: nó cho phép gắn kiểm soát truy cập, xác thực tham số, ghi log audit, và điểm dừng phê duyệt vào lớp môi trường mà không phụ thuộc niềm tin vào mô hình.
+
+\subsection{Tổ chức luồng thực thi với đồ thị trạng thái}
+\label{subsec:state-graph}
+
+Khi quy trình của tác tử có nhiều bước, có chu trình (lặp quét lại sau khắc phục), có rẽ nhánh phụ thuộc kết quả, và cần điểm dừng phê duyệt được chèn linh hoạt, mô hình điều phối phù hợp là \textit{đồ thị trạng thái} (state-graph). Một đồ thị trạng thái được biểu diễn bằng bộ ba $(\Sigma, V, E)$:
+
+\begin{itemize}
+  \item $\Sigma$ --- \textit{lược đồ trạng thái dùng chung}, là cấu trúc dữ liệu chứa các trường tương ứng với các đại lượng xuyên suốt vòng đời (kế hoạch, danh sách phát hiện, kết quả đánh giá rủi ro, lịch sử khắc phục, \dots).
+  \item $V$ --- tập node. Mỗi node $v \in V$ là một hàm $f_v: \Sigma \to \Delta\Sigma$ trả về một bản cập nhật cục bộ thay vì ghi đè toàn bộ trạng thái.
+  \item $E$ --- tập cạnh, gồm cạnh thường (chuyển tiếp cố định) và cạnh điều kiện $r: \Sigma \to V$ chọn node kế tiếp dựa trên trạng thái hiện tại.
+\end{itemize}
+
+Trạng thái sau mỗi node được cập nhật theo cơ chế \textit{reducer per-key}:
+\begin{equation}
+  \Sigma_{t+1}[k] \;=\; R_k\!\big(\Sigma_t[k],\; \Delta\Sigma_v[k]\big), \qquad \forall k \in \mathrm{keys}(\Sigma)
+  \label{eq:reducer}
+\end{equation}
+trong đó $R_k$ là một hàm hợp nhất do người thiết kế quy định riêng cho từng trường: ví dụ với trường danh sách findings có thể chọn nối tiếp (append/extend), với trường vô hướng chọn ghi đè, với trường tập tin chứng cứ có thể là một merger tùy biến. Bản chất của reducer là \textbf{hàm hợp nhất theo trường}, cho phép nhiều node cùng cập nhật trạng thái mà không gây xung đột.
+
+So với chuỗi xử lý không trạng thái, đồ thị trạng thái mang lại bốn tính chất quan trọng đối với bài toán: trạng thái dùng chung có thể serialize và checkpoint phục vụ phục hồi sau lỗi; chu trình (cycle) phục vụ vòng \textit{quét \(\rightarrow\) đánh giá \(\rightarrow\) khắc phục \(\rightarrow\) quét lại}; cạnh điều kiện phục vụ định tuyến dựa trên mức rủi ro và kết quả xác minh; và cơ chế \textit{interrupt} đặt điểm dừng phê duyệt human-in-the-loop ở các nhánh nhạy cảm.
+
+\subsection{Các kiểu lỗi và rào cản an toàn của tác tử}
+\label{subsec:agent-failure-modes}
+
+Tác tử AI có khả năng tác động lên môi trường kèm theo các kiểu lỗi đặc thù không xuất hiện ở chatbot thuần. Các kiểu lỗi này phải được tính đến ngay từ giai đoạn thiết kế lý thuyết:
+
+\begin{itemize}
+  \item \textbf{Hallucination kéo dài}: lỗi sinh ngôn ngữ ở một bước có thể tích lũy qua các bước kế tiếp, vì đầu ra của bước trước trở thành đầu vào của bước sau. Khác với một câu trả lời sai trong chatbot, lỗi của tác tử có thể dẫn tới hành động sai trên hạ tầng.
+  \item \textbf{Tool injection}: kết quả trả về từ một công cụ có thể chứa văn bản giả mạo chỉ thị (do dữ liệu môi trường bị thao túng), thao túng quyết định ở các bước sau \cite{greshake_prompt_injection_2023}.
+  \item \textbf{Plan brittleness}: kế hoạch do mô hình lập có thể đúng theo schema nhưng thiếu một bước cần thiết, hoặc phụ thuộc vào giả định không kiểm tra được (ví dụ giả định một tài nguyên tồn tại trong khi nó đã bị xóa). Các mẫu Plan-and-Execute giảm thiểu rủi ro này bằng \textit{re-planning} khi phát hiện sai lệch.
+  \item \textbf{Vòng lặp không hội tụ}: khi cạnh điều kiện thiết kế không cẩn thận, tác tử có thể rơi vào chu trình không thoát. Cần ràng buộc cứng \textit{số lần lặp tối đa} và \textit{tiêu chí dừng}.
+  \item \textbf{Hành động không thể đảo ngược}: một số hành động (xóa tài nguyên, sửa policy) không có cơ chế rollback tự động. Đây là động lực cho yêu cầu human-in-the-loop tại các nhánh nhạy cảm.
+\end{itemize}
+
+Bốn rào cản an toàn được khuyến nghị trong tài liệu \cite{wang_llm_agent_survey_2024,zaharia_compound_2024}: (i) \textit{capability scoping} --- giới hạn không gian công cụ theo nhiệm vụ; (ii) \textit{argument validation} --- xác thực mọi tham số tool-call ở lớp môi trường; (iii) \textit{human-in-the-loop checkpoint} --- yêu cầu xác nhận trước hành động có hậu quả; (iv) \textit{audit trail} --- ghi log toàn bộ chuỗi suy luận, tool-call và kết quả phục vụ truy ngược.
+
+\section{Sinh tăng cường truy hồi (Retrieval-Augmented Generation)}
+\label{sec:rag}
+
+\subsection{Hạn chế của LLM dẫn đến RAG}
+\label{subsec:rag-motivation}
+
+LLM thuần có ba hạn chế cốt yếu cho bài toán bảo mật: (1) \textit{hallucination} --- sinh thông tin nghe hợp lý nhưng sai sự thật, đặc biệt nguy hiểm khi đề xuất khắc phục; (2) \textit{knowledge cutoff} --- không biết các check, CVE hay best practice xuất hiện sau ngày huấn luyện; (3) \textit{thiếu khả năng truy vết nguồn} --- mọi câu trả lời là dự đoán xác suất, không có evidence trail.
+
+\textit{Retrieval-Augmented Generation} \cite{lewis2020rag} bổ sung một bộ truy hồi lấy thông tin từ kho tri thức ngoài rồi ghép vào ngữ cảnh sinh, giảm hallucination và bổ sung tính cập nhật, khả năng giải thích. Đây là điều kiện cần để hệ thống đề xuất khắc phục có thể được kiểm tra ngược lại với nguồn tri thức gốc.
+
+\subsection{Kiến trúc cơ bản}
+\label{subsec:rag-arch}
+
+Một hệ thống RAG gồm hai pha:
+\begin{itemize}
+  \item \textit{Offline (chuẩn bị tri thức)}: phân đoạn tài liệu thành các \textit{chunk} (đơn vị truy hồi cơ sở), nhúng (embedding) các chunk thành vector, lưu vào cơ sở dữ liệu vector kèm \textit{metadata} có cấu trúc.
+  \item \textit{Online (xử lý truy vấn)}: nhúng truy vấn, truy hồi top-$k$ chunk, có thể tinh lọc qua \textit{re-ranking}, ghép vào prompt và để LLM sinh câu trả lời.
+\end{itemize}
+
+\vspace{10pt}
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\footnotesize},
+  box/.style={draw, rounded corners=3pt, minimum width=1.9cm, minimum height=0.85cm, align=center, thick},
+  off/.style={box, fill=blue!8},
+  on/.style={box, fill=green!8},
+  store/.style={cylinder, draw, shape border rotate=90, aspect=0.3,
+                minimum height=0.95cm, minimum width=1.9cm, fill=yellow!15, thick, align=center},
+  arr/.style={->, >=stealth, thick}
+]
+  % Offline row (label placed ABOVE the row to avoid overlapping the first box)
+  \node[font=\itshape\small] at (0, 2.55) {Offline --- chuẩn bị tri thức};
+  \node[off] (doc)   at (0, 1.6)   {Tài liệu\\nguồn};
+  \node[off] (chunk) at (2.4, 1.6) {Chunking};
+  \node[off] (emb1)  at (4.8, 1.6) {Embedding};
+  \node[store] (db)  at (7.4, 1.6) {Vector DB};
+
+  \draw[arr] (doc) -- (chunk);
+  \draw[arr] (chunk) -- (emb1);
+  \draw[arr] (emb1) -- (db);
+
+  % Online row (label placed ABOVE the row, between the two rows)
+  \node[font=\itshape\small] at (0, 0.55) {Online --- xử lý truy vấn};
+  \node[on] (q)    at (0, -0.4)  {Truy vấn};
+  \node[on] (emb2) at (2.4, -0.4) {Embedding};
+  \node[on] (ret)  at (4.8, -0.4) {Retrieval};
+  \node[on] (rer)  at (7.4, -0.4) {Re-rank};
+  \node[on] (gen)  at (9.8, -0.4) {Generation};
+
+  \draw[arr] (q) -- (emb2);
+  \draw[arr] (emb2) -- (ret);
+  \draw[arr] (ret) -- (rer);
+  \draw[arr] (rer) -- (gen);
+  \draw[arr] (db.south) -- (ret.north);
+\end{tikzpicture}
+\vspace{15pt}
+\caption{Kiến trúc hai pha của hệ thống RAG: chuẩn bị tri thức (offline) và xử lý truy vấn (online).}
+\label{fig:rag-arch}
+\end{figure}
+\vspace{10pt}
+
+\subsection{Phân loại Naive / Advanced / Modular}
+\label{subsec:rag-taxonomy}
+
+Gao và cộng sự \cite{gao_rag_survey_2024} đề xuất phân loại ba cấp:
+\begin{itemize}
+  \item \textit{Naive RAG} --- truy hồi một bước, không tiền xử lý truy vấn, không hậu xử lý ngữ cảnh.
+  \item \textit{Advanced RAG} --- thêm các bước tiền xử lý truy vấn (rewrite, expansion) và hậu xử lý (rerank, filter).
+  \item \textit{Modular RAG} --- pipeline được chia thành các module độc lập có thể tổ hợp linh hoạt.
+\end{itemize}
+
+\subsection{Các mẫu RAG mở rộng}
+\label{subsec:rag-2024}
+
+Tài liệu RAG hiện đại đề xuất nhiều mẫu mở rộng để cải thiện độ tin cậy. Bốn mẫu nổi bật và liên quan trực tiếp đến bài toán CSPM:
+
+\begin{itemize}
+  \item \textbf{Multi-stage retrieval với re-ranking}: thuộc nhánh Advanced/Modular RAG, áp dụng kiến trúc \textit{recall--precision tách biệt}. Pha thứ nhất dùng retriever rẻ (BM25, bi-encoder) lấy tập ứng viên rộng (top-$N$ với $N \gg k$); pha thứ hai dùng cross-encoder hoặc generative reranker đắt nhưng chính xác hơn để chọn top-$k$ cuối cùng. Kiến trúc này cho phép đẩy chi phí tính toán xuống tập nhỏ, thay vì áp dụng mô hình đắt cho toàn bộ corpus.
+  \item \textbf{Adaptive-RAG} \cite{jeong_adaptiverag_2024}: chọn động chiến lược truy hồi dựa trên độ phức tạp của truy vấn. Một bộ phân loại (classifier) phán đoán trước truy vấn thuộc loại đơn giản (chỉ cần lookup trực tiếp), trung bình (cần một lượt truy hồi tiêu chuẩn), hay phức tạp (cần truy hồi đa bước với suy luận trung gian). Mục tiêu là tránh tổng hợp không cần thiết cho truy vấn dễ và đảm bảo đủ ngữ cảnh cho truy vấn khó.
+  \item \textbf{Self-RAG} \cite{asai_selfrag_2024}: mô hình ngôn ngữ được huấn luyện sinh thêm các \textit{reflection tokens} cho phép tự quyết định ba điều: (i) có cần truy hồi không, (ii) các đoạn văn truy hồi có liên quan không, (iii) đầu ra cuối có được hỗ trợ bởi ngữ cảnh truy hồi không. So với pipeline RAG cổ điển luôn truy hồi, Self-RAG cho phép tiết kiệm chi phí và giảm hiện tượng "ngữ cảnh nhiễu làm mô hình lạc đề".
+  \item \textbf{GraphRAG} \cite{edge_graphrag_2024}: thay vì chỉ truy hồi đoạn văn, GraphRAG xây trước một \textit{đồ thị tri thức} (entities + relations) từ corpus, sinh các \textit{community summary} ở các mức trừu tượng khác nhau, và truy hồi qua kết hợp tìm kiếm semantic và duyệt đồ thị. Phù hợp cho truy vấn \textit{tổng hợp toàn cục} (ví dụ: "tổng quan về tư thế bảo mật của tài khoản") mà RAG dựa trên đoạn văn riêng lẻ khó trả lời.
+\end{itemize}
+
+Cần lưu ý: bốn mẫu này không loại trừ nhau và thường được kết hợp. Multi-stage retrieval gần như là chuẩn mặc định cho RAG sản xuất; Adaptive-RAG là chiến lược điều phối ở cấp pipeline; Self-RAG và GraphRAG là các thay thế cho phần xử lý ngữ cảnh.
+
+\section{Phương pháp truy hồi và tái xếp hạng}
+\label{sec:retrieval}
+
+\subsection{Truy hồi từ vựng: TF-IDF và BM25}
+\label{subsec:lexical}
+
+Truy hồi từ vựng dựa trên trùng khớp từ giữa truy vấn và tài liệu, có ưu thế với truy vấn chứa định danh kỹ thuật. \textbf{TF-IDF} là baseline lịch sử; \textbf{BM25} \cite{robertson2009bm25} là biến thể xác suất chuẩn de-facto. Điểm BM25 của tài liệu $D$ với truy vấn $Q$:
+\begin{equation}
+\mathrm{score}(D, Q) = \sum_{q_i \in Q} \mathrm{IDF}(q_i) \cdot
+\frac{f(q_i, D) (k_1 + 1)}{f(q_i, D) + k_1 \big(1 - b + b \cdot \frac{|D|}{\mathrm{avgdl}}\big)}
+\end{equation}
+trong đó $f(q_i, D)$ là tần số $q_i$ trong $D$, $|D|$ là độ dài tài liệu, $\mathrm{avgdl}$ là độ dài trung bình của corpus, $k_1, b$ là siêu tham số (thường $k_1 \in [1.2, 2.0]$, $b \approx 0.75$). $\mathrm{IDF}$ chuẩn theo Robertson--Sparck-Jones với làm trơn:
+\begin{equation}
+\mathrm{IDF}(q_i) = \ln\!\left( \frac{N - n(q_i) + 0.5}{n(q_i) + 0.5} + 1 \right)
+\end{equation}
+với $N$ là tổng số tài liệu và $n(q_i)$ là số tài liệu chứa $q_i$.
+
+\subsection{Truy hồi đặc đại lượng (Dense Retrieval)}
+\label{subsec:dense}
+
+Dense retrieval biểu diễn truy vấn và tài liệu thành vector cùng không gian, đo độ tương đồng bằng tích vô hướng hoặc cosine. Ba kiến trúc chính:
+\begin{itemize}
+  \item \textbf{Bi-encoder} \cite{reimers2019sbert,karpukhin2020dpr} --- mã hóa truy vấn và tài liệu \textit{độc lập}, lưu vector tài liệu offline. Rẻ, mở rộng tốt; phù hợp cho \textit{candidate retrieval}.
+  \item \textbf{Cross-encoder} \cite{nogueira2019passage} --- xử lý đồng thời truy vấn và tài liệu trong cùng một lần forward, cho điểm tương đồng chính xác hơn nhưng đắt; chỉ chạy được trên tập ứng viên nhỏ.
+  \item \textbf{Late-interaction (ColBERT)} \cite{khattab2020colbert} --- biểu diễn từng \textit{token} thành vector và tính \textit{MaxSim} ở thời điểm truy vấn, đứng giữa hai cực về chất lượng/chi phí. Lưu ý: ColBERT là multi-vector, không phải bi-encoder thuần.
+\end{itemize}
+
+Độ tương đồng cosine giữa truy vấn $\mathbf{q}$ và tài liệu $\mathbf{d}$:
+\begin{equation}
+\mathrm{cosine\_sim}(\mathbf{q}, \mathbf{d}) = \frac{\mathbf{q} \cdot \mathbf{d}}{\lVert \mathbf{q} \rVert \cdot \lVert \mathbf{d} \rVert}
+\end{equation}
+
+\subsection{Hybrid Retrieval và Reciprocal Rank Fusion}
+\label{subsec:hybrid}
+
+Truy hồi lai kết hợp một retriever từ vựng và một retriever đặc đại lượng để tận dụng ưu điểm của mỗi phía: định danh kỹ thuật (BM25) và diễn đạt ngữ nghĩa (Dense). Có hai cách hợp nhất:
+\begin{itemize}
+  \item \textbf{Score fusion} --- chuẩn hóa điểm về cùng thang (Min--Max, Z-score) rồi cộng có trọng số. Nhạy cảm với phân phối điểm.
+  \item \textbf{Rank fusion} --- chỉ dùng thứ hạng, không phụ thuộc thang điểm. Phổ biến nhất là Reciprocal Rank Fusion (RRF) \cite{cormack2009rrf}:
+\end{itemize}
+\begin{equation}
+\mathrm{RRF}(d) = \sum_{i=1}^{n} \frac{1}{k + \mathrm{rank}_i(d)}
+\end{equation}
+trong đó $\mathrm{rank}_i(d)$ là thứ hạng của $d$ trong danh sách thứ $i$, $k$ là hằng số làm dịu (Cormack đề xuất giá trị mặc định $k = 60$ qua khảo sát thực nghiệm trên TREC), và $n$ là số lượng danh sách được hợp nhất.
+
+\vspace{10pt}
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\footnotesize},
+  box/.style={draw, rounded corners=3pt, minimum width=2.2cm, minimum height=0.9cm, align=center, thick},
+  q/.style={box, fill=gray!10},
+  bm/.style={box, fill=blue!10},
+  ds/.style={box, fill=red!10},
+  fuse/.style={box, fill=orange!15, minimum width=1.8cm},
+  outb/.style={box, fill=green!10},
+  arr/.style={->, >=stealth, thick}
+]
+  \node[q] (q)      at (0, 0)     {Truy vấn};
+  \node[bm] (bm)    at (3.0, 1.1) {BM25 retriever};
+  \node[ds] (de)    at (3.0, -1.1){Dense retriever};
+  \node[fuse] (rrf) at (6.4, 0)   {RRF};
+  \node[outb] (top) at (9.4, 0)   {Top-$k$ ứng viên};
+
+  \draw[arr] (q.east) -- (bm.west);
+  \draw[arr] (q.east) -- (de.west);
+  \draw[arr] (bm.east) -- (rrf.north west);
+  \draw[arr] (de.east) -- (rrf.south west);
+  \draw[arr] (rrf.east) -- (top.west);
+
+  \node[font=\scriptsize\itshape, anchor=west] at (3.0, 1.85) {định danh kỹ thuật};
+  \node[font=\scriptsize\itshape, anchor=west] at (3.0, -1.85) {ngữ nghĩa};
+\end{tikzpicture}
+\vspace{15pt}
+\caption{Truy hồi lai (hybrid retrieval) kết hợp BM25 và dense retriever, hợp nhất thứ hạng bằng Reciprocal Rank Fusion.}
+\label{fig:hybrid-rrf}
+\end{figure}
+\vspace{10pt}
+
+\subsection{Tái xếp hạng (Re-ranking)}
+\label{subsec:rerank}
+
+Re-ranking là pha tinh lọc đặt sau truy hồi ứng viên, sử dụng một mô hình \textit{đắt hơn nhưng chính xác hơn} để xếp lại thứ hạng trên tập top-$N$ ứng viên trước khi lấy top-$k$ cuối ($k \ll N$). Lợi thế của thiết kế này nằm ở chỗ chi phí tính toán đắt chỉ áp dụng cho tập nhỏ, đồng thời giữ lại được khả năng truy hồi rộng (recall) ở pha trước.
+
+Có hai họ kiến trúc chính, khác nhau về cách sinh điểm relevance:
+
+\begin{itemize}
+  \item \textbf{Discriminative cross-encoder}: nhận đồng thời cặp (truy vấn, tài liệu) qua một transformer encoder và sinh \textit{một} điểm relevance qua đầu phân loại. Đại diện: monoBERT \cite{nogueira2019passage}, BGE-Reranker đa ngôn ngữ \cite{bge_reranker_2024}. Ưu thế: độ chính xác cao, độ trễ ổn định cho cùng kích thước cặp đầu vào.
+  \item \textbf{Generative reranker}: sinh điểm relevance gián tiếp qua xác suất sinh token. MonoT5 \cite{nogueira2020monot5} sử dụng T5 sinh từ ``true''/``false'' và lấy log-prob của ``true'' làm điểm. Ưu thế: tận dụng được hiểu biết ngôn ngữ phong phú từ pre-training; có thể mở rộng sang listwise với prompt instruction.
+\end{itemize}
+
+\textit{Khi nào chọn họ nào}: discriminative cross-encoder phù hợp khi yêu cầu độ trễ thấp và corpus có cấu trúc rõ; generative reranker phù hợp khi truy vấn dài, ngữ nghĩa phức tạp, và có thể chấp nhận chi phí cao hơn. Trong thực tế triển khai, discriminative cross-encoder vẫn là lựa chọn mặc định cho RAG sản xuất.
+
+Một lựa chọn thứ ba là \textit{API thương mại} (Cohere Rerank, Jina Rerank): dễ tích hợp nhưng phụ thuộc bên thứ ba, không phù hợp cho ngữ cảnh đòi hỏi xử lý cục bộ và bảo mật dữ liệu --- ràng buộc thường gặp trong các hệ thống bảo mật.
+
+\subsection{Cơ sở dữ liệu vector và chỉ mục ANN}
+\label{subsec:vector-db}
+
+Cơ sở dữ liệu vector lưu trữ các vector cao chiều và hỗ trợ truy vấn \textit{Approximate Nearest Neighbor} (ANN). Hai họ chỉ mục chính:
+\begin{itemize}
+  \item \textbf{Đồ thị}: HNSW \cite{malkov2018hnsw} --- đồ thị thế giới nhỏ phân tầng, $\mathrm{O}(\log N)$ tra cứu trung bình; là chỉ mục mặc định trong nhiều cơ sở dữ liệu vector.
+  \item \textbf{Phân cụm + lượng tử hóa}: IVF, IVF-PQ, ScaNN \cite{scann_2020}, DiskANN \cite{diskann_2019}.
+\end{itemize}
+
+Một cơ sở dữ liệu vector hữu dụng cho RAG phải hỗ trợ thêm \textit{metadata filter} để giới hạn không gian truy hồi theo các thuộc tính có cấu trúc (ví dụ: dịch vụ, mức độ nghiêm trọng), thay vì chỉ tìm kiếm trên toàn bộ corpus.
+
+\subsection{Chiến lược phân đoạn tài liệu (Chunking)}
+\label{subsec:chunking}
+
+Trước khi nhúng và đánh chỉ mục, tài liệu nguồn cần được \textit{phân đoạn} (chunk) thành các đơn vị có kích thước phù hợp với mô hình embedding (thường 256--1024 token) và phù hợp với độ chi tiết của truy vấn. Chiến lược phân đoạn có ảnh hưởng quyết định đến chất lượng truy hồi: chunk quá nhỏ làm mất ngữ cảnh, chunk quá lớn làm loãng tín hiệu ngữ nghĩa và có thể vượt giới hạn token của mô hình.
+
+Bốn chiến lược chính trong tài liệu hiện nay \cite{lewis2020rag,gao_rag_survey_2024,langchain_chunking_2024}:
+
+\begin{itemize}
+  \item \textbf{Phân đoạn theo kích thước cố định} (fixed-size chunking): chia tài liệu thành các đoạn có cùng số token, thường kèm \textit{overlap} (10--20\%) để tránh mất ngữ cảnh ở ranh giới. Đơn giản, không phụ thuộc cấu trúc tài liệu, nhưng có thể cắt ngang câu hoặc đoạn ý nghĩa.
+  \item \textbf{Phân đoạn theo cấu trúc} (structure-aware chunking): khai thác phân cấp tài liệu (chương, mục, tiểu mục, đoạn) để giữ ranh giới chunk trùng với ranh giới ngữ nghĩa tự nhiên. Phù hợp cho tài liệu có cấu trúc rõ như tài liệu kỹ thuật, manual, RFC, hoặc các check tuân thủ có schema cố định.
+  \item \textbf{Phân đoạn ngữ nghĩa} (semantic chunking): dùng các tín hiệu ngữ nghĩa (thay đổi đột ngột trong embedding của các câu liên tiếp) để xác định ranh giới chunk \cite{kamradt_semantic_chunking_2024}. Cho ranh giới sát ý nghĩa hơn nhưng cần một lượt embedding bổ sung trong giai đoạn tiền xử lý.
+  \item \textbf{Phân đoạn đệ quy theo mức trừu tượng} (recursive/hierarchical chunking): tạo nhiều mức chunk (đoạn, mục, tóm tắt mục) và đánh chỉ mục đồng thời; truy hồi có thể chọn mức trừu tượng phù hợp với truy vấn. Là cơ sở cho các mẫu như \textit{parent-document retrieval} và GraphRAG.
+\end{itemize}
+
+Cùng với phân đoạn, hai kỹ thuật bổ trợ quan trọng:
+\begin{itemize}
+  \item \textit{Metadata enrichment}: gắn metadata cấu trúc (định danh tài liệu, dịch vụ, mức nghiêm trọng, khung tuân thủ\dots) vào mỗi chunk, phục vụ filter ở pha truy hồi.
+  \item \textit{Document expansion}: tạo các \textit{truy vấn giả} mà chunk có thể trả lời (HyDE \cite{gao_hyde_2023}), nhúng các truy vấn giả thay vì chunk gốc, cải thiện cosine similarity với truy vấn thật.
+\end{itemize}
+
+Lựa chọn chiến lược phân đoạn không có tối ưu phổ quát; phụ thuộc đặc tính corpus, đặc tính truy vấn, và ngân sách tính toán. Đối với corpus có cấu trúc rõ ràng và định danh kỹ thuật ổn định, structure-aware chunking thường cho cân bằng tốt nhất giữa chất lượng và độ phức tạp.
+
+% =============================================================================
+% [C] EVALUATION FOUNDATIONS
+% =============================================================================
+
+\section*{Cụm C --- Nền tảng đánh giá}
+\addcontentsline{toc}{section}{Cụm C --- Nền tảng đánh giá}
+
+Một hệ thống lai giữa CSPM và AI có nhiều lớp chức năng độc lập, mỗi lớp có chỉ tiêu đánh giá riêng. Một bộ đánh giá toàn cục đơn lẻ (ví dụ: chỉ chất lượng câu trả lời cuối) sẽ che mờ các chế độ lỗi cục bộ và làm khó khăn việc cải tiến. Cụm C trình bày phương pháp luận đánh giá theo bốn nhóm chỉ tiêu (truy hồi, sinh ngôn ngữ, đặc thù bảo mật, toàn cục) và các nguyên tắc thiết kế bộ đánh giá để các phép đo có giá trị diễn dịch.
+
+\section{Phương pháp luận đánh giá hệ thống}
+\label{sec:evaluation-methodology}
+
+Hệ thống đề xuất là một CSPM dựa trên RAG và workflow agentic. Việc đánh giá chỉ qua một họ chỉ tiêu (ví dụ chỉ chỉ tiêu RAG) là chưa đủ; phương pháp luận đánh giá phải bao quát \textit{bốn nhóm} chỉ tiêu, tương ứng với bốn lớp chức năng của hệ thống: truy hồi, sinh ngôn ngữ, đặc thù bảo mật, và toàn cục.
+
+\subsection{Nhóm I --- Đánh giá truy hồi (Retrieval)}
+\label{subsec:eval-retrieval}
+
+\begin{itemize}
+  \item \textbf{Recall@$k$}: tỷ lệ truy vấn có ít nhất một tài liệu liên quan trong top-$k$. Đo độ bao phủ.
+  \item \textbf{Precision@$k$}: tỷ lệ tài liệu liên quan trong top-$k$. Đo độ chính xác cục bộ.
+  \item \textbf{Mean Reciprocal Rank (MRR)}: $\mathrm{MRR} = \frac{1}{|Q|}\sum_{q\in Q} \frac{1}{\mathrm{rank}_q^{*}}$ với $\mathrm{rank}_q^{*}$ là thứ hạng của tài liệu liên quan đầu tiên.
+  \item \textbf{Normalized Discounted Cumulative Gain (NDCG@$k$)} \cite{voorhees_ndcg}: đánh giá chất lượng xếp hạng có tính đến vị trí, dùng khi nhãn phù hợp có nhiều mức.
+  \item \textbf{Latency p50/p95}: phản ánh khả năng phục vụ thực tế.
+\end{itemize}
+
+\subsection{Nhóm II --- Đánh giá sinh ngôn ngữ (Generation)}
+\label{subsec:eval-generation}
+
+\begin{itemize}
+  \item \textbf{RAGAS} \cite{es_ragas_2024} --- bộ chỉ tiêu chuyên cho RAG: \textit{faithfulness} (đầu ra trung thực với ngữ cảnh truy hồi), \textit{answer relevancy} (phù hợp truy vấn), \textit{context precision/recall}.
+  \item \textbf{BERTScore} \cite{zhang_bertscore_2020} --- so khớp ngữ nghĩa qua embedding BERT, ổn định hơn ROUGE/BLEU cho văn bản tự do.
+  \item \textbf{ROUGE-L} --- vẫn dùng cho phần \textit{tóm tắt} trong báo cáo, nơi có reference summary.
+  \item \textbf{LLM-as-Judge / G-Eval} \cite{liu_geval_2023} --- dùng một LLM mạnh hơn làm trọng tài đánh giá theo rubric. Có thể bias; cần kiểm chứng chéo bằng đánh giá người.
+\end{itemize}
+
+\subsection{Nhóm III --- Đánh giá đặc thù bảo mật (Security-specific)}
+\label{subsec:eval-security}
+
+Đây là nhóm chỉ tiêu đặc thù cho bài toán CSPM, không có sẵn trong các benchmark RAG chuẩn. Có thể chia thành ba phân nhóm theo mục tiêu đo, mỗi phân nhóm phù hợp với một câu hỏi đánh giá khác nhau:
+
+\textbf{(a) Đo chất lượng phân loại rủi ro}: trả lời câu hỏi \textit{"hệ thống có gán đúng mức nghiêm trọng cho phát hiện không?"}.
+\begin{itemize}
+  \item \textbf{TPR/FPR và confusion matrix nhiều lớp}: ground-truth được dán nhãn Critical/High/Medium/Low theo CIS, CVSS, và đánh giá chuyên gia. Phù hợp khi nhãn tham chiếu đáng tin và phân bố lớp không quá lệch.
+  \item \textbf{Tool-call accuracy}: tỷ lệ tác tử gọi đúng công cụ với đúng đối số so với gold action. Phù hợp khi đánh giá riêng pha thực thi (Do/Act của PDCA), tách bạch khỏi chất lượng suy luận.
+\end{itemize}
+
+\textbf{(b) Đo độ an toàn của hành động khắc phục}: trả lời câu hỏi \textit{"khi hệ thống tự khắc phục, nó có gây hại không?"}.
+\begin{itemize}
+  \item \textbf{False-remediation rate}: tỷ lệ khắc phục tự động gây regression hoặc sai lệch chính sách bảo mật. Đây là chỉ tiêu sống còn cho một hệ thống có khả năng tác động lên hạ tầng; cần đo trên môi trường thí nghiệm có tính đại diện.
+\end{itemize}
+
+\textbf{(c) Đo hiệu quả vận hành theo chu kỳ}: trả lời câu hỏi \textit{"qua các chu kỳ PDCA, hệ thống có cải thiện posture không?"}.
+\begin{itemize}
+  \item \textbf{Compliance coverage}: tỷ lệ kiểm soát đạt yêu cầu trên tổng số kiểm soát thuộc phạm vi đánh giá, đo trước và sau một chu kỳ. Là chỉ tiêu trực tiếp gắn với khái niệm trưởng thành (§\ref{sec:maturity}).
+  \item \textbf{Security score delta}: hiệu số coverage giữa hai chu kỳ liên tiếp, định lượng \textit{tốc độ cải thiện}.
+  \item \textbf{MTTD/MTTR} (Mean Time to Detect / Remediate): đo thời gian từ khi phát hiện xuất hiện đến khi xác minh khắc phục. Phù hợp khi quan tâm tới tốc độ phản ứng, chỉ có ý nghĩa với môi trường thí nghiệm có theo dõi thời gian thực.
+\end{itemize}
+
+Lưu ý phương pháp luận: ba phân nhóm này không thay thế nhau --- một hệ thống có TPR cao (a) vẫn có thể có false-remediation rate cao (b) nếu pha hành động yếu, và compliance coverage cao (c) vẫn không nói gì về độ chính xác phân loại nếu nhãn tham chiếu thiếu nghiêm ngặt. Đánh giá toàn cục đòi hỏi báo cáo song song các phân nhóm.
+
+\subsection{Nhóm IV --- Đánh giá toàn cục (End-to-End)}
+\label{subsec:eval-e2e}
+
+\begin{itemize}
+  \item \textbf{Task success rate}: tỷ lệ kịch bản end-to-end (từ thu thập đến báo cáo) hoàn thành không lỗi.
+  \item \textbf{Plan validity}: tỷ lệ kế hoạch do mô-đun lập kế hoạch sinh ra đúng schema và đúng ràng buộc, đánh giá bằng schema validator kết hợp đánh giá chuyên gia.
+  \item \textbf{Human evaluation}: khảo sát chuyên gia bảo mật theo rubric (chính xác kỹ thuật, mức độ giải thích được, tính khả thi của khuyến nghị) --- dùng để hiệu chuẩn các chỉ tiêu tự động.
+\end{itemize}
+
+\subsection{Thiết kế bộ đánh giá}
+\label{subsec:eval-design}
+
+Bốn nhóm chỉ tiêu trên chỉ có giá trị diễn dịch khi đặt trên một \textit{bộ đánh giá} được thiết kế đúng phương pháp luận. Năm nguyên tắc tham chiếu cho thiết kế bộ đánh giá trong RAG và agentic systems:
+
+\begin{itemize}
+  \item \textbf{Xây dựng \textit{golden set}}: bộ truy vấn kèm câu trả lời và bằng chứng tham chiếu, được dán nhãn bởi chuyên gia có kiến thức miền. Trong CSPM, golden set bao gồm các tình huống cấu hình đại diện kèm severity đúng, bằng chứng kỹ thuật và khuyến nghị khắc phục được kiểm chứng. Yêu cầu: phủ đa dạng dịch vụ, đa dạng mức rủi ro, và bao gồm cả các \textit{trường hợp khó} (cấu hình hợp lệ trong ngữ cảnh A nhưng không hợp lệ trong ngữ cảnh B).
+  \item \textbf{Inter-Annotator Agreement (IAA)}: khi nhiều chuyên gia cùng dán nhãn, cần đo độ thống nhất bằng các chỉ tiêu như Cohen's $\kappa$ \cite{cohen_kappa_1960} hoặc Krippendorff's $\alpha$ \cite{krippendorff_alpha_2011}. Độ thống nhất thấp ($\kappa < 0.6$) chỉ ra rằng nhãn chính nó không đáng tin, và mọi phép đo trên bộ đánh giá đó cần được diễn dịch thận trọng.
+  \item \textbf{Tách \textit{development set} và \textit{test set}}: tránh hiệu chỉnh siêu tham số trên cùng tập dùng để báo cáo kết quả cuối, là sai lầm phương pháp luận phổ biến trong các bài đánh giá hệ thống RAG.
+  \item \textbf{Khử các thiên kiến của LLM-as-Judge}: khi dùng một LLM mạnh để chấm điểm đầu ra, cần lưu ý ba thiên kiến đã được tài liệu hóa \cite{liu_geval_2023,zheng2023llmjudge}: (i) \textit{position bias} --- ưa lựa chọn xuất hiện trước trong cặp so sánh; (ii) \textit{verbosity bias} --- ưa câu trả lời dài; (iii) \textit{self-preference bias} --- ưa đầu ra do cùng họ mô hình sinh. Khử các thiên kiến này bằng cách hoán đổi vị trí cặp, kiểm soát chiều dài, và đối chứng với đánh giá người ở mẫu nhỏ.
+  \item \textbf{Đánh giá thống kê}: kèm khoảng tin cậy (bootstrap CI 95\%) và kiểm định ý nghĩa (paired test) khi so sánh hai cấu hình, thay vì chỉ báo cáo điểm trung bình. Điều này quan trọng khi kích thước bộ đánh giá nhỏ --- thường gặp trong các đề tài đồ án.
+\end{itemize}
+
+Áp dụng đầy đủ năm nguyên tắc này vượt quá phạm vi một đồ án cá nhân, nhưng việc \textit{ý thức} về chúng là điều kiện cần để hiểu giới hạn của các kết quả định lượng. Các quy ước đánh giá cụ thể, kích thước bộ đánh giá, và các kiểm soát thiên kiến áp dụng được trình bày tại Chương~6.
+
+% =============================================================================
+% TỔNG KẾT CHƯƠNG
+% =============================================================================
+
+\section{Tổng kết chương}
+\label{sec:ch2-summary}
+
+Chương này đã thiết lập khung lý thuyết ba lớp cho đề tài: Cụm A định nghĩa bài toán (CSPM, mô hình trưởng thành, khung tuân thủ, PDCA, đánh giá rủi ro); Cụm B cung cấp công cụ giải bài toán (mô hình ngôn ngữ cục bộ, tác tử dựa trên LLM, RAG, truy hồi nhiều giai đoạn); Cụm C đặt nền tảng phương pháp luận đánh giá theo bốn nhóm chỉ tiêu kèm các nguyên tắc thiết kế bộ đánh giá.
+
+Ba lớp này tương tác chặt chẽ: mô hình trưởng thành ở Cụm A cung cấp \textit{thước đo} cho hệ thống, chu trình PDCA được hiện thực hóa qua đồ thị trạng thái có chu trình ở Cụm B, và pipeline truy hồi đa giai đoạn chỉ có ý nghĩa khi đi cùng các chỉ tiêu đánh giá ở Cụm C. Các khái niệm được trình bày ở mức trừu tượng đủ để bao quát không gian thiết kế; các con số tham khảo và đánh đổi được nêu để làm rõ ranh giới lựa chọn, các quyết định cụ thể được biện luận tại Chương~4 và đánh giá tại Chương~6.

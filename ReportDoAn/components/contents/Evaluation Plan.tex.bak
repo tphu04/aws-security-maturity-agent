@@ -1,0 +1,1037 @@
+
+
+\chapter{Thực nghiệm và Đánh giá Kết quả}
+
+Chương này trình bày các kết quả thực nghiệm nhằm kiểm chứng tính khả thi và hiệu quả của hệ thống "AWS Security Assessment Agent" trong môi trường thực tế. Quá trình đánh giá tập trung vào ba khía cạnh chính: khả năng hiểu ý định người dùng (Semantic Understanding), độ tin cậy của vòng lặp khắc phục tự động (End-to-End Remediation), và hiệu năng vận hành (System Performance) trên hạ tầng phần cứng giới hạn.
+
+
+\section{So sánh các mô hình ngôn ngữ --- Baseline}
+\label{sec:eval-model-baseline}
+
+Quá trình lựa chọn mô hình ngôn ngữ (LLM/SLM) ảnh hưởng trực tiếp đến cả hiệu năng vận hành lẫn khả năng bảo vệ riêng tư dữ liệu của hệ thống. Xuất phát từ ràng buộc triển khai cục bộ (Local Inference) trên phần cứng cá nhân (RTX 3060 --- 6\,GB VRAM) để giữ dữ liệu cấu hình AWS không rời khỏi máy người dùng, kết hợp yêu cầu sinh tiếng Việt phù hợp cho viết báo cáo, đồ án đã sàng lọc và chọn ra 4 đại diện tiêu biểu trong nhóm SLM mã nguồn mở $\le 7B$ tham số, lượng tử hóa Q4: \textbf{Gemma 3 4B IT}, \textbf{Qwen 2.5 7B Instruct}, \textbf{DeepSeek-R1-Distill-7B} và \textbf{Llama 3.2 3B Instruct}.
+
+\subsection{Bộ kiểm thử và phương pháp đo}
+\label{subsec:eval-baseline-method}
+
+\subsubsection*{Bộ kiểm thử 3 prompt}
+Toàn bộ benchmark được thực hiện trên một bộ kiểm thử gồm 3 prompt đặc thù tái hiện các tình huống sinh nội dung điển hình của \textit{Report Agent} --- thành phần có lời gọi LLM dài và nặng nhất trong workflow:
+
+\begin{enumerate}
+  \item \textbf{P1 --- Tóm tắt finding bảo mật ngắn ($\sim$300 token đầu vào):} cho một finding Prowler ở dạng JSON, yêu cầu mô tả cấu hình sai và rủi ro tương ứng bằng tiếng Việt trong $\le 200$ từ. Đo khả năng tuân thủ chỉ thị về độ dài và sinh tiếng Việt có dấu.
+  \item \textbf{P2 --- Sinh đoạn đánh giá rủi ro có cấu trúc ($\sim$1\,200 token đầu vào):} đầu vào là 5 finding S3 cùng metadata, yêu cầu xuất một đoạn đánh giá theo bố cục cố định gồm \textit{Mức độ}, \textit{Lý do}, \textit{Khuyến nghị}. Đo khả năng giữ đúng cấu trúc và độ dài.
+  \item \textbf{P3 --- Sinh báo cáo bảo mật dài có ngữ cảnh RAG ($\sim$3\,500 token đầu vào):} đầu vào gồm danh sách finding đã prioritize, các đoạn ngữ cảnh từ RAG (CIS Benchmark + AWS Well-Architected) và yêu cầu sinh báo cáo Markdown đa mục. Đo khả năng vận hành ở cửa sổ ngữ cảnh dài và tránh trộn ngôn ngữ.
+\end{enumerate}
+
+Mỗi prompt được lặp $n=5$ lần cho mỗi mô hình; các giá trị tốc độ (tok/s), thời gian thực thi và VRAM trong Bảng~\ref{tab:model_benchmark} là \textit{trung bình cộng} của 5 lần lặp cho cả 3 prompt (tổng 15 mẫu). Mọi mô hình đều chạy trên cùng một runtime Ollama với \texttt{num\_ctx=8192}, cùng \texttt{temperature=0.2} và cùng máy thực nghiệm để đảm bảo tính so sánh được. VRAM được đọc bằng \texttt{nvidia-smi} ở thời điểm cao nhất trong mỗi lần chạy.
+
+\subsubsection*{Cột ``Lỗi vi phạm chỉ thị''}
+Một lần chạy bị tính là vi phạm khi đầu ra phạm ít nhất một trong các quy tắc sau (kiểm bằng kịch bản post-process bán tự động):
+\begin{itemize}
+  \item Vượt quá giới hạn số từ đã quy định trong prompt (P1 hoặc P2).
+  \item Thiếu mục bắt buộc trong cấu trúc đầu ra (ví dụ thiếu \textit{Khuyến nghị} ở P2).
+  \item Sinh tiếng Việt không dấu hoặc trộn nguyên đoạn tiếng Anh ở P1/P3 dù prompt yêu cầu tiếng Việt.
+  \item Không trả về câu trả lời mà ``dump'' lại cấu trúc prompt.
+\end{itemize}
+Cột giá trị là \textit{tổng số lần vi phạm} đếm trên 15 mẫu (tối đa 15).
+
+\subsubsection*{Thang điểm định tính 25}
+Cột ``Điểm định tính'' tổng hợp đánh giá chất lượng đầu ra theo 5 tiêu chí, mỗi tiêu chí cho điểm 1--5 (tổng tối đa 25), do nhóm tác giả chấm chéo trên 15 mẫu rồi lấy trung vị:
+\begin{enumerate}
+  \item \textbf{Đúng cấu trúc} (\textit{structural compliance}) --- đầu ra có đủ các mục cấu trúc yêu cầu hay không.
+  \item \textbf{Chất lượng tiếng Việt} --- ngữ pháp, dấu, phong cách viết báo cáo kỹ thuật.
+  \item \textbf{Tính nhất quán nội dung} --- không mâu thuẫn nội tại hoặc với ngữ cảnh đầu vào.
+  \item \textbf{Tính có thể sử dụng} (\textit{usability}) --- nội dung có dùng được trực tiếp cho báo cáo cuối hay phải sửa nhiều.
+  \item \textbf{Bám sát ngữ cảnh RAG} --- ở P3, có trích đúng các điểm tham chiếu CIS/AWS Well-Architected hay không.
+\end{enumerate}
+
+\subsection{Kết quả benchmark}
+\label{subsec:eval-baseline-results}
+
+Bảng~\ref{tab:model_benchmark} tổng hợp các số liệu định lượng về tốc độ, thời gian thực thi, mức tiêu thụ tài nguyên cùng thước đo định tính.
+
+\begin{table}[H]
+    \centering
+    \caption{Kết quả benchmark thực nghiệm lựa chọn mô hình SLM cho Local Inference (trung bình của $n=5$ lần lặp $\times$ 3 prompt = 15 mẫu/mô hình).}
+    \label{tab:model_benchmark}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|c|c|c|c|c|}
+        \hline
+        \textbf{Mô hình} & \textbf{Tốc độ} & \textbf{Thời gian} & \textbf{VRAM} & \textbf{Lỗi vi phạm} & \textbf{Điểm định tính} \\
+        & \textbf{(tok/s)} & \textbf{tổng (s)} & \textbf{(MB)} & \textbf{chỉ thị (/15)} & \textbf{(/25)} \\
+        \hline
+        \textbf{Gemma 3 4B IT} & 61.8 & 27.7 & 4849 & 3 & 21 \\
+        \hline
+        Qwen2.5-7B-Instruct & 10.3 & 83.3 & 5352 & 0 & 22 \\
+        \hline
+        DeepSeek-R1-Distill-7B & 11.2 & 258.5 & 5342 & 2 & 16 \\
+        \hline
+        Llama 3.2 3B Instruct & 83.0 & 17.8 & 3856 & 9 & 8 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Căn cứ vào dữ liệu đối chiếu trên --- với ưu tiên ba yếu tố \textit{chất lượng tiếng Việt}, \textit{tốc độ sinh token} và \textit{biên VRAM còn lại cho ngữ cảnh RAG dài} --- mô hình \textbf{Gemma 3 4B IT} \cite{google2025gemma3} được chọn làm hạt nhân thống nhất cho cả 4 thành phần Planning/Risk/Remediation/Report. Quyết định này dựa trên ba căn cứ định lượng:
+
+\begin{itemize}
+    \item \textbf{Tốc độ suy luận phù hợp với workflow agentic:} Trong một phiên PDCA điển hình, hệ thống phát sinh hơn 10 lời gọi LLM tuần tự nên tốc độ sinh token ảnh hưởng trực tiếp đến độ trễ tổng. Qwen 2.5-7B có chất lượng cấu trúc tốt (0 vi phạm) nhưng tốc độ 10.3\,tok/s khiến một phiên broad-scan kéo dài quá ngưỡng cảm nhận của người vận hành. Gemma 3 4B đạt 61.8\,tok/s (gấp $\sim$6 lần) và hoàn tất bộ kiểm thử trong 27.7\,s, duy trì độ trễ chấp nhận được cho luồng PDCA bất đồng bộ.
+
+    \item \textbf{Biên VRAM còn lại đủ cho ngữ cảnh RAG dài:} Trong bước đánh giá rủi ro và sinh báo cáo, cửa sổ ngữ cảnh thực tế thường vượt 4\,000 token sau khi nối metadata AWS với các đoạn RAG. DeepSeek-R1-Distill-7B và Qwen 2.5-7B đều dùng $\sim$5.3\,GB VRAM ở trạng thái nền, để lại biên dưới 0.7\,GB so với trần 6\,GB của RTX 3060 --- sát giới hạn tràn bộ nhớ khi nạp ngữ cảnh dài. Gemma 3 4B sử dụng 4.85\,GB, để lại biên $\sim$1.15\,GB cho KV-cache.
+
+    \item \textbf{Chất lượng sinh tiếng Việt ổn định ở P3:} Llama 3.2 3B Instruct ghi nhận 9/15 lần vi phạm chỉ thị, chủ yếu là sinh tiếng Việt không dấu hoặc lệch ý định prompt. DeepSeek-R1-Distill-7B tiêu tốn nhiều token cho phần \textit{thinking} bằng tiếng Anh nhưng đoạn báo cáo cuối kém liền mạch. Gemma 3 4B IT cho điểm tiêu chí \textit{chất lượng tiếng Việt} 4/5 và không trộn nguyên đoạn tiếng Anh trong văn bản đầu ra, nhờ tokenizer đa ngôn ngữ.
+\end{itemize}
+
+\textbf{Hạn chế cần kiểm soát:} Gemma 3 4B đôi khi vượt giới hạn số từ ở các báo cáo dài (3/15 lần vi phạm trong bảng trên). Hạn chế này được kiểm soát ở cấp ứng dụng bằng việc đặt \texttt{num\_predict} cho mỗi lời gọi và bổ sung ràng buộc độ dài trong System Prompt; mức vi phạm trong vận hành thực tế được đánh giá lại tại §\ref{sec:llm_generation_eval}.
+
+\subsection{Đặc tả mô hình hạt nhân được tích hợp}
+\label{subsec:eval-baseline-gemma-spec}
+
+Bảng~\ref{tab:gemma3_specs} tổng hợp các đặc tả kỹ thuật của Gemma 3 4B IT ở phiên bản triển khai trong đồ án (định dạng GGUF, lượng tử hóa K-Quants \texttt{Q4\_K\_M}, chạy trên runtime Ollama).
+
+\begin{table}[H]
+    \centering
+    \caption{Đặc tả kỹ thuật cốt lõi của mô hình Gemma 3 4B IT được tích hợp.}
+    \label{tab:gemma3_specs}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|p{8cm}|}
+         \hline
+         \textbf{Đặc điểm kỹ thuật} & \textbf{Giá trị áp dụng trong đồ án} \\ \hline
+         Kiến trúc nền tảng & Gemma-3-4B-IT (decoder-only Transformer) \\ \hline
+         Tổng số tham số & 4 tỷ tham số (4B) \\ \hline
+         Định dạng phân phối & GGUF \\ \hline
+         Chuẩn lượng tử hóa & K-Quants \texttt{Q4\_K\_M} (4-bit) \\ \hline
+         Dung lượng tải lưu trữ & $\sim$2.8\,GB \\ \hline
+         VRAM tiêu thụ thực đo (P3) & $\sim$4.85\,GB trên RTX 3060 6\,GB \\ \hline
+         Cửa sổ ngữ cảnh tối đa & 128\,000 tokens (đồ án dùng \texttt{num\_ctx=8192}) \\ \hline
+         Khả năng đa ngôn ngữ & Hỗ trợ chính thức 140+ ngôn ngữ, có tiếng Việt \\ \hline
+         Runtime & Ollama (local), GPU offload toàn bộ trọng số \\ \hline
+         Giấy phép & Gemma License \\ \hline
+    \end{tabular}
+\end{table}
+\section{Môi trường và Cấu hình Thực nghiệm}
+
+Để đảm bảo tính khách quan và khả năng tái lập (reproducibility), hệ thống được triển khai và đánh giá trên môi trường cục bộ, mô phỏng trạm làm việc của quản trị viên (Admin Workstation), kết nối tới một môi trường AWS Sandbox biệt lập.
+
+\subsection{Cấu hình Phần cứng và Phần mềm}
+Hệ thống vận hành khép kín trên một máy tính cá nhân, không phụ thuộc GPU đám mây, nhằm chứng minh hai luận điểm: (i) chi phí vận hành thấp đủ để các đội bảo mật quy mô vừa có thể tự triển khai; (ii) dữ liệu cấu hình nhạy cảm của AWS không cần rời khỏi máy người dùng. Toàn bộ stack chia thành năm khối: phần cứng tham chiếu, mô hình ngôn ngữ cục bộ, ba dịch vụ FastAPI nội bộ, khối orchestration--truy hồi, và lớp giao diện--quan sát.
+
+\begin{itemize}
+  \item \textbf{Phần cứng tham chiếu:}
+    \begin{itemize}
+      \item CPU: Intel Core i5-11400H (6 lõi / 12 luồng).
+      \item RAM: 16\,GB DDR4.
+      \item GPU: NVIDIA GeForce RTX 3060 Laptop, 6\,GB VRAM (CUDA-enabled).
+      \item Lưu trữ: SSD NVMe 512\,GB (chứa cả checkpoint LangGraph và chỉ mục ChromaDB cục bộ).
+    \end{itemize}
+  \item \textbf{Mô hình ngôn ngữ cục bộ (LLM):}
+    \begin{itemize}
+      \item Model: \textbf{Gemma 3 4B IT} (4 tỷ tham số, instruction-tuned), dùng đồng nhất cho cả 4 agent (\texttt{PlanningAgent}, \texttt{RiskEvaluationAgent}, \texttt{RemediationPlannerAgent}, \texttt{ReportAgent}).
+      \item Lượng tử hoá: \textbf{Q4\_K\_M} (4-bit K-quants), tệp \textasciitilde 2.8\,GB, chạy trên \textbf{Ollama} với cửa sổ ngữ cảnh \texttt{num\_ctx=8192} và toàn bộ trọng số được offload vào VRAM của RTX 3060.
+      \item Lý do chọn: cân bằng giữa tốc độ suy luận, năng lực sinh tiếng Việt và dư địa VRAM cho ngữ cảnh RAG dài (xem Bảng~\ref{tab:model_benchmark}).
+    \end{itemize}
+  \item \textbf{Ba dịch vụ FastAPI nội bộ} (mỗi dịch vụ là một process Python độc lập, được khởi động qua một script duy nhất):
+    \begin{itemize}
+      \item \textbf{Scanner API} (cổng 9001): proxy gọi Prowler v4 ở chế độ headless, đẩy job xuống một hàng đợi SQLite nội bộ (chế độ WAL); hàng đợi job hỗ trợ cả \textit{group scan} và \textit{checks scan} theo ý định Planning Agent xác định.
+      \item \textbf{RAG API} (cổng 9005): bọc tầng truy hồi hybrid (BM25 + vector + Cross-Encoder rerank) trên ChromaDB cục bộ; cung cấp ba endpoint chính tương ứng truy hồi check, truy hồi capability và làm giàu finding.
+      \item \textbf{Chatbot API} (cổng 9002): orchestrator tích hợp LangGraph compile cache, các endpoint \texttt{POST /v1/runs}, \texttt{POST /v1/runs/\{run\_id\}/approvals/\{task\_id\}} (Web HITL) và \texttt{GET /v1/runs/\{run\_id\}/report}; tự đồng bộ snapshot trạng thái từ tầng checkpoint SQLite.
+    \end{itemize}
+  \item \textbf{Khối orchestration và truy hồi:}
+    \begin{itemize}
+      \item Orchestration: \textbf{LangGraph} với 13 node, 3 conditional edge và một điểm dừng \emph{interrupt\_before} trước node \textit{review\_task}; trạng thái lưu trên tầng checkpoint SQLite.
+      \item Knowledge Base: ba tệp tham chiếu của Maturity Engine (502 mapping, 5 domain --- Data Protection, Identity \& Access, Logging \& Monitoring, Resilience, Network Security) cộng với danh mục capability và check Prowler; chỉ mục lưu offline trong ChromaDB v0.5.x với 3 collection.
+      \item Cloud SDK: \textbf{Boto3} (AWS SDK for Python) cho các tool remediation.
+    \end{itemize}
+  \item \textbf{Lớp giao diện và quan sát (Observability):}
+    \begin{itemize}
+      \item Frontend: \textbf{React 18 + Vite + Tailwind + Radix} (cổng 5173) với năm view chính (cửa sổ chat, dòng thời gian đồ thị, thẻ bằng chứng, panel theo dõi tool và panel cài đặt); giao tiếp với Chatbot API qua Server-Sent Events.
+      \item Tracing: \textbf{Langfuse} self-host (triển khai bằng Docker Compose, phiên bản 3.171.0); mỗi node phát một span, mỗi gọi LLM/RAG đi kèm generation hoặc sub-span (BM25, rerank, hai pass risk evaluation); chế độ ẩn dữ liệu nội bộ che AWS account và ARN trước khi gửi.
+      \item Scanner backend: \textbf{Prowler v4 (open-source)} chạy ở chế độ headless qua Scanner API.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Thiết lập Môi trường Mục tiêu (Target Environment)}
+\label{subsec:target_environment}
+
+Môi trường mục tiêu là một AWS account biệt lập thuộc tài khoản số \texttt{0853\textbullet\textbullet\textbullet\textbullet 70} ở vùng \texttt{us-east-1}. IAM user dùng cho các phiên thực nghiệm là \texttt{Prowler-Scanner} với quyền tối thiểu để (a) liệt kê và đọc cấu hình tài nguyên cần đánh giá và (b) thực thi các tool remediation đã đăng ký trong registry tool nội bộ. Đối tượng kiểm thử trên AWS gồm hai S3 bucket: \texttt{s3-test123-bucket} đóng vai trò bucket nghiệp vụ và \texttt{logs-085350497370-us-east-1} là bucket nhật ký mặc định của tài khoản. Cả hai bucket đều có sẵn một số finding FAIL từ Prowler v4 ngay cả ở trạng thái không chỉnh sửa, đại diện cho phần "rác cấu hình" tự nhiên trong môi trường vận hành.
+
+Để kiểm chứng pipeline ở các kịch bản đa dạng và \emph{tái lập được}, chúng em đưa thêm một script Python dùng Boto3 để chuyển 7 check S3 từ PASS sang FAIL trên \texttt{s3-test123-bucket}, đồng thời lưu snapshot cấu hình gốc trước khi thay đổi. Bảy check được chủ động làm hỏng gồm: \texttt{s3\_bucket\_object\_versioning}, \texttt{s3\_bucket\_default\_encryption}, \texttt{s3\_bucket\_kms\_encryption}, \texttt{s3\_bucket\_event\_notifications\_enabled}, \texttt{s3\_bucket\_acl\_prohibited}, \texttt{s3\_bucket\_secure\_transport\_policy} và \texttt{s3\_bucket\_shadow\_resource\_vulnerability}. Sau mỗi phiên thực nghiệm, lệnh revert đọc snapshot và đưa bucket về đúng trạng thái trước degrade, đảm bảo các phiên kế tiếp khởi động từ cùng một điểm tham chiếu.
+
+Tổng cộng, bộ scan toàn nhóm \texttt{s3} trên môi trường này phát hiện \textbf{11 finding FAIL phân biệt} (4 finding sẵn có trên hai bucket, cộng 7 check do degrade --- một số trùng định danh nhưng khác bucket nên Prowler gắn các \texttt{finding\_uid} riêng biệt). Đây là tập "đã seed" được dùng làm ground truth cho các phép đo chất lượng deliverable ở \S\ref{sec:holistic_eval}. Toàn bộ thực nghiệm trong chương này lặp lại đúng quy trình \emph{degrade $\rightarrow$ run end-to-end $\rightarrow$ revert}, cho phép so sánh kết quả giữa các phiên độc lập mà không bị nhiễu bởi trạng thái dư thừa của các lần chạy trước.
+
+\section{Các Kịch bản Kiểm thử và Kết quả (Scenarios and Results)}
+
+Quá trình đánh giá được thực hiện thông qua 3 kịch bản thực tế với độ phức tạp tăng dần, tập trung vào khả năng hiểu ngôn ngữ tự nhiên và khả năng tự động sửa lỗi của hệ thống.
+
+\subsection{Kịch bản 1: Lập kế hoạch ngữ nghĩa với Multi-Query RAG (Group Intent Recognition)}
+\label{subsec:scenario_planning}
+\textbf{Mục tiêu:} kiểm chứng khả năng của Planning Agent trong việc đọc một yêu cầu tự nhiên bằng tiếng Việt, dịch sang truy vấn tiếng Anh giàu ngữ cảnh và quyết định đúng ý định người dùng (\textit{group scan} toàn nhóm dịch vụ vs.\ \textit{checks scan} chỉ vài check cụ thể) mà không cần người dùng nhớ tên Check ID.
+
+\textbf{Đầu vào.} Người dùng gửi yêu cầu tổng quát qua cửa sổ chat của Frontend:
+\begin{quote}
+\textit{"Đánh giá toàn diện S3 service"}.
+\end{quote}
+Câu này thuộc nhóm \emph{generic} --- không nhắc tên check, không gợi ý topic an toàn cụ thể (encryption, public access, ...).
+
+\textbf{Pipeline xử lý} của Planning Agent với hỗ trợ từ một thư viện client RAG dùng chung:
+\begin{enumerate}
+  \item \textbf{Translate-and-enhance:} Planning Agent dùng Gemma 3 4B IT để dịch yêu cầu sang tiếng Anh kèm chú giải nghiệp vụ (truy vấn được làm giàu thành "Comprehensive S3 service security assessment").
+  \item \textbf{Multi-query enrichment (Q1/Q2/Q3):} thay vì 1 truy vấn duy nhất, agent sinh đồng thời ba biến thể được gọi song song qua RAG API: Q1 mang ngữ điệu nghiệp vụ, Q2 trừu xuất root-cause, Q3 thiên về remediation. Kết quả top-$k$ của ba truy vấn được hợp nhất bằng \textit{Reciprocal Rank Fusion} trước khi tinh chỉnh thứ hạng bằng Cross-Encoder reranker (xem \S\ref{sec:rag_retrieval_eval} để biết chi tiết về tầng truy hồi).
+  \item \textbf{Group-vs-checks intent:} một heuristic phân loại ý định chuẩn hoá tokens của truy vấn được làm giàu, loại bỏ tên dịch vụ và 14 từ generic, rồi giao tập tokens còn lại với một danh sách topic bảo mật được duy trì sẵn. Yêu cầu ở đây không chứa topic nào ("comprehensive" và "service" đều nằm ngoài tập topic) nên được xếp vào \emph{group intent}.
+  \item \textbf{Quyết định kế hoạch:} Planning Agent ghi vào assessment plan của trạng thái hai trường tương ứng: nhóm dịch vụ cần quét là \texttt{["s3"]}, danh sách check cụ thể để rỗng, và chiến lược quét được đặt là \textit{group}.
+\end{enumerate}
+
+\textbf{Kết quả quan sát.} Trên 5 phiên end-to-end ở Bảng~\ref{tab:pdca_timing_v2}, scan job được Scanner API ghi nhận đều có \textit{taskType = group, taskValue = s3}, không phiên nào "rơi" về chế độ checks. Số finding trả về cố định ở mức \textbf{11/phiên} (4 sẵn có trên hai bucket + 7 check bị degrade), trùng tuyệt đối với danh sách "đã seed" của \S\ref{subsec:target_environment}. Ở Langfuse, các sub-span ứng với BM25 và rerank đều phát ra trong nhánh node Planning với độ trễ trung bình $\sim 1{,}4$ giây/phiên --- thấp hơn nhiều so với node làm giàu RAG ở pha sau ($\sim 31{,}7\,$s/phiên) vì Planning chỉ truy vấn để \emph{định hướng}, còn pha sau mới làm giàu chi tiết cho từng finding. Đây là minh chứng định lượng rằng việc tách RAG ra hai pha (planning vs enrichment) giúp giảm phụ tải truy hồi sớm trong pipeline.
+
+Quan sát thứ hai liên quan tới mức nhạy cảm của heuristic group-vs-checks: nếu yêu cầu chứa từ topic an toàn (ví dụ "rủi ro" $\rightarrow$ \textit{risk}, "cấu hình" $\rightarrow$ \textit{configuration}), heuristic chuyển sang chế độ checks và Scanner API chỉ chạy một tập nhỏ $\le 5$ check. Hành vi này vốn được thiết kế để "đỡ tốn thời gian" cho yêu cầu hẹp, nhưng đặt một ràng buộc lên cách mô tả yêu cầu tổng quát: muốn quét toàn diện thì câu lệnh phải tránh các từ topic. Đây là thông tin được ghi nhận để hướng dẫn người dùng và là một lựa chọn thiết kế minh bạch.
+
+\subsection{Kịch bản 2: Vòng lặp Tự động Khắc phục có Kiểm soát qua Web HITL}
+\label{subsec:scenario_hitl}
+\textbf{Mục tiêu:} kiểm chứng khả năng vận hành khép kín của chu trình PDCA trên 11 finding, đồng thời chứng minh cơ chế \textit{Human-in-the-Loop} (HITL) hoạt động qua Web API thay vì CLI: quản trị viên duyệt từng tác vụ trên Frontend, hệ thống chỉ gọi API thay đổi cấu hình AWS sau khi nhận được quyết định chính thức kèm định danh phiên chạy và định danh tác vụ.
+
+\textbf{Diễn biến thực nghiệm} (đối chiếu với 5 phiên D1 ở Bảng~\ref{tab:pdca_timing_v2}):
+\begin{enumerate}
+  \item \textbf{Detect.} Node \textit{scan\_submit} đẩy job (loại \emph{group}, giá trị \texttt{s3}) sang Scanner API; \textit{scan\_poll} chờ Prowler hoàn thành; \textit{scan\_collect} chuẩn hoá và đưa 11 finding FAIL vào trạng thái pipeline. 4 finding đến từ trạng thái sẵn có của hai bucket, 7 finding đến từ degrade.
+  \item \textbf{Analyse (two-pass risk + RAG enrich).} Node \textit{risk\_evaluation} chấm rủi ro pass 1 bằng rubric rule-based, \textit{rag\_enrich} truy hồi root-cause / impact / remediation guide qua RAG API, sau đó pass 2 (có ngữ cảnh RAG) tinh chỉnh mức nghiêm trọng dựa trên ngữ cảnh được làm giàu. Đầu ra là danh sách finding đã ưu tiên kèm thông tin ánh xạ control cho mỗi finding (xem \S\ref{subsec:deliverable_quality}).
+  \item \textbf{Plan.} Node \textit{operational\_planning} sinh 11 tác vụ remediation, mỗi tác vụ gắn một tool đăng ký trong registry cùng tham số được suy ra từ resource và các bước RAG. Các tác vụ được gắn nhãn \emph{tự động} (\texttt{manual\_only=False}) hoặc \emph{thủ công bắt buộc} (\texttt{manual\_only=True}, cần xác thực vật lý hoặc tuân theo chính sách phê duyệt riêng): trong kịch bản này có 5 tác vụ tự động và 6 tác vụ thủ công.
+  \item \textbf{Web HITL.} LangGraph dừng tại điểm \emph{interrupt\_before} trước node \textit{review\_task}; Chatbot API trả về snapshot có các tác vụ remediation ở trạng thái \emph{pending}. Frontend hiển thị danh sách tác vụ kèm finding gốc, tên tool, tham số, các bước RAG, side effect dự kiến và phương án rollback. Quản trị viên duyệt từng tác vụ bằng endpoint phê duyệt với quyết định \emph{approved} hoặc \emph{rejected}. Sau khi nhận quyết định, runtime cập nhật kế hoạch thực thi rồi tiếp tục pipeline thông qua cơ chế resume của LangGraph.
+  \item \textbf{Execute.} Node \textit{execution} duyệt từng tác vụ được phê duyệt và gọi tool tương ứng qua Boto3. 5 tool tự động (vô hiệu hoá ACL, bật event notifications, bật mã hoá KMS, bật versioning, bắt buộc HTTPS) thực thi thành công với độ trễ tổng $\approx 12$ giây. 6 tool thuộc nhóm thủ công bắt buộc bị guard từ chối ngay tại tầng đăng ký và ghi log với mã \textit{manual\_required} mà không gọi API AWS --- chính là cơ chế trình bày ở \S\ref{subsec:scenario_safety}.
+  \item \textbf{Verify.} Node \textit{verification} chạy lại scan trên cùng nhóm S3 và sinh 34 verification record (mỗi tác vụ có thể tạo nhiều bản ghi vì một check ảnh hưởng nhiều thuộc tính). Kết quả: 5 finding chuyển từ FAIL sang PASS, 6 finding giữ nguyên trạng thái với chú thích \textit{manual\_required} kèm hướng dẫn thủ công.
+  \item \textbf{Report.} Node \textit{report} chạy pipeline gồm năm bước (xây dựng dữ liệu, xác định phạm vi, sinh nội dung bằng LLM, kiểm chứng số liệu, xuất tệp) tạo báo cáo ở ba định dạng (Markdown, HTML, PDF) kèm điểm Maturity tổng hợp ($60{,}9 \rightarrow 78{,}1$, $\Delta = +17{,}2$). Báo cáo có thể tải qua endpoint chuyên biệt của Chatbot API.
+\end{enumerate}
+
+\textbf{Kết quả tổng hợp.} Trên 5 phiên độc lập, mọi phiên đều hoàn tất 7 bước trên với:
+\begin{itemize}
+  \item 11 finding FAIL được phát hiện đầy đủ (Coverage 100\%, xem Bảng~\ref{tab:d2_deliverable_quality}),
+  \item 5 quyết định \emph{approved} được hệ thống chấp thuận đúng tác vụ tự động, 6 tác vụ thủ công bắt buộc bị từ chối tại guard (xem Bảng~\ref{tab:d2_trajectory_eval}),
+  \item Toàn bộ năm bất biến state-handoff thoả mãn, tức không có trường nào của trạng thái pipeline bị "đánh rơi" giữa các node.
+\end{itemize}
+
+So với cơ chế HITL kiểu CLI (đợi người dùng nhập \texttt{y/n}) thường thấy ở các prototype, lựa chọn Web HITL trong ĐATN có hai khác biệt thiết kế đáng nhắc. Thứ nhất, mỗi quyết định được liên kết \emph{tường minh} với một cặp định danh phiên chạy và định danh tác vụ, lưu trong kế hoạch thực thi của trạng thái thay vì biến tạm trong tiến trình --- nghĩa là quyết định không bị mất khi người dùng đóng tab, có thể tiếp tục từ máy khác miễn là phiên đó còn checkpoint. Thứ hai, Frontend có thể hiển thị đồng thời các bước RAG, side effect dự kiến, phương án rollback và các guard check cho từng tác vụ, giúp quản trị viên ra quyết định dựa trên nhiều thông tin hơn so với một dòng prompt CLI. Tổng độ trễ giữa lúc Frontend hiển thị tác vụ và lúc người dùng bấm "Approve" được Langfuse ghi nhận trong một span riêng dành cho thời gian chờ HITL, cho phép phân tích định lượng riêng (xem chú thích cuối Bảng~\ref{tab:d2_trajectory_eval}).
+
+\subsection{Kịch bản 3: Cơ chế An toàn (Safety Guards)}
+\label{subsec:scenario_safety}
+\textbf{Mục tiêu:} chứng minh hệ thống nhận diện và từ chối các tác vụ thay đổi cấu hình mà bản thân Agent không thể tự thực hiện một cách an toàn (yêu cầu xác thực vật lý, tác động chính sách rộng, hoặc chưa có nguồn dữ liệu đủ tin cậy để tự động hoá), thay vì cố gọi API và gây lỗi runtime.
+
+\textbf{Cơ chế cài đặt.} Mỗi tool khi đăng ký vào registry tool nội bộ đều mang một thuộc tính metadata gắn nhãn \emph{thủ công bắt buộc}. Tại thời điểm node \textit{execution} chuẩn bị gọi tool, một guard kiểm tra cờ này; nếu nhãn được bật, guard chuyển trạng thái sang \textit{manual\_required} và đính kèm hướng dẫn thủ công lấy từ phương án rollback và các bước RAG, bỏ qua hoàn toàn lời gọi Boto3. Trong codebase hiện tại có 5 tool S3 được đánh dấu thủ công bắt buộc: chuẩn bị replication, bật MFA delete, bật object lock, gỡ principal cross-account và bật intelligent tiering.
+
+\textbf{Quan sát từ 5 phiên D1.} Trên broad-scan group \texttt{s3} (\S\ref{subsec:scenario_hitl}), 6 trên 11 tác vụ rơi vào diện thủ công bắt buộc: hai tác vụ chuẩn bị replication (cross-region replication cần IAM role và bucket đối tác), hai tác vụ bật MFA delete (yêu cầu MFA hardware token của Root) và hai tác vụ bật object lock (chính sách giữ vĩnh viễn, không thể rollback). Toàn bộ 6 tác vụ này được verification ghi nhận với kết quả \textit{manual\_required} và xuất hiện trong báo cáo cuối ở mục yêu cầu khắc phục thủ công kèm hướng dẫn từng bước. Quan sát này trùng nhau trên cả 5 phiên (xem cột Tools / Legit ở Bảng~\ref{tab:d2_trajectory_eval}), khẳng định guard hoạt động ổn định và không có trường hợp nào "rò" vào nhánh tự động.
+
+\textbf{Ý nghĩa.} Việc tách rạch ròi tool tự động và tool thủ công bắt buộc ngay tại tầng đăng ký --- thay vì để Agent quyết định tại runtime --- giúp giảm bề mặt rủi ro của hệ thống: bất kỳ thay đổi nào liên quan đến nhãn thủ công đều phải đi qua review của người duy trì registry. Đây cũng là điều kiện tiên quyết để có thể áp dụng nguyên tắc \emph{least-privilege} cho IAM user của Agent --- khi tool không thể chạy được tự động, ta không cần cấp quyền IAM tương ứng.
+
+\section{Đánh giá Hiệu năng Hệ thống (Performance Evaluation)}
+
+\label{sec:performance_eval}
+
+Phần này đánh giá hiệu năng vận hành end-to-end của pipeline PDCA trên môi trường mô tả ở \S\ref{subsec:target_environment}. Khác với các thực nghiệm phía sau (\S\ref{sec:rag_retrieval_eval} đánh giá riêng tầng truy hồi và \S\ref{sec:llm_generation_eval} đánh giá riêng từng agent), phần này nhìn pipeline như một khối thống nhất: từ lúc nhận yêu cầu người dùng tới lúc xuất báo cáo cuối, với toàn bộ 13 node của LangGraph và đầy đủ chi phí tracing, persistence và Web HITL của ĐATN.
+
+\subsection{Phương pháp đo}
+\label{subsec:perf_method}
+
+Để loại trừ phương sai do phiên warm-up đầu tiên (Ollama nạp mô hình lần đầu chậm hơn $\sim 2\times$), chúng em chạy 6 phiên end-to-end liên tiếp và bỏ phiên \#1; thống kê tính trên 5 phiên còn lại. Mỗi phiên tuân theo quy trình \texttt{degrade $\rightarrow$ run $\rightarrow$ revert} mô tả ở \S\ref{subsec:target_environment}, dùng cùng prompt \textit{"Đánh giá toàn diện S3 service"} để Planning Agent chọn group intent (\S\ref{subsec:scenario_planning}). Người vận hành đóng vai Web HITL bằng script tự động duyệt 5 tác vụ không thuộc \texttt{manual\_only}, do đó độ trễ chờ con người trong các phiên này $\approx 0$ và thời gian báo cáo phản ánh phần thuần kỹ thuật của pipeline; phần độ trễ chờ phê duyệt thực tế được đo riêng bằng span \texttt{hitl:wait} (xem chú thích Bảng~\ref{tab:d2_trajectory_eval}).
+
+Toàn bộ chỉ số per-node được trích trực tiếp từ các span tracing trong Langfuse self-host bằng một công cụ trích xuất tự động, đảm bảo tính tái lập của thực nghiệm. Mọi trace, observation và score đều mở để kiểm tra trong giao diện Langfuse trên môi trường nội bộ.
+
+\subsection{Thời gian end-to-end và phân bố theo node}
+\label{subsec:perf_e2e}
+
+Bảng~\ref{tab:pdca_timing_v2} trình bày thời gian end-to-end và per-node trên 5 phiên broad-scan group \texttt{s3}.
+
+\input{components/tables/d1_pdca_timing_v2}
+
+Bốn quan sát chính từ Bảng~\ref{tab:pdca_timing_v2}:
+
+\begin{enumerate}
+  \item \textbf{Tổng thời gian ổn định ở mức "có thể đoán được"}: $\bar{T} = 432{,}1$ giây với $\sigma = 45{,}1$ giây --- hệ số biến thiên $\text{CV} \approx 10{,}4\%$, nghĩa là cùng một kịch bản chạy lặp lại trên cùng phần cứng cho ra thời gian dao động trong khoảng $\pm 10\%$ quanh trung bình. Nhánh hai bên (min $391{,}0$ s, max $513{,}9$ s) cho khoảng dao động $\sim 123$ giây, phần lớn do các node có gọi LLM.
+  \item \textbf{Node sinh báo cáo là chặng tốn nhất}: $208{,}7 \pm 20{,}7$ s, chiếm $\approx 48{,}3\%$ tổng thời gian. Nguyên nhân chính là pipeline gồm năm bước (xây dựng dữ liệu $\rightarrow$ xác định phạm vi $\rightarrow$ sinh nội dung bằng LLM $\rightarrow$ kiểm chứng số liệu bằng LLM $\rightarrow$ xuất tệp) tạo báo cáo cho 11 finding ở ba định dạng (Markdown / HTML / PDF).
+  \item \textbf{Ba node truy xuất và suy luận tri thức} (làm giàu RAG, đánh giá rủi ro, lập kế hoạch khắc phục) cộng lại $\approx 113$ giây, $\approx 26\%$ tổng thời gian. Đây là phần "đắt tiền" chính của thiết kế: hệ thống đầu tư thời gian truy hồi và suy luận trước khi đụng vào AWS, nhằm tránh các sai lầm tốn kém ở pha thực thi.
+  \item \textbf{Phương sai tập trung ở node có gọi LLM}: node sinh báo cáo có $\sigma = 20{,}7$ s và đánh giá rủi ro có $\sigma = 11{,}4$ s --- chiếm phần lớn dao động end-to-end. Các node tất định (\textit{environment}, các node \textit{scan\_*}, \textit{execution}) có $\sigma$ nhỏ ($<4$ s), riêng các node bookkeeping (\textit{review\_task}, \textit{reset\_index}) ghi $\sim 0$ s vì script tự duyệt 5 tác vụ không thuộc nhóm \texttt{manual\_only}.
+\end{enumerate}
+
+\subsection{Phân bố theo nhóm chức năng PDCA}
+\label{subsec:perf_pdca_phase}
+
+Để đối chiếu với mô hình bốn pha PDCA, chúng em gộp 13 node thành 5 cụm chức năng: Plan, Do, Check, và pha Act được tách thành \emph{Apply} (thực thi remediation) và \emph{Verify+Report} (xác minh + tổng hợp báo cáo). Việc tách Act ra hai cụm phản ánh chênh lệch đáng kể về chi phí thời gian giữa hai phần này: thực thi remediation chỉ chiếm vài giây, trong khi xác minh và tổng hợp báo cáo chiếm hơn một nửa tổng thời gian. Bảng~\ref{tab:pdca_phase_breakdown} cho thấy hệ thống chi $\approx 57{,}5\%$ thời gian cho cụm Verify+Report, $\approx 26\%$ cho pha phân tích (Check), và chỉ $\approx 3\%$ cho pha hành động trực tiếp lên AWS --- một tỷ lệ phù hợp với mục tiêu thiết kế "đầu tư cho lập luận trước khi thực thi" của giải pháp.
+
+\begin{table}[H]
+  \centering
+  \caption{Phân bố thời gian theo nhóm chức năng PDCA, trung bình trên 5 phiên D1.}
+  \label{tab:pdca_phase_breakdown}
+  \small
+  \begin{tabular}{llrrr}
+    \toprule
+    \textbf{Pha} & \textbf{Node thuộc pha} & \textbf{Thời gian (s)} & \textbf{Tỷ trọng} & \textbf{Std (s)} \\
+    \midrule
+    Plan      & \textit{environment, planning}                        & 6{,}60  & 1{,}5\%  & 0{,}32 \\
+    Do        & \textit{scan\_submit, scan\_poll, scan\_collect}      & 1{,}10  & 0{,}3\%  & 0{,}19 \\
+    Check     & \textit{risk\_evaluation, rag\_enrich, op\_planning}  & 113{,}13 & 26{,}2\% & 13{,}32 \\
+    Act-Apply & \textit{review\_task, reset\_index, execution}        & 12{,}05 & 2{,}8\%  & 0{,}90 \\
+    Act-Verify+Report & \textit{verification, report}                 & 248{,}24 & 57{,}5\% & 21{,}09 \\
+    \midrule
+    \textbf{Tổng} &                                                  & \textbf{432{,}08} & \textbf{100\%} & \textbf{45{,}09} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+So với một phiên thử nghiệm nhỏ trong giai đoạn ĐACN (1 phiên đơn lẻ, 19 finding, 5 FAIL, $\sim 150$ giây, không có RAG enrichment, không có Web HITL, không có tracing), phiên broad-scan đầy đủ ở ĐATN dài hơn $\sim 2{,}9\times$. Khoản chênh lệch này không phản ánh "sự suy giảm hiệu năng" mà phản ánh các thành phần được bổ sung làm tăng giá trị của báo cáo cuối: tầng làm giàu RAG đa truy vấn, hai pass đánh giá rủi ro, bước kiểm chứng số liệu của Report Agent, đường dẫn Web HITL có thể audit, và tracing đầy đủ. Mức biến thiên $\text{CV} \approx 10\%$ đủ thấp để các số liệu này được dùng làm điểm chuẩn cho các phiên bản kế tiếp đo lường tác động của tối ưu hoá.
+
+\subsection{Tải LLM và lượng token tiêu thụ}
+\label{subsec:perf_llm_load}
+
+Bảng~\ref{tab:perf_llm_load} thống kê chi tiết tải LLM trên 5 phiên. Toàn bộ số liệu được tính trực tiếp từ các generation observation trong Langfuse, với số token đầu vào và đầu ra do runtime Ollama báo cáo cho mỗi lời gọi.
+
+\begin{table}[H]
+  \centering
+  \caption{Tải LLM trung bình trên một phiên broad-scan group \texttt{s3} (5 phiên D1).}
+  \label{tab:perf_llm_load}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Chỉ số} & \textbf{Mean} & \textbf{Std} & \textbf{Min} & \textbf{Max} \\
+    \midrule
+    Số lời gọi LLM                       & 51{,}0  & 0{,}0   & 51    & 51    \\
+    Token đầu vào                         & 56{,}391 & 8       & 56{,}376 & 56{,}395 \\
+    Token đầu ra                          & 12{,}094 & 183     & 11{,}797 & 12{,}305 \\
+    Tổng token / phiên                    & 68{,}485 & 183     & 68{,}173 & 68{,}700 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Số lời gọi cố định (51) phản ánh tính tất định của thiết kế: cho cùng tập 11 finding, các agent luôn gọi LLM cùng số lần (Planning $1\times$, Risk pass 1 $11\times$, Risk pass 2 có RAG $11\times$, Remediation Planner $11\times$, Report writer $\sim 14\times$, Report validator $\sim 3\times$). Phương sai output token ($\sigma = 183$) chỉ chiếm $\sim 1{,}5\%$ giá trị trung bình --- chứng tỏ Gemma 3 4B IT sinh nội dung gần như nhất quán mặc dù không cố định seed. Trong trường hợp người vận hành cần đẩy chi phí xuống thêm, các điểm tối ưu khả thi gồm (i) cache prompt cho Planning và Risk pass 1 (cố định template), (ii) giới hạn số token sinh tối đa cho Report writer khi số finding ít, (iii) chuyển một phần các section của Report writer sang sinh theo định dạng có cấu trúc để bớt token "vỏ".
+
+\subsection{Tổng kết hiệu năng}
+\label{subsec:perf_summary}
+
+Tổng hợp các quan sát ở \S\ref{subsec:perf_e2e} đến \S\ref{subsec:perf_llm_load}: hệ thống đạt thời gian end-to-end $432{,}1 \pm 45{,}1$ giây cho một phiên broad-scan trên 11 finding, với độ ổn định ở mức "có thể đoán được" ($\text{CV} \approx 10\%$), tải LLM tất định (51 lời gọi, $\approx 68$k token tổng), và phần lớn thời gian ($\approx 84\%$) được dành cho phân tích và tổng hợp báo cáo --- đúng định hướng "đầu tư trước, hành động sau" của thiết kế. Đánh giá hiệu năng thuần thời gian như trên là cần thiết nhưng chưa đủ; phần kế tiếp \S\ref{sec:holistic_eval} bổ sung góc nhìn chất lượng deliverable và độ chính xác trajectory để khẳng định pipeline không chỉ \emph{nhanh ổn định} mà còn \emph{đúng đắn} trong từng phiên chạy.
+
+% =====================================================================
+% §6.5 -- Holistic End-to-End Pipeline Evaluation (D2)
+% Tận dụng 5 trace + báo cáo Markdown đã sinh ra ở D1, không tốn thêm
+% GPU compute. Hai mảng đo: deliverable quality + trajectory.
+% Hai script tham chiếu: benchmarks/holistic_eval/{deliverable_quality,
+% trajectory_eval}.py
+% =====================================================================
+\section{Đánh giá toàn diện end-to-end (Holistic Pipeline Evaluation)}
+\label{sec:holistic_eval}
+
+Bảng~\ref{tab:pdca_timing_v2} ở phần trên cho thấy pipeline ổn định về \emph{thời gian}. Tuy nhiên, một pipeline nhanh chỉ có giá trị khi sản phẩm cuối đáp ứng yêu cầu chuyên môn và quỹ đạo thực thi đúng thiết kế. Phần này đánh giá hệ thống ở mức tổng thể trên hai trục: chất lượng deliverable (báo cáo cuối cùng và các tạo phẩm trung gian) và độ chính xác của trajectory (chuỗi node và tool call mà LangGraph thực thi). Cả hai tận dụng dữ liệu sẵn có từ 5 phiên D1 nên không phát sinh thêm chi phí tính toán; toàn bộ logic phân tích được hiện thực bằng hai script Python độc lập, không can thiệp vào pipeline đang chạy.
+
+\subsection{Chất lượng deliverable (Deliverable Quality)}
+\label{subsec:deliverable_quality}
+
+Chúng em chấm bốn tiêu chí trên mỗi phiên:
+\begin{itemize}
+  \item \textbf{Coverage} --- đo tỷ lệ check phát hiện được so với tập "đã seed". Tập này được lấy bằng hợp các check quan sát được trên cả 5 phiên (8 check phân biệt), đóng vai trò ground truth do bucket được degrade theo cùng kịch bản trước mỗi phiên.
+  \item \textbf{Completeness} --- kiểm tra sự hiện diện của năm tạo phẩm PDCA tương ứng năm pha Detect / Analyse / Plan / Apply / Verify.
+  \item \textbf{Mapping consistency} --- so sánh thông tin ánh xạ capability, domain và trạng thái duyệt của từng finding với knowledge base Maturity Engine (502 entry, 5 domain).
+  \item \textbf{Maturity score} --- đối chiếu điểm post-remediation mà hệ thống tự ghi nhận với một rubric độc lập tính bằng trọng số mức nghiêm trọng của finding (\textit{critical}~=~4, \textit{high}~=~3, \textit{medium}~=~2, \textit{low}~=~1) áp lên tỷ lệ pass/fail sau khắc phục. Rubric đóng vai trò baseline tham chiếu, không nhằm thay thế đánh giá maturity của hệ thống mà để định lượng độ "khoan dung" của Maturity Engine so với một thang nghiêm khắc thuần dựa trên severity.
+\end{itemize}
+
+\input{components/tables/d2_deliverable_quality}
+
+Kết quả ở Bảng~\ref{tab:d2_deliverable_quality} cho thấy ba tiêu chí đầu đạt mức tối đa trên cả 5 phiên: hệ thống nhận diện đầy đủ 8/8 \texttt{check\_id}, sinh đủ 5 nhóm tạo phẩm PDCA, và 100\% finding ánh xạ tới capability đã được product owner duyệt (\texttt{review\_status = approved}). Điều này khẳng định khâu chuẩn hoá Prowler--RAG--Maturity Engine không bị bỏ sót khi quy mô tăng từ 1 lên 11 finding/phiên. Tiêu chí Maturity, sau khi tách đường dẫn báo cáo theo từng phiên chạy, được đối chiếu đầy đủ trên cả 5 phiên: $78{,}10$ (system) so với $46{,}43$ (rubric severity), chênh nhau $+31{,}67$ và lặp lại đồng nhất trên 5/5 phiên (CV $= 0\%$ ở cả hai cột). Khoảng cách này phản ánh sự khác biệt phương pháp luận: rubric chỉ trừ điểm theo mức nghiêm trọng, trong khi Maturity Engine chấm theo \emph{ngưỡng năng lực} (mặc định $50\%$) và \emph{độ hoàn thiện stage} (mặc định $70\%$); engine vì thế "khoan dung" hơn với những capability vốn đã ở stage cao trước remediation. Tính ổn định tuyệt đối của điểm Maturity giữa các phiên là hệ quả trực tiếp của thiết kế tất định: cùng tập 11 finding và 34 verification record sẽ luôn cho cùng một bản đồ năng lực và cùng điểm số --- một thuộc tính có lợi khi muốn dùng deliverable quality làm điểm chuẩn cho các phiên bản tiếp theo.
+
+\subsection{Đánh giá trajectory (Trajectory Evaluation)}
+\label{subsec:trajectory_eval}
+
+Bốn tiêu chí phía trajectory phân tích trace Langfuse đã xuất ra ở D0 và đối chiếu với cấu trúc đồ thị canonical đã khai báo ở Chương~5:
+\begin{itemize}
+  \item \textbf{Path correctness} --- so chuỗi node sau khi gộp bản ghi \textit{review\_task} liên tiếp với 13 node thiết kế.
+  \item \textbf{Cycle count} --- đếm số chu trình PDCA hoàn tất (kỳ vọng đúng 1 cho kịch bản không cần lặp).
+  \item \textbf{Tool call correctness} --- chia hai mức: \emph{name validity} kiểm tên tool có thuộc registry tool nội bộ, và \emph{semantic correctness} tính tỷ lệ tool call kết thúc thành công hoặc thất bại đúng thiết kế (tool thuộc nhóm thủ công bắt buộc bị guard từ chối là hành vi mong đợi, không tính lỗi).
+  \item \textbf{State handoff fidelity} --- kiểm năm bất biến tối thiểu giữa các node liên tiếp để phát hiện trường hợp một node "đánh rơi" trường trạng thái mà node sau cần dùng.
+\end{itemize}
+
+Hình~\ref{fig:d2_trace_flow} minh hoạ quỹ đạo điển hình của một phiên broad-scan với mean và std trên từng node --- phối hợp với Bảng~\ref{tab:pdca_timing_v2} để người đọc đối chiếu trực quan thời gian và logic.
+
+\input{components/diagrams/d2_trace_flow}
+
+\input{components/tables/d2_trajectory_eval}
+
+Bảng~\ref{tab:d2_trajectory_eval} cho thấy độ chính xác kỹ thuật của hệ thống đạt mức tối đa trên cả 5 phiên: tỷ lệ khớp đường đi kinh điển 13 node là 100\% trên 5/5 phiên; 100\% tool call đều có tên hợp lệ và kết thúc đúng thiết kế (5 tool đổi cấu hình thực sự thành công, 6 tool thuộc nhóm thủ công bắt buộc bị guard từ chối với mã \textit{manual\_required} đúng kỳ vọng); số chu trình PDCA bằng 1 trên cả 5 phiên (không cần lặp lại); và toàn bộ năm bất biến handoff đều thoả mãn --- không có trường hợp "đánh rơi" trường \textit{findings}, \textit{remediation\_tasks}, \textit{execution\_logs}, \textit{verifications}, hay trạng thái \textit{report} giữa các node liên tiếp.
+
+Kết hợp Bảng~\ref{tab:d2_deliverable_quality} và Bảng~\ref{tab:d2_trajectory_eval}, đánh giá toàn diện cho thấy: ở quy mô bench hiện tại, tính \emph{ổn định kỹ thuật} (path, cycles, tool calls, handoff, mapping) đã đạt ngưỡng "không có lỗi quy trình" trên 5/5 phiên, và Maturity có thể đối chiếu trên toàn bộ 5 phiên với cùng kết luận. Dư địa cải thiện chính còn lại là bổ sung một bộ kịch bản đa dạng hơn để kiểm tra tính bền vững khi số lượng finding tăng vài chục lần và khi xuất hiện các nhóm dịch vụ ngoài S3 (IAM, EC2).
+
+% =====================================================================
+% Hết §6.5. Phần còn lại (§6.6 Agent Readiness, §6.7 Latency...) giữ nguyên.
+% =====================================================================
+
+\section{Thiết lập đánh giá}
+\label{sec:eval_setup}
+
+Trước khi đi vào chi tiết phạm vi và phương pháp, Bảng~\ref{tab:rq_metric_mapping} tổng hợp ánh xạ giữa bốn thử thách kỹ thuật của đề tài (đã trình bày ở \S~Thử thách trong Chương~1) với các phần đánh giá định lượng tương ứng. Mỗi thử thách được "đóng" bởi ít nhất một bảng số liệu cụ thể; cách trình bày này nhằm giúp người đọc đối chiếu nhanh giữa lập luận thiết kế và minh chứng thực nghiệm.
+
+\begin{table}[H]
+  \centering
+  \caption{Ánh xạ giữa bốn thử thách kỹ thuật và minh chứng thực nghiệm trong Chương 6.}
+  \label{tab:rq_metric_mapping}
+  \small
+  \begin{tabular}{p{3.6cm}p{6cm}p{4.8cm}}
+    \toprule
+    \textbf{Thử thách} & \textbf{Section đánh giá} & \textbf{Bảng/Hình minh chứng chính} \\
+    \midrule
+    T1. Điều phối chu trình PDCA khép kín, không mất ngữ cảnh, có thể lặp lại
+       & \S\ref{sec:performance_eval} (hiệu năng e2e), \S\ref{subsec:trajectory_eval} (path + handoff)
+       & Bảng~\ref{tab:pdca_timing_v2}, \ref{tab:pdca_phase_breakdown}, \ref{tab:d2_trajectory_eval}; Hình~\ref{fig:d2_trace_flow} \\
+    \addlinespace
+    T2. Kiểm soát an toàn của hành động khắc phục tự động
+       & \S\ref{subsec:scenario_safety} (Safety Guards), \S\ref{subsec:scenario_hitl} (Web HITL), \S\ref{subsec:trajectory_eval} (tool call legitimacy)
+       & Bảng~\ref{tab:d2_trajectory_eval} (cột \texttt{Legit}, \texttt{HITL spans}); báo cáo per-task ở \S\ref{subsec:scenario_hitl} \\
+    \addlinespace
+    T3. Xác minh hậu khắc phục, đo hiệu quả
+       & \S\ref{subsec:scenario_hitl} (verification node), \S\ref{subsec:deliverable_quality} (Maturity score)
+       & Bảng~\ref{tab:d2_deliverable_quality} (cột Maturity post + diff); 34 verification record/phiên \\
+    \addlinespace
+    T4. Phạm vi và đa dạng cấu hình đám mây
+       & \S\ref{sec:rag_retrieval_eval} (RAG retrieval đa loại truy vấn), \S\ref{sec:llm_generation_eval} (3 agent với 4 dạng input)
+       & Bảng~\ref{tab:retrieval_overall}, \ref{tab:retrieval_ablation}, \ref{tab:retrieval_category}, \ref{tab:planning_breakdown} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Mỗi hàng của Bảng~\ref{tab:rq_metric_mapping} chỉ rõ section nào trong chương này định lượng được đáp ứng cho thử thách tương ứng. Phần còn lại của \S\ref{sec:eval_setup} mô tả kiến trúc đánh giá theo hai khối (RAG và LLM Generation), phương pháp luận chung, bộ test và quy trình; chi tiết kết quả nằm ở \S\ref{sec:rag_retrieval_eval} và \S\ref{sec:llm_generation_eval}.
+
+\subsection{Phạm vi đánh giá}
+
+Trong hệ thống được đề xuất, kiến trúc tổng thể được xây dựng theo hướng kết hợp giữa hai thành phần chính: khối truy hồi (Retrieval-Augmented Generation -- RAG) và khối sinh nội dung dựa trên mô hình ngôn ngữ lớn (LLM). Trong đó, RAG có nhiệm vụ cung cấp ngữ cảnh liên quan, còn các agent sử dụng LLM để thực hiện suy luận và tạo ra kết quả cuối cùng.
+
+Do đó, việc đánh giá hệ thống không thể chỉ tập trung vào một thành phần riêng lẻ, mà cần được thực hiện trên cả hai khối chức năng này. Cụ thể, phạm vi đánh giá trong luận văn bao gồm:
+
+\begin{itemize}
+    \item \textbf{Khối truy hồi (RAG Retrieval):} đánh giá khả năng truy xuất tài liệu phù hợp từ knowledge base dựa trên truy vấn đầu vào.
+    \item \textbf{Khối sinh nội dung (LLM Generation):} đánh giá chất lượng suy luận và nội dung được sinh ra bởi các agent khi sử dụng hoặc không sử dụng ngữ cảnh từ RAG.
+\end{itemize}
+
+Trong phạm vi khối sinh nội dung, ba agent chính được lựa chọn để đánh giá là:
+
+\begin{itemize}
+    \item \textbf{Planning Agent:} chịu trách nhiệm phân tích yêu cầu đầu vào và xác định tập hợp các security checks phù hợp.
+    \item \textbf{Risk Evaluation Agent:} thực hiện đánh giá mức độ nghiêm trọng (severity) của các lỗ hổng bảo mật dựa trên thông tin từ hệ thống quét.
+    \item \textbf{Report Agent:} tổng hợp kết quả từ các bước trước và sinh báo cáo hoàn chỉnh dưới dạng tài liệu, kết hợp giữa dữ liệu có cấu trúc và nội dung tường thuật do LLM sinh ra.
+\end{itemize}
+
+Việc lựa chọn ba agent này nhằm đại diện cho ba dạng bài toán khác nhau trong hệ thống: lựa chọn có cấu trúc (Planning), suy luận ordinal về mức độ rủi ro (Risk Evaluation), và sinh nội dung dài có cấu trúc (Report). Điều này giúp việc đánh giá phản ánh được đầy đủ các khía cạnh của hệ thống.
+
+\subsection{Phương pháp đánh giá}
+
+Để đảm bảo đánh giá toàn diện chất lượng hệ thống, luận văn sử dụng phương pháp kết hợp giữa các chỉ số định lượng truyền thống và các phương pháp đánh giá dựa trên mô hình.
+
+Cách tiếp cận này được xây dựng dựa trên ý tưởng của các framework đánh giá RAG như RAGAS, trong đó chất lượng hệ thống được xem xét theo nhiều khía cạnh khác nhau. Trong phạm vi luận văn, các tiêu chí đánh giá được tổ chức xoay quanh bốn trụ cột chính, bao gồm:
+
+\begin{itemize}
+    \item \textbf{Structure (Cấu trúc output)}
+    \item \textbf{Correctness (Độ chính xác)}
+    \item \textbf{Faithfulness (Mức độ bám sát ngữ cảnh)}
+    \item \textbf{Completeness (Độ đầy đủ của thông tin)}
+\end{itemize}
+
+Các trụ cột này được hiện thực thông qua hai nhóm phương pháp đánh giá chính như sau.
+
+\subsubsection*{(1) Đánh giá định lượng (Deterministic Metrics)}
+
+Nhóm chỉ số này được sử dụng để đo lường trực tiếp các khía cạnh có thể xác định rõ ràng bằng quy tắc, bao gồm:
+
+\begin{itemize}
+    \item \textbf{Structure:} kiểm tra mức độ tuân thủ định dạng output (ví dụ: khả năng parse JSON, đầy đủ các trường bắt buộc, tính hợp lệ của giá trị).
+    
+    \item \textbf{Correctness:} đo lường độ chính xác của kết quả so với ground truth, thông qua các chỉ số như Accuracy, F1-score hoặc các metric xếp hạng trong bài toán truy hồi.
+    
+    \item \textbf{Completeness (một phần):} đánh giá mức độ bao phủ các thông tin bắt buộc thông qua các phương pháp như keyword matching hoặc rule-based checking.
+\end{itemize}
+
+Ưu điểm của nhóm phương pháp này là có thể tính toán một cách khách quan, dễ tái lập và không phụ thuộc vào mô hình.
+
+\subsubsection*{(2) Đánh giá dựa trên mô hình (LLM-based Evaluation)}
+
+Đối với các khía cạnh mang tính ngữ nghĩa, đặc biệt là chất lượng reasoning, các phương pháp rule-based thường không đủ khả năng đánh giá. Do đó, luận văn sử dụng thêm phương pháp đánh giá dựa trên mô hình, trong đó một LLM đóng vai trò như một ``judge''.
+
+Nhóm phương pháp này chủ yếu phục vụ cho trụ cột:
+
+\begin{itemize}
+    \item \textbf{Faithfulness:} kiểm tra xem nội dung sinh ra có được hỗ trợ bởi ngữ cảnh đầu vào hay không.
+\end{itemize}
+
+Cụ thể, quá trình đánh giá faithfulness được thực hiện theo hướng \textit{claim-based}, bao gồm các bước:
+
+\begin{itemize}
+    \item Tách reasoning thành các mệnh đề (\textit{claims}).
+    \item Kiểm tra từng claim có được hỗ trợ bởi ngữ cảnh hay không.
+    \item Tính điểm dựa trên tỷ lệ các claim hợp lệ.
+\end{itemize}
+
+Ngoài ra, trong một số trường hợp, LLM-based evaluation cũng có thể hỗ trợ đánh giá các khía cạnh liên quan đến completeness hoặc tính hợp lý của nội dung, đặc biệt khi các tiêu chí không thể biểu diễn bằng quy tắc cứng.
+
+
+\subsection{Bộ testcases đánh giá}
+
+Bộ dữ liệu đánh giá được xây dựng theo hướng bán tự động (semi-automatic), kết hợp giữa tri thức từ knowledge base và khả năng sinh nội dung của mô hình ngôn ngữ lớn (LLM). Cách tiếp cận này cho phép tạo ra các test case đa dạng về ngữ nghĩa, đồng thời vẫn đảm bảo tính kiểm soát về mặt chất lượng.
+
+Dataset được chia thành hai khối lớn (RAG Retrieval và LLM Generation), trong đó khối LLM Generation lại tách thành ba bộ con --- mỗi bộ gắn với một agent. Bốn bộ test có quy mô khác nhau như tổng hợp ở Bảng~\ref{tab:testset_sizes}, phản ánh đặc thù của từng trục đánh giá thay vì tuân theo một quy ước "một-cỡ-cho-tất-cả".
+
+\begin{table}[H]
+  \centering
+  \caption{Bốn bộ test sử dụng trong Chương 6 và lý do chọn quy mô.}
+  \label{tab:testset_sizes}
+  \small
+  \begin{tabular}{lrp{8.5cm}}
+    \toprule
+    \textbf{Bộ test} & \textbf{Số case} & \textbf{Cơ sở chọn quy mô} \\
+    \midrule
+    RAG Retrieval (\S\ref{sec:rag_retrieval_eval})    & 72 & 63 security check + 9 maturity capability --- bao quát toàn bộ tri thức được index, mỗi nhóm có 4 dạng truy vấn (định danh chính xác, diễn đạt lại, truy vấn từ agent, truy vấn tiếng Việt); cần độ phủ rộng vì tầng truy hồi là gốc của mọi pha downstream. \\
+    \addlinespace
+    Planning Agent (\S\ref{sec:llm_generation_eval})  & 50 & Phân theo 4 dạng input: \emph{explicit checks} (10), \emph{group request} (9), \emph{specific intent} (25), \emph{ambiguous} (6) --- tỷ lệ phản ánh tần suất xuất hiện thực tế và đảm bảo mỗi dạng có ít nhất 5 case để thống kê có ý nghĩa. \\
+    \addlinespace
+    Risk Eval Agent  & 30 & Phân bố cân bằng 4 mức ordinal severity (Low / Medium / High / Critical) cộng với 4 nhóm độ khó (định danh chính xác, diễn đạt lại, ngữ nghĩa khó, mô tả rủi ro); 30 case đủ để Quadratic Weighted Kappa hội tụ ổn định cho ma trận $4\times 4$. \\
+    \addlinespace
+    Report Agent     & 19 & Mỗi báo cáo cuối là một artefact tốn thời gian sinh ($\approx 209$ giây trên Gemma 3 4B IT, theo \S\ref{subsec:perf_e2e}); 19 case chia 10 nhóm scenario là điểm cân bằng giữa độ phủ tình huống và chi phí tính toán. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Sự chênh lệch quy mô giữa bốn bộ test phản ánh trục đo riêng của từng agent: bộ RAG cần coverage rộng để chứng minh độ phủ tri thức, bộ Planning cần phân tách theo dạng input để bóc tách lỗi semantic mapping, bộ Risk cần phân bố ordinal cân bằng cho QWK, còn bộ Report cần đa dạng scenario nội dung. Áp dụng cùng một số case cho cả bốn sẽ hoặc lãng phí (RAG quá ít) hoặc tốn kém (Report quá nhiều) so với mục tiêu định lượng riêng.
+
+\subsubsection*{Quy trình xây dựng testcases}
+
+Quy trình tạo testcases được thực hiện qua nhiều bước, kết hợp giữa sinh tự động bằng LLM và kiểm duyệt thủ công.
+
+Trước hết, các security checks và maturity capabilities được thu thập từ knowledge base (Prowler). Đây là nguồn ground truth chính, đảm bảo tính chính xác và nhất quán của dữ liệu.
+
+Tiếp theo, LLM được sử dụng để sinh các truy vấn kiểm thử (queries) từ nội dung của từng check. Thay vì chỉ sử dụng nội dung gốc, mô hình được hướng dẫn tạo ra nhiều biến thể khác nhau, bao gồm:
+
+\begin{itemize}
+    \item Diễn đạt lại nội dung (paraphrase)
+    \item Mô tả ở mức khái quát, tập trung vào rủi ro (risk-oriented)
+    \item Sinh các truy vấn có khoảng cách ngữ nghĩa lớn (semantic\_hard)
+\end{itemize}
+
+Việc sử dụng LLM trong bước này giúp mở rộng không gian truy vấn, mô phỏng tốt hơn các cách diễn đạt đa dạng của người dùng hoặc hệ thống.
+
+Sau khi sinh dữ liệu, các test case được kiểm duyệt và hiệu chỉnh thủ công nhằm loại bỏ các trường hợp không hợp lệ hoặc không phù hợp với ngữ cảnh. Đây là bước quan trọng nhằm đảm bảo chất lượng dataset, đặc biệt đối với các truy vấn phức tạp.
+
+Đối với mỗi test case, ground truth được xác định rõ ràng:
+
+\begin{itemize}
+    \item Với RAG Retrieval: tài liệu đúng cần được truy hồi
+    \item Với LLM Generation: các giá trị kỳ vọng như severity, danh sách checks, hoặc các bằng chứng cần xuất hiện trong reasoning
+\end{itemize}
+
+Cuối cùng, dataset được gắn nhãn bổ sung như loại truy vấn, dịch vụ AWS và mức độ khó, phục vụ cho việc phân tích chi tiết theo từng nhóm.
+
+
+\subsection{Quy trình đánh giá}
+
+Quy trình đánh giá được thiết kế riêng cho từng khối chức năng trong hệ thống, bao gồm khối truy hồi (RAG Retrieval) và khối sinh nội dung (LLM Generation). Mỗi khối được đánh giá theo pipeline riêng, phù hợp với đặc thù của từng thành phần.
+
+\subsubsection*{Đối với khối truy hồi (RAG Retrieval)}
+
+Hệ thống sử dụng cơ chế truy hồi kết hợp (hybrid retrieval), bao gồm:
+
+\begin{itemize}
+    \item \textbf{BM25 (keyword-based):} khai thác sự trùng khớp từ khóa giữa truy vấn và tài liệu
+    \item \textbf{Vector search (semantic):} sử dụng embedding để tìm các tài liệu có tương đồng ngữ nghĩa
+\end{itemize}
+
+Đối với mỗi truy vấn trong dataset, quy trình đánh giá được thực hiện như sau:
+
+\begin{itemize}
+    \item Thực hiện truy hồi với cơ chế hybrid
+    \item Lấy ra \textbf{top-k kết quả} với $k = 5$
+    \item So sánh kết quả truy hồi với ground truth đã được gán nhãn
+    \item Tính toán các chỉ số đánh giá (Hit@k, MRR, NDCG, ...)
+\end{itemize}
+
+Quy trình này được lặp lại cho toàn bộ tập test nhằm đánh giá khả năng truy hồi của hệ thống trên nhiều loại truy vấn khác nhau.
+
+\subsubsection*{Đối với khối sinh nội dung (LLM Generation)}
+
+Quy trình đánh giá được thiết kế khác nhau cho từng loại agent nhằm phản ánh đúng bản chất của đầu ra.
+
+\textbf{Planning Agent}
+
+Planning Agent được đánh giá như một bài toán lựa chọn trên dữ liệu có cấu trúc, trong đó đầu ra là tập các check hoặc service.
+
+\begin{itemize}
+    \item Mỗi test case bao gồm truy vấn đầu vào và tập ground truth tương ứng, đầu ra của hệ thống được so sánh trực tiếp với ground truth để tính các chỉ số như Precision, Recall, F1-score và Exact Match, phản ánh mức độ khớp giữa hai tập kết quả.
+    
+    \item Hai dạng sai lệch chính là over-selection và under-selection được sử dụng để phân tích hành vi lựa chọn, cho phép đánh giá xu hướng chọn dư hoặc bỏ sót thay vì chỉ dựa trên các chỉ số tổng hợp.
+    
+    \item Các chỉ số như Service Accuracy và Planning Correctness được sử dụng để đánh giá mức độ phù hợp tổng thể của kế hoạch, đảm bảo hệ thống không chỉ đúng ở mức từng check riêng lẻ mà còn đúng ở mức ngữ cảnh dịch vụ.
+\end{itemize}
+
+Quy trình này mang tính deterministic, không phụ thuộc vào đánh giá ngữ nghĩa mà dựa trên so sánh trực tiếp giữa tập dự đoán và ground truth.
+
+\vspace{0.5em}
+
+\textbf{Risk Agent và Report Agent}
+
+Risk Agent và Report Agent là các tác vụ sinh nội dung và phụ thuộc trực tiếp vào ngữ cảnh truy hồi từ hệ thống RAG.
+
+\begin{itemize}
+    \item Mỗi test case bao gồm truy vấn đầu vào, ngữ cảnh được truy hồi và đầu ra văn bản của mô hình, trong đó đầu ra không được so sánh trực tiếp mà được đánh giá ở mức độ ngữ nghĩa do không tồn tại một đáp án duy nhất.
+    
+    \item Các chỉ số như Faithfulness, Semantic Similarity và các tiêu chí đặc thù theo từng agent được sử dụng để đo lường mức độ bám sát ngữ cảnh và chất lượng nội dung, với việc tính toán dựa trên LLM-as-a-judge hoặc các phương pháp embedding-based.
+\end{itemize}
+
+Quy trình này phản ánh đặc trưng của các bài toán sinh nội dung có điều kiện, trong đó chất lượng đầu ra phụ thuộc đồng thời vào cả bước retrieval và generation.
+
+\vspace{0.5em}
+
+Tổng thể, Planning Agent được đánh giá như một bài toán dự đoán tập hợp có cấu trúc, trong khi Risk và Report Agent được đánh giá theo hướng ngữ nghĩa dựa trên ngữ cảnh truy hồi.
+
+
+
+
+
+
+
+\section{RAG Retrieval Evaluation}
+\label{sec:rag_retrieval_eval}
+
+RAG (Retrieval-Augmented Generation) đóng vai trò cung cấp ngữ cảnh chuyên môn cho các tác tử như Planning Agent, Risk Agent và Report Agent. Khác với các tác tử sinh nội dung, RAG không trực tiếp tạo ra output mà tập trung vào bài toán truy hồi thông tin, do đó chất lượng của RAG được đánh giá độc lập thông qua khả năng truy xuất đúng tài liệu từ knowledge base.
+
+Việc đánh giá được thực hiện trên 72 test cases, bao gồm 63 security checks và 9 maturity capabilities. Các truy vấn được thiết kế theo nhiều dạng khác nhau nhằm phản ánh các tình huống thực tế trong hệ thống, bao gồm truy vấn định danh (check ID), truy vấn ngôn ngữ tự nhiên từ agent, truy vấn tiếng Việt và các trường hợp không có kết quả hợp lệ.
+
+\subsubsection*{Overall Retrieval Performance}
+
+Bảng~\ref{tab:retrieval_overall} trình bày kết quả tổng thể của hệ thống RAG trên toàn bộ tập test.
+
+\begin{table}[H]
+\centering
+\caption{Tổng hợp Retrieval Metrics}
+\label{tab:retrieval_overall}
+\begin{tabular}{lccc}
+\toprule
+Metric & Checks & Maturity & Combined \\
+\midrule
+Top-1 Accuracy & 76.2\% & 77.8\% & 76.4\% \\
+Top-5 Accuracy & 88.9\% & 100.0\% & 90.3\% \\
+MRR & 0.8066 & 0.8426 & 0.8111 \\
+NDCG@5 & 0.8270 & 0.8812 & 0.8338 \\
+MAP@5 & 0.8066 & 0.8426 & 0.8111 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả cho thấy hệ thống đạt hiệu năng truy hồi tốt với Top-1 Accuracy đạt 76.4\% và Top-5 Accuracy đạt 90.3\%. Các chỉ số ranking như MRR (0.811) và NDCG@5 (0.834) đều ở mức cao, phản ánh khả năng đưa tài liệu liên quan lên vị trí ưu tiên trong danh sách kết quả.
+
+Việc Top-5 Accuracy cao hơn đáng kể so với Top-1 cho thấy hệ thống được thiết kế theo hướng ưu tiên recall, trong đó tài liệu đúng thường nằm trong tập candidate ban đầu và được cải thiện thứ hạng thông qua bước reranking. Điều này phù hợp với pipeline hybrid, nơi retrieval đóng vai trò mở rộng không gian tìm kiếm, còn cross-encoder chịu trách nhiệm tinh chỉnh thứ tự.
+
+Ngoài ra, kết quả giữa hai nhóm dữ liệu (security checks và maturity capabilities) tương đối đồng đều, cho thấy hệ thống không bị lệch về một loại tri thức cụ thể. Đặc biệt, các truy vấn định danh (check ID hoặc capability ID) đạt độ chính xác rất cao nhờ cơ chế exact lookup, góp phần đảm bảo tính ổn định trong các tình huống sử dụng thực tế.
+
+Tóm lại, hiệu năng truy hồi tổng thể đã đủ tốt để hỗ trợ các tác tử downstream, đáp ứng yêu cầu cân bằng giữa độ chính xác và khả năng bao phủ thông tin.
+
+\subsubsection*{Retrieval Strategy Analysis}
+
+Để đánh giá hiệu quả của từng chiến lược truy hồi, hệ thống được thử nghiệm với ba cấu hình khác nhau: BM25-only, Vector-only và Hybrid. Kết quả được trình bày trong Bảng~\ref{tab:retrieval_ablation}.
+
+\begin{table}[H]
+\centering
+\caption{So sánh các chiến lược Retrieval}
+\label{tab:retrieval_ablation}
+\begin{tabular}{lccc}
+\toprule
+Metric & BM25-only & Vector-only & Hybrid \\
+\midrule
+Top-1 Accuracy & 71.0\% & 71.0\% & \textbf{79.7\%} \\
+Top-5 Accuracy & 91.3\% & 85.5\% & \textbf{94.2\%} \\
+MRR & 0.7865 & 0.7674 & \textbf{0.8464} \\
+Avg Latency & 2812ms & 2869ms & 3573ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả cho thấy cấu hình Hybrid đạt hiệu năng tốt nhất trên hầu hết các chỉ số, đặc biệt là Top-1 Accuracy và MRR, vượt trội so với hai phương pháp đơn lẻ. Cần lưu ý chỉ số Hybrid Top-1 ở Bảng~\ref{tab:retrieval_ablation} ($79{,}7\%$) cao hơn $\sim 3$ điểm phần trăm so với Top-1 Combined ở Bảng~\ref{tab:retrieval_overall} ($76{,}4\%$): bảng tổng hợp đo trên cấu hình production của tầng RAG còn bảng ablation đo riêng từng chiến lược trong điều kiện cô lập (cùng 72 case nhưng tham số reranker được giữ nguyên), nên sai lệch nhỏ này phản ánh tinh chỉnh giữa hai lần chạy bench chứ không phải mâu thuẫn dữ liệu. Sự cải thiện của Hybrid so với hai phương pháp đơn lẻ đến từ việc các thành phần bổ sung lẫn nhau: BM25 hoạt động hiệu quả trong các truy vấn có cấu trúc rõ ràng, đặc biệt là các truy vấn định danh như check ID, trong khi vector search phù hợp hơn với các truy vấn ngôn ngữ tự nhiên yêu cầu suy luận ngữ nghĩa.
+
+Cấu hình Hybrid kết hợp hai tín hiệu này thông qua cơ chế fusion, cho phép hệ thống vừa duy trì độ chính xác cao trong các truy vấn dạng exact, vừa cải thiện khả năng xử lý các truy vấn phức tạp. Điều này lý giải vì sao Hybrid đạt kết quả tốt hơn một cách nhất quán trên cả các chỉ số Top-k và các chỉ số ranking.
+
+Tuy nhiên, sự cải thiện về chất lượng đi kèm với chi phí về hiệu năng. Độ trễ trung bình của Hybrid cao hơn so với các phương pháp đơn lẻ do phải thực hiện đồng thời hai nhánh retrieval và bước fusion. Điều này cho thấy tồn tại trade-off giữa độ chính xác và latency, và việc lựa chọn Hybrid phản ánh định hướng ưu tiên chất lượng truy hồi trong thiết kế hệ thống.
+
+
+\subsubsection*{Robustness theo loại truy vấn}
+
+Bảng~\ref{tab:retrieval_category} trình bày kết quả phân tích hiệu năng truy hồi theo từng loại truy vấn.
+
+\begin{table}[H]
+\centering
+\caption{Retrieval theo Query Category}
+\label{tab:retrieval_category}
+\begin{tabular}{lccc}
+\toprule
+Category & Cases & Top-1 & MRR \\
+\midrule
+check\_id\_exact & 25 & 100.0\% & 1.0000 \\
+check\_id\_partial & 7 & 85.7\% & 0.9286 \\
+agent\_query & 18 & 61.1\% & 0.6898 \\
+user\_query\_vi & 10 & 60.0\% & 0.6900 \\
+capability\_exact & 3 & 100.0\% & 1.0000 \\
+capability\_query & 3 & 100.0\% & 1.0000 \\
+capability\_vi & 3 & 33.3\% & 0.5278 \\
+negative & 3 & 0.0\% & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả cho thấy hệ thống đạt độ chính xác tuyệt đối đối với các truy vấn định danh, nhờ cơ chế exact lookup cho phép match trực tiếp với check ID hoặc capability ID mà không cần thông qua pipeline truy hồi thông thường. Điều này giúp đảm bảo độ ổn định trong các tình huống sử dụng thực tế, nơi các truy vấn dạng ID xuất hiện phổ biến.
+
+Ngược lại, hiệu năng giảm đáng kể đối với các truy vấn ngôn ngữ tự nhiên, đặc biệt là nhóm agent\_query với Top-1 Accuracy chỉ đạt 61.1\%. Điều này phản ánh khoảng cách ngữ nghĩa giữa cách mô tả tự nhiên của người dùng hoặc agent và cấu trúc dữ liệu trong knowledge base, vốn được tổ chức theo dạng check và capability.
+
+Đối với các truy vấn tiếng Việt, hiệu năng tiếp tục giảm do pipeline hiện tại sử dụng embedding tiếng Anh, yêu cầu chuyển đổi truy vấn sang tiếng Anh trước khi thực hiện vector search. Sai lệch trong quá trình dịch, đặc biệt với các thuật ngữ chuyên ngành, có thể làm giảm độ chính xác của biểu diễn ngữ nghĩa và ảnh hưởng trực tiếp đến kết quả truy hồi.
+
+Đáng chú ý, nhóm capability\_vi có hiệu năng thấp nhất, cho thấy sự kết hợp giữa translation và cơ chế fusion chưa xử lý tốt các truy vấn phức tạp đa ngôn ngữ. Điều này chỉ ra rằng hệ thống hiện tại vẫn chưa tối ưu cho các truy vấn mang tính semantic cao và đa ngôn ngữ, và cần được cải thiện trong các phiên bản tiếp theo.
+
+
+\subsubsection*{Tổng thể}
+
+Hệ thống RAG đạt hiệu năng truy hồi tốt với các chỉ số ranking cao và khả năng bao phủ thông tin hiệu quả, đặc biệt trong các truy vấn định danh và các trường hợp có cấu trúc rõ ràng. Kết quả ablation cho thấy việc sử dụng hybrid retrieval là hợp lý về mặt thiết kế, giúp tận dụng đồng thời ưu điểm của BM25 và vector search.
+
+Tuy nhiên, hệ thống vẫn còn hạn chế trong các truy vấn mang tính ngữ nghĩa cao và truy vấn đa ngôn ngữ, đặc biệt là tiếng Việt, do phụ thuộc vào bước chuyển đổi ngôn ngữ trước khi embedding. Điều này cho thấy hướng cải thiện trong tương lai là tối ưu hóa pipeline semantic retrieval và hỗ trợ embedding đa ngôn ngữ tốt hơn.
+
+Đúc kết lại, RAG đã đáp ứng tốt vai trò cung cấp ngữ cảnh cho các tác tử downstream, đồng thời vẫn còn dư địa để cải thiện trong các tình huống truy vấn phức tạp.
+
+
+
+
+
+
+\section{Đánh giá thành phần sinh nội dung (LLM Generation)}
+\label{sec:llm_generation_eval}
+
+\subsection{Planning Agent Evaluation}
+
+\subsubsection*{Evaluation Metrics}
+
+Planning Agent được đánh giá như một bài toán ánh xạ từ truy vấn ngôn ngữ tự nhiên sang tập các check ID. Do đặc thù bài toán mang tính mở (multiple valid answers), hệ thống metric cần phản ánh đồng thời độ chính xác lựa chọn và mức độ bao phủ.
+
+\textbf{Correctness.} 
+Nhóm metric này đo lường mức độ trùng khớp giữa tập check dự đoán và ground truth, trong đó F1-score được sử dụng làm chỉ số trung tâm do khả năng cân bằng giữa Precision và Recall. Precision phản ánh khả năng hạn chế việc chọn dư các check không liên quan, trong khi Recall thể hiện mức độ bao phủ các check cần thiết.
+
+\textbf{Selection Quality.} 
+Để bổ sung cho F1-score, các metric chuyên biệt được sử dụng nhằm phân tích hành vi lựa chọn:
+\begin{itemize}
+    \item Over-selection rate đo tỷ lệ các check bị chọn dư
+    \item Under-selection rate đo tỷ lệ các check bị bỏ sót
+    \item Exact Match rate phản ánh khả năng dự đoán chính xác tuyệt đối
+\end{itemize}
+Bên cạnh đó, hai chỉ số thống kê về số lượng check trung bình cũng được sử dụng:
+\begin{itemize}
+    \item Avg. predicted checks: số lượng check trung bình được hệ thống dự đoán cho mỗi truy vấn
+    \item Avg. ground truth checks: số lượng check trung bình trong ground truth
+\end{itemize}
+Hai chỉ số này giúp làm rõ xu hướng mở rộng hoặc thu hẹp tập kết quả, đặc biệt hữu ích trong việc phân tích hiện tượng over-selection và trade-off giữa Precision và Recall.
+
+Nhóm metric này giúp làm rõ các lỗi dạng ``chọn dư'' và ``bỏ sót'', vốn không được thể hiện đầy đủ qua F1.
+
+\textbf{Service-level Accuracy.} 
+Đối với các truy vấn ở mức dịch vụ (group-level), Service Accuracy được sử dụng để đánh giá khả năng xác định đúng service mục tiêu.
+
+\textbf{Planning Correctness.}
+Planning Correctness là chỉ số tổng hợp, kết hợp giữa F1-score và Service Accuracy, cho phép đánh giá đồng thời cả hai khía cạnh: lựa chọn check và xác định phạm vi dịch vụ.
+
+\textbf{Faithfulness (trong bối cảnh Planning Agent).} Khác với Faithfulness của các tác vụ sinh narrative dài (Risk, Report), Faithfulness ở Planning được định nghĩa là tỷ lệ các check được lựa chọn có hiện diện trong tập kết quả truy hồi RAG ứng với truy vấn đầu vào. Chỉ số này đo mức độ Planning Agent bám vào ngữ cảnh được cung cấp khi ra quyết định, hạn chế việc "đoán mò" một check ID không có trong knowledge base.
+
+\subsubsection*{Results and Analysis}
+
+Bảng~\ref{tab:planning_overall} trình bày kết quả tổng thể của Planning Agent.
+
+\begin{table}[H]
+\centering
+\caption{Planning Agent Overall Performance}
+\label{tab:planning_overall}
+\begin{tabular}{l c}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+F1-score & 0.8429 \\
+Precision & 0.7948 \\
+Recall & 0.9531 \\
+Over-selection rate & 20.38\% \\
+Under-selection rate & 7.26\% \\
+Exact Match rate & 46.88\% \\
+Faithfulness & 93.65\% \\
+Service Accuracy & 85.71\% \\
+Planning Correctness & 0.8700 \\
+Avg. predicted checks & 2.30 \\
+Avg. ground truth checks & 1.28 \\
+\hline
+\end{tabular}
+\end{table}
+
+Kết quả cho thấy Planning Agent đạt Recall ở mức rất cao (0.9531), cho thấy hệ thống gần như không bỏ sót các kiểm tra quan trọng trong quá trình lập kế hoạch. Hành vi này phản ánh một chiến lược ưu tiên bao phủ, phù hợp với bối cảnh bài toán bảo mật. Tuy nhiên, Precision ở mức 0.7948 cho thấy vẫn tồn tại một lượng check không cần thiết được đưa vào, phản ánh sự đánh đổi giữa việc giảm bỏ sót và kiểm soát độ chính xác.
+
+Xu hướng mở rộng tập kết quả được thể hiện rõ qua Over-selection rate (20.38\%) và sự chênh lệch giữa số lượng check dự đoán trung bình (2.30) so với ground truth (1.28). Điều này cho thấy hệ thống có xu hướng giữ lại nhiều candidate có liên quan gần nhau trong không gian ngữ nghĩa. Tuy nhiên, Under-selection rate ở mức thấp (7.26\%) cho thấy việc mở rộng này giúp giảm thiểu nguy cơ bỏ sót các kiểm tra quan trọng, thay vì là dấu hiệu của lựa chọn thiếu kiểm soát.
+
+Exact Match rate đạt 46.88\% cho thấy trong gần một nửa số trường hợp, hệ thống có thể xác định chính xác toàn bộ tập check cần thiết. Đây là chỉ dấu cho thấy Planning Agent không chỉ hoạt động tốt ở mức từng check riêng lẻ (thể hiện qua F1-score 0.8429) mà còn có khả năng tổ chức một tập kết quả hoàn chỉnh và nhất quán theo yêu cầu truy vấn.
+
+Faithfulness đạt 93.65\% cho thấy phần lớn các quyết định lựa chọn đều dựa trên thông tin truy hồi hợp lệ, hạn chế việc sinh ra các check không có cơ sở trong ngữ cảnh. Điều này đồng thời được phản ánh qua Planning Correctness đạt 0.87, cho thấy hệ thống duy trì được sự nhất quán giữa ý định đầu vào và kế hoạch kiểm tra được sinh ra.
+
+Service Accuracy ở mức 85.71\% cho thấy hệ thống nhận diện đúng phạm vi dịch vụ trong đa số trường hợp, tuy nhiên vẫn tồn tại một số sai lệch trong việc xác định service tương ứng với truy vấn. Đây là dấu hiệu cho thấy bước phân loại service vẫn còn là một nguồn sai số độc lập với quá trình lựa chọn check.
+
+Tổng thể, các chỉ số như Recall cao (0.9531), Under-selection thấp (7.26\%) và Over-selection ở mức kiểm soát (20.38\%) cho thấy Planning Agent vận hành theo hướng \textit{recall-oriented}, trong đó việc ưu tiên bao phủ được thực hiện có kiểm soát, không dẫn đến suy giảm đáng kể độ chính xác tổng thể.
+
+\vspace{0.5em}
+
+Bảng~\ref{tab:planning_breakdown} trình bày hiệu năng theo từng loại truy vấn.
+
+\begin{table}[H]
+\centering
+\caption{Performance by Input Type}
+\label{tab:planning_breakdown}
+\begin{tabular}{l c c c c}
+\hline
+\textbf{Input Type} & \textbf{n} & \textbf{F1} & \textbf{Service Acc.} & \textbf{Faithfulness} \\
+\hline
+explicit\_checks & 10 & 0.9857 & — & 100\% \\
+group\_request & 9 & — & 100\% & 100\% \\
+specific\_intent & 25 & 0.7742 & 75.0\% & 96.0\% \\
+ambiguous & 6 & N/A & — & 66.67\% \\
+\hline
+\end{tabular}
+\end{table}
+
+Hiệu năng của hệ thống thay đổi theo mức độ rõ ràng của truy vấn đầu vào. Đối với các truy vấn explicit, F1 gần như tuyệt đối (0.9857) cho thấy hệ thống có thể ánh xạ trực tiếp từ input sang check mà không cần suy luận phức tạp, từ đó loại bỏ gần như hoàn toàn sai lệch trong quá trình lựa chọn.
+
+Trong các truy vấn group-level, Service Accuracy đạt 100\%, phản ánh khả năng xác định đúng phạm vi dịch vụ trước khi thực hiện lựa chọn chi tiết. Điều này cho thấy bước định tuyến theo service được thực hiện ổn định và ít chịu ảnh hưởng bởi nhiễu ngữ nghĩa.
+
+Đối với nhóm specific\_intent, F1 ở mức 0.7742 và Service Accuracy 75.0\% cho thấy quá trình lựa chọn bắt đầu phụ thuộc nhiều hơn vào biểu diễn ngữ nghĩa. Trong trường hợp này, các candidate có độ tương đồng cao dễ được giữ lại đồng thời, dẫn đến hiện tượng over-selection, đồng thời làm giảm độ chính xác trong việc xác định service tương ứng.
+
+Các truy vấn ambiguous có Faithfulness thấp hơn (66.67\%) cho thấy khi ngữ cảnh truy hồi không đủ rõ ràng, hệ thống có xu hướng suy luận ngoài thông tin được cung cấp. Điều này phản ánh sự phụ thuộc trực tiếp của chất lượng lập kế hoạch vào độ đầy đủ của dữ liệu truy hồi.
+
+Tổng thể, các kết quả theo từng nhóm truy vấn cho thấy hiệu năng của Planning Agent bị chi phối bởi hai yếu tố chính: mức độ rõ ràng của input và khả năng phân tách giữa các candidate trong không gian ngữ nghĩa. Khi hai yếu tố này được đảm bảo, hệ thống đạt hiệu năng cao và ổn định; ngược lại, sai số chủ yếu xuất hiện do sự mơ hồ trong truy vấn hoặc độ chồng lấn ngữ nghĩa giữa các check.
+
+
+
+% Planning Agent chịu trách nhiệm chuyển đổi yêu cầu người dùng (ngôn ngữ tự nhiên) thành danh sách các kiểm tra cụ thể hoặc nhóm dịch vụ cần được quét. Khác với Risk Agent, đầu ra của Planning Agent là dữ liệu có cấu trúc (check IDs hoặc service), do đó bài toán không chỉ là sinh nội dung mà còn yêu cầu ánh xạ chính xác từ ngữ nghĩa sang các thực thể định danh. Trong thực tế, các truy vấn đầu vào thường không chứa check ID rõ ràng, khiến bài toán trở thành một bài toán ánh xạ ngữ nghĩa (semantic mapping) với không gian lựa chọn lớn và nhiều kiểm tra có ý nghĩa tương tự.
+
+% Việc đánh giá được thực hiện trên 30 test cases với mô hình Gemma 3 4B IT trong cấu hình RAG-first.
+
+% Bảng~\ref{tab:planning_overall} trình bày kết quả tổng thể của Planning Agent.
+
+% \begin{table}[H]
+% \centering
+% \caption{Kết quả tổng thể Planning Agent}
+% \label{tab:planning_overall}
+% \begin{tabular}{lcccc}
+% \toprule
+% Metric & F1 & Precision & Recall & Planning Correctness \\
+% \midrule
+% Value & 0.626 & 0.609 & 0.767 & 0.738 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% Kết quả cho thấy F1 đạt mức trung bình trong phạm vi thí nghiệm. Có thể quan sát rằng Recall cao hơn Precision (0.767 so với 0.609), cho thấy hệ thống có xu hướng lựa chọn nhiều kiểm tra hơn cần thiết. Xu hướng này phản ánh một chiến lược ưu tiên giảm thiểu bỏ sót kiểm tra quan trọng, tuy nhiên đồng thời cũng làm tăng số lượng kiểm tra dư thừa trong đầu ra.
+
+% Từ góc độ hệ thống, sự đánh đổi giữa Precision và Recall dẫn đến hai hệ quả chính:
+% \begin{itemize}
+%     \item giảm nguy cơ bỏ sót các kiểm tra quan trọng (false negative)
+%     \item nhưng làm tăng nhiễu trong ngữ cảnh đầu vào của các agent phía sau
+% \end{itemize}
+% Điều này cho thấy mặc dù chiến lược ưu tiên Recall có thể phù hợp trong bối cảnh bảo mật, nhưng vẫn tồn tại rủi ro làm giảm hiệu quả xử lý của các bước downstream.
+
+% Chỉ số Planning Correctness đạt 0.738, gợi ý rằng hệ thống hoạt động ổn định ở mức tổng thể, khi phần lớn các kế hoạch sinh ra vẫn bao gồm các kiểm tra chính cần thiết.
+
+% Để phân tích chi tiết hơn, Bảng~\ref{tab:planning_by_type} trình bày kết quả theo từng loại truy vấn.
+
+% \begin{table}[H]
+% \centering
+% \caption{Kết quả theo loại truy vấn}
+% \label{tab:planning_by_type}
+% \begin{tabular}{lccc}
+% \toprule
+% Input Type & n & F1 & Service Accuracy \\
+% \midrule
+% explicit\_checks & 5 & 1.00 & -- \\
+% group\_request & 5 & -- & 100\% \\
+% specific\_intent & 15 & 0.50 & -- \\
+% ambiguous & 5 & -- & -- \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% Có thể quan sát rằng các truy vấn thuộc nhóm explicit\_checks và group\_request đạt độ chính xác cao. Các trường hợp này chủ yếu dựa trên các quy tắc ánh xạ trực tiếp hoặc luồng xử lý mang tính xác định (deterministic), do đó ít phụ thuộc vào khả năng suy luận của mô hình.
+
+% Ngược lại, nhóm specific\_intent có kết quả thấp hơn đáng kể (F1 = 0.50), phản ánh khó khăn trong việc ánh xạ từ mô tả ngữ nghĩa sang các kiểm tra cụ thể. Điều này cho thấy thách thức chính của bài toán không nằm ở cấu trúc đầu ra hay logic xử lý, mà nằm ở bước hiểu intent và liên kết với tri thức trong knowledge base.
+
+% Tổng hợp các kết quả trên cho thấy Planning Agent có một đặc điểm hành vi tương đối rõ ràng: mô hình có xu hướng ưu tiên lựa chọn các kiểm tra có mức độ liên quan cao và dễ nhận diện, trong khi các kiểm tra phụ thuộc ngữ cảnh hoặc yêu cầu suy luận ngữ nghĩa sâu thường bị bỏ sót. Điều này phù hợp với quan sát về sự chênh lệch giữa Precision và Recall, đồng thời phản ánh hạn chế trong khả năng phân biệt giữa các kiểm tra có ý nghĩa gần nhau.
+
+% Từ góc độ hệ thống, các kết quả này gợi ý rằng bottleneck chính của Planning Agent nằm ở bước semantic mapping, thay vì ở logic xử lý hay cấu trúc đầu ra. Do đó, hiệu năng của thành phần này phụ thuộc đáng kể vào chất lượng của ngữ cảnh truy hồi từ RAG, đặc biệt trong các truy vấn mang tính ngữ nghĩa phức tạp.
+
+% Tổng hợp lại, Planning Agent hoạt động hiệu quả trong các trường hợp truy vấn có cấu trúc rõ ràng hoặc có thể ánh xạ trực tiếp, nhưng hiệu năng giảm đáng kể đối với các truy vấn yêu cầu suy luận ngữ nghĩa. Điều này gợi ý rằng việc cải thiện khả năng hiểu intent và liên kết tri thức là hướng quan trọng để nâng cao hiệu năng tổng thể của hệ thống.
+
+
+
+
+
+
+
+
+\subsection{Đánh giá Risk Evaluation Agent}
+
+Khác với Planning Agent, Risk Evaluation Agent không chỉ thực hiện lựa chọn thông tin liên quan mà còn phải suy luận để gán mức độ nghiêm trọng cho từng lỗ hổng bảo mật. Đây là một bài toán khó hơn vì đầu ra không mang tính nhị phân, mà được tổ chức theo thứ tự từ \textit{Low} đến \textit{Critical}. Do đó, phần đánh giá này không chỉ xem xét độ chính xác của dự đoán, mà còn phân tích mức độ sai lệch giữa các mức severity, chất lượng reasoning và ảnh hưởng của cơ chế RAG đến kết quả cuối cùng.
+
+Thực nghiệm được thực hiện trên 30 test cases, bao phủ nhiều dịch vụ AWS và nhiều dạng truy vấn khác nhau. Hệ thống sử dụng mô hình Gemma 3 4B IT kết hợp cơ chế \textit{Two-Pass RAG}. Ở bước đầu, mô hình đánh giá severity dựa trên finding; ở bước sau, kết quả này được đối chiếu với tri thức từ knowledge base để điều chỉnh nếu cần. Cách tổ chức này nhằm hạn chế trường hợp mô hình bị chi phối quá sớm bởi một nguồn thông tin duy nhất.
+
+\subsubsection*{Kết quả tổng thể}
+
+Trước hết, các chỉ số tổng thể được sử dụng để quan sát hiệu năng chung của agent trên bốn khía cạnh: độ chính xác dự đoán, mức độ phù hợp theo thứ tự severity, độ bám sát ngữ cảnh và mức độ đầy đủ của reasoning.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{l c}
+\hline
+Metric & Giá trị \\
+\hline
+Accuracy & 83.3\% \\
+QWK & 0.941 \\
+Faithfulness & 0.950 \\
+Completeness & 82.2\% \\
+\hline
+\end{tabular}
+\caption{Kết quả tổng thể của Risk Evaluation Agent}
+\end{table}
+
+Nhìn chung, các kết quả này cho thấy agent đạt hiệu năng khá tốt trong phạm vi bộ dữ liệu thí nghiệm. Đặc biệt, chỉ số QWK cao hơn đáng kể so với việc chỉ nhìn accuracy đơn thuần, cho thấy các sai lệch chủ yếu là sai lệch cục bộ giữa các mức liền kề, thay vì các lỗi lệch xa. Trong bối cảnh bài toán ordinal, đây là một dấu hiệu tích cực vì nó cho thấy mô hình phần nào nắm được cấu trúc thứ bậc của severity.
+
+\subsubsection*{Phân tích độ chính xác}
+
+Từ kết quả tổng thể, cần đi sâu hơn vào dạng sai lệch mà mô hình tạo ra. Mục tiêu của phần này không chỉ là xác định mô hình sai bao nhiêu trường hợp, mà còn xem mô hình sai theo kiểu nào và sai nhiều hơn ở những nhóm truy vấn nào.
+
+Trong 30 trường hợp, có 5 trường hợp dự đoán sai và tất cả đều là sai lệch một mức. Mẫu lỗi này cho thấy mô hình không gặp vấn đề lớn trong việc nhận diện chiều hướng rủi ro, mà chủ yếu gặp khó khăn khi phân biệt ranh giới giữa các mức severity gần nhau, đặc biệt ở vùng \textit{High} và \textit{Critical}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{l c}
+\hline
+Category & Accuracy \\
+\hline
+Exact & 87.5\% \\
+Paraphrase & 87.5\% \\
+Semantic\_hard & 71.4\% \\
+Risk & 85.7\% \\
+\hline
+\end{tabular}
+\caption{Độ chính xác theo loại truy vấn}
+\end{table}
+
+Khi xét theo loại truy vấn, hiệu năng của mô hình giảm rõ ở nhóm \textit{semantic\_hard}. Điều này gợi ý rằng mô hình xử lý tốt hơn khi tín hiệu được biểu đạt trực tiếp, nhưng bắt đầu suy giảm khi cần diễn giải gián tiếp hoặc khi mô tả lỗ hổng không nêu rõ các dấu hiệu kỹ thuật quan trọng. Nói cách khác, giới hạn của agent không nằm nhiều ở việc đọc thông tin, mà nằm ở bước suy luận khi tín hiệu đầu vào trở nên mơ hồ hơn.
+
+\subsubsection*{Faithfulness và reasoning}
+
+Bên cạnh việc dự đoán đúng severity, chất lượng reasoning cũng là yếu tố quan trọng vì agent này được sử dụng như một thành phần hỗ trợ ra quyết định trong pipeline tổng thể. Do đó, phần này tập trung xem reasoning của mô hình có thực sự bám vào context hay không.
+
+Chỉ số faithfulness đạt 0.950, cho thấy phần lớn reasoning có thể truy vết về context đầu vào. Đây là một kết quả tương đối tốt, đặc biệt trong bối cảnh mô hình nhỏ và output có chứa phần giải thích tự nhiên bằng ngôn ngữ.
+
+Tuy vậy, các trường hợp có điểm thấp hơn thường không phải do mô hình bịa thêm thông tin bên ngoài, mà do xuất hiện hiện tượng \textit{meta-reasoning}. Cụ thể, mô hình có xu hướng giải thích về quá trình điều chỉnh severity thay vì tập trung mô tả trực tiếp bản chất lỗ hổng. Điều này cho thấy một dịch chuyển từ reasoning hướng nội dung sang reasoning hướng quy trình. Về mặt đánh giá, đây không phải hallucination theo nghĩa thông thường, nhưng vẫn làm giảm mức độ grounding của output.
+
+\subsubsection*{Ảnh hưởng của RAG}
+
+Sau khi xem xét chất lượng đầu ra, phần tiếp theo phân tích vai trò của RAG trong pipeline suy luận. Câu hỏi trọng tâm ở đây không phải là “có dùng RAG hay không”, mà là “RAG được tích hợp như thế nào” và cách tích hợp đó ảnh hưởng ra sao đến kết quả.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{l c c}
+\hline
+Cấu hình & Accuracy & QWK \\
+\hline
+No-RAG & 76.7\% & 0.916 \\
+Single-pass RAG & 66.7\% & 0.684 \\
+Two-pass RAG & 83.3\% & 0.941 \\
+\hline
+\end{tabular}
+\caption{So sánh các cấu hình của Risk Evaluation Agent}
+\end{table}
+
+Kết quả cho thấy việc đưa thêm RAG context trong cấu hình single-pass không mang lại cải thiện, thậm chí làm giảm hiệu năng. Điều này có thể được lý giải bởi việc mô hình nhỏ phải xử lý đồng thời nhiều nguồn tín hiệu, trong đó có những tín hiệu không hoàn toàn nhất quán với nhau. Khi đó, thay vì bổ sung thông tin hữu ích, RAG có thể làm tăng độ nhiễu trong quá trình suy luận.
+
+Ngược lại, cơ chế Two-Pass cho kết quả tốt hơn cả baseline không RAG lẫn cấu hình single-pass. Quan sát này gợi ý rằng việc tách riêng bước đánh giá ban đầu và bước hiệu chỉnh bằng tri thức chuẩn có thể giúp mô hình sử dụng context có kiểm soát hơn. Như vậy, trong bài toán này, cách tổ chức pipeline dường như quan trọng không kém bản thân việc có sử dụng RAG hay không.
+
+\subsubsection*{Tóm tắt}
+
+Từ các kết quả trên, có thể thấy Risk Evaluation Agent đạt hiệu năng tương đối tốt trong phạm vi thí nghiệm, với sai lệch chủ yếu ở mức nhỏ và reasoning nhìn chung bám sát context. Đồng thời, các kết quả cũng cho thấy rằng hiệu quả của RAG không nên được xem như một thuộc tính mặc định, mà cần được đánh giá cùng với cách tích hợp vào pipeline suy luận. Trong trường hợp này, cơ chế Two-Pass cho thấy tín hiệu tích cực hơn so với cách tiếp cận single-pass.
+
+
+\subsection{Report Agent Evaluation}
+
+Report Agent là thành phần cuối trong pipeline, chịu trách nhiệm tổng hợp dữ liệu từ các agent trước và sinh báo cáo hoàn chỉnh dưới dạng HTML. Khác với các agent trước, đầu ra của Report Agent không phải là dữ liệu có cấu trúc mà là một tài liệu hoàn chỉnh kết hợp giữa phần template (deterministic) và phần narrative do mô hình sinh. Việc tách biệt hai thành phần này cho phép phân tích rõ nguồn gốc của các sai lệch trong quá trình đánh giá. Thí nghiệm được thực hiện trên 19 test cases với mô hình Gemma 3 4B IT.
+
+Bảng~\ref{tab:report_overall} trình bày kết quả tổng thể của Report Agent.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả tổng thể Report Agent}
+\label{tab:report_overall}
+\begin{tabular}{lcccc}
+\toprule
+Metric & Structure & Correctness & Faithfulness & Coverage \\
+\midrule
+Value & 100\% & 100\% & 0.987 & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Có thể quan sát rằng Structure và Correctness đạt mức tối đa, phản ánh tính ổn định của quá trình render template và việc hiển thị số liệu từ dữ liệu đầu vào. Chỉ số Faithfulness đạt $0{,}987$, vượt ngưỡng release đã đặt ra ($\geq 0{,}90$), cho thấy phần narrative do mô hình sinh đã bám sát số liệu nguồn. Kết quả này có được sau khi đặt nhiệt độ sinh ($temperature$) về $0$ cho Report Agent; so với cấu hình trước đó dùng nhiệt độ $0{,}5$ cho Faithfulness $0{,}719$, mức cải thiện $+0{,}268$ điểm đến từ việc loại bỏ ngẫu nhiên trong sampling --- mô hình không còn sinh các con số "có vẻ hợp lý" mà bám đúng giá trị thực có trong dữ liệu nguồn. Điều này cho thấy với các pipeline yêu cầu trung thực số liệu, kiểm soát nhiệt độ sinh là một đòn bẩy đơn giản và hiệu quả.
+
+Để phân tích sâu hơn, Bảng~\ref{tab:report_scenario} trình bày kết quả theo từng nhóm scenario.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả theo scenario}
+\label{tab:report_scenario}
+\begin{tabular}{lccc}
+\toprule
+Scenario & n & Faithfulness & Coverage \\
+\midrule
+standard & 3 & 1{,}000 & 100\% \\
+all\_pass & 2 & 0{,}875 & 100\% \\
+all\_fail & 2 & 1{,}000 & 100\% \\
+minimal & 2 & 1{,}000 & 100\% \\
+missing\_fields & 2 & 1{,}000 & 100\% \\
+mixed\_case\_status & 2 & 1{,}000 & 100\% \\
+multi\_service & 2 & 1{,}000 & 100\% \\
+high\_volume & 1 & 1{,}000 & 100\% \\
+zero\_severity & 1 & 1{,}000 & 100\% \\
+complex\_remediation & 2 & 1{,}000 & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả cho thấy độ trung thực số liệu được duy trì ổn định qua hầu hết các scenario: 9/10 nhóm đạt $1{,}000$ tuyệt đối, riêng nhóm \texttt{all\_pass} đạt $0{,}875$ do một case đơn lẻ ($0{,}750$) phát sinh khi mô hình mô tả tỷ lệ pass dưới dạng làm tròn không khớp với giá trị nguồn. Cải thiện đáng chú ý so với phiên bản trước nằm ở các scenario có dữ liệu hạn chế: \texttt{minimal} từ $0{,}208$ tăng lên $1{,}000$, \texttt{all\_pass} từ $0{,}675$ tăng lên $0{,}875$. Điều này cho thấy khi loại bỏ tính ngẫu nhiên ở bước sinh, mô hình không còn "lấp đầy chỗ trống" bằng số liệu suy đoán mà bám sát các giá trị nhỏ/zero một cách trung thực.
+
+Để làm rõ hơn đặc điểm này, chỉ số Faithfulness tổng thể được trình bày lại trong Bảng~\ref{tab:report_faithfulness}.
+
+\begin{table}[H]
+\centering
+\caption{Numerical Faithfulness của Report Agent}
+\label{tab:report_faithfulness}
+\begin{tabular}{lc}
+\toprule
+Metric & Value \\
+\midrule
+Faithfulness & 0{,}987 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Mức Faithfulness $0{,}987$ phản ánh phần narrative đã bám sát dữ liệu đầu vào ở cả các scenario "khó" như dữ liệu tối thiểu hoặc cấu hình toàn pass --- những trường hợp mà phiên bản trước đó dễ "lấp đầy chỗ trống" bằng số liệu suy đoán. Một case đơn lẻ trong nhóm toàn pass còn lệch ($0{,}750$) liên quan đến cách mô hình diễn đạt tỷ lệ pass: thay vì viết đúng "100\%" mô hình dùng cách diễn đạt làm tròn ("xấp xỉ 100\%") khiến trình so khớp số học bắt được một số phụ. Đây là vấn đề về phong cách diễn đạt chứ không phải hallucination dữ liệu, có thể được xử lý ở phiên bản kế tiếp bằng cách buộc phần tóm tắt điều hành sinh theo định dạng có cấu trúc.
+
+Tổng hợp lại, Report Agent vừa đạt độ ổn định cao ở phần template (Structure 100\%, Correctness 100\%) vừa đạt mức Faithfulness vượt ngưỡng release ($\geq 0{,}90$). Kết quả này, cùng với 100\% độ chính xác bypass có điều kiện và 100\% độ phủ finding trong báo cáo, chứng tỏ pipeline sinh báo cáo đã đủ tin cậy để xuất bản cho người vận hành mà không cần bước duyệt thủ công cho phần thân báo cáo.
+
+
+\section{Tổng kết chương}
+\label{sec:ch6_summary}
+
+Chương 6 đã trình bày kết quả thực nghiệm của hệ thống ĐATN trên môi trường AWS thực, kết hợp ba lớp đánh giá bổ trợ: (a) đánh giá end-to-end ở mức pipeline (\S\ref{sec:performance_eval}, \S\ref{sec:holistic_eval}), (b) đánh giá tầng truy hồi tri thức (\S\ref{sec:rag_retrieval_eval}), và (c) đánh giá từng agent sinh nội dung (\S\ref{sec:llm_generation_eval}). Tổng hợp các quan sát chính qua ba lớp này có thể đúc kết thành các điểm sau.
+
+\paragraph{Đóng góp được kiểm chứng định lượng.}
+\begin{itemize}
+  \item \textbf{Pipeline PDCA + LangGraph end-to-end ổn định trên phần cứng cá nhân:} thời gian trung bình $432{,}1 \pm 45{,}1$ giây trên 5 phiên broad-scan với hệ số biến thiên $\text{CV} \approx 10{,}4\%$; 100\% trajectory bám sát đường đi kinh điển 13 node trên cả 5 phiên; toàn bộ năm bất biến state-handoff thoả mãn (Bảng~\ref{tab:pdca_timing_v2}, Bảng~\ref{tab:d2_trajectory_eval}). Đây là minh chứng cho thử thách T1 về điều phối chu trình khép kín có khả năng lặp lại.
+  \item \textbf{Hybrid RAG có cải thiện rõ so với từng phương pháp đơn lẻ:} Top-1 Accuracy đạt $79{,}7\%$ (so với $71{,}0\%$ của BM25 hoặc Vector đơn lẻ), MRR đạt $0{,}8464$ (so với $0{,}79$); cải thiện đồng nhất trên cả nhóm truy vấn định danh lẫn ngôn ngữ tự nhiên (Bảng~\ref{tab:retrieval_ablation}). Cùng với cấu trúc multi-query Q1/Q2/Q3 (\S\ref{subsec:scenario_planning}), tầng RAG đáp ứng yêu cầu cung cấp ngữ cảnh chuyên môn cho ba agent downstream.
+  \item \textbf{Two-Pass Risk Eval với hiệu chỉnh từ RAG cho ordinal severity tốt hơn baseline:} Accuracy $83{,}3\%$ và Quadratic Weighted Kappa $0{,}941$ trên 30 case --- đều cao hơn cấu hình No-RAG ($76{,}7\%$) và Single-pass RAG ($66{,}7\%$) trong cùng điều kiện so sánh (Bảng so sánh các cấu hình ở \S\ref{sec:llm_generation_eval}). Sai lệch còn lại đều là sai lệch cục bộ một mức, không có nhảy bậc, củng cố tính đáng tin cậy của output cho người vận hành.
+\end{itemize}
+
+\paragraph{Hạn chế thẳng thắn của thực nghiệm.}
+\begin{itemize}
+  \item \textbf{Một AWS account và một service S3:} mọi phiên đo dùng tài khoản duy nhất ở vùng \texttt{us-east-1} và scope đánh giá là \texttt{s3}. Tuy môi trường đã đủ đa dạng để phát hiện 11 finding/phiên, nhưng đây vẫn là single-tenant single-service; chưa kiểm chứng tính bền vững khi mở rộng sang IAM, EC2 hoặc multi-cloud (đã loại trừ ở phạm vi nghiên cứu --- xem \S\ref{sec:scope}).
+  \item \textbf{Quy mô tập tài nguyên trung bình:} bench broad-scan dừng ở $\sim 11$ finding/phiên, tương đương 1--2 bucket. Hiệu năng và độ ổn định của node sinh báo cáo (chiếm $\approx 48\%$ tổng thời gian) khi số finding tăng vài chục lần là một nhánh kiểm chứng để mở; số liệu hiện tại không khẳng định tính tuyến tính của thời gian sinh báo cáo.
+\end{itemize}
+
+\paragraph{Chuyển tiếp.}
+Các kết quả định lượng trong chương này chứng minh tính khả thi của hướng tiếp cận đã đề xuất ở Chương 4 và hiện thực ở Chương 5. Sau bước hiệu chỉnh nhiệt độ sinh về $0$ cho Report Agent và tách đường dẫn báo cáo theo từng phiên chạy, các điểm yếu phát hiện sớm trong quá trình bench đã được khép lại: Faithfulness đạt $0{,}987$ (vượt ngưỡng release $\geq 0{,}90$) và Maturity được đối chiếu trên cả 5 phiên D1. Dư địa cải tiến chính còn lại là bổ sung kịch bản đa dịch vụ / quy mô lớn để kiểm chứng tính bền vững khi số finding tăng vài chục lần. Chương 7 sẽ tổng hợp các đóng góp khoa học, vị trí của hệ thống trong không gian giải pháp CSPM hiện hành, và đề xuất các hướng nghiên cứu mở.

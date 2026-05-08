@@ -1,0 +1,870 @@
+<!DOCTYPE html><html lang="vi"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AWS Security Maturity Agent - Academic Poster</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "background": "#f9f9ff",
+                "primary-fixed-dim": "#a9c7ff",
+                "on-surface": "#111c2d",
+                "primary-fixed": "#d6e3ff",
+                "surface": "#f9f9ff",
+                "secondary-container": "#0070ea",
+                "on-secondary-container": "#fefcff",
+                "surface-container": "#e7eeff",
+                "primary": "#002a58",
+                "inverse-surface": "#263143",
+                "tertiary": "#282b2d",
+                "on-primary-fixed-variant": "#0e4686",
+                "surface-container-high": "#dee8ff",
+                "surface-bright": "#f9f9ff",
+                "on-tertiary": "#ffffff",
+                "inverse-primary": "#a9c7ff",
+                "on-surface-variant": "#424750",
+                "error": "#ba1a1a",
+                "surface-container-lowest": "#ffffff",
+                "surface-container-low": "#f0f3ff",
+                "on-secondary": "#ffffff",
+                "tertiary-fixed-dim": "#c4c7c9",
+                "on-secondary-fixed-variant": "#004493",
+                "on-primary": "#ffffff",
+                "on-tertiary-container": "#aaadaf",
+                "on-background": "#111c2d",
+                "on-error": "#ffffff",
+                "on-tertiary-fixed-variant": "#444749",
+                "on-secondary-fixed": "#001a41",
+                "tertiary-fixed": "#e0e3e5",
+                "surface-variant": "#d8e3fb",
+                "secondary-fixed-dim": "#adc7ff",
+                "secondary-fixed": "#d8e2ff",
+                "surface-container-highest": "#d8e3fb",
+                "inverse-on-surface": "#ecf1ff",
+                "outline-variant": "#c3c6d2",
+                "error-container": "#ffdad6",
+                "surface-dim": "#cfdaf2",
+                "on-tertiary-fixed": "#191c1e",
+                "outline": "#737781",
+                "secondary": "#0059bb",
+                "on-primary-fixed": "#001b3d",
+                "on-error-container": "#93000a",
+                "primary-container": "#004080",
+                "surface-tint": "#305ea0",
+                "tertiary-container": "#3e4143",
+                "on-primary-container": "#83aef5"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "margin-page": "4rem",
+                "gutter-grid": "2rem",
+                "stack-gap": "1rem",
+                "padding-section": "2.5rem"
+        },
+        "fontFamily": {
+                "poster-title": [
+                        "Inter"
+                ],
+                "section-heading": [
+                        "Inter"
+                ],
+                "body-text": [
+                        "Inter"
+                ],
+                "data-label": [
+                        "Inter"
+                ],
+                "caption": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "poster-title": [
+                        "84px",
+                        {
+                                "lineHeight": "96px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "800"
+                        }
+                ],
+                "section-heading": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-text": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "data-label": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "caption": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "500"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<script>
+  const posterParams = new URLSearchParams(window.location.search);
+  if (posterParams.get("export") === "png") {
+    document.documentElement.classList.add("png-export");
+
+    const exportWidth = Number(posterParams.get("w")) || 2065;
+    const exportHeight = Number(posterParams.get("h")) || 2920;
+    const sourceWidth = Number(posterParams.get("sw")) || 2400;
+    const sourceHeight = Number(posterParams.get("sh")) || 3395;
+    const exportScale = Math.min(exportWidth / sourceWidth, exportHeight / sourceHeight);
+
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty("--poster-export-width", `${exportWidth}px`);
+    rootStyle.setProperty("--poster-export-height", `${exportHeight}px`);
+    rootStyle.setProperty("--poster-source-width", `${sourceWidth}px`);
+    rootStyle.setProperty("--poster-source-height", `${sourceHeight}px`);
+    rootStyle.setProperty("--poster-export-scale", exportScale.toFixed(6));
+  }
+</script>
+<style>
+        :root {
+            --poster-export-width: 2065px;
+            --poster-export-height: 2920px;
+            --poster-source-width: 2400px;
+            --poster-source-height: 3395px;
+            --poster-preview-scale: 0.3307;
+            --poster-export-scale: 0.8604;
+            --poster-print-scale: 1.3237;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+        
+        .poster-canvas {
+            width: 210mm;
+            height: 297mm;
+            background-color: #ffffff;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .poster-content {
+            width: var(--poster-source-width);        /* Source poster canvas, scaled down for browser preview */
+            min-height: var(--poster-source-height);
+            box-sizing: border-box;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scale(var(--poster-preview-scale));
+            transform-origin: top left;
+        }
+
+        html.png-export,
+        html.png-export body {
+            width: var(--poster-export-width);
+            height: var(--poster-export-height);
+            min-height: var(--poster-export-height);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        html.png-export body {
+            display: block;
+        }
+
+        html.png-export .poster-canvas {
+            width: var(--poster-export-width);
+            height: var(--poster-export-height);
+            border: 0;
+            box-shadow: none;
+        }
+
+        html.png-export .poster-content {
+            width: var(--poster-source-width);
+            min-height: var(--poster-source-height);
+            height: var(--poster-source-height);
+            overflow: visible;
+            transform: scale(var(--poster-export-scale));
+        }
+
+        @page {
+            size: A0 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+                min-height: auto;
+                padding: 0;
+            }
+
+            .poster-canvas {
+                width: 841mm;
+                height: 1189mm;
+                box-shadow: none;
+                border: 0;
+            }
+
+            .poster-content {
+                width: var(--poster-source-width);
+                min-height: var(--poster-source-height);
+                height: var(--poster-source-height);
+                overflow: visible;
+                transform: scale(var(--poster-print-scale));
+                transform-origin: top left;
+            }
+        }
+
+        .icon {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+
+        .section-accent {
+            border-left: 6px solid #06B6D4;
+        }
+
+        .thesis-header {
+            position: relative;
+            text-align: center;
+            color: #173a57;
+            border-bottom: 4px solid #173a57;
+            padding: 4rem 11rem 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .thesis-logo {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            object-position: center;
+        }
+
+        .thesis-brand {
+            position: absolute;
+            top: 0.15rem;
+            left: -0.3rem;
+            width: 360px;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            text-align: left;
+        }
+
+        .thesis-school-name {
+            font-family: "Times New Roman", Times, serif;
+            color: #173a57;
+            line-height: 1.12;
+            text-transform: uppercase;
+        }
+
+        .thesis-school-name .school-system {
+            display: block;
+            font-family: Inter, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #2a8dcc;
+        }
+
+        .thesis-school-name .school-main {
+            display: block;
+            margin-top: 0.1rem;
+            font-size: 15px;
+            font-weight: 800;
+            color: #003b7a;
+            letter-spacing: 0.02em;
+        }
+
+        .thesis-school-name .school-faculty {
+            display: none;
+        }
+
+        .architecture-figure {
+            flex: 1 1 auto;
+            min-height: 0;
+            background: #f9f9ff;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .architecture-image {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 920px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
+            border-radius: 0.25rem;
+        }
+
+        .poster-footer {
+            position: static;
+        }
+
+        .results-panel {
+            background: #eef7ff;
+            border-color: #0070ea;
+            color: #173a57;
+        }
+
+        .conclusion-panel {
+            background: #f6f9fc;
+            border-color: #004080;
+            color: #173a57;
+        }
+
+        .results-panel h2,
+        .conclusion-panel h2 {
+            color: #004080 !important;
+        }
+
+        .results-panel h2 .material-symbols-outlined,
+        .conclusion-panel h2 .material-symbols-outlined,
+        .results-panel h3 .material-symbols-outlined,
+        .conclusion-panel h3 .material-symbols-outlined {
+            color: #0059bb !important;
+        }
+
+        .result-stat-card {
+            background: #ffffff;
+            border: 1px solid #adc7ff;
+            color: #004080;
+            box-shadow: 0 8px 18px rgba(0, 64, 128, 0.08);
+        }
+
+        .result-stat-label {
+            color: #0059bb;
+        }
+
+        .result-stat-caption,
+        .results-muted,
+        .conclusion-muted {
+            color: #4a5f78;
+        }
+
+        .result-bullet,
+        .conclusion-bullet,
+        .conclusion-check {
+            color: #0059bb;
+        }
+
+        .results-deliverables,
+        .conclusion-footer-note {
+            border-color: #c8d9f2;
+        }
+
+        .result-output-card {
+            background: #ffffff;
+            border: 1px solid #d8e6fb;
+            color: #173a57;
+        }
+
+        .result-output-card .material-symbols-outlined {
+            color: #0070ea;
+        }
+
+        .conclusion-callout {
+            background: #eaf2ff;
+            border: 1px solid #adc7ff;
+            color: #173a57;
+        }
+
+        .thesis-qr {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 128px;
+            height: 128px;
+            border: 2px solid #c3c6d2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            background: #f9f9ff;
+        }
+
+        .thesis-qr .material-symbols-outlined {
+            font-size: 52px;
+            line-height: 1;
+            color: #737781;
+            margin-bottom: 0.5rem;
+        }
+
+        .thesis-qr span:last-child {
+            font-family: Inter, sans-serif;
+            font-size: 11px;
+            line-height: 1.15;
+            font-weight: 800;
+            color: #737781;
+            text-align: center;
+        }
+
+        .thesis-title {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 34px;
+            line-height: 1.3;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0;
+            margin: 0 auto 0.85rem;
+            max-width: 1180px;
+        }
+
+        .thesis-divider {
+            width: 100%;
+            border-top: 4px solid #4a4a4a;
+            margin: 0 auto 1.25rem;
+        }
+
+        .thesis-major {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #273b4a;
+            margin-bottom: 0.85rem;
+        }
+
+        .thesis-info {
+            display: grid;
+            grid-template-columns: 44% 56%;
+            width: 720px;
+            max-width: 100%;
+            margin: 0 auto;
+            text-align: left;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 19px;
+            line-height: 1.4;
+            color: #1f2933;
+        }
+
+        .thesis-info-label {
+            text-align: right;
+            padding-right: 3.5rem;
+            font-weight: 700;
+        }
+
+        .thesis-info-value {
+            font-weight: 700;
+        }
+
+        .thesis-date {
+            margin-top: 1.25rem;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #273b4a;
+        }
+    </style>
+</head>
+<body class="font-body-text text-on-surface">
+<div class="poster-canvas">
+<div class="poster-content">
+<!-- Header Section -->
+<header class="thesis-header">
+<div class="thesis-brand">
+<img alt="University Logo" class="thesis-logo" src="hcmut.png">
+<div class="thesis-school-name">
+<span class="school-system">Đại học Quốc gia Thành phố Hồ Chí Minh</span>
+<span class="school-main">Trường Đại học Bách Khoa</span>
+<span class="school-faculty">Khoa Khoa học &amp; Kỹ thuật Máy tính</span>
+</div>
+</div>
+<div style="position: absolute; top: 1.25rem; left: 0; right: 0; text-align: center; font-family: 'Times New Roman', Times, serif; font-size: 20px; font-weight: 700; color: #173a57; letter-spacing: 0.04em;">BÁO CÁO ĐỒ ÁN TỐT NGHIỆP</div>
+<div class="thesis-qr">
+<img src="qr.png" alt="QR code: GitHub repo aws-security-maturity-agent" style="width:96px;height:96px;object-fit:contain;">
+<span>FULL REPORT &amp; REPO</span>
+</div>
+<h1 class="thesis-title">
+<span class="block">NGHIÊN CỨU VÀ XÂY DỰNG TÁC TỬ AI TỰ HÀNH</span>
+<span class="block">ĐỂ ĐÁNH GIÁ MỨC ĐỘ TRƯỞNG THÀNH BẢO MẬT</span>
+<span class="block">TRÊN NỀN TẢNG AWS</span>
+</h1>
+<div class="thesis-divider"></div>
+<div class="thesis-major">Chuyên ngành: Khoa học Máy tính</div>
+<div class="thesis-info">
+<div class="thesis-info-label">Giảng viên hướng dẫn:</div>
+<div class="thesis-info-value">
+<div>Nguyễn An Khương, PhD</div>
+<div>Nguyễn Lê Quốc Anh</div>
+</div>
+<div class="thesis-info-label">Sinh viên thực hiện:</div>
+<div class="thesis-info-value">
+<div>Võ Nguyễn Đức Phát -- 2212540</div>
+<div>Nguyễn Trung Phú -- 2212592</div>
+</div>
+</div>
+<div class="thesis-date">Thành phố Hồ Chí Minh, Tháng 06/2026</div>
+</header>
+<!-- Content Grid -->
+<main class="flex flex-col gap-8">
+<!-- Top Row: Intro, Challenges, Method -->
+<div class="grid grid-cols-3 gap-8">
+<!-- 1. Giới thiệu -->
+<section class="section-accent bg-surface-container-lowest p-6 rounded shadow-sm flex flex-col">
+<h2 class="font-section-heading text-primary-container mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-3xl">info</span> Giới thiệu &amp; Bối cảnh
+                </h2>
+<p class="font-body-text mb-4">Sự mở rộng hạ tầng AWS làm tăng độ phức tạp trong bảo mật. Các công cụ CSPM hiện tại (như Prowler) chỉ xuất báo cáo thô (JSON/CSV), khiến đội ngũ SecOps tốn nhiều thời gian phân tích và khắc phục thủ công, đồng thời thiếu đầu ra chiến lược cho CISO/CIO. Mục tiêu của hệ thống là tự động chuyển hóa cảnh báo thô thành các <b>Actionable Insights</b> phục vụ cả vận hành lẫn ra quyết định cấp cao.</p>
+<p class="font-body-text mb-4">Đề tài xây dựng <b>AWS Security Maturity Agent (ASMA)</b> vận hành theo chu trình <b>PDCA khép kín</b>. Hệ thống ứng dụng <b>Agentic Workflow (LangGraph)</b> để điều phối quy trình tự động từ rà quét, đánh giá rủi ro (kết hợp <b>Hybrid RAG</b> và cơ chế <b>Grounding</b>) đến khắc phục có kiểm soát. Dữ liệu cấu hình AWS không rời môi trường nội bộ nhờ <b>Local LLM (Ollama)</b>.</p>
+
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="bg-surface-container-high text-secondary text-sm px-3 py-1 rounded font-bold">PDCA Closed-Loop</span>
+<span class="bg-surface-container-high text-secondary text-sm px-3 py-1 rounded font-bold">Hybrid RAG + Grounding</span>
+<span class="bg-surface-container-high text-secondary text-sm px-3 py-1 rounded font-bold">Local-first + HITL</span>
+</div>
+</section>
+<!-- 2. Thách thức -->
+<section class="section-accent bg-surface-container-lowest p-6 rounded shadow-sm flex flex-col">
+<h2 class="font-section-heading text-primary-container mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-error text-3xl">warning</span>Thách thức &amp; Đặc tả yêu cầu</h2>
+<div class="mb-6">
+<h3 class="font-bold text-lg mb-2 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg">settings</span> Yêu cầu chức năng:
+</h3>
+<ul class="space-y-1 font-body-text text-[16px]">
+<li class="flex gap-2">
+<span class="text-secondary font-bold">•</span>
+<span class="">Tiếp nhận &amp; phân tích ý định từ ngôn ngữ tự nhiên</span>
+</li>
+<li class="flex gap-2">
+<span class="text-secondary font-bold">•</span>
+<span class="">Quét tự động (Prowler) &amp; Đánh giá rủi ro bằng LLM kết hợp Hybrid RAG</span>
+</li>
+<li class="flex gap-2">
+<span class="text-secondary font-bold">•</span>
+<span>Lập kế hoạch khắc phục tận gốc (Remediation) có phê duyệt (HITL)</span>
+</li>
+<li class="flex gap-2">
+<span class="text-secondary font-bold">•</span>
+<span>Thực thi kế hoạch Remediation được phê duyệt</span>
+</li>
+<li class="flex gap-2">
+<span class="text-secondary font-bold">•</span>
+<span>Xác minh hậu khắc phục (Verify) &amp; Sinh báo cáo chiến lược</span>
+</li>
+</ul>
+</div>
+<div class="mb-6">
+<h3 class="font-bold text-lg mb-2 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-lg">security</span> Yêu cầu phi chức năng:
+</h3>
+<ul class="space-y-1 font-body-text text-[16px]">
+<li class="flex gap-2">
+<span class="text-error font-bold">•</span>
+<span><b>Bảo mật dữ liệu:</b> Local inference (Ollama) tránh rò rỉ thông tin AWS.</span>
+</li>
+<li class="flex gap-2">
+<span class="text-error font-bold">•</span>
+<span><b>An toàn vận hành:</b> Mọi can thiệp tài nguyên đều qua Human-in-the-Loop (HITL).</span>
+</li>
+<li class="flex gap-2">
+<span class="text-error font-bold">•</span>
+<span><b>Tính đúng đắn:</b> Suy luận có cơ sở (Grounding) bám sát bằng chứng.</span>
+</li>
+<li class="flex gap-2">
+<span class="text-error font-bold">•</span>
+<span><b>Khả năng quan sát:</b> Tracking độ trễ và chi phí qua Langfuse.</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- 3. Phương pháp -->
+<section class="section-accent bg-surface-container-lowest p-6 rounded shadow-sm flex flex-col">
+<h2 class="font-section-heading text-primary-container mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-3xl">engineering</span> Phương pháp &amp; Đóng góp</h2>
+<p class="font-body-text mb-4 text-[15px]">Tiếp cận <b>Agentic Workflow (LangGraph)</b> kết hợp <b>Hybrid RAG có grounding</b>, mô phỏng quy trình đánh giá và khắc phục bảo mật của đội ngũ vận hành. Ba đóng góp chính:</p>
+<div class="space-y-3 font-body-text">
+<div class="p-3 border-l-4 border-secondary bg-surface rounded flex gap-3 items-start">
+<span class="material-symbols-outlined text-secondary text-[34px] flex-shrink-0 leading-none">autorenew</span>
+<div>
+<span class="font-bold text-primary block text-md mb-1">C1 · PDCA Agentic Loop cho CSPM</span>
+<span class="text-[14px]">Áp dụng chu trình PDCA khép kín kết hợp LangGraph cho bài toán đánh giá trưởng thành bảo mật — mở rộng phạm vi từ "scan-and-report" sang "scan → evaluate → remediate → verify".</span>
+</div>
+</div>
+<div class="p-3 border-l-4 border-secondary bg-surface rounded flex gap-3 items-start"><span class="material-symbols-outlined text-secondary text-[34px] flex-shrink-0 leading-none">search_check</span>
+<div>
+<span class="font-bold text-primary block text-md mb-1">C2 · Hybrid RAG + Grounded Generation</span>
+<span class="text-[14px]">Kết hợp BM25 và vector retrieval trên kho CIS / AWS Security Maturity Model; narrative do LLM sinh ra được ràng buộc bằng evidence từ findings, giảm hallucination về số và capability.</span>
+</div>
+</div>
+<div class="p-3 border-l-4 border-secondary bg-surface rounded flex gap-3 items-start">
+<span class="material-symbols-outlined text-secondary text-[34px] flex-shrink-0 leading-none">verified_user</span>
+<div>
+<span class="font-bold text-primary block text-md mb-1">C3 · Local-first + HITL Safety Gate</span>
+<span class="text-[14px]">Local LLM (Ollama) thay vì Cloud API → bảo toàn metadata AWS; HITL gate trước mọi thao tác thực thi → giữ quyết định cuối cùng cho con người.</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Comparison Strip — Existing CSPM vs Proposed System -->
+<section class="section-accent bg-surface-container-lowest p-6 rounded shadow-sm">
+<h2 class="font-section-heading text-primary-container mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-3xl">compare_arrows</span> So sánh với CSPM truyền thống
+</h2>
+<div class="overflow-hidden rounded border border-outline-variant">
+<table class="w-full border-collapse text-[15px]">
+<thead>
+<tr class="bg-primary text-white text-left">
+<th class="p-3 font-bold w-[24%] border-r border-white/20">Năng lực</th>
+<th class="p-3 font-bold w-[38%] border-r border-white/20">CSPM truyền thống (Prowler đơn lẻ)</th>
+<th class="p-3 font-bold w-[38%]">Hệ thống đề tài</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-t border-outline-variant">
+<td class="p-3 font-bold text-primary bg-surface-container-low">Output</td>
+<td class="p-3" style="background:#fff8f8">Findings JSON/CSV thô — đội vận hành tự diễn giải</td>
+<td class="p-3" style="background:#f4f9ff">Báo cáo HTML có narrative + Maturity Score, sẵn sàng cho CISO/CIO</td>
+</tr>
+<tr class="border-t border-outline-variant">
+<td class="p-3 font-bold text-primary bg-surface-container-low">Đánh giá rủi ro</td>
+<td class="p-3" style="background:#fff8f8">Severity tag tĩnh theo rule</td>
+<td class="p-3" style="background:#f4f9ff">LLM scoring có ngữ cảnh, ràng buộc bởi <b>Hybrid RAG + Grounding</b></td>
+</tr>
+<tr class="border-t border-outline-variant">
+<td class="p-3 font-bold text-primary bg-surface-container-low">Khắc phục</td>
+<td class="p-3" style="background:#fff8f8">Thủ công hoặc auto-blind (rủi ro can thiệp sai)</td>
+<td class="p-3" style="background:#f4f9ff">Plan do LLM sinh, có <b>HITL Gate</b> phê duyệt trước khi thực thi</td>
+</tr>
+<tr class="border-t border-outline-variant">
+<td class="p-3 font-bold text-primary bg-surface-container-low">Xác minh hậu khắc phục</td>
+<td class="p-3" style="background:#fff8f8">Không có — mỗi lần scan độc lập</td>
+<td class="p-3" style="background:#f4f9ff">Tự động re-scan trong cùng pipeline (chu trình PDCA khép kín)</td>
+</tr>
+<tr class="border-t border-outline-variant">
+<td class="p-3 font-bold text-primary bg-surface-container-low">Bảo mật dữ liệu</td>
+<td class="p-3" style="background:#fff8f8">Prowler CLI không dùng LLM; chỉ xuất file thô, không có lớp phân tích cục bộ</td>
+<td class="p-3" style="background:#f4f9ff"><b>Local LLM (Ollama)</b> — phân tích cục bộ, không gửi finding tới Cloud LLM API</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Middle Row: Architecture (Full Width) -->
+<section class="section-accent bg-surface-container-lowest p-6 rounded shadow-sm flex flex-col w-full min-h-[620px]">
+<h2 class="font-section-heading text-primary-container mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-3xl">architecture</span> Kiến trúc Hệ thống</h2>
+<p class="font-body-text mb-4 text-[15px]">Hệ thống điều phối qua <b>Agentic Workflow (LangGraph)</b> theo chu trình <b>PDCA khép kín</b>, tổ chức thành 4 lớp:</p>
+<div class="grid grid-cols-4 gap-3 mb-5">
+<div class="bg-surface-container-low border-l-4 border-secondary p-3 rounded">
+<div class="font-bold text-primary text-[14px] mb-1">① Interface</div>
+<div class="text-[12px] text-on-surface-variant leading-tight">Frontend chat/HITL + FastAPI</div>
+</div>
+<div class="bg-surface-container-low border-l-4 border-secondary p-3 rounded">
+<div class="font-bold text-primary text-[14px] mb-1">② Orchestrator PDCA</div>
+<div class="text-[12px] text-on-surface-variant leading-tight">Plan/Scan/Risk/Remediation + HITL Gate</div>
+</div>
+<div class="bg-surface-container-low border-l-4 border-secondary p-3 rounded">
+<div class="font-bold text-primary text-[14px] mb-1">③ AWS Target</div>
+<div class="text-[12px] text-on-surface-variant leading-tight">Prowler scan trên scope S3</div>
+</div>
+<div class="bg-surface-container-low border-l-4 border-secondary p-3 rounded">
+<div class="font-bold text-primary text-[14px] mb-1">④ Foundation</div>
+<div class="text-[12px] text-on-surface-variant leading-tight">Local LLM · Hybrid RAG · Langfuse</div>
+</div>
+</div>
+<div class="architecture-figure">
+<img src="KienTruc.svg" alt="Kiến trúc AWS Security Maturity Agent — PDCA Agentic Workflow" class="architecture-image">
+</div>
+</section>
+<!-- Tech Stack Ribbon -->
+<section class="bg-primary py-3 px-5 rounded shadow-sm flex items-center gap-3 flex-wrap">
+<span class="text-white text-[12px] font-bold uppercase tracking-[0.18em] flex items-center gap-2 mr-2">
+<span class="material-symbols-outlined text-base">layers</span>
+Tech Stack
+</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">LangGraph</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">FastAPI</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">React + TypeScript</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">Ollama · Gemma 3 4B</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">Chroma + BM25</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">Langfuse</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">Prowler</span>
+<span class="bg-white/15 text-white px-3 py-1 rounded text-[13px] font-bold border border-white/25">SqliteSaver</span>
+</section>
+<!-- Bottom Row: Results & Conclusion -->
+<div class="grid grid-cols-2 gap-8">
+<!-- 5. Kết quả -->
+<section class="section-accent results-panel p-6 rounded shadow-sm flex flex-col">
+<h2 class="font-section-heading mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-3xl">analytics</span> Kết quả Hiện thực
+</h2>
+
+<!-- Quantitative highlights — 2 safe tiles -->
+<div class="grid grid-cols-2 gap-3 mb-5">
+<div class="result-stat-card rounded p-4">
+<div class="text-4xl font-extrabold leading-none">90.3<span class="text-2xl">%</span></div>
+<div class="result-stat-label text-[11px] font-bold uppercase tracking-wider mt-2">Overall Top-5 Retrieval</div>
+<div class="result-stat-caption text-[12px] mt-1">Truy hồi tài liệu chuẩn CIS / AWS Security Maturity Model</div>
+</div>
+<div class="result-stat-card rounded p-4">
+<div class="text-4xl font-extrabold leading-none">97.5<span class="text-2xl">%</span></div>
+<div class="result-stat-label text-[11px] font-bold uppercase tracking-wider mt-2">Báo cáo · Numerical Faithfulness</div>
+<div class="result-stat-caption text-[12px] mt-1">Báo cáo bám đúng số liệu trong findings</div>
+</div>
+</div>
+
+<!-- Qualitative business value -->
+<div class="font-body-text text-[15px]">
+<ul class="space-y-2">
+<li class="flex gap-2">
+<span class="result-bullet font-bold">▸</span>
+<span><b>Cost Efficiency:</b> Chạy trên GPU cá nhân tầm trung, không cần thuê GPU cloud hay dùng Cloud LLM API.</span>
+</li>
+<li class="flex gap-2">
+<span class="result-bullet font-bold">▸</span>
+<span><b>Data Privacy:</b> Local-first inference (Ollama), metadata AWS không rời máy.</span>
+</li>
+<li class="flex gap-2">
+<span class="result-bullet font-bold">▸</span>
+<span><b>An toàn vận hành:</b> HITL gate chặn AI tự ý đổi cấu hình, loại bỏ rủi ro downtime.</span>
+</li>
+<li class="flex gap-2">
+<span class="result-bullet font-bold">▸</span>
+<span><b>Audit-ready:</b> Quyết định AI lưu vết qua Langfuse, rút ngắn thời gian giải trình.</span>
+</li>
+</ul>
+</div>
+
+<!-- Deliverables strip — what each run produces -->
+<div class="results-deliverables mt-auto pt-4 border-t">
+<div class="results-muted text-[11px] font-bold uppercase tracking-widest mb-3">Đầu ra mỗi lần chạy</div>
+<div class="grid grid-cols-4 gap-2">
+<div class="result-output-card rounded p-2 text-center">
+<div class="material-symbols-outlined text-2xl">description</div>
+<div class="text-[11px] font-bold mt-1 leading-tight">Báo cáo HTML</div>
+<div class="results-muted text-[10px] leading-tight">CISO-ready</div>
+</div>
+<div class="result-output-card rounded p-2 text-center">
+<div class="material-symbols-outlined text-2xl">build</div>
+<div class="text-[11px] font-bold mt-1 leading-tight">Remediation Plan</div>
+<div class="results-muted text-[10px] leading-tight">Có ưu tiên</div>
+</div>
+<div class="result-output-card rounded p-2 text-center">
+<div class="material-symbols-outlined text-2xl">radar</div>
+<div class="text-[11px] font-bold mt-1 leading-tight">Maturity Score</div>
+<div class="results-muted text-[10px] leading-tight">Theo trục năng lực</div>
+</div>
+<div class="result-output-card rounded p-2 text-center">
+<div class="material-symbols-outlined text-2xl">receipt_long</div>
+<div class="text-[11px] font-bold mt-1 leading-tight">Audit Trail</div>
+<div class="results-muted text-[10px] leading-tight">Trace đầy đủ</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. Kết luận & Hướng phát triển -->
+<section class="section-accent conclusion-panel p-6 rounded shadow-sm flex flex-col">
+<h2 class="font-section-heading mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-3xl">fact_check</span> Kết luận &amp; Hướng phát triển
+                </h2>
+<div class="mb-5 font-body-text">
+<p>
+        Khẳng định tính khả thi của hệ thống đánh giá bảo mật đám mây khép kín dựa trên chu trình PDCA, kết hợp mô hình ngôn ngữ nhỏ chạy cục bộ (Gemma 3) và Hybrid RAG. Tính minh bạch và an toàn vận hành được duy trì qua cơ chế Web HITL.
+    </p>
+</div>
+
+<!-- Validation evidence callout -->
+<div class="conclusion-callout rounded p-3 mb-5">
+<div class="conclusion-muted text-[11px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">verified</span>
+Đã kiểm chứng
+</div>
+<ul class="space-y-1 font-body-text text-[14px]">
+<li class="flex gap-2"><span class="conclusion-check font-bold">✓</span><span>Pipeline E2E trên dịch vụ Amazon S3 (13 node, từ scan đến verify)</span></li>
+<li class="flex gap-2"><span class="conclusion-check font-bold">✓</span><span>Truy hồi tài liệu chuẩn CIS / AWS Security Maturity Model qua Hybrid RAG</span></li>
+<li class="flex gap-2"><span class="conclusion-check font-bold">✓</span><span>Chất lượng báo cáo: bám số liệu finding, đúng scope dịch vụ</span></li>
+</ul>
+</div>
+
+<div class="mb-5">
+<h3 class="font-bold text-lg mb-2 text-primary-container flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">trending_up</span> Hướng phát triển:
+</h3>
+<ul class="space-y-2 font-body-text text-[16px]">
+<li class="flex gap-2">
+<span class="conclusion-bullet font-bold">•</span>
+<span class=""><b>Mở rộng dịch vụ:</b> Phát triển remediation cho IAM, EC2, RDS, VPC ngoài phạm vi S3 hiện tại.</span>
+</li>
+<li class="flex gap-2">
+<span class="conclusion-bullet font-bold">•</span>
+<span class=""><b>Nghiên cứu sâu:</b> Hỗ trợ Multi-cloud (Azure/GCP), tích hợp Long-term Memory (Reflexion) và Fine-tune mô hình (LoRA) chuyên biệt.</span>
+</li>
+</ul>
+</div>
+<div class="conclusion-footer-note mt-auto pt-4 border-t">
+<p class="conclusion-muted text-sm italic font-medium">
+        Đồ án minh chứng tính khả thi của tác tử AI <b>tự hành</b> cho CSPM — cân bằng giữa <b>tự động hóa</b>, <b>an toàn vận hành</b>, và <b>bảo mật dữ liệu</b>.
+    </p>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="poster-footer mt-4 pt-3 border-t-2 border-outline-variant flex justify-between items-center text-sm text-outline uppercase tracking-widest font-bold">
+<span>© BÁO CÁO ĐỒ ÁN TỐT NGHIỆP — 2026</span>
+<div class="flex gap-6 items-center">
+<span>TRƯỜNG ĐẠI HỌC BÁCH KHOA — ĐHQG TP.HCM</span>
+<span class="text-primary-container text-xl">•</span>
+<span>KHOA KHOA HỌC &amp; KỸ THUẬT MÁY TÍNH</span>
+</div>
+</footer>
+</div>
+</div>
+
+
+</body></html>

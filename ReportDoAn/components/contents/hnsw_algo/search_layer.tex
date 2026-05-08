@@ -1,0 +1,31 @@
+\begin{algorithm}[H]
+\caption{SEARCH-LAYER($q$, $ep$, $ef$, $lc$)}
+\begin{algorithmic}[1]
+\Require Query element $q$, enter points $ep$, number of nearest to $q$ elements to return $ef$, layer number $lc$
+\Ensure $ef$ closest neighbors to $q$
+\State $v \gets ep$ \Comment{Set of visited elements}
+\State $C \gets ep$ \Comment{Set of candidates}
+\State $W \gets ep$ \Comment{Dynamic list of found nearest neighbors}
+\While{$|C| > 0$}
+    \State $c \gets$ Extract nearest element from $C$ to $q$
+    \State $f \gets$ Get furthest element from $W$ to $q$
+    \If{\texttt{distance}$(c, q) > \texttt{distance}(f, q)$}
+        \State \textbf{break} \Comment{All elements in $W$ are evaluated}
+    \EndIf
+    \For{each $e \in \texttt{neighbourhood}(c)$ at layer $lc$} \Comment{Update $C$ and $W$}
+        \If{$e \notin v$}
+            \State $v \gets v \cup e$
+            \State $f \gets$ Get furthest element from $W$ to $q$
+            \If{\texttt{distance}$(e, q) < \texttt{distance}(f, q)$ \textbf{or} $|W| < ef$}
+                \State $C \gets C \cup e$
+                \State $W \gets W \cup e$
+                \If{$|W| > ef$}
+                    \State Remove furthest element from $W$ to $q$
+                \EndIf
+            \EndIf
+        \EndIf
+    \EndFor
+\EndWhile
+\State \textbf{return} $W$
+\end{algorithmic}
+\end{algorithm}

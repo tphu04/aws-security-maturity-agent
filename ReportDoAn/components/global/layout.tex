@@ -1,0 +1,133 @@
+% !TEX root = ../../main.tex
+
+% --- KHÔNG ĐƯỢC CÓ LỆNH \documentclass Ở ĐÂY ---
+
+% --- 1. CÁC GÓI CƠ BẢN & ĐỊNH DẠNG ---
+\usepackage{amssymb,epsfig,latexsym,array,hhline,fancyhdr} 
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{tabularray}
+\usepackage{vntex}            % Hỗ trợ tiếng Việt
+\usepackage{makecell}
+\usepackage{changepage}
+\usepackage{indentfirst}      % Thụt đầu dòng đoạn văn đầu tiên
+\usepackage{algpseudocode}
+\usepackage{pifont}
+\newcommand{\xmark}{\ding{55}} % Định nghĩa dấu X-mark
+
+\usepackage{parskip}          % Tạo khoảng cách giữa các đoạn văn
+\usepackage{pgfgantt}         % Vẽ biểu đồ Gantt
+
+% --- 2. QUẢN LÝ TÀI LIỆU THAM KHẢO ---
+\usepackage{biblatex}
+\addbibresource{ref.bib}
+
+% --- 3. MÀU SẮC & CODE ---
+\usepackage[smartEllipses]{markdown}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{fvextra}
+\usepackage{tcolorbox}
+\usepackage{xcolor,colortbl}
+
+% Định nghĩa màu
+\definecolor{barblue}{RGB}{153,204,254}
+\definecolor{groupblue}{RGB}{51,102,254}
+\definecolor{linkred}{RGB}{165,0,33}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{xam}{rgb}{0.95, 0.95, 0.95}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{lightblue}{rgb}{0.8, 0.35, 0.9}
+\definecolor{light-gray}{gray}{0.92}  
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+
+% Style cho code
+\lstdefinestyle{mystyle}{
+  language=python,
+  backgroundcolor=\color{light-gray}, 
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+\lstset{style=mystyle}
+
+% --- 4. CẤU HÌNH TRANG (GEOMETRY) ---
+\usepackage{geometry} 
+\usepackage[Bjornstrup]{fncychap}
+
+% Các gói phụ trợ khác
+\usepackage[makeroom]{cancel}
+\usepackage{nicefrac}
+\usepackage{multicol,longtable,amscd}
+\usepackage{diagbox}
+\usepackage{booktabs}
+\usepackage{alltt}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds,calc}
+\usepackage{caption}
+\usepackage{lastpage}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{setspace}
+
+\usepackage[hidelinks]{hyperref}
+
+% --- 5. ĐỊNH NGHĨA LAYOUT CHÍNH (THESIS LAYOUT) ---
+\def\thesislayout{
+	\geometry{
+		a4paper,
+		total={160mm,240mm}, 
+		left=30mm,
+		top=30mm,
+        bottom=25mm,
+        right=20mm
+	}
+}
+\thesislayout
+
+% --- 6. CÁC THIẾT LẬP KHÁC ---
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesection{\thechapter.\arabic{section}}
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\usepackage{algorithm}
+\sloppy
+\captionsetup[figure]{labelfont={small,bf},textfont={small},belowskip=-1pt,aboveskip=-9pt}
+\captionsetup[table]{labelfont={small,bf},textfont={small},belowskip=-1pt,aboveskip=7pt}
+
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}

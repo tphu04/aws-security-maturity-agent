@@ -1,0 +1,205 @@
+\chapter{Giới thiệu}
+% \label{chap:intro}
+
+\section{Động lực nghiên cứu}
+% \label{sec:motivation}
+
+Sự bùng nổ của điện toán đám mây, đặc biệt là nền tảng Amazon Web Services (AWS), đã mang lại khả năng mở rộng và linh hoạt chưa từng có cho các doanh nghiệp. Tuy nhiên, đi cùng với lợi ích đó là sự gia tăng phức tạp về quản trị hạ tầng và đảm bảo an ninh: số lượng dịch vụ, tài nguyên và tham số cấu hình tăng nhanh theo quy mô triển khai, dẫn đến rủi ro cấu hình sai (misconfiguration) trở thành một trong những nguyên nhân hàng đầu của các sự cố bảo mật đám mây~\cite{gartner_cspm}.
+
+Để giải bài toán này một cách có hệ thống, các tổ chức tiêu chuẩn và nhà cung cấp đã định nghĩa khái niệm \textit{Mức độ Trưởng thành Bảo mật Đám mây} (Cloud Security Maturity) --- biểu thị mức độ hoàn thiện của hệ thống quản trị bảo mật từ trạng thái phản ứng thụ động đến vận hành chủ động và liên tục cải tiến. Các khung tham chiếu phổ biến bao gồm \textit{AWS Security Maturity Model}~\cite{aws_smm} và \textit{CIS AWS Foundations Benchmarks}~\cite{cis_aws_foundations}, đóng vai trò định hướng đánh giá năng lực bảo mật theo nhóm khả năng (capability) và các giai đoạn trưởng thành.
+
+Trong thực tế vận hành, các công cụ đánh giá tư thế bảo mật đám mây (Cloud Security Posture Management --- CSPM) hiện nay như Prowler~\cite{prowler} hay ScoutSuite~\cite{scoutsuite} đóng vai trò quan trọng trong việc phát hiện cấu hình sai. Mặc dù mạnh mẽ trong việc chỉ ra sai sót kỹ thuật, đầu ra của các công cụ này thường dừng lại ở báo cáo dạng văn bản hoặc dữ liệu thô (JSON, CSV). Điều này tạo ra gánh nặng lớn cho các kỹ sư vận hành, khi họ phải thủ công phân tích từng cảnh báo, đối chiếu tài liệu và tự thực hiện các thao tác sửa lỗi (remediation) lặp đi lặp lại.
+
+Trong khi đó, các Mô hình Ngôn ngữ Lớn (Large Language Models --- LLM) đã chứng minh khả năng hiểu và xử lý ngôn ngữ tự nhiên ở mức cao, mở ra cơ hội tự động hoá các tác vụ phân tích phức tạp~\cite{zhao2023survey}. Tuy nhiên, nếu chỉ sử dụng LLM như một công cụ tư vấn (chatbot) thụ động thì chưa đủ để giải quyết bài toán vận hành thực tế, vì LLM khi đó thiếu khả năng tương tác trực tiếp với môi trường để thực thi hành động.
+
+Để thu hẹp khoảng cách giữa ``phát hiện lỗi'' và ``xử lý lỗi'' trong vận hành CSPM, đồ án này đề xuất nghiên cứu và xây dựng một hệ thống \textbf{Tác tử AI Tự hành} (Autonomous AI Agent) hoạt động theo mô hình \textit{tự động hoá có giám sát} (assisted automation): hệ thống tự động thực thi các hành động khắc phục thuộc lớp an toàn (low-blast-radius, có thể đảo ngược), đồng thời bắt buộc Human-in-the-Loop cho các thao tác có rủi ro cao hoặc cần xác thực vật lý. Cách tiếp cận này phối hợp các tác tử chuyên biệt theo chu trình PDCA (Plan--Do--Check--Act)~\cite{deming1986pdca}, kết hợp với kỹ thuật truy hồi tăng cường sinh (Retrieval-Augmented Generation --- RAG)~\cite{lewis2020rag} để bổ sung tri thức chuyên môn và giảm thiểu hiện tượng hallucination khi sinh đề xuất khắc phục.
+
+Thông qua việc tự động hoá có kiểm soát các bước đánh giá, khắc phục và xác minh, hướng tiếp cận này hướng tới việc chuyển hoá quy trình bảo mật đám mây từ mô hình thụ động phụ thuộc thao tác thủ công sang mô hình chủ động, có tính lặp lại và minh bạch trong báo cáo.
+
+
+\section{Mục tiêu nghiên cứu}
+
+Mục tiêu chính của đồ án là \textbf{thiết kế, hiện thực và đánh giá} một hệ thống Tác tử AI Tự hành cho đánh giá mức độ trưởng thành bảo mật và khắc phục có giám sát trên nền tảng AWS. Hệ thống được xây dựng dựa trên mô hình \textbf{điều phối tác vụ thông minh} (agentic workflow) kết hợp với kỹ thuật \textbf{Gọi công cụ} (Tool Calling)~\cite{schick2023toolformer,yao2023react} --- cơ chế cho phép mô hình ngôn ngữ gọi các công cụ bên ngoài (như AWS CLI hay Boto3) để thực thi hành động trực tiếp trên hạ tầng, thay vì chỉ sinh văn bản tư vấn. Nhờ đó, hệ thống có thể liên kết mô hình ngôn ngữ với các công cụ kiểm tra và khắc phục bảo mật thực tế.
+
+Trên cơ sở đó, đồ án hướng tới các mục tiêu cụ thể sau:
+
+\begin{itemize}
+    \item Xây dựng \textbf{kiến trúc điều phối tác vụ thông minh theo chu trình PDCA} cho miền CSPM, tổ chức các hoạt động đánh giá – khắc phục – xác minh thành chu trình khép kín có quản lý trạng thái tập trung.
+
+    \item Thiết kế \textbf{cơ chế đánh giá rủi ro và sinh đề xuất khắc phục dựa trên tri thức}, kết hợp giữa quy tắc đối chiếu chuẩn (rule-based) và suy luận của mô hình ngôn ngữ có ngữ cảnh từ RAG, nhằm giảm hiện tượng hallucination và tăng độ tin cậy của đầu ra.
+
+    \item Thiết kế \textbf{cơ chế Human-in-the-Loop} cho các hành động khắc phục, phân loại theo mức độ rủi ro và khả năng đảo ngược, đảm bảo nguyên tắc least-privilege và tính truy vết của toàn bộ quyết định.
+
+    \item \textbf{Hiện thực và đánh giá} hệ thống thực nghiệm trên nền tảng AWS, qua đó kiểm chứng tính khả thi của hướng tiếp cận và xác định các giới hạn của giải pháp đề xuất.
+\end{itemize}
+
+\subsection*{Câu hỏi nghiên cứu}
+\label{subsec:research-questions}
+
+Để định hướng quá trình thiết kế và đánh giá, đồ án đặt ra các câu hỏi nghiên cứu sau:
+
+\begin{itemize}
+    \item \textbf{RQ1 (Khép kín chu trình PDCA):} Có thể xây dựng một tác tử AI khép kín chu trình CSPM trên AWS — phát hiện $\to$ đánh giá $\to$ khắc phục $\to$ xác minh — một cách nhất quán và lặp lại được hay không?
+
+    \item \textbf{RQ2 (Độ tin cậy của đánh giá rủi ro):} Tác tử AI có cho ra kết quả đánh giá rủi ro CSPM đáng tin cậy hơn so với cách chấm điểm rule-only truyền thống hay không?
+
+    \item \textbf{RQ3 (Ngữ cảnh chuyên ngành):} Việc đưa truy hồi tri thức vào pipeline có cải thiện chất lượng đầu ra ở các bước cần ngữ cảnh CSPM chuyên ngành hay không?
+
+    \item \textbf{RQ4 (An toàn vận hành):} Có thể bảo đảm an toàn vận hành cho remediation tự động khi tác tử có quyền ghi cấu hình AWS thật hay không?
+
+    \item \textbf{RQ5 (Khả thi trên hạ tầng hạn chế):} Hệ thống có khả thi trên hạ tầng tài nguyên hạn chế và bảo đảm tính riêng tư của dữ liệu cấu hình hay không?
+\end{itemize}
+
+Phương pháp đo và kết quả định lượng cho từng câu hỏi được trình bày chi tiết ở Chương~6.
+
+
+\section{Phạm vi nghiên cứu}
+\label{sec:scope}
+
+Đồ án tập trung vào nghiên cứu và phát triển một hệ thống tự động hoá Quản lý Tư thế Bảo mật Đám mây (CSPM) dành riêng cho nền tảng AWS, vận hành theo mô hình cải tiến liên tục PDCA. Phạm vi được xác định theo nguyên tắc \textit{phủ rộng ở khâu đánh giá, đi sâu ở khâu khắc phục} — phù hợp với định hướng proof-of-concept của một luận văn tốt nghiệp.
+
+\begin{itemize}
+    \item \textbf{Đối tượng nghiên cứu:} các dịch vụ cốt lõi của AWS được sử dụng phổ biến trong môi trường doanh nghiệp. Khâu đánh giá tư thế bảo mật và xây dựng tri thức bao phủ các domain bảo mật chính theo các khung tham chiếu công nghiệp (Data Protection, Identity \& Access, Logging \& Monitoring, Resilience), trong khi khâu khắc phục tự động được tập trung minh chứng trên Amazon Simple Storage Service (S3) — đại diện cho lớp lưu trữ dữ liệu, một trong những bề mặt rủi ro phổ biến nhất của môi trường đám mây.
+
+    \item \textbf{Mô hình ngôn ngữ:} đồ án sử dụng một mô hình ngôn ngữ nhỏ chạy cục bộ (local inference) nhằm bảo vệ tính riêng tư của dữ liệu cấu hình AWS, tránh việc gửi thông tin nhạy cảm tới các dịch vụ LLM bên thứ ba. Lựa chọn cụ thể về mô hình, mức lượng tử hoá và nền tảng suy luận được trình bày ở Chương~2 và Chương~3.
+
+    \item \textbf{Thành phần hệ thống:}
+    \begin{itemize}
+        \item \textit{Cơ sở tri thức (Knowledge Base):} tích hợp kỹ thuật truy hồi tăng cường sinh (RAG) nhằm bổ sung tri thức chuyên biệt và giảm hiện tượng hallucination khi sinh đề xuất khắc phục.
+        \item \textit{Giao diện người dùng (User Interface):} cung cấp giao diện đồ hoạ cơ bản, song song với giao diện dòng lệnh (CLI) và các điểm cuối API.
+    \end{itemize}
+
+    \item \textbf{Kiến trúc điều phối tác vụ:} hệ thống được thiết kế theo hướng \textit{agentic workflow} dựa trên đồ thị trạng thái có điều phối tập trung. Ở mức ý tưởng, hệ thống bao gồm các năng lực: phân tích yêu cầu người dùng và lập kế hoạch kiểm toán; quét cấu hình AWS qua các công cụ tiêu chuẩn; đánh giá rủi ro của các phát hiện (findings); đề xuất và thực thi khắc phục có giám sát của con người (Human-in-the-Loop) tại các điểm phê duyệt nhạy cảm; tổng hợp và kết xuất báo cáo. Chi tiết về kiến trúc thành phần, sơ đồ luồng và cơ chế điều phối được trình bày ở Chương~4.
+
+    \item \textbf{Giới hạn nghiên cứu (Exclusions):} trong khuôn khổ nghiên cứu hiện tại, đồ án \textbf{không} bao gồm:
+    \begin{itemize}
+        \item Khả năng hỗ trợ đa nền tảng đám mây (multi-cloud) như Microsoft Azure hay Google Cloud Platform.
+        \item Tinh chỉnh chuyên biệt (fine-tuning) mô hình ngôn ngữ trên tập dữ liệu CSPM riêng.
+        \item Phát hiện mối đe doạ thời gian thực (real-time threat hunting) dựa trên dòng sự kiện log của hạ tầng.
+        \item Triển khai trên môi trường production: thực nghiệm được thực hiện trên môi trường sandbox biệt lập; phân tích threats-to-validity được trình bày ở Chương~6.
+    \end{itemize}
+\end{itemize}
+
+Tổng quan, định hướng đề tài tập trung phát triển quy trình xử lý phía Backend, kiến trúc điều phối các thành phần chức năng và độ tin cậy của các bước phát hiện – đánh giá – khắc phục cấu hình sai trên AWS; phần giao diện người dùng được giữ ở mức cơ bản, đủ minh hoạ luồng vận hành.
+
+
+\section{Đóng góp của nghiên cứu}
+\label{sec:contributions}
+
+Khác với phần lớn các công trình hiện có trong miền CSPM tập trung chủ yếu vào phát hiện cấu hình sai hoặc giám sát tuân thủ, đồ án này nhấn mạnh việc \textit{tổ chức toàn bộ quá trình quản lý bảo mật như một chu trình khép kín}, đồng thời tích hợp các tác tử AI có khả năng suy luận trên tri thức chuyên môn để hỗ trợ ra quyết định.
+
+Cụ thể, đồ án có các đóng góp nghiên cứu chính như sau:
+
+\begin{itemize}
+    \item \textbf{Đề xuất mô hình agentic-PDCA cho CSPM:} tổ chức các hoạt động đánh giá – khắc phục – xác minh trên đám mây thành một chu trình khép kín, với cơ chế quản lý trạng thái tập trung và các điểm phê duyệt người-dùng-trong-vòng-lặp đặt tại các vị trí có rủi ro cao. Cách tiếp cận này khác biệt với các giải pháp CSPM truyền thống ở chỗ tích hợp đầy đủ pha xác minh hậu khắc phục và khả năng lặp lại quy trình.
+
+    \item \textbf{Đề xuất kiến trúc đánh giá rủi ro hai vòng (Two-Pass Risk Evaluation):} tách bạch pha rule-based rubric (định lượng rủi ro theo các thuộc tính khách quan của finding) khỏi pha LLM judgment có ngữ cảnh RAG (hiệu chỉnh dựa trên tri thức chuyên môn), nhằm giảm phương sai khi mô hình ngôn ngữ phải xử lý đồng thời nhiều tín hiệu không hoàn toàn nhất quán.
+
+    \item \textbf{Đề xuất kiến trúc Multi-Query Hybrid RAG cho miền CSPM:} kết hợp truy hồi từ khoá và truy hồi ngữ nghĩa với cơ chế reranking, đồng thời sinh đa truy vấn theo các trục nghiệp vụ – nguyên-nhân-gốc – khắc phục, để cung cấp ngữ cảnh chuyên môn phù hợp cho các tác tử downstream. Cấu hình này phù hợp với đặc thù miền CSPM, nơi truy vấn có thể là định danh chính xác (check ID), mô tả ngôn ngữ tự nhiên hoặc tiếng Việt.
+
+    \item \textbf{Đề xuất mô hình Human-in-the-Loop gate dựa trên phân loại hành động theo mức rủi ro:} phân loại các hành động khắc phục theo blast-radius và khả năng đảo ngược ngay từ thời điểm thiết kế, thay vì để mô hình ngôn ngữ quyết định tại runtime. Cơ chế default-safe đảm bảo khi LLM không đủ chắc chắn, hệ thống mặc định chuyển sang nhánh phê duyệt thủ công.
+
+    \item \textbf{Hiện thực hệ thống thực nghiệm và bộ khung đánh giá định lượng đa trục:} hiện thực giải pháp đề xuất trên nền tảng AWS với mô hình ngôn ngữ cục bộ, đồng thời thiết lập khung đánh giá định lượng cho các thành phần truy hồi tri thức và sinh nội dung, làm cơ sở kiểm chứng các câu hỏi nghiên cứu đã đặt ra.
+\end{itemize}
+
+\subsection*{Định vị hướng tiếp cận của nghiên cứu}
+\label{subsec:positioning}
+
+Bảng~\ref{tab:design-positioning} trình bày sự khác biệt về \textit{định hướng thiết kế và phạm vi chức năng} giữa hướng tiếp cận của đồ án và các nhóm giải pháp phổ biến hiện nay. Việc so sánh nhằm làm rõ vị trí của hệ thống đề xuất trong không gian thiết kế, \textbf{không nhằm mục đích so sánh hiệu năng định lượng} (kết quả định lượng được trình bày ở Chương~6).
+
+\begin{table}[!htb]
+  \centering
+  \caption{Định vị hướng tiếp cận của nghiên cứu so với các giải pháp phổ biến}
+  \label{tab:design-positioning}
+  \small
+  \begin{tabular}{|p{2.8cm}|p{2.4cm}|p{2.6cm}|p{2.6cm}|p{2.8cm}|}
+    \hline
+    \textbf{Tiêu chí thiết kế} &
+    \textbf{Công cụ quét bảo mật} &
+    \textbf{CSPM truyền thống} &
+    \textbf{SOAR / Playbook tự động} &
+    \textbf{Hệ thống đề xuất} \\ \hline
+
+    Mục tiêu chính &
+    Phát hiện cấu hình sai &
+    Giám sát tuân thủ và rủi ro &
+    Tự động hoá phản hồi sự cố &
+    Đánh giá theo chu trình + khắc phục có giám sát \\ \hline
+
+    Chu trình xử lý &
+    Một-shot &
+    Một phần &
+    Theo playbook tĩnh &
+    Khép kín theo PDCA \\ \hline
+
+    Khắc phục tự động &
+    Không &
+    Hạn chế &
+    Theo kịch bản định nghĩa trước &
+    Có giám sát, phân loại theo rủi ro \\ \hline
+
+    Xác minh hậu khắc phục &
+    Không &
+    Hạn chế &
+    Tuỳ playbook &
+    Có \\ \hline
+
+    Tri thức bổ sung &
+    Không &
+    Tập luật tĩnh &
+    Tập playbook &
+    RAG đa truy vấn \\ \hline
+
+    Mức tự hành &
+    Thấp &
+    Trung bình &
+    Trung bình--Cao (theo playbook) &
+    Có giám sát (assisted) \\ \hline
+  \end{tabular}
+\end{table}
+
+\subsection*{Khoảng trống nghiên cứu}
+
+Từ phân tích các công trình và giải pháp liên quan (chi tiết ở Chương~3), có thể nhận thấy phần lớn nghiên cứu hiện tại vẫn tập trung vào từng khía cạnh riêng lẻ. Các công cụ quét và giải pháp CSPM dừng ở mức phát hiện hoặc giám sát tuân thủ; các giải pháp SOAR tự động hoá phản hồi nhưng dựa trên kịch bản tĩnh, thiếu khả năng suy luận trên tri thức chuyên môn; các công trình về tác tử LLM cho an ninh mạng còn ít nghiên cứu tổ chức được toàn bộ chu trình PDCA khép kín cho miền CSPM với cơ chế xác minh hậu khắc phục.
+
+Hiện vẫn thiếu một phương pháp tiếp cận có khả năng \textit{tích hợp năng lực suy luận của LLM với chu trình quản lý bảo mật khép kín}, cân bằng giữa tự động hoá và an toàn vận hành, đồng thời đảm bảo độ tin cậy của đầu ra thông qua tri thức chuyên môn được kiểm chứng. Nghiên cứu này nhằm lấp đầy khoảng trống đó thông qua việc đề xuất và hiện thực hoá một phương pháp tiếp cận dựa trên chu trình PDCA và các tác tử AI chuyên biệt.
+
+\subsection*{Thử thách kỹ thuật và ánh xạ tới đóng góp}
+
+Việc lấp đầy khoảng trống nêu trên đặt ra bốn thử thách kỹ thuật cốt lõi; mỗi thử thách được ánh xạ trực tiếp tới một đóng góp đã liệt kê ở §\ref{sec:contributions}, tránh trùng lặp giữa các mục:
+
+\begin{itemize}
+    \item \textbf{Điều phối quy trình bảo mật theo chu trình khép kín} --- các hoạt động đánh giá, khắc phục và xác minh vốn rời rạc trong thực tế; tổ chức thành chu trình nhất quán, không mất ngữ cảnh và lặp lại được đòi hỏi cơ chế quản lý trạng thái phù hợp. Được giải quyết bằng \textit{mô hình agentic-PDCA} với trạng thái dùng chung tập trung.
+
+    \item \textbf{Độ tin cậy của suy luận trên tri thức chuyên môn} --- LLM có xu hướng hallucinate trên thuật ngữ CSPM hoặc khi ngữ cảnh không đủ rõ. Được giải quyết bằng \textit{Two-Pass Risk Evaluation} kết hợp \textit{Multi-Query Hybrid RAG} để tách rule-based khỏi LLM judgment.
+
+    \item \textbf{Kiểm soát an toàn của hành động khắc phục tự động} --- các thao tác khắc phục có thể ảnh hưởng trực tiếp đến hệ thống đang vận hành. Được giải quyết bằng \textit{mô hình HITL gate phân loại theo blast-radius} ngay tại thời điểm thiết kế tool.
+
+    \item \textbf{Giới hạn tài nguyên của môi trường suy luận cục bộ} --- ràng buộc riêng tư đòi hỏi LLM chạy cục bộ trên phần cứng cá nhân tầm trung. Được giải quyết bằng lựa chọn SLM nhỏ ($\le$ 4B tham số, lượng tử hoá Q4) kết hợp tối ưu prompt và cửa sổ ngữ cảnh.
+\end{itemize}
+
+Chi tiết thiết kế cho từng thành phần được trình bày ở Chương~4; kết quả kiểm chứng định lượng cho các thử thách 2 và 3 được trình bày ở Chương~6.
+
+
+\section{Cấu trúc báo cáo}
+
+\textbf{Chương 1. Giới thiệu.}
+Chương này giới thiệu động lực, mục tiêu, câu hỏi nghiên cứu, phạm vi và đóng góp của đồ án. Nội dung tập trung vào các thách thức trong quản trị tư thế bảo mật đám mây (CSPM) và đề xuất hướng tiếp cận tự động hoá có giám sát dựa trên chu trình PDCA và tác tử AI.
+
+\textbf{Chương 2. Cơ sở lý thuyết.}
+Chương này trình bày các khung lý thuyết và khái niệm nền tảng làm tiền đề cho thiết kế hệ thống, bao gồm: Mô hình ngôn ngữ lớn (LLM) và Mô hình ngôn ngữ nhỏ (SLM); kỹ thuật truy hồi tăng cường sinh (RAG) trên cơ sở dữ liệu vector; hệ tác tử dựa trên đồ thị trạng thái (agentic workflow); chu trình quản lý chất lượng PDCA; và các khái niệm cốt lõi về bảo mật AWS.
+
+\textbf{Chương 3. Công trình và Công cụ liên quan.}
+Chương này khảo sát các công trình nghiên cứu cùng lĩnh vực CSPM và các tác tử LLM cho an ninh mạng, đồng thời giới thiệu các công cụ tích hợp được sử dụng trong đồ án. Nội dung kết thúc bằng phần định vị đề tài trong không gian thiết kế hiện có.
+
+\textbf{Chương 4. Phương pháp tiếp cận.}
+Chương này trình bày chi tiết giải pháp đề xuất ở mức thiết kế: kiến trúc tổng thể của hệ thống, sơ đồ điều phối các thành phần chức năng theo mô hình PDCA, chiến lược nhận diện ý định người dùng, cơ chế quản lý trạng thái tập trung và thiết kế truy hồi lai (Hybrid RAG) phục vụ mô-đun đánh giá rủi ro.
+
+\textbf{Chương 5. Hiện thực hệ thống.}
+Chương này trình bày quá trình hiện thực hệ thống, bao gồm: lớp API trung gian bao bọc các công cụ Cloud-native; hiện thực các thành phần chức năng theo đồ thị trạng thái; dịch vụ chatbot và điều phối phiên chạy; cấu trúc bộ nhớ tập trung và cơ chế bền vững hoá trạng thái; mô-đun sinh báo cáo; giao diện người dùng (Frontend); và lớp quan sát vận hành (observability).
+
+\textbf{Chương 6. Thực nghiệm và Đánh giá.}
+Chương này thiết lập khung đánh giá định lượng cho hệ thống thông qua các nhóm thực nghiệm: chất lượng truy hồi của hệ RAG; năng lực sinh phản hồi của mô hình ngôn ngữ; độ chính xác lập kế hoạch và nhận diện ý định; hiệu năng end-to-end của chu trình PDCA trên môi trường AWS Sandbox; và đánh giá độ ổn định cũng như các giới hạn của hệ thống.
+
+\textbf{Chương 7. Kết luận và Hướng phát triển.}
+Chương cuối đối chiếu kết quả đạt được với các câu hỏi nghiên cứu, tóm lược các đóng góp chính cùng các vị trí có bằng chứng tương ứng trong báo cáo, phân tích các hạn chế của đồ án trên cả phương diện kiến trúc và thực nghiệm, và đề xuất các hướng phát triển được phân nhóm theo độ trưởng thành.

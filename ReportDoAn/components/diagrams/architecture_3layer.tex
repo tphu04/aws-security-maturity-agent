@@ -1,0 +1,114 @@
+% =====================================================================
+% B1: Sơ đồ kiến trúc 3 lớp Frontend ↔ Backend ↔ {Scanner API, RAG API, Ollama}
+% Cách dùng: \input{components/diagrams/architecture_3layer}
+% Yêu cầu preamble: \usepackage{tikz} + \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+% =====================================================================
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      node distance=10mm and 12mm,
+      every node/.style={font=\small\sffamily},
+      layer/.style={
+        rectangle, rounded corners=4pt, draw=black!50, very thick,
+        minimum width=140mm, minimum height=22mm,
+        align=center
+      },
+      comp/.style={
+        rectangle, rounded corners=2pt, draw=black!60, thick,
+        minimum width=28mm, minimum height=12mm,
+        align=center, fill=white
+      },
+      ext/.style={
+        rectangle, rounded corners=2pt, draw=gray!70, dashed, thick,
+        minimum width=28mm, minimum height=12mm,
+        align=center, fill=gray!10
+      },
+      datastore/.style={
+        cylinder, draw=black!60, thick, aspect=0.3,
+        shape border rotate=90, minimum width=18mm, minimum height=12mm,
+        align=center, fill=yellow!15
+      },
+      flow/.style={-Stealth, thick, draw=black!70},
+      label/.style={font=\scriptsize\ttfamily, text=black!70}
+    ]
+
+    % ===== LAYER 1: FRONTEND =====
+    \node[comp, fill=blue!8] (chat) {ChatWindow};
+    \node[comp, fill=blue!8, right=of chat] (timeline) {GraphTimeline};
+    \node[comp, fill=blue!8, right=of timeline] (evidence) {EvidenceCard\\\&\,ToolTracePanel};
+    \node[comp, fill=blue!8, right=of evidence] (settings) {SettingsView};
+
+    \begin{scope}[on background layer]
+      \node[layer, fill=blue!4,
+            fit=(chat)(timeline)(evidence)(settings),
+            label={[font=\bfseries\small, anchor=west]north west:\hspace{2mm}Frontend (React 18 + Vite + Tailwind + Radix)}]
+            (frontend) {};
+    \end{scope}
+
+    % ===== LAYER 2: BACKEND ORCHESTRATOR =====
+    \node[comp, fill=green!10, below=22mm of chat] (chatapi) {Chatbot API\\\scriptsize\texttt{/v1/runs}};
+    \node[comp, fill=green!10, right=of chatapi] (graphrt) {graph\_runtime\\\scriptsize daemon thread};
+    \node[comp, fill=green!10, right=of graphrt] (langgraph) {LangGraph\\\scriptsize 13 nodes};
+    \node[comp, fill=green!10, right=of langgraph] (agents) {Agents\\\scriptsize Plan/Risk/\\Remediate/Report};
+
+    \begin{scope}[on background layer]
+      \node[layer, fill=green!4,
+            fit=(chatapi)(graphrt)(langgraph)(agents),
+            label={[font=\bfseries\small, anchor=west]north west:\hspace{2mm}Backend Orchestrator (FastAPI + LangGraph, port 8000)}]
+            (backend) {};
+    \end{scope}
+
+    % ===== LAYER 3: SERVICES =====
+    \node[comp, fill=orange!12, below=20mm of chatapi] (scanner) {Scanner API\\\scriptsize Prowler subprocess};
+    \node[comp, fill=orange!12, right=of scanner] (rag) {RAG Service\\\scriptsize port 9005};
+    \node[ext, right=of rag] (ollama) {Ollama\\\scriptsize Gemma 3 4B Q4};
+    \node[ext, right=of ollama] (aws) {AWS APIs\\\scriptsize boto3 / IAM / S3};
+
+    \begin{scope}[on background layer]
+      \node[layer, fill=orange!4,
+            fit=(scanner)(rag)(ollama)(aws),
+            label={[font=\bfseries\small, anchor=west]north west:\hspace{2mm}Services \& External}]
+            (services) {};
+    \end{scope}
+
+    % ===== DATA STORES =====
+    \node[datastore, below=12mm of scanner.south, xshift=-8mm] (jobsdb) {jobs.db\\\scriptsize SQLite};
+    \node[datastore, right=8mm of jobsdb] (ckpt) {checkpoints\\\scriptsize SqliteSaver};
+    \node[datastore, right=8mm of ckpt] (chroma) {Chroma\\\scriptsize vector DB};
+    \node[datastore, right=8mm of chroma] (bm25) {BM25 idx\\\scriptsize pickle};
+    \node[ext, right=18mm of bm25] (langfuse) {Langfuse\\\scriptsize observability};
+
+    % ===== FLOWS =====
+    % Frontend → Backend
+    \draw[flow] (chat.south) -- (chatapi.north) node[label, midway, right]{HTTP/JSON};
+    \draw[flow] (timeline.south) |- ($(graphrt.north)+(0,3mm)$);
+    \draw[flow] (evidence.south) |- ($(langgraph.north)+(0,3mm)$);
+    \draw[flow] (settings.south) -- (agents.north);
+
+    % Within backend
+    \draw[flow] (chatapi) -- (graphrt);
+    \draw[flow] (graphrt) -- (langgraph);
+    \draw[flow] (langgraph) -- (agents);
+
+    % Backend → Services
+    \draw[flow] (agents.south) |- ++(0,-3mm) -| (scanner.north)
+      node[label, near end, right]{scan job};
+    \draw[flow] (agents.south) -- (rag.north) node[label, midway, right]{retrieve};
+    \draw[flow] (agents.south) -- (ollama.north) node[label, midway, right]{LLM call};
+    \draw[flow] (agents.south) -| (aws.north) node[label, near end, right]{remediate};
+
+    % Services → Data
+    \draw[flow] (scanner) -- (jobsdb);
+    \draw[flow] (graphrt.south) |- ++(0,-15mm) -| (ckpt.north);
+    \draw[flow] (rag) -- (chroma);
+    \draw[flow] (rag.south) |- ++(0,-2mm) -| (bm25.north);
+
+    % Observability (cross-cutting dashed)
+    \draw[flow, dashed, draw=purple!70] (agents.east) -- ++(8mm,0) |- (langfuse.east)
+      node[label, near end, above]{traces};
+
+  \end{tikzpicture}
+  \vspace{10mm}
+  \caption{Kiến trúc 3 lớp của hệ thống. Frontend giao tiếp HTTP/JSON với Backend Orchestrator; Backend điều phối các Agent gọi vào Scanner API (Prowler subprocess), RAG Service (port 9005), Ollama (mô hình Gemma 3) và AWS APIs (boto3). Lớp dữ liệu gồm SQLite cho jobs/checkpoints, ChromaDB cho vector index, và pickle cho BM25 index. Langfuse hoạt động cross-cutting để thu thập trace.}
+  \label{fig:architecture_3layer}
+\end{figure}

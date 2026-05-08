@@ -1,0 +1,75 @@
+% =====================================================================
+% Sơ đồ logic 6-tầng kiến trúc RAG
+% Cách dùng: \input{components/diagrams/rag_logic}
+% Yêu cầu preamble: tikz + arrows.meta, positioning, shapes.geometric, fit, calc
+% =====================================================================
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\footnotesize\sffamily,
+      tier/.style    ={rectangle, rounded corners=3pt, draw=black!60, very thick,
+                       minimum width=38mm, minimum height=14mm, align=center,
+                       text width=36mm},
+      offline/.style ={tier, fill=orange!12, draw=orange!70!black},
+      online/.style  ={tier, fill=blue!10,   draw=blue!70!black},
+      post/.style    ={tier, fill=green!12,  draw=green!60!black},
+      store/.style   ={rectangle, rounded corners=2pt, draw=black!60,
+                       very thick, fill=gray!15, minimum width=26mm, minimum height=10mm,
+                       align=center, font=\scriptsize},
+      io/.style      ={rectangle, rounded corners=2pt, draw=black!60, very thick,
+                       fill=yellow!20, minimum width=24mm, minimum height=10mm,
+                       align=center, font=\scriptsize},
+      flow/.style    ={-{Latex[length=2mm]}, thick}
+    ]
+
+    % ---- Tọa độ thiết kế ----
+    % bm25 tại x=4.0, vec tại x=7.0  →  trung điểm = 5.5
+    % st và ri đều tại x=5.5 (căn giữa hai store)
+    % Hai mũi tên từ st.south (cùng gốc) xuống bm25/vec
+    % Hai mũi tên từ bm25/vec.south xuống ri.north (cùng đích)
+
+    % ---- Row 1 (Offline): y=3.0 ----
+    \node[io]      (raw)   at (-5.5,  3.0) {Raw docs\\Prowler, AWS};
+    \node[offline] (ke)    at ( 0,    3.0) {1. Knowledge\\Engineering};
+    \node[offline] (st)    at ( 5.5,  3.0) {2. Storage\\(Embedding + Index)};
+
+    % ---- Stores: y=1.2, giữa Storage và RI ----
+    \node[store]   (bm25)  at ( 4.0,  1.2) {BM25 Index};
+    \node[store]   (vec)   at ( 7.0,  1.2) {Chroma Vector DB};
+
+    % ---- Row 2 (Online): y=-0.5 ----
+    \node[io]      (agent) at (-5.5, -0.5) {Agent query};
+    \node[online]  (q)     at ( 0,   -0.5) {3. Query\\Analysis};
+    \node[online]  (ri)    at ( 5.5, -0.5) {4. Retrieval\\Intelligence};
+
+    % ---- Row 3 (Post): y=-3.0, cc thẳng dưới ri ----
+    \node[post]    (cc)    at ( 5.5, -3.0) {5. Context\\Construction};
+    \node[post]    (gen)   at ( 0,   -3.0) {6. Agentic\\Generation};
+    \node[io]      (out)   at (-5.5, -3.0) {Strict JSON\\to Agent};
+
+    % ---- Flows offline ----
+    \draw[flow] (raw) -- (ke);
+    \draw[flow] (ke)  -- (st);
+    % Hai mũi tên cùng GỐC tại st.south, tỏa ra hai phía
+    \draw[flow] (st.south) -- (bm25.north);
+    \draw[flow] (st.south) -- (vec.north);
+
+    % ---- Flows online ----
+    \draw[flow] (agent) -- (q);
+    \draw[flow] (q.east) -- (ri.west);
+    % Hai mũi tên cùng ĐÍCH tại ri.north, hội tụ từ hai phía
+    \draw[flow] (bm25.south) -- (ri.north);
+    \draw[flow] (vec.south)  -- (ri.north);
+
+    % ---- Flows post ----
+    \draw[flow] (ri.south)  -- (cc.north);
+    \draw[flow] (cc.west)   -- (gen.east);
+    \draw[flow] (gen.west)  -- (out.east);
+
+  \end{tikzpicture}%
+  }
+  \vspace{8pt}
+  \caption{Sơ đồ logic 6 tầng kiến trúc RAG: pha \textit{offline} (1--2) tạo và đánh chỉ mục tri thức; pha \textit{online} (3--4) phân tích truy vấn và truy xuất lai BM25 + Vector + RRF + Reranker; pha \textit{post-processing} (5--6) đóng gói ngữ cảnh và sinh kết quả cho từng agent tiêu thụ.}
+  \label{fig:rag_logic}
+\end{figure}

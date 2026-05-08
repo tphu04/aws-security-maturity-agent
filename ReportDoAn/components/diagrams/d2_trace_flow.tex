@@ -1,0 +1,88 @@
+% =====================================================================
+% D2: Sơ đồ trajectory điển hình của 1 phiên PDCA broad-scan.
+% Mỗi node được gán mean (± std) thời gian từ 5 phiên D1.
+% Cách dùng: \input{components/diagrams/d2_trace_flow}
+% Yêu cầu preamble: \usepackage{tikz}
+%                  + \usetikzlibrary{arrows.meta,positioning,fit,calc}
+% =====================================================================
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      node distance=4mm and 9mm,
+      every node/.style={font=\scriptsize\sffamily},
+      stage/.style={
+        rectangle, rounded corners=2pt, draw=black!55, very thick,
+        minimum width=18mm, minimum height=10mm, align=center,
+        fill=blue!8, inner sep=2pt
+      },
+      hot/.style={
+        rectangle, rounded corners=2pt, draw=red!60, very thick,
+        minimum width=18mm, minimum height=10mm, align=center,
+        fill=red!12, inner sep=2pt
+      },
+      hitl/.style={
+        rectangle, rounded corners=2pt, draw=orange!70, very thick,
+        minimum width=18mm, minimum height=10mm, align=center,
+        fill=orange!18, inner sep=2pt
+      },
+      edge/.style={-Stealth, thick, draw=black!70},
+      loop/.style={->, thick, draw=orange!80, dashed},
+    ]
+
+    % Top row: PDCA stage labels
+    \node[font=\footnotesize\bfseries] (lbl_p) at (0, 1.2) {Plan};
+    \node[font=\footnotesize\bfseries] (lbl_d) at (4.6, 1.2) {Do (Detect)};
+    \node[font=\footnotesize\bfseries] (lbl_c) at (10.2, 1.2) {Check (Analyse)};
+    \node[font=\footnotesize\bfseries] (lbl_a) at (16.0, 1.2) {Act (Apply \& Verify)};
+
+    % --- Plan ---
+    \node[stage] (env)  at (-0.7, 0) {\texttt{environment}\\[1pt]\textbf{5.17s}\\$\pm$0.24};
+    \node[stage, right=of env] (plan) {\texttt{planning}\\[1pt]\textbf{1.43s}\\$\pm$0.21};
+
+    % --- Do (scan) ---
+    \node[stage, right=of plan] (subm) {\texttt{scan\_submit}\\[1pt]\textbf{0.15s}};
+    \node[stage, right=of subm] (poll) {\texttt{scan\_poll}\\[1pt]\textbf{0.85s}\\(loop)};
+    \node[stage, right=of poll] (coll) {\texttt{scan\_collect}\\[1pt]\textbf{0.10s}};
+
+    % --- Check (analyse) ---
+    \node[hot, below=8mm of subm] (risk) {\texttt{risk\_eval}\\[1pt]\textbf{43.6s}\\$\pm$11.4};
+    \node[hot, right=of risk] (rag)   {\texttt{rag\_enrich}\\[1pt]\textbf{31.7s}\\$\pm$6.0};
+    \node[hot, right=of rag]  (oper)  {\texttt{op\_planning}\\[1pt]\textbf{37.8s}\\$\pm$3.4};
+
+    % --- HITL gate (interrupt_before) ---
+    \node[hitl, right=of oper] (rev) {\texttt{review\_task}\\[1pt]interrupt\\$\times 5$ tasks};
+
+    % --- Act (remediation) ---
+    \node[stage, below=8mm of rag]   (reset) {\texttt{reset\_index}\\[1pt]$\sim$0s};
+    \node[stage, right=of reset]     (exec)  {\texttt{execution}\\[1pt]\textbf{12.1s}\\$\pm$0.9};
+    \node[hot,   right=of exec]      (verif) {\texttt{verification}\\[1pt]\textbf{39.5s}\\$\pm$3.9};
+    \node[hot,   right=of verif]     (rep)   {\texttt{report}\\[1pt]\textbf{208.7s}\\$\pm$20.7};
+
+    % Edges
+    \draw[edge] (env)  -- (plan);
+    \draw[edge] (plan) -- (subm);
+    \draw[edge] (subm) -- (poll);
+    \draw[edge] (poll) -- (coll);
+    \draw[edge] (coll.south) -- ++(0,-4mm) -| (risk.north);
+    \draw[edge] (risk) -- (rag);
+    \draw[edge] (rag)  -- (oper);
+    \draw[edge] (oper) -- (rev);
+    \draw[loop] (rev.east) to[out=30,in=-30,looseness=4]
+        node[right, font=\tiny, text=orange!90!black, align=left]
+            {repeat\\$\times$4\\HITL spans} (rev.east);
+    \draw[edge] (rev.south) -- ++(0,-4mm) -| (reset.north);
+    \draw[edge] (reset) -- (exec);
+    \draw[edge] (exec)  -- (verif);
+    \draw[edge] (verif) -- (rep);
+
+    % Total badge
+    \node[draw=black!30, fill=gray!10, rounded corners=2pt,
+          font=\footnotesize, align=center, inner sep=4pt]
+          at (16.0, -3.6) {\textbf{End-to-end:}\\$\bar{T} = 432.1$~s, $\sigma = 45.1$~s};
+
+  \end{tikzpicture}}%
+  \vspace{10mm}
+  \caption{Trajectory điển hình của một phiên PDCA broad-scan trên bucket S3 đã degrade: 13 node theo thứ tự kinh điển, mỗi node ghi $\bar{T} \pm \sigma$ tính trên 5 phiên D1. Node tô đỏ là 4 chặng tốn nhất (\texttt{report}, \texttt{risk\_eval}, \texttt{verification}, \texttt{operational\_planning}); node \texttt{review\_task} là điểm dừng \texttt{interrupt\_before} của LangGraph, lặp 4 lần ứng với các tác vụ chờ duyệt.}
+  \label{fig:d2_trace_flow}
+\end{figure}

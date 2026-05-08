@@ -1,0 +1,109 @@
+\chapter{Benchmark lựa chọn mô hình ngôn ngữ}
+\label{app:model_benchmark}
+
+Phụ lục này trình bày kết quả benchmark đối chiếu bốn mô hình SLM mã nguồn mở dùng làm cơ sở chọn mô hình hạt nhân Gemma 3 4B IT cho hệ thống. Phần này được tách khỏi Chương~\ref{ch:eval} vì đây là bước \emph{lựa chọn cấu phần} chứ không phải đánh giá hệ thống tích hợp; đặt ở phụ lục giúp Chương~\ref{ch:eval} tập trung vào đo lường pipeline thay vì so sánh mô hình.
+
+\section{Bối cảnh và bộ kiểm thử}
+\label{app:model_benchmark_context}
+
+Quá trình lựa chọn mô hình ngôn ngữ (LLM/SLM) ảnh hưởng trực tiếp đến cả hiệu năng vận hành lẫn khả năng bảo vệ riêng tư dữ liệu của hệ thống. Xuất phát từ ràng buộc triển khai cục bộ (Local Inference) trên phần cứng cá nhân (RTX 3060 --- 6\,GB VRAM) để giữ dữ liệu cấu hình AWS không rời khỏi máy người dùng, kết hợp yêu cầu sinh tiếng Việt phù hợp cho viết báo cáo, đồ án đã sàng lọc và chọn ra 4 đại diện tiêu biểu trong nhóm SLM mã nguồn mở $\le 7B$ tham số, lượng tử hóa Q4: \textbf{Gemma 3 4B IT}, \textbf{Qwen 2.5 7B Instruct}, \textbf{DeepSeek-R1-Distill-7B} và \textbf{Llama 3.2 3B Instruct}.
+
+\subsection{Bộ kiểm thử và phương pháp đo}
+\label{app:model_benchmark_method}
+
+\subsubsection*{Bộ kiểm thử 3 prompt}
+Toàn bộ benchmark được thực hiện trên một bộ kiểm thử gồm 3 prompt đặc thù tái hiện các tình huống sinh nội dung điển hình của \textit{Report Agent} --- thành phần có lời gọi LLM dài và nặng nhất trong workflow:
+
+\begin{enumerate}
+  \item \textbf{P1 --- Tóm tắt finding bảo mật ngắn ($\sim$300 token đầu vào):} cho một finding Prowler ở dạng JSON, yêu cầu mô tả cấu hình sai và rủi ro tương ứng bằng tiếng Việt trong $\le 200$ từ. Đo khả năng tuân thủ chỉ thị về độ dài và sinh tiếng Việt có dấu.
+  \item \textbf{P2 --- Sinh đoạn đánh giá rủi ro có cấu trúc ($\sim$1\,200 token đầu vào):} đầu vào là 5 finding S3 cùng metadata, yêu cầu xuất một đoạn đánh giá theo bố cục cố định gồm \textit{Mức độ}, \textit{Lý do}, \textit{Khuyến nghị}. Đo khả năng giữ đúng cấu trúc và độ dài.
+  \item \textbf{P3 --- Sinh báo cáo bảo mật dài có ngữ cảnh RAG ($\sim$3\,500 token đầu vào):} đầu vào gồm danh sách finding đã prioritize, các đoạn ngữ cảnh từ RAG (CIS Benchmark + AWS Well-Architected) và yêu cầu sinh báo cáo Markdown đa mục. Đo khả năng vận hành ở cửa sổ ngữ cảnh dài và tránh trộn ngôn ngữ.
+\end{enumerate}
+
+Mỗi prompt được lặp $n=5$ lần cho mỗi mô hình; các giá trị tốc độ (tok/s), thời gian thực thi và VRAM trong Bảng~\ref{tab:model_benchmark} là \textit{trung bình cộng} của 5 lần lặp cho cả 3 prompt (tổng 15 mẫu). Mọi mô hình đều chạy trên cùng một runtime Ollama với \texttt{num\_ctx=8192}, cùng \texttt{temperature=0.2} và cùng máy thực nghiệm để đảm bảo tính so sánh được. VRAM được đọc bằng \texttt{nvidia-smi} ở thời điểm cao nhất trong mỗi lần chạy.
+
+\subsubsection*{Cột ``Lỗi vi phạm chỉ thị''}
+Một lần chạy bị tính là vi phạm khi đầu ra phạm ít nhất một trong các quy tắc sau (kiểm bằng kịch bản post-process bán tự động):
+\begin{itemize}
+  \item Vượt quá giới hạn số từ đã quy định trong prompt (P1 hoặc P2).
+  \item Thiếu mục bắt buộc trong cấu trúc đầu ra (ví dụ thiếu \textit{Khuyến nghị} ở P2).
+  \item Sinh tiếng Việt không dấu hoặc trộn nguyên đoạn tiếng Anh ở P1/P3 dù prompt yêu cầu tiếng Việt.
+  \item Không trả về câu trả lời mà ``dump'' lại cấu trúc prompt.
+\end{itemize}
+Cột giá trị là \textit{tổng số lần vi phạm} đếm trên 15 mẫu (tối đa 15).
+
+\subsubsection*{Thang điểm định tính 25}
+Cột ``Điểm định tính'' tổng hợp đánh giá chất lượng đầu ra theo 5 tiêu chí, mỗi tiêu chí cho điểm 1--5 (tổng tối đa 25), do nhóm tác giả chấm chéo trên 15 mẫu rồi lấy trung vị:
+\begin{enumerate}
+  \item \textbf{Đúng cấu trúc} (\textit{structural compliance}) --- đầu ra có đủ các mục cấu trúc yêu cầu hay không.
+  \item \textbf{Chất lượng tiếng Việt} --- ngữ pháp, dấu, phong cách viết báo cáo kỹ thuật.
+  \item \textbf{Tính nhất quán nội dung} --- không mâu thuẫn nội tại hoặc với ngữ cảnh đầu vào.
+  \item \textbf{Tính có thể sử dụng} (\textit{usability}) --- nội dung có dùng được trực tiếp cho báo cáo cuối hay phải sửa nhiều.
+  \item \textbf{Bám sát ngữ cảnh RAG} --- ở P3, có trích đúng các điểm tham chiếu CIS/AWS Well-Architected hay không.
+\end{enumerate}
+
+\textbf{Hạn chế đánh giá định tính:} thang điểm này được chấm bởi nhóm tác giả mà không có rater độc lập, do đó chưa có inter-rater reliability (Cohen's $\kappa$) để xác nhận tính nhất quán. Đây là giới hạn được ghi nhận và là dư địa cho hướng phát triển: bổ sung rater độc lập thứ hai và báo cáo Cohen's $\kappa$ là một bước mở rộng tự nhiên cho khung đánh giá này.
+
+\section{Kết quả benchmark}
+\label{app:model_benchmark_results}
+
+Bảng~\ref{tab:model_benchmark} tổng hợp các số liệu định lượng về tốc độ, thời gian thực thi, mức tiêu thụ tài nguyên cùng thước đo định tính.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Kết quả benchmark thực nghiệm lựa chọn mô hình SLM cho Local Inference (trung bình của $n=5$ lần lặp $\times$ 3 prompt = 15 mẫu/mô hình).}
+    \label{tab:model_benchmark}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|c|c|c|c|c|}
+        \hline
+        \textbf{Mô hình} & \textbf{Tốc độ} & \textbf{Thời gian} & \textbf{VRAM} & \textbf{Lỗi vi phạm} & \textbf{Điểm định tính} \\
+        & \textbf{(tok/s)} & \textbf{tổng (s)} & \textbf{(MB)} & \textbf{chỉ thị (/15)} & \textbf{(/25)} \\
+        \hline
+        \textbf{Gemma 3 4B IT} & 61.8 & 27.7 & 4849 & 3 & 21 \\
+        \hline
+        Qwen2.5-7B-Instruct & 10.3 & 83.3 & 5352 & 0 & 22 \\
+        \hline
+        DeepSeek-R1-Distill-7B & 11.2 & 258.5 & 5342 & 2 & 16 \\
+        \hline
+        Llama 3.2 3B Instruct & 83.0 & 17.8 & 3856 & 9 & 8 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Căn cứ vào dữ liệu đối chiếu trên --- với ưu tiên ba yếu tố \textit{chất lượng tiếng Việt}, \textit{tốc độ sinh token} và \textit{biên VRAM còn lại cho ngữ cảnh RAG dài} --- mô hình \textbf{Gemma 3 4B IT} \cite{google2025gemma3} được chọn làm hạt nhân thống nhất cho cả 4 thành phần Planning/Risk/Remediation/Report. Quyết định này dựa trên ba căn cứ định lượng:
+
+\begin{itemize}
+    \item \textbf{Tốc độ suy luận phù hợp với workflow agentic:} Trong một phiên PDCA điển hình, hệ thống phát sinh hơn 10 lời gọi LLM tuần tự nên tốc độ sinh token ảnh hưởng trực tiếp đến độ trễ tổng. Qwen 2.5-7B có chất lượng cấu trúc tốt (0 vi phạm) nhưng tốc độ 10.3\,tok/s khiến một phiên broad-scan kéo dài quá ngưỡng cảm nhận của người vận hành. Gemma 3 4B đạt 61.8\,tok/s (gấp $\sim$6 lần) và hoàn tất bộ kiểm thử trong 27.7\,s, duy trì độ trễ chấp nhận được cho luồng PDCA bất đồng bộ.
+
+    \item \textbf{Biên VRAM còn lại đủ cho ngữ cảnh RAG dài:} Trong bước đánh giá rủi ro và sinh báo cáo, cửa sổ ngữ cảnh thực tế thường vượt 4\,000 token sau khi nối metadata AWS với các đoạn RAG. DeepSeek-R1-Distill-7B và Qwen 2.5-7B đều dùng $\sim$5.3\,GB VRAM ở trạng thái nền, để lại biên dưới 0.7\,GB so với trần 6\,GB của RTX 3060 --- sát giới hạn tràn bộ nhớ khi nạp ngữ cảnh dài. Gemma 3 4B sử dụng 4.85\,GB, để lại biên $\sim$1.15\,GB cho KV-cache.
+
+    \item \textbf{Chất lượng sinh tiếng Việt ổn định ở P3:} Llama 3.2 3B Instruct ghi nhận 9/15 lần vi phạm chỉ thị, chủ yếu là sinh tiếng Việt không dấu hoặc lệch ý định prompt. DeepSeek-R1-Distill-7B tiêu tốn nhiều token cho phần \textit{thinking} bằng tiếng Anh nhưng đoạn báo cáo cuối kém liền mạch. Gemma 3 4B IT cho điểm tiêu chí \textit{chất lượng tiếng Việt} 4/5 và không trộn nguyên đoạn tiếng Anh trong văn bản đầu ra, nhờ tokenizer đa ngôn ngữ.
+\end{itemize}
+
+\textbf{Hạn chế cần kiểm soát:} Gemma 3 4B đôi khi vượt giới hạn số từ ở các báo cáo dài (3/15 lần vi phạm trong bảng trên). Hạn chế này được kiểm soát ở cấp ứng dụng bằng việc đặt \texttt{num\_predict} cho mỗi lời gọi và bổ sung ràng buộc độ dài trong System Prompt; mức vi phạm trong vận hành thực tế được đánh giá lại tại §\ref{sec:llm_generation_eval}.
+
+\section{Đặc tả mô hình hạt nhân được tích hợp}
+\label{app:model_benchmark_gemma_spec}
+
+Bảng~\ref{tab:gemma3_specs} tổng hợp các đặc tả kỹ thuật của Gemma 3 4B IT ở phiên bản triển khai trong đồ án (định dạng GGUF, lượng tử hóa K-Quants \texttt{Q4\_K\_M}, chạy trên runtime Ollama).
+
+\begin{table}[!htb]
+    \centering
+    \caption{Đặc tả kỹ thuật cốt lõi của mô hình Gemma 3 4B IT được tích hợp.}
+    \label{tab:gemma3_specs}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|p{8cm}|}
+         \hline
+         \textbf{Đặc điểm kỹ thuật} & \textbf{Giá trị áp dụng trong đồ án} \\ \hline
+         Kiến trúc nền tảng & Gemma-3-4B-IT (decoder-only Transformer) \\ \hline
+         Tổng số tham số & 4 tỷ tham số (4B) \\ \hline
+         Định dạng phân phối & GGUF \\ \hline
+         Chuẩn lượng tử hóa & K-Quants \texttt{Q4\_K\_M} (4-bit) \\ \hline
+         Dung lượng tải lưu trữ & $\sim$2.8\,GB \\ \hline
+         VRAM tiêu thụ thực đo (P3) & $\sim$4.85\,GB trên RTX 3060 6\,GB \\ \hline
+         Cửa sổ ngữ cảnh tối đa & 128\,000 tokens (đồ án dùng \texttt{num\_ctx=8192}) \\ \hline
+         Khả năng đa ngôn ngữ & Hỗ trợ chính thức 140+ ngôn ngữ, có tiếng Việt \\ \hline
+         Runtime & Ollama (local), GPU offload toàn bộ trọng số \\ \hline
+         Giấy phép & Gemma License \\ \hline
+    \end{tabular}
+\end{table}

@@ -1,0 +1,2056 @@
+\chapter{Phương pháp tiếp cận}
+
+Chương này trình bày thiết kế và kiến trúc của hệ thống \sysname. Khác với các hệ thống rà soát bảo mật truyền thống vốn hoạt động theo luồng tuyến tính (Linear Scripting) hoặc phân tầng cứng nhắc (N-tier), giải pháp đề xuất xây dựng theo Kiến trúc Hướng Đồ thị (Graph-based Architecture) tập trung vào quản lý trạng thái (State-centric Design).
+
+Việc mô hình hóa quy trình nghiệp vụ dưới dạng một máy trạng thái hữu hạn (Finite State Machine) cho phép hiện thực hóa chu trình \textbf{PDCA (Plan--Do--Check--Act)} với các đặc trưng vòng lặp (cyclic workflows) và khả năng tự phục hồi (self-correction) — những yếu tố cốt lõi để đảm bảo tính liên tục trong đánh giá bảo mật.
+
+Kiến trúc tổng thể gồm bốn khối tương tác: Giao diện người dùng, Khối điều phối trung tâm, Bộ nhớ trạng thái chia sẻ, và Hạ tầng công cụ. Sự phân tách này đảm bảo tính mô-đun hóa và khả năng mở rộng.
+
+\section{Khung khái niệm của hệ thống}
+\label{sec:conceptual-framework}
+
+\sysname{} được xây dựng dựa trên sự kết hợp giữa \textbf{mô hình khái niệm PDCA (Plan--Do--Check--Act)} và pattern \textbf{Stateful Agentic Workflow} \cite{zaharia_compound_2024} có tích hợp RAG (Retrieval-Augmented Generation). Trong đó, quá trình quản lý và đánh giá bảo mật đám mây AWS được tổ chức như một \textit{chu trình khép kín, liên tục và tự động hóa cao}, thay vì các hoạt động rà soát thủ công, rời rạc. Cách tiếp cận này cho phép quản lý toàn bộ vòng đời xử lý bảo mật từ khâu lập kế hoạch, phát hiện, đánh giá rủi ro, cho đến báo cáo hoàn chỉnh một cách nhất quán và có khả năng tương tác (Human-in-the-loop). Trong báo cáo này, từ \textit{node} hoặc \textit{module} được dùng cho các thành phần hàm độc lập trong đồ thị trạng thái; từ \textit{agent} chỉ được giữ lại ở các module có gọi LLM kèm tool calling (Planning, Risk Eval, Remediation Planner, Report) --- đây là quy ước nội bộ thống nhất xuyên suốt báo cáo.
+
+Trong mô hình này, mỗi giai đoạn của chu trình PDCA tương ứng với sự phối hợp của các \textbf{node chức năng} đảm nhiệm vai trò cụ thể:
+
+\begin{itemize}
+  \item \textbf{Plan (Lập kế hoạch)}: \textbf{Planning Node} tiếp nhận yêu cầu từ người dùng, tận dụng \textbf{hệ thống RAG (Hybrid BM25 + Vector)} để thu thập tri thức bảo mật AWS, từ đó xây dựng kế hoạch đánh giá chi tiết (Assessment Plan) bao gồm: định tuyến dịch vụ cần kiểm tra, giới hạn phạm vi tài nguyên và chiến lược quét cụ thể.
+
+  \item \textbf{Do (Thực thi quét)}: nhóm \textbf{Scanner Nodes} (Submitter, Monitor, Collector) thực hiện việc thu thập cấu hình sai (misconfigurations) qua Prowler API, polling trạng thái job và tổng hợp findings thô.
+
+  \item \textbf{Check (Đánh giá và Xác minh)}: pha CHECK kép gồm hai bước. \textbf{Risk Evaluation Node} (Check tiền-khắc-phục) sử dụng cơ chế \textit{Two-Pass Validation} kết hợp với RAG để chấm điểm và tái đánh giá mức độ nghiêm trọng (Severity), loại bỏ cảnh báo giả (false positives). Sau khi remediation thực thi, \textbf{Verification Node} (Check hậu-khắc-phục) thực hiện micro-scan để khẳng định trạng thái đã được giải quyết, đối chiếu với baseline trước remediation.
+
+  \item \textbf{Act (Khắc phục và Báo cáo)}: \textbf{RAG Enricher} làm giàu ngữ cảnh bằng multi-query, \textbf{Remediation Planner} sinh tác vụ khắc phục, \textbf{Review Gate (HITL)} thu thập phê duyệt của con người, \textbf{Execution Engine} thực thi qua AWS SDK, và cuối cùng \textbf{Report Node} chạy qua quy trình 5 bước (Pipeline) để tổng hợp dữ liệu, tính toán điểm trưởng thành bảo mật (Security Maturity Score) và sinh báo cáo đánh giá cuối cùng. Dựa trên báo cáo, quản trị viên đưa ra các quyết định tinh chỉnh hệ thống cho các chu trình PDCA tiếp theo.
+\end{itemize}
+
+Thông qua việc ánh xạ kiến trúc Compound AI vào chu trình PDCA, nghiên cứu này cung cấp một \textbf{khung khái niệm rõ ràng} giúp tự động hóa quy trình xử lý sự cố bảo mật. Các câu hỏi nghiên cứu (RQ1--RQ5) chi phối các quyết định thiết kế trong chương này đã được phát biểu ở \S{}1.4; mỗi quyết định thiết kế được tham chiếu ngược về RQ thông qua Bảng~\ref{tab:rq_mapping} ở cuối chương.
+
+\section{Kiến trúc Hệ thống (System Architecture)}
+\label{sec:system_architecture}
+
+Hệ thống được thiết kế dựa trên kiến trúc hướng đồ thị
+(\textit{Graph-based Architecture})
+nhằm điều phối các luồng xử lý phức tạp
+giữa các thành phần chức năng trong hệ thống.
+Kiến trúc này cho phép mô hình hóa quy trình đánh giá,
+khắc phục và xác minh bảo mật dưới dạng một đồ thị có trạng thái,
+trong đó các bước xử lý được liên kết linh hoạt
+thay vì bị ràng buộc bởi một luồng tuyến tính cố định.
+Tổng quan kiến trúc hệ thống được trình bày trong Hình~\ref{fig:architecture_3layer}.
+
+Hệ thống bao gồm bốn thành phần chính tương tác chặt chẽ với nhau: (1) Khối điều phối tổng thể của \sysnameshort{}, (2) Bộ nhớ trạng thái chia sẻ (Shared State Memory), (3) Hạ tầng hỗ trợ (Infrastructure), và (4) Giao diện tương tác người dùng (User Interface).
+
+\input{components/diagrams/architecture_3layer}
+
+Hình~\ref{fig:architecture_3layer} chi tiết hoá ranh giới tiến trình của hệ thống: Frontend (UI) giao tiếp HTTP/JSON với Orchestrator (stateful graph runtime); Orchestrator điều phối các module gọi vào Scanner CLI, RAG Service, và Local LLM Runtime; lớp dữ liệu gồm một relational store cho jobs/checkpoint và một vector index cho RAG.
+
+\subsection{Luồng điều phối trung tâm của \sysnameshort{}}
+Khối điều phối trung tâm của \sysname{} mô hình hóa toàn bộ quy trình nghiệp vụ bảo mật dưới dạng một đồ thị trạng thái có hướng (\textit{StateGraph}). Thay vì hoạt động như một chuỗi lệnh tuyến tính cứng nhắc, kiến trúc này cho phép luân chuyển dữ liệu linh hoạt giữa các node xử lý chuyên biệt theo mô hình PDCA.
+
+Quy trình vận hành của Orchestration Layer được khởi tạo tại giai đoạn \textbf{Thu thập và Lập kế hoạch (Plan)}. Tại đây, node \texttt{environment} đóng vai trò tiền trạm, chịu trách nhiệm thiết lập các kết nối an toàn thông qua việc xác thực danh tính (IAM roles và AWS STS) để trích xuất ngữ cảnh của tài khoản AWS mục tiêu. Dựa trên dữ liệu môi trường này, kết hợp với kho tri thức từ hệ thống Retrieval-Augmented Generation (bao gồm CIS AWS Foundations Benchmark và AWS Well-Architected Framework), node \texttt{planning} phân tích ngữ nghĩa yêu cầu của người dùng và tự động ánh xạ thành một phạm vi đánh giá (\textit{Assessment Plan}). Tiếp theo, hệ thống chuyển sang \textbf{Giai đoạn Thực thi (Do)}: node \texttt{scan\_submit} kích hoạt công cụ \textit{Prowler} thông qua Scanner API để quét các dịch vụ AWS bất đồng bộ; node \texttt{scan\_poll} hoạt động ở vòng lặp polling theo dõi tiến trình quét; và node \texttt{scan\_collect} tổng hợp các raw findings khi tất cả job hoàn tất.
+
+Tiếp theo là giai đoạn \textbf{Đánh giá rủi ro (Check)}. Node \texttt{risk\_evaluation} chuyển hóa raw findings thành tri thức ưu tiên thông qua phương pháp \textit{Two-Pass Validation}: lần thứ nhất lọc các cảnh báo giả (false positives) bằng bộ rubric tĩnh; lần thứ hai kết hợp LLM với RAG để tái phân tích ngữ cảnh, từ đó xác định mức độ nghiêm trọng thực sự (True Severity) thay vì chỉ dựa vào điểm CVSS mặc định. Khi có ít nhất một finding ở trạng thái \texttt{FAIL}, conditional edge \texttt{route\_after\_risk} chuyển luồng sang giai đoạn \textbf{Khắc phục (Act)}: node \texttt{rag\_enrich} truy vấn RAG (multi-query Q1+Q2+Q3) để bổ sung ngữ cảnh root-cause, impact và remediation steps; node \texttt{remediation} dựa trên ngữ cảnh tăng cường này để sinh các kịch bản khắc phục (\textit{Remediation Plans}). Để đảm bảo tính toàn vẹn, hệ thống thiết lập chốt chặn an toàn tại node \texttt{review\_task} với cơ chế \texttt{interrupt\_before} của LangGraph — luồng tạm dừng và yêu cầu quản trị viên phê duyệt từng task (Approve/Skip). Chỉ khi có đủ phê duyệt, node \texttt{reset\_index} reset chỉ số duyệt task, sau đó node \texttt{execution} sử dụng AWS SDK để thực thi các thay đổi đã được phê duyệt. Chu trình khép lại tại node \texttt{verification} (chạy micro-scan để xác minh trạng thái hậu khắc phục) và node \texttt{report} (tổng hợp Maturity Score và xuất bản báo cáo cuối).
+
+Bảng~\ref{tab:node_mapping} tổng hợp tên thiết kế của 13 node, pha PDCA tương ứng và vai trò chính. Phần văn bản tiếp theo dùng tên thiết kế ở cột thứ nhất; tên định danh trong mã nguồn cùng đường dẫn file, lib version được trình bày ở Chương~5.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ánh xạ giữa tên thiết kế node, pha PDCA và vai trò chính}
+  \label{tab:node_mapping}
+  \renewcommand{\arraystretch}{1.15}
+  \footnotesize
+  \begin{tabular}{|p{4.0cm}|l|p{7.5cm}|}
+    \hline
+    \textbf{Tên thiết kế} & \textbf{Pha PDCA} & \textbf{Vai trò} \\
+    \hline
+    Environment Setup       & Plan  & Thu thập ngữ cảnh tài khoản AWS, xác thực IAM/STS \\ \hline
+    Planner                 & Plan  & Sinh kế hoạch đánh giá (RAG-first) từ yêu cầu ngôn ngữ tự nhiên \\ \hline
+    Scan Submitter          & Do    & Gửi job tới Scanner API (Prowler) \\ \hline
+    Scan Monitor            & Do    & Vòng lặp polling trạng thái job (conditional edge) \\ \hline
+    Scan Collector          & Do    & Tổng hợp findings thô khi job hoàn tất \\ \hline
+    Risk Evaluator          & Check & Two-Pass: rubric tất định + LLM/RAG re-rank \\ \hline
+    RAG Enricher            & Act   & Multi-query (Q1 root-cause, Q2 compliance mapping, Q3 fix-guide) \\ \hline
+    Remediation Planner     & Act   & Sinh tác vụ khắc phục từ ngữ cảnh đã làm giàu \\ \hline
+    Review Gate (HITL)      & Act   & Cổng phê duyệt người dùng (cơ chế \textit{interrupt before}) \\ \hline
+    Approval Indexer        & Act   & Reset chỉ số duyệt sau khi tác vụ được phê duyệt \\ \hline
+    Execution Engine        & Act   & Thực thi các tác vụ đã Approve qua AWS SDK \\ \hline
+    Verification            & Check & Micro-scan xác minh trạng thái hậu khắc phục \\ \hline
+    Reporter                & Act   & Sinh Maturity Score và báo cáo cuối \\ \hline
+  \end{tabular}
+\end{table}
+
+\subsection{Cơ chế Quản lý Trạng thái Tập trung (Shared State Memory)}
+
+Để giải quyết thách thức về đồng bộ hóa dữ liệu giữa các luồng tác tử chuyên biệt, hệ thống triển khai một cơ chế bộ nhớ trạng thái tập trung đóng vai trò là ``Nguồn chân lý duy nhất'' (\textit{Single Source of Truth}). Cơ chế này được hiện thực hóa dưới từ điển trạng thái toàn cục (\texttt{PDCAState}), giữ tính nhất quán dữ liệu ở toàn bộ vòng đời của một phiên đánh giá (\textit{Audit Session}).
+
+Các thành phần cấu trúc quan trọng nhất trong \textit{Shared State} bao gồm:
+
+\begin{itemize}
+  \item \textbf{AWS Context (Ngữ cảnh Môi trường):} Lưu trữ các dữ liệu cần thiết phục vụ gọi API vào Amazon Web Services của người dùng, bao gồm \texttt{account\_id}, \texttt{region}... giúp điều hướng thông tin về đích một cách minh bạch.
+  
+  \item \textbf{Assessment Plan (Kế hoạch Đánh giá):} Đóng vai trò là cầu nối dữ liệu thực hiện quét. Bằng việc duy trì bản đồ dịch vụ và danh sách quy định mã kiểm duyệt (\texttt{groups\_to\_scan}, \texttt{checks\_to\_scan}) cho \textit{Prowler}, hệ thống sẽ lọc tối ưu được tài nguyên bị gọi, tránh quét toàn bộ hệ thống gây chậm và thừa dữ liệu rác.
+
+  \item \textbf{Remediation Tasks (Hàng đợi Khắc phục):} Bộ đệm trung gian quản lý phiên, lưu danh sách đề xuất khắc phục kèm trạng thái duyệt (Approve/Skip/Dry-run); là kênh trao đổi quyết định giữa hệ thống và người duyệt tại HITL gate.
+
+  \item \textbf{Execution Logs (Nhật ký Thực thi) và Analysis Results:} Ghi lại toàn bộ thông tin \textit{trace} sau khi execution. Nó giúp hệ thống minh bạch các thao tác đã áp dụng, đồng thời cung cấp điểm tựa cho \texttt{AnalysisModule/ReportModule} có thể tóm lược được việc thành công hay thất bại trên những nỗ lực đã tự động gọi.
+\end{itemize}
+
+\subsection{Hạ tầng và Công cụ tích hợp (Infrastructure)}
+
+Là một \textbf{tác tử AI tự hành} được hiện thực theo pattern \textbf{Stateful Agentic Workflow} (Compound AI System \cite{zaharia_compound_2024}), \sysnameshort{} tự động đánh giá và khắc phục rủi ro bảo mật trên đám mây AWS (Cloud Security Posture Management). Kiến trúc của tác tử được điều phối qua một đồ thị trạng thái duy nhất (\textit{State-Graph}) liên kết khả năng suy luận của LLM cục bộ (\textit{Local Inference}) thông qua RAG với nhóm công cụ quét chuyên dụng (\textit{Cloud-native CLI}).
+
+\begin{itemize}
+  \item \textbf{Dịch vụ LLM và Tri thức (Local LLM \& RAG):} 
+    \begin{itemize}
+      \item \textit{Local SLM Runtime:} Các module gọi LLM được cấu hình chạy một SLM ($\leq$ 4B tham số, lượng tử hoá Q4) trên phần cứng cục bộ thông qua một runtime tương thích chuẩn OpenAI Chat Completions. Sự cô lập này đảm bảo \textit{Data Privacy}: cấu hình nhạy cảm từ IAM/Network không bị lộ ra API bên thứ ba (OpenAI, Anthropic). Cụ thể model và lượng tử hoá được trình bày ở Chương~5.
+      \item \textit{Tối ưu hiệu năng:} Kiến trúc Prompt được định hình ngắn gọn, phù hợp mô hình tham số nhỏ (\textasciitilde 3B-8B), giúp cân bằng khả năng lý luận (reasoning) và độ trễ (\textit{latency}).
+      \item \textit{Kiến trúc RAG (Retrieval-Augmented Generation):} Tích hợp \texttt{RAGClient} để tra cứu tri thức bảo mật chuyên sâu đặc hữu của hệ thống từ CSDL Vector, cung cấp ngữ cảnh chuẩn xác giúp hạn chế tình trạng ảo giác (hallucination) của LLM trong bước khảo sát rủi ro và sinh báo cáo.
+    \end{itemize}
+
+  \item \textbf{Công cụ Mở rộng Hệ thống (External Tools):} 
+    \begin{itemize}
+      \item \textit{Prowler CLI (Scanning Engine):} Lõi thu thập log từ Cloud AWS. \textit{Prowler} được bọc và gọi thông qua Middleware API Server, cấu hình tùy chỉnh để quét các tiêu chuẩn nhạy bén như \textit{CIS AWS Foundations Benchmark}, tạo đầu vào cơ sở xác thực khách quan nhất cho hệ thống.
+      \item \textit{AWS SDK for Python (Boto3):} Cung cấp các phương thức thao tác trực tiếp lên IAM, S3, KMS... để thực thi tự động các tập lệnh vá lỗi cấu hình (Remediation Execution).
+    \end{itemize}
+
+  \item \textbf{Lớp Lưu trữ và Quản lý Trạng thái (Persistence \& State Layer):} Hệ thống thiết kế phân mảnh lớp lưu trữ để tối ưu bộ nhớ:
+    \begin{itemize}
+      \item \textit{Trạng thái luồng (Graph State):} quản lý xuyên suốt vòng đời phiên qua cấu trúc \texttt{PDCAState}. Một persistent checkpointer dạng SQL-based lưu snapshot vào ổ đĩa, đảm bảo phiên không mất sau khi orchestrator restart (chi tiết \S\ref{subsec:persistence_resume}).
+      \item \textit{Tệp tĩnh thu nhặt (Static JSON):} Trích xuất và lưu trữ tạm các mốc dữ liệu trung gian (cấu hình quét ban đầu, snapshot trước và sau remediation) dưới dạng JSON, đóng vai trò làm đầu vào tĩnh hỗ trợ \texttt{AnalysisAgent} thực thi việc so sánh \textit{diff} nhằm giảm tải ngữ cảnh tràn RAM khi truyền số lượng lớn dữ liệu cho LLM.
+      \item \textit{Dữ liệu đầu ra (Output):} Hệ thống cập nhật và ghi xuất liên tục các thành phần kết quả sau cùng ra báo cáo cuối cùng định dạng Markdown cũng như lưu trữ file log đánh giá hiệu suất của mỗi luồng dưới dạng JSON.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection*{Ba server FastAPI tách biệt}
+Triển khai thực tế gồm \textbf{ba tiến trình FastAPI độc lập}, không ghép chung — mỗi tiến trình có vòng đời và port riêng, kết nối qua HTTP/JSON:
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ba server FastAPI và phân chia trách nhiệm}
+  \label{tab:three_fastapi}
+  \begin{tabular}{|p{3.2cm}|p{2.6cm}|p{3.5cm}|p{4.5cm}|}
+    \hline
+    \textbf{Service} & \textbf{Stateful?} & \textbf{Scaling profile} & \textbf{Trách nhiệm} \\ \hline
+    Orchestrator (Chatbot API) & \checkmark{} (checkpointer) & vertical (single-node graph runtime) & Chatbot/Runs API, graph execution, HITL endpoints, callback ra Observability Layer \\ \hline
+    Scanner API & \checkmark{} (job queue SQLite) & vertical & Proxy Prowler 5.16.1, hàng đợi quét bất đồng bộ, polling status \\ \hline
+    RAG Service & \xmark{} (stateless) & horizontal (chia sẻ index) & Hybrid retrieval (BM25 + dense + RRF + reranker), context bundle, mapping resolution \\ \hline
+  \end{tabular}
+\end{table}
+
+Tách biệt này phục vụ ba mục tiêu: (1) \textit{vòng đời độc lập} — mỗi service có thể restart độc lập (RAG rebuild index, Scanner upgrade Prowler) mà không làm dropoff phiên PDCA đang chạy; (2) \textit{cô lập tài nguyên} — RAG độc chiếm RAM cho vector index/embedding model, Scanner spawn subprocess Prowler nặng I/O, Orchestrator giữ graph runtime — không tranh chấp lẫn nhau; (3) \textit{khả năng scale riêng biệt} — RAG stateless scale ngang dễ, Orchestrator/Scanner stateful nên scale dọc.
+
+\subsection{Giao diện và Cơ chế tương tác (Human-in-the-Loop)}
+Sự tương tác của quản trị viên và Agent được chia ra gồm:
+\begin{enumerate}
+  \item \textbf{Input:} Cho phép Quản trị viên (Admin) truyền chỉ định yêu cầu bằng ngôn ngữ tự nhiên cấp độ cao (Vd: \textit{"Kiểm tra bảo mật và tư vấn S3, định tuyến khắc phục bằng CLI"}).
+  \item \textbf{Control (Kiểm soát an toàn):} Hoạt động như \textit{Breakpoints} ở Node Phê duyệt Nhiệm vụ. Hệ thống dừng (pause) Graph \texttt{PDCAState} ở đây. Hành động tương tác AWS API thay đổi tài nguyên thực tế (\textit{Side-effect write operations}) chỉ được thực hiện khi con người \textit{Review} qua.
+\end{enumerate}
+
+\section{Thiết kế Luồng điều phối trạng thái (Orchestration Design)}
+\label{sec:orchestration_design}
+
+Thay vì sử dụng các tập lệnh tuần tự tuyến tính
+(\textit{Linear Scripts}) truyền thống,
+hệ thống được thiết kế dựa trên kiến trúc
+\textbf{Điều phối theo đồ thị}
+(\textit{Graph-based Orchestration}).
+Cách tiếp cận này cho phép mô hình hóa toàn bộ
+chu trình PDCA như một workflow có trạng thái,
+trong đó ngữ cảnh xử lý được duy trì xuyên suốt
+vòng đời thực thi
+và luồng xử lý có thể linh hoạt rẽ nhánh
+dựa trên kết quả thực tế của từng bước.
+
+\subsection{Định nghĩa Không gian Trạng thái (State Schema)}
+
+Trong kiến trúc điều phối theo đồ thị,
+các thành phần xử lý được thực thi bất đồng bộ
+và cần một cơ chế thống nhất
+để chia sẻ và đồng bộ hóa thông tin.
+Do đó, trạng thái hệ thống
+(\textit{System State})
+không chỉ đơn thuần là các biến lưu trữ tạm thời,
+mà được thiết kế như một cấu trúc dữ liệu chia sẻ
+(\textit{Shared Data Structure})
+đóng vai trò là ``bộ nhớ trung tâm''
+(\textit{Central Memory})
+cho toàn bộ workflow.
+
+Cấu trúc này hoạt động tương tự
+mẫu thiết kế ``Bảng đen''
+(\textit{Blackboard Pattern}),
+trong đó mỗi module chức năng
+sau khi hoàn thành nhiệm vụ
+sẽ ghi kết quả vào trạng thái chung,
+và module tiếp theo
+đọc dữ liệu từ đó để tiếp tục xử lý.
+Cơ chế này đảm bảo tính nhất quán của dữ liệu
+khi nó được truyền qua các pha
+\textit{Plan--Do--Check--Act}. Cụ thể, không gian trạng thái được tổ chức thành bốn phân vùng dữ liệu chính để phục vụ các mục đích khác nhau:
+
+\begin{itemize}
+  \item \textbf{Context Data (Ngữ cảnh):}
+    Lưu trữ các thông tin đầu vào mang tính bất biến
+    như yêu cầu ban đầu của người dùng
+    (\texttt{user\_request})
+    và thông tin định danh môi trường AWS
+    (\texttt{aws\_context}).
+    Đây là cơ sở để các module xử lý
+    xác định đúng mục tiêu và phạm vi đánh giá.
+
+  \item \textbf{Operational Data (Vận hành):}
+    Chứa các dữ liệu phát sinh trong quá trình thực thi,
+    bao gồm kế hoạch đánh giá
+    (\texttt{assessment\_plan})
+    và các định danh tiến trình quét
+    (\texttt{scan\_job\_ids})
+    được kích hoạt trên hạ tầng Prowler.
+
+  \item \textbf{Analytical Data (Phân tích):}
+    Lưu trữ kết quả sau khi đã qua xử lý suy luận,
+    bao gồm danh sách các phát hiện bảo mật
+    đã được chuẩn hóa
+    và điểm rủi ro tổng hợp
+    (\texttt{risk\_score})
+    do mô-đun đánh giá rủi ro sinh ra.
+
+  \item \textbf{Actionable Data (Hành động):}
+    Chứa các quyết định cuối cùng của hệ thống,
+    bao gồm các kịch bản khắc phục
+    (\texttt{remediation\_tasks})
+    và trạng thái phê duyệt của quản trị viên
+    (\textit{Human Decision}),
+    đảm bảo mọi hành động thay đổi cấu hình
+    đều được kiểm soát và ghi nhận rõ ràng.
+\end{itemize}
+
+Việc định nghĩa chặt chẽ Schema này giúp hệ thống tránh được việc mất mát thông tin giữa các bước chuyển đổi và hỗ trợ khả năng truy vết (Traceability) nguồn gốc của các quyết định bảo mật.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Đặc tả chi tiết Schema dữ liệu chia sẻ (Shared State) trong LangGraph.}
+  \label{tab:state_schema}
+  \renewcommand{\arraystretch}{1.3}
+  \setlength{\tabcolsep}{5pt}
+  \footnotesize
+  \begin{tabular}{|p{0.27\textwidth}|p{0.66\textwidth}|}
+    \hline
+    \textbf{Nhóm dữ liệu} & \textbf{Chi tiết trường thông tin (Fields) và Vai trò} \\
+    \hline
+    \textbf{Input Context} \newline (Ngữ cảnh đầu vào bất biến) &
+    \textbullet~\texttt{user\_request}: Yêu cầu ngôn ngữ tự nhiên ban đầu. \newline
+    \textbullet~\texttt{aws\_context}: Thông tin định danh (Account ID, Region) để Agent xác thực. \\
+    \hline
+    \textbf{Scanning Data} \newline (Dữ liệu vận hành quá trình quét) &
+    \textbullet~\texttt{assessment\_plan}: Kế hoạch chứa danh sách Service hoặc Check ID mục tiêu. \newline
+    \textbullet~\texttt{scan\_job\_ids}: Danh sách các tiến trình Prowler đang chạy song song. \\
+    \hline
+    \textbf{Analytical Data} \newline (Kết quả phân tích bảo mật) &
+    \textbullet~\texttt{raw\_findings}: Dữ liệu thô thu thập từ Monitoring Module. \newline
+    \textbullet~\texttt{prioritized\_findings}: Danh sách lỗ hổng đã được Risk Module chấm điểm và sắp xếp ưu tiên. \\
+    \hline
+    \textbf{Actionable Data} \newline (Dữ liệu phục vụ hành động khắc phục) &
+    \textbullet~\texttt{remediation\_tasks}: Các kịch bản vá lỗi do Planner sinh ra. \newline
+    \textbullet~\texttt{task\_execution\_plan}: Trạng thái phê duyệt (Approve/Skip) từ người dùng (HITL). \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\subsection{Thiết kế Luồng hoạt động (Workflow Logic)}
+Luồng hoạt động của hệ thống được mô hình hóa thành một đồ thị có hướng (Directed Graph) gồm 13 node, 3 conditional edge và cơ chế \texttt{interrupt\_before}.
+
+\input{components/diagrams/langgraph_topology}
+
+Hình~\ref{fig:langgraph_topology} chi tiết hóa bốn pha PDCA cùng các cơ chế điều khiển: vòng lặp polling Scanner API, nhánh điều kiện \textit{has FAIL?} sau Risk Evaluator, vòng phê duyệt HITL tại Review Gate, và pha CHECK kép (Risk Evaluator đánh giá tiền và Verification xác minh hậu khắc phục).
+
+Các điểm thiết kế quan trọng bao gồm:
+\begin{itemize}
+  \item \textbf{Cơ chế Rẽ nhánh (Conditional Routing):} Tại pha \textit{Check}, hệ thống tự động kiểm tra xem có tồn tại lỗ hổng nghiêm trọng (FAIL) hay không. Nếu có, luồng xử lý sẽ chuyển sang pha \textit{Act} (Khắc phục); ngược lại, hệ thống sẽ đi thẳng đến bước tạo báo cáo.
+
+  \item \textbf{Cơ chế Vòng lặp duyệt tác vụ (Review Loop):} Để tránh việc người dùng bị quá tải bởi hàng loạt yêu cầu phê duyệt cùng lúc, thiết kế sử dụng một vòng lặp tuần tự. Hệ thống trình bày từng tác vụ khắc phục một cách riêng lẻ, chờ phản hồi, cập nhật trạng thái, rồi mới quay lại lấy tác vụ tiếp theo.
+
+  \item \textbf{Điểm ngắt an toàn (Safety Checkpoint):} Trước khi thực thi bất kỳ hành động ghi (Write Action) nào lên hạ tầng đám mây, luồng xử lý được thiết kế để tự động tạm dừng (Suspend), chuyển quyền kiểm soát cho cơ chế Human-in-the-Loop.
+\end{itemize}
+
+\subsection{Kiến trúc Persistence \& Resume}
+\label{subsec:persistence_resume}
+
+Một phiên PDCA điển hình kéo dài hàng chục phút (Prowler scan, hai vòng LLM, phê duyệt thủ công, micro-scan xác minh). Nếu tiến trình orchestrator restart giữa luồng, toàn bộ ngữ cảnh \texttt{PDCAState} sẽ mất nếu chỉ dùng in-memory checkpointer. Vì vậy, thiết kế đề xuất một \textbf{persistent checkpointer} dạng factory pattern: ưu tiên backend persistent (SQL-based), fallback về in-memory khi thiếu dependency, và cho phép test override. Lib và file path cụ thể được trình bày ở Chương~5.
+
+\subsubsection*{Cơ chế interrupt\_before và resume}
+Graph được compile với \texttt{interrupt\_before=["review\_task"]} — yêu cầu graph runtime dừng \textbf{trước khi thực thi node \texttt{review\_task}}. Tại thời điểm này, checkpointer ghi snapshot đầy đủ của \texttt{PDCAState}. Frontend gọi endpoint truy xuất state để lấy danh sách task chờ duyệt. Khi admin chọn \textit{Approve}/\textit{Skip}, orchestrator gọi thủ tục \textsc{ResumeAfterDecision}$(run\_id, task\_id, decision)$:
+
+\begin{enumerate}
+  \item Đọc snapshot hiện tại; xác minh \texttt{snapshot.next == (review\_task,)} — nếu không, từ chối resume.
+  \item Cập nhật \texttt{task\_execution\_plan} với decision và tăng \texttt{current\_task\_index}.
+  \item Spawn worker chạy \texttt{stream(None, config)} — luồng tự chạy đến lần \texttt{interrupt\_before} kế tiếp hoặc tới \texttt{END}.
+\end{enumerate}
+
+Hành vi này biến mỗi task duyệt thành một \textit{transactional unit}: backend có thể restart bất cứ lúc nào, frontend chỉ cần gọi lại endpoint truy xuất state là khôi phục đúng vị trí dừng. Sequence diagram của giao tác này được trình bày ở Hình~\ref{fig:persistence_sequence}.
+
+\input{components/diagrams/persistence_sequence}
+
+\subsubsection*{Hệ quả thiết kế}
+\begin{itemize}
+  \item \textbf{Crash recovery}: backend OOM/restart không phá phiên đánh giá đang chạy. Cũng cho phép admin đóng laptop và quay lại sau vài giờ phê duyệt tiếp.
+  \item \textbf{Audit trail}: SQLite giữ \textit{toàn bộ lịch sử} trạng thái (\texttt{get\_state\_history}) — phục vụ truy vết \textit{ai đã duyệt task gì, lúc nào}.
+  \item \textbf{Concurrency-safe}: \texttt{check\_same\_thread=False} cho phép FastAPI worker share connection; mỗi run\_id có \texttt{threading.Lock} riêng để tránh race khi resume song song.
+\end{itemize}
+
+\subsection{Quan sát hệ thống với Langfuse (Observability)}
+\label{subsec:observability_langfuse}
+
+Một Compound AI System với LLM + RAG + tool calling không thể debug bằng log đơn thuần. Để có khả năng quan sát đầy đủ (\textit{end-to-end traceability}), thiết kế đề xuất một \textbf{Observability Layer} chuyên dụng tách biệt khỏi luồng nghiệp vụ. Tầng này áp dụng nguyên tắc bao trùm: \textit{quan sát không bao giờ làm sập sản xuất}. (Chi tiết hiện thực và lib SaaS dùng để render trace UI được trình bày ở Chương~5.)
+
+\subsubsection*{Sơ đồ phân lớp tracing}
+Mỗi phiên PDCA tạo một \textit{trace} với \texttt{trace\_id = run\_id}. Mỗi node tạo một \textit{span} con thông qua context manager \textsc{NodeSpan}$(\textit{name}, \textit{run\_id})$ — pattern dưới dạng pseudocode:
+
+\begin{algorithmic}[1]
+  \Function{ExecuteNode}{name, state}
+    \State $run\_id \gets state.run\_id$
+    \State \textbf{begin span} $sp \gets$ \textsc{NodeSpan}(name, $run\_id$)
+    \State $output \gets$ \textsc{BusinessLogic}(state)
+    \State $sp$.update($output$, latency)
+    \State \textsc{EmitScore}($run\_id$, custom\_metrics)
+    \State \textsc{FlushAtNode}() \Comment{gửi sớm, giảm rủi ro mất trace}
+    \State \textbf{end span}
+    \State \Return $output$
+  \EndFunction
+\end{algorithmic}
+
+Toàn bộ 13 node tuân theo pattern này. Span tự động bắt: input/output payload, exceptions, độ dài thực thi, và mọi LLM call (qua callback handler của framework điều phối).
+
+\subsubsection*{Bốn cơ chế phòng vệ}
+\begin{enumerate}
+  \item \textbf{Circuit-breaker}: nếu observability backend fail liên tục $\geq N_{trip}$ lần trong cửa sổ thời gian $W$, breaker \textit{trip} và mọi call tracing tiếp theo trở thành no-op cho đến khi cửa sổ reset. Tránh cascade failure khi tầng quan sát down.
+  \item \textbf{Redaction}: trước khi gửi payload, một bộ lọc tất định loại bỏ các trường nhạy cảm (\texttt{access\_key}, \texttt{secret\_key}, \texttt{aws\_credentials}, \texttt{cookie}\ldots). Tránh leak credential ra SaaS bên thứ ba.
+  \item \textbf{Score emission}: thủ tục \textsc{EmitScore}$(run\_id, name, value)$ cho phép node bơm metric tuỳ biến (ví dụ \texttt{risk\_severity\_critical}, \texttt{rag\_confidence}, \texttt{planning\_quality}). Các score này hỗ trợ tracking xu hướng giữa nhiều phiên.
+  \item \textbf{Flush-at-node}: span được gửi ngay sau mỗi node thay vì batch ở cuối luồng — giảm rủi ro mất trace khi crash giữa luồng dài.
+\end{enumerate}
+
+\subsubsection*{Bảng các trace event được emit}
+\begin{table}[!htb]
+  \centering
+  \caption{Các loại event tracing được emit qua Observability Layer}
+  \label{tab:langfuse_events}
+  \begin{tabular}{|l|l|p{6.5cm}|}
+    \hline
+    \textbf{Loại event} & \textbf{Nguồn} & \textbf{Mô tả} \\ \hline
+    \texttt{trace} (root) & $run\_id$ & 1 trace cho 1 phiên PDCA \\ \hline
+    \texttt{span: node:*} & \textsc{NodeSpan} & 1 span/node, tổng 13 spans/phiên \\ \hline
+    \texttt{generation} & callback handler & Mỗi lần gọi LLM \\ \hline
+    \texttt{score} & \textsc{EmitScore} & Metric tuỳ biến (Critical count, RAG confidence,\ldots) \\ \hline
+    \texttt{event: tool\_call} & Remediation tool & Mỗi tool call ra hạ tầng AWS \\ \hline
+  \end{tabular}
+\end{table}
+
+Cấu hình Observability Layer (endpoint backend, API key, tỷ lệ sample) được tham số hoá; ở môi trường offline có thể disable hoàn toàn — toàn bộ helper trở thành no-op silent. Lib SaaS dùng để render trace UI được trình bày ở Chương~5.
+
+\subsubsection*{Failure Mode Analysis}
+\label{sec:failure_modes}
+
+Mỗi thành phần phụ thuộc bên ngoài (Observability backend, RAG service, LLM, AWS API) đều có khả năng fail. Bảng~\ref{tab:failure_modes} phát biểu policy ứng phó cho từng failure mode đã được tính đến trong thiết kế:
+
+\begin{table}[!htb]
+  \centering
+  \caption{Phân tích Failure Mode và Policy ứng phó}
+  \label{tab:failure_modes}
+  \renewcommand{\arraystretch}{1.25}
+  \footnotesize
+  \begin{tabular}{|p{2.6cm}|p{2.4cm}|p{4.0cm}|p{3.4cm}|}
+    \hline
+    \textbf{Failure mode} & \textbf{Severity} & \textbf{Policy ứng phó} & \textbf{Hệ quả vận hành} \\ \hline
+    Observability SDK down/timeout & Low & Circuit-breaker trip $\rightarrow$ mọi tracing call thành no-op trong cửa sổ reset & Mất visibility, không mất phiên \\ \hline
+    RAG service unavailable & Medium & \texttt{rag\_bundle} rỗng với $c_{RAG}=$\textit{unavailable}; pha Risk fallback Medium; pha Remediation skip auto-fix $\rightarrow$ manual\_required & Phiên vẫn chạy với chất lượng giảm \\ \hline
+    LLM timeout / parse error & Medium & Whitelist validation + fallback severity=Medium, score=5 (\S\ref{subsec:risk_evaluation_module}); retry max 1 lần & Mất chính xác đánh giá, không stop pipeline \\ \hline
+    AWS API throttling & High & Layered error handling: ClientError $\to$ retry với exponential backoff; SDK core error $\to$ flag manual\_required & Chậm phiên, không gây side-effect sai \\ \hline
+    Orchestrator OOM / restart & High & Persistent checkpointer đã lưu snapshot; resume từ checkpoint qua \texttt{interrupt\_before} state (\S\ref{subsec:persistence_resume}) & Phiên tiếp tục từ vị trí dừng \\ \hline
+    Embedding model fail load & Critical & Hard-fail ở startup; admin được cảnh báo qua health-check endpoint & RAG service không serve cho đến khi recover \\ \hline
+  \end{tabular}
+\end{table}
+
+Nguyên tắc bao trùm: \textit{quan sát không bao giờ làm sập sản xuất} (Observability), và \textit{sự cố ở tầng tri thức không làm dừng pha Act} (RAG soft-fail). Các fail-policy được test ở \S{}6.9 (HITL safety) và \S{}6.x (resilience).
+
+\section{Tầng RAG (Retrieval-Augmented Generation)}
+\label{sec:rag_layer}
+
+\subsubsection*{Kiến trúc tổng thể}
+
+Hệ thống Retrieval-Augmented Generation (RAG) trong đề tài được thiết kế như một thành phần trung tâm trong hệ thống đánh giá bảo mật AWS, với vai trò cung cấp ngữ cảnh tri thức cho các tác tử trí tuệ nhân tạo. Khác với cách tiếp cận RAG truyền thống, nơi mô hình ngôn ngữ trực tiếp sinh câu trả lời cho người dùng, hệ thống trong nghiên cứu này tách biệt rõ ràng giữa hai quá trình: truy hồi tri thức và suy luận. Cụ thể, RAG không thực hiện sinh nội dung cuối cùng mà tập trung vào việc truy xuất, xử lý và cấu trúc hóa thông tin nhằm phục vụ cho các agent chuyên biệt.
+
+Về tổng thể, kiến trúc hệ thống được tổ chức thành ba khối chức năng chính:
+
+\begin{itemize}
+    \item \textbf{Khối Orchestration của \sysnameshort{}:} bao gồm các module Planning, Monitoring, Scanning, Risk Evaluation, RAG Enrichment, Remediation, Verification và Report.
+    \item \textbf{Hạ tầng tri thức và RAG Engine:} chịu trách nhiệm lưu trữ, truy hồi và xử lý dữ liệu phục vụ cho toàn bộ hệ thống.
+\end{itemize}
+
+Trong kiến trúc này, RAG Engine đóng vai trò là một dịch vụ trung gian (RAG-as-a-Service), kết nối giữa các agent và nguồn tri thức. Các agent không trực tiếp truy cập dữ liệu mà gửi yêu cầu đến RAG Engine thông qua các API nội bộ. Cách tổ chức này giúp chuẩn hóa toàn bộ quá trình truy hồi, đồng thời đảm bảo tính nhất quán và khả năng tái sử dụng giữa các agent.
+
+RAG Engine thực hiện một chuỗi các chức năng liên tiếp, bao gồm:
+
+\begin{itemize}
+    \item Phân tích và chuẩn hóa truy vấn từ agent
+    \item Định tuyến truy vấn theo loại (ví dụ: truy vấn theo định danh, truy vấn ngôn ngữ tự nhiên)
+    \item Thực hiện truy hồi tri thức bằng phương pháp hybrid
+    \item Hợp nhất, lọc và đánh giá độ tin cậy của kết quả
+    \item Xây dựng ngữ cảnh phù hợp với từng loại agent
+\end{itemize}
+
+Về phía dữ liệu, hệ thống tri thức được xây dựng từ nhiều nguồn khác nhau liên quan đến bảo mật AWS, tiêu biểu như các kiểm tra bảo mật (Prowler checks), các năng lực bảo mật (maturity capabilities) và các ánh xạ giữa chúng. Các dữ liệu này được xử lý thông qua pipeline offline nhằm chuẩn hóa nội dung và tạo biểu diễn phục vụ truy hồi. Kết quả được lưu trữ dưới hai dạng bổ trợ cho nhau:
+
+\begin{itemize}
+    \item \textbf{Chỉ mục từ khóa (BM25):} hỗ trợ truy hồi chính xác đối với các truy vấn có cấu trúc, đặc biệt là các định danh như \texttt{check\_id}.
+    
+    \item \textbf{Cơ sở dữ liệu vector (ChromaDB):} hỗ trợ truy hồi ngữ nghĩa cho các truy vấn ngôn ngữ tự nhiên.
+\end{itemize}
+
+Sự kết hợp này cho phép hệ thống tận dụng ưu điểm của cả hai phương pháp, vừa đảm bảo độ chính xác cao, vừa duy trì khả năng hiểu ngữ nghĩa của truy vấn.
+
+Trong quá trình vận hành, luồng xử lý tổng quát của hệ thống có thể được mô tả như sau: các agent gửi truy vấn đến RAG Engine, hệ thống tiến hành phân tích và truy hồi dữ liệu từ các nguồn tri thức, sau đó xây dựng một tập ngữ cảnh có cấu trúc và trả về cho agent. Agent sử dụng ngữ cảnh này làm đầu vào cho quá trình suy luận hoặc sinh nội dung, tùy thuộc vào mục đích sử dụng.
+
+Một điểm quan trọng trong thiết kế là ngữ cảnh không được xây dựng theo một khuôn mẫu chung, mà được điều chỉnh theo từng loại agent. Ví dụ, Planning Agent cần tập trung vào phạm vi kiểm tra và độ bao phủ, trong khi Risk Evaluation Agent cần thông tin chi tiết về rủi ro và ánh xạ kiểm soát. Điều này cho thấy hệ thống không chỉ dừng lại ở mức truy hồi thông tin, mà còn thực hiện bước trung gian nhằm tối ưu hóa dữ liệu đầu vào cho từng tác vụ cụ thể.
+
+Tổng thể, kiến trúc thể hiện ba đặc điểm: phân tách chức năng rõ ràng, thiết kế hướng dịch vụ, và khả năng phục vụ nhiều module tiêu thụ ngữ cảnh khác nhau (consumer-aware). Đây là nền tảng để triển khai các cơ chế truy hồi và xây dựng ngữ cảnh trình bày trong các mục tiếp theo.
+
+\subsubsection*{Các tầng kiến trúc RAG}
+
+Kiến trúc logic của hệ thống RAG được thiết kế theo mô hình phân tầng (Layered Architecture) gồm sáu lớp chức năng: \textbf{Knowledge Engineering} và \textbf{Storage} (xử lý ngoại tuyến); \textbf{Query} và \textbf{Retrieval Intelligence} (truy vấn thời gian thực); \textbf{Context Construction} và \textbf{Generation} (hậu xử lý). Việc phân tầng tách bạch trách nhiệm: quá trình nhúng dữ liệu và quản lý kho lưu trữ lai (BM25 và ChromaDB) diễn ra ngoại tuyến, độc lập với pha trực tuyến; trong pha trực tuyến, hệ thống định tuyến truy vấn, lọc ngữ cảnh và đóng gói ngữ cảnh riêng biệt cho từng Agent đích. Sơ đồ sau trực quan hoá toàn bộ luồng dữ liệu từ truy vấn đến đầu ra của tầng sinh:
+
+\input{components/diagrams/rag_logic}
+
+Dựa trên sơ đồ logic, quy trình vận hành End-to-End được cô đọng qua các giai đoạn kỹ thuật cốt lõi sau:
+
+\begin{enumerate}
+    \item \textbf{Ingestion (Nạp tri thức ngoại tuyến):} Phân rã văn bản phức tạp, trích xuất siêu dữ liệu đính kèm (Metadata-aware Chunking), sinh Vector Embeddings và đối soát vào cơ sở lưu trữ lai.
+    \item \textbf{Query Analysis (Phân tích truy vấn):} Chuẩn hóa chuỗi truy vấn đầu vào từ Agent, nhận diện ý định và định tuyến chiến lược (Ví dụ: Định dạng Exact Match cho \texttt{check\_id} hoặc định dạng Semantic Search cho diễn giải rủi ro AWS).
+    \item \textbf{Hybrid Retrieval (Truy xuất lai):} Quét định danh song song trên chỉ mục từ khóa BM25 và không gian vector ngữ nghĩa ChromaDB, đồng thời tiến hành hợp nhất danh sách phân tán qua thuật toán chấm điểm Reciprocal Rank Fusion (RRF).
+    \item \textbf{Contextualization (Dựng ngữ cảnh):} Lọc nhiễu tài liệu thô dựa trên siêu dữ liệu (Metadata Filtering), kết nối và đóng gói thành tập ngữ cảnh (Context Bundle) chuyên dụng, đáp ứng độ phủ hệ thống mà từng Agent yêu cầu (Planning/Risk/Report).
+    \item \textbf{Agentic Generation (Sinh đầu ra có cấu trúc):} Đưa khối ngữ cảnh đã chọn lọc vào prompt template, mô hình LLM sinh đầu ra theo schema cố định (\textit{Structured JSON Output}) đã định nghĩa trước cho từng agent, giúp downstream parsing không bị ảnh hưởng bởi format drift.
+\end{enumerate}
+
+
+
+\subsection{Knowledge Ingestion --- Xây dựng và Quản lý Tri thức}
+
+Chất lượng của một hệ thống RAG phụ thuộc trực tiếp vào tính chính thống và độ sạch của dữ liệu đầu vào. Nhóm đã xây dựng một pipeline tự động để thu thập và tinh chế tri thức từ các nguồn uy tín trong ngành bảo mật điện toán đám mây.
+
+\begin{enumerate}
+    \item \textbf{Nguồn thu thập dữ liệu (Data Sourcing)}
+
+    Hệ thống tập trung khai thác ba nhóm thực thể tri thức cốt lõi, đảm bảo tính cập nhật và chính xác:
+    \begin{itemize}
+        \item \textbf{Prowler Checks:} Dữ liệu được trích xuất trực tiếp từ tài liệu chính thống (\textit{Official Documentation}) của dự án \textbf{Prowler}, công cụ mã nguồn mở hàng đầu về đánh giá an ninh AWS. Nhóm sử dụng kỹ thuật cào dữ liệu (\textit{Web Scraping}) để thu thập các trường: \textit{CheckTitle, Description, Risk, Remediation} và các lệnh thực thi (CLI/Terraform).
+
+        \item \textbf{AWS Maturity Capabilities:} Dữ liệu về năng lực bảo mật được thu thập từ trang chủ của \textbf{Amazon Web Services (AWS)} và mô hình trưởng thành an ninh. Nhóm phát triển các script Python chuyên biệt để crawl và cấu trúc lại các khuyến nghị quản trị.
+
+        \item \textbf{Maturity Mappings:} Đây là dữ liệu do đồ án tự xây dựng và tinh chỉnh, đóng vai trò "cầu nối" ngữ nghĩa giữa các lỗi kỹ thuật từ Prowler và các mục tiêu chiến lược của AWS Maturity Model.
+    \end{itemize}
+
+    \item \textbf{Hiện thực quy trình thu thập tự động (Automated Crawling)}
+    \subsubsection*{Thu thập dữ liệu từ Prowler}
+    Dữ liệu kỹ thuật được trích xuất trực tiếp từ mã nguồn của \textbf{Prowler}, công cụ đánh giá an ninh AWS tiêu chuẩn ngành. Nhóm hiện thực phương pháp truy xuất tệp tin hệ thống để thu thập tri thức ở dạng nguyên bản nhất.
+
+\begin{itemize}
+    \item \textbf{Cơ chế thực thi:} Sử dụng thư viện chuẩn của Python để duyệt đệ quy qua cấu trúc thư mục các provider AWS của thư viện Prowler đã cài đặt.
+    \item \textbf{Dữ liệu trích xuất:} Hệ thống tập trung thu thập các tệp metadata dạng JSON. Mỗi tệp này chứa đầy đủ thông tin về một bài kiểm tra an ninh, bao gồm: \textit{CheckID}, mã lệnh khắc phục (\textit{Remediation Code}), mức độ nghiêm trọng và các rủi ro liên quan.
+\end{itemize}
+
+
+    \subsubsection*{Thu thập dữ liệu chiến lược từ AWS Security Maturity Model}
+    \begin{itemize}
+    \item \textbf{Chiến lược quét theo giai đoạn:} Agent thực hiện quét theo 4 giai đoạn (\textit{Phases}) của mô hình trưởng thành: \textit{Quick Wins, Foundational, Efficient} và \textit{Optimized}.
+    \item \textbf{Bóc tách ngữ nghĩa dựa trên tiêu đề:} Thay vì lấy văn bản thô, Agent sử dụng \texttt{BeautifulSoup} để phân tích cấu trúc HTML, trích xuất thông tin theo các từ khóa mục tiêu (\textit{Keywords}) như: \textit{Risk Mitigation}, \textit{How to check}, và \textit{Guidance for assessments}.
+\end{itemize}
+
+
+    \item \textbf{Chuẩn hóa dữ liệu chuyên biệt (Domain-Specific Normalization)}
+
+    Sau khi thu thập, dữ liệu thô được đưa qua lớp \texttt{Normalizer} để chuyển đổi thành định dạng \textit{Canonical Data}. Khác với các hệ thống thông thường, đồ án áp dụng các quy tắc xử lý đặc thù cho lĩnh vực Cloud Security:
+
+    \begin{itemize}
+        \item \textbf{Xử lý Stopwords chuyên biệt:} Ngoài danh sách từ dừng tiếng Anh thông thường, đồ án xây dựng bộ lọc \texttt{AWS\_STOPWORDS} để loại bỏ các từ xuất hiện với tần suất quá cao nhưng không mang giá trị phân loại như: \textit{"aws", "amazon", "service", "resource", "account"}. Việc này giúp bộ máy BM25 tập trung vào các từ khóa mang tính chuyên môn cao như \textit{"public"}, \textit{"encryption"}, hay \textit{"mfa"}.
+
+        \item \textbf{Gốc hóa bằng Snowball Stemmer:} Hệ thống sử dụng thuật toán \texttt{SnowballStemmer} để đưa các biến thể từ ngữ về gốc nguyên bản (ví dụ: \textit{"encrypting"}, \textit{"encrypted"} $\rightarrow$ \textit{"encrypt"}). Điều này giúp tăng tỷ lệ khớp ngữ nghĩa khi người dùng đặt câu hỏi bằng ngôn ngữ tự nhiên.
+
+        \item \textbf{Tổ hợp văn bản truy xuất (Retrieval Text Construction):} Hệ thống thực hiện phẳng hóa (\textit{Flattening}) dữ liệu JSON thành một chuỗi văn bản duy nhất gọi là \texttt{retrieval\_text}. Chuỗi này bao gồm sự kết hợp chiến lược của tiêu đề, rủi ro và các bí danh ngữ nghĩa (\textit{Semantic Aliases}) giúp mô hình Embedding dễ dàng bắt lấy đặc trưng của tài liệu.
+    \end{itemize}
+\end{enumerate}
+
+Quy trình thu thập và chuẩn hóa này tạo nên một kho tri thức "sạch", nơi mỗi thực thể dữ liệu không chỉ là văn bản thô mà là một đơn vị tri thức có cấu trúc, gắn liền với các nhãn Metadata (Service, Severity, Domain). Đây là tiền đề bắt buộc để các tầng truy xuất lai (Hybrid Retrieval) đạt được độ chính xác cao trong các giai đoạn tiếp theo.
+
+
+Sau quá trình xử lý, các thực thể tri thức được lưu trữ dưới dạng các đối tượng JSON có cấu trúc đồng nhất. Dưới đây là các mẫu dữ liệu tiêu biểu đại diện cho ba kho thành phần của hệ thống:
+
+\begin{enumerate}
+    \item \textbf{Dữ liệu kiểm tra an ninh (Prowler Check):}
+    Bản ghi này chứa đầy đủ thông tin kỹ thuật, rủi ro và mã lệnh khắc phục. Đặc biệt, trường \texttt{retrieval\_text} được làm giàu bằng các \texttt{aliases} và \texttt{synonyms} để tối ưu hóa khả năng truy xuất ngữ nghĩa.
+
+\begin{lstlisting}[language=json, caption=Mẫu dữ liệu chuẩn hóa của một Prowler Check]
+{
+  "doc_id": "check:s3_multi_region_access_point_public_access_block",
+  "doc_type": "prowler_check",
+  "service": "s3",
+  "severity": "high",
+  "title": "Block Public Access Settings enabled on Multi Region Access Points.",
+  "risk": "Leaving S3 multi region access points open to the public in AWS can lead to data exposure...",
+  "remediation": "{'Other': '...', 'Text': 'Ensure S3 multi region access points are private by default...'}",
+  "retrieval_text": "check: s3_multi_region_access_point_public_access_block\nservice: s3\ntitle: block public access settings enabled...",
+  "synonyms": ["s3 bucket", "public exposure", "storage bucket", ...]
+}
+\end{lstlisting}
+
+    \item \textbf{Dữ liệu ánh xạ (Maturity Mapping):}
+    Đây là đơn vị tri thức trung gian, kết nối giữa các bài kiểm tra kỹ thuật và năng lực quản trị tương ứng, giúp Agent thực hiện suy luận bắc cầu.
+
+\begin{lstlisting}[language=json, caption=Mẫu dữ liệu ánh xạ giữa kỹ thuật và quản trị]
+{
+  "doc_id": "mapping:s3_account_level_public_access_blocks:block_public_access",
+  "doc_type": "maturity_mapping",
+  "check_id": "s3_account_level_public_access_blocks",
+  "capability_id": "block_public_access",
+  "capability_name": "Block Public Access",
+  "mapping_confidence": "high",
+  "mapping_reason": "S3 Account-Level Public Access Blocks directly enforces the block public access capability...",
+  "retrieval_text": "s3_account_level_public_access_blocks\ns3\ndata_protection\nblock_public_access..."
+}
+\end{lstlisting}
+
+    \item \textbf{Dữ liệu năng lực quản trị (Maturity Capability):}
+    Tập trung vào các hướng dẫn chiến lược, mức độ ưu tiên (\textit{Stage}) và các câu hỏi dẫn dắt (\textit{Guidance}) để đánh giá độ trưởng thành an ninh.
+
+\begin{lstlisting}[language=json, caption=Mẫu dữ liệu năng lực bảo mật trong Maturity Model]
+{
+  "doc_id": "capability:keep_your_security_contact_details_up_to_date",
+  "doc_type": "maturity_capability",
+  "capability_name": "Keep your security contact details up to date",
+  "stage": "1 quickwins",
+  "summary": "Ensure that the security contacts are up to date, and that the mail address is monitored regularly...",
+  "risk_explanation": "AWS contacts you through these contacts if we detect a security issue...",
+  "guidance": "Are security contacts defined for all accounts in your organization?",
+  "retrieval_text": "capability: keep_your_security_contact_details_up_to_date\nname: keep your security contact details..."
+}
+\end{lstlisting}
+\end{enumerate}
+
+\subsubsection*{Phân đoạn và biểu diễn dữ liệu}
+Sau bước chuẩn hóa, dữ liệu được tổ chức lại thành các đơn vị tri thức tối ưu. Khác với các hệ thống RAG phổ thông thường chia nhỏ văn bản theo kích thước cố định (\textit{Fixed-size chunking}), đồ án chọn chiến lược Phân đoạn theo thực thể tài liệu (Atomic/Document-level Chunking) để bảo toàn tính toàn vẹn của tri thức bảo mật.
+
+\begin{enumerate}
+    \item \textbf{Chiến lược phân đoạn theo thực thể (Atomic Chunking Strategy)}
+
+    Thay vì chia cắt tài liệu dựa trên số lượng ký tự, hệ thống quy định mỗi tài liệu gốc là một đơn vị truy hồi độc lập (\textit{Atomic Unit}). Cụ thể:
+    \begin{itemize}
+        \item Một \textit{Prowler Check} (bao gồm đầy đủ tiêu đề, rủi ro, mã lệnh khắc phục) là một đơn vị.
+        \item Một \textit{Maturity Capability} là một đơn vị.
+        \item Một \textit{Maturity Mapping} là một đơn vị liên kết.
+    \end{itemize}
+
+    \textbf{Lý do của lựa chọn này:} Trong miền tri thức bảo mật, một hướng dẫn khắc phục (\textit{Remediation}) nếu bị chia cắt làm hai đoạn sẽ mất đi giá trị thực thi. Việc giữ nguyên thực thể giúp hệ thống:
+    \begin{itemize}
+        \item Đảm bảo tính toàn vẹn của mã lệnh CLI và cấu hình Terraform.
+        \item Cung cấp ngữ cảnh hoàn chỉnh cho Agent suy luận mà không cần ghép nối các đoạn rời rạc.
+        \item Duy trì mối quan hệ logic chặt chẽ giữa lỗi kỹ thuật và năng lực quản trị tương ứng.
+    \end{itemize}
+
+    \item \textbf{Xây dựng biểu diễn lai (\textit{Hybrid Representation})}
+
+    Nhóm thực hiện ánh xạ mỗi đơn vị tri thức sang hai không gian biểu diễn đồng thời để phục vụ kiến trúc Hybrid RAG:
+
+    \textit{- Biểu diễn văn bản cho BM25:} Hệ thống hiện thực hàm \texttt{build\_retrieval\_text} để tổng hợp các trường dữ liệu thành một chuỗi văn bản thuần túy. Đặc biệt, đồ án chủ động đưa các mã định danh (\texttt{check\_id}) và dịch vụ (\texttt{service}) lên đầu chuỗi để tăng trọng số truy xuất cho bộ máy từ khóa.
+
+    \textit{- Biểu diễn Vector cho Semantic Search:} Nhóm sử dụng toàn bộ nội dung đã chuẩn hóa (bao gồm cả các \textit{Semantic Aliases}) để tạo nhúng vector. Việc nhúng toàn bộ thực thể tài liệu giúp vector phản ánh đầy đủ ngữ nghĩa của bài kiểm tra bảo mật, từ đó hỗ trợ tốt cho các truy vấn bằng ngôn ngữ tự nhiên mang tính mô tả.
+
+    \item \textbf{Cấu trúc Metadata phục vụ điều phối}
+
+    Bên cạnh nội dung tìm kiếm, đồ án thiết kế hệ thống Metadata phong phú gắn kèm mỗi tài liệu để phục vụ các logic nghiệp vụ sau truy xuất:
+    \begin{itemize}
+        \item \textbf{Service \& Provider:} Dùng để thực hiện bộ lọc cứng (\textit{Hard Filtering}), đảm bảo truy vấn về S3 không bao giờ trả về kết quả của IAM.
+        \item \textbf{Document Type:} Phân loại rõ \textit{check, capability} hay \textit{mapping} để tầng \texttt{ContextService} điều phối đúng gói tri thức cho từng loại Agent.
+        \item \textbf{Severity \& Domain:} Hỗ trợ Agent trong việc đánh giá mức độ ưu tiên của các rủi ro phát hiện được.
+    \end{itemize}
+\end{enumerate}
+
+
+
+Phân đoạn theo thực thể tài liệu kết hợp với biểu diễn lai giúp cân bằng giữa độ chính xác từ khoá và khả năng hiểu ngữ cảnh. Cách tiếp cận này cấp cho Agent các đơn vị tri thức nguyên vẹn (\textit{Actionable Units}) thay vì các đoạn văn bản bị cắt rời, qua đó cải thiện chất lượng kế hoạch và báo cáo đầu ra.
+
+\subsubsection*{Hiện thực tầng lưu trữ và Chỉ mục kép (Indexing Layer)}
+
+Sau khi dữ liệu đã được chuẩn hóa thành các thực thể nguyên tử (\textit{Atomic Docs}), đồ án tiến hành xây dựng hệ thống lưu trữ song song để phục vụ kiến trúc truy xuất lai. Thay vì sử dụng một kho lưu trữ chung, đồ án thiết lập các chiến lược chỉ mục chuyên biệt cho từng loại tri thức an ninh.
+
+\begin{enumerate}
+    \item \textbf{Cấu trúc lưu trữ phân mảnh theo Collections}
+
+    Nhóm thực hiện tổ chức dữ liệu vào các phân vùng riêng biệt (\textit{Collections}) trong ChromaDB và các bộ chỉ mục BM25 tương ứng:
+    \begin{itemize}
+        \item \textbf{\texttt{checks\_collection}:} Lưu trữ toàn bộ 100\% Metadata từ Prowler.
+        \item \textbf{\texttt{capabilities\_collection}:} Lưu trữ các năng lực bảo mật từ AWS Maturity Model.
+        \item \textbf{\texttt{mappings\_collection}:} Lưu trữ các quan hệ logic giữa kỹ thuật và quản trị.
+    \end{itemize}
+    Việc phân chia này giúp hệ thống tối ưu hóa tốc độ truy vấn bằng cách giới hạn phạm vi tìm kiếm ngay từ cấp độ dịch vụ (\textit{Service-level gating}).
+
+    \item \textbf{Hiện thực chỉ mục từ khóa chuyên biệt (BM25)}
+
+    Trong hệ thống đề xuất, chỉ mục BM25 được tinh chỉnh để ưu tiên các truy vấn có tính xác thực cao. Đồ án cấu trúc nội dung đánh chỉ mục tập trung vào các trường định danh kỹ thuật:
+    \begin{itemize}
+        \item \textbf{Xử lý Tokenization:} Sử dụng bộ tách từ đã loại bỏ \texttt{AWS\_STOPWORDS} để đảm bảo các từ khóa như \texttt{iam}, \texttt{s3}, \texttt{mfa} luôn có trọng số cao nhất.
+        \item \textbf{Trọng số định danh:} Nhóm chủ động đưa các mã \texttt{check\_id} vào nội dung chỉ mục để hỗ trợ cơ chế \textit{Exact Match}, giúp đạt độ chính xác tuyệt đối ($1{,}0$) khi Agent truy vấn đích danh một bài kiểm tra.
+    \end{itemize}
+
+    \item \textbf{Hiện thực chỉ mục Vector (Semantic Indexing)}
+
+    Song song với luồng từ khóa, hệ thống nạp các vector nhúng 768 chiều vào ChromaDB.
+    \begin{itemize}
+        \item \textbf{Lưu trữ Metadata đồ sộ:} Nhóm không chỉ lưu vector mà còn nhúng kèm toàn bộ JSON Metadata vào mỗi bản ghi. Điều này cho phép hệ thống truy xuất đầy đủ thông tin rủi ro và hướng dẫn khắc phục ngay lập tức mà không cần truy vấn thêm cơ sở dữ liệu quan hệ bên ngoài.
+        \item \textbf{Cơ chế Persistence:} Chỉ mục được cấu trúc để lưu trữ bền vững trên đĩa cứng (\textit{Persistent Storage}), cho phép hệ thống khởi động nhanh và duy trì tính nhất quán của tri thức.
+    \end{itemize}
+
+    \item \textbf{Quy trình xây dựng chỉ mục Offline (Offline Pipeline)}
+
+    Để đảm bảo hiệu năng thời gian thực cho Agent, đồ án tách rời quá trình xây dựng chỉ mục thành một luồng xử lý ngoại tuyến (\textit{Offline}):
+    \begin{enumerate}
+        \item Đọc dữ liệu thô đã được chuẩn hoá.
+        \item Thực hiện véc-tơ hóa hàng loạt (\textit{Batch Embedding}) để tối ưu tài nguyên tính toán.
+        \item Đồng bộ hóa trạng thái giữa chỉ mục BM25 và Vector DB để đảm bảo mỗi \texttt{doc\_id} đều tồn tại song song ở cả hai luồng truy xuất.
+    \end{enumerate}
+\end{enumerate}
+
+
+
+Thiết kế lưu trữ phân mảnh kết hợp với cơ chế chỉ mục kép giúp hệ thống đạt được sự cân bằng giữa tốc độ và độ chính xác. Đây là nền tảng kỹ thuật cho phép hệ thống triển khai thuật toán \textit{Reciprocal Rank Fusion} (RRF) ở tầng truy xuất, đảm bảo các kết quả trả về cho Agent luôn là sự kết hợp tối ưu giữa sự thật kỹ thuật (BM25) và ngữ cảnh bảo mật (Vector).
+
+\subsection{Hybrid Retrieval Pipeline}
+\label{sec:retrieval_design}
+\subsubsection*{Hiện thực tầng Điều phối và Định tuyến truy vấn (Query Routing)}
+
+Trong hệ thống, lớp \texttt{QueryController} được hiện thực để định tuyến truy vấn dựa trên luật (\textit{Rule-based Query Routing}). Thiết kế xác định chiến lược truy xuất phù hợp cho từng dạng truy vấn nhằm giảm nhiễu và tăng độ chính xác. Quy trình gồm 3 khía cạnh:
+
+\begin{enumerate}
+    \item \textbf{Nhận diện mục đích (Query Type Detection):} Sau khi đồng bộ qua lớp \texttt{Normalizer}, hệ thống chia luồng truy vấn thành 3 nhóm: Truy vấn định danh (\textit{Exact Lookup} dùng \textit{Regex} quét thẳng mã \texttt{id} kiểm tra); Truy vấn tự nhiên (\textit{Semantic Query} dành cho hỏi đáp linh hoạt); và Truy vấn ánh xạ (\textit{Mapping Resolution} để tìm mối liên kết lỗi kỹ thuật – năng lực quản trị).
+    
+    \item \textbf{Trích xuất thực thể và áp bộ lọc cứng (Dynamic Filtering):} Trích các tín hiệu (\textit{Signals}) từ văn bản truy vấn để áp các \textit{Hard Filters}: \textit{Service Gating} chèn ràng buộc dịch vụ (ví dụ \texttt{service: iam}) vào tham số \texttt{where} của ChromaDB để cô lập không gian tìm kiếm; \textit{Intent Extraction} điều chỉnh trọng số (\textit{Weighting}) cho BM25 theo ý định truy vấn.
+
+    \item \textbf{Định tuyến nhánh xử lý (Pipeline Routing):} Truy vấn được phân vào 1 trong 3 nhánh xử lý: \textit{Direct Path} truy cập trực tiếp metadata để giảm độ trễ; \textit{Hybrid Path} chạy song song hai bộ máy BM25 và Vector; hoặc \textit{Mapping Path} tra cứu \texttt{mappings\_collection} để kết nối chéo các tầng tri thức.
+\end{enumerate}
+
+Kiến trúc tách luồng này cho phép Agent vừa duy trì độ chính xác $1{,}0$ cho các truy vấn chứa mã định danh, vừa giữ năng lực truy hồi ngữ nghĩa cho các truy vấn bằng ngôn ngữ tự nhiên.
+
+
+
+
+
+
+\subsubsection*{Tầng Truy xuất lai (Hybrid Retrieval)}
+\label{subsec:hybrid_retrieval}
+
+Truy xuất lai kết hợp lexical search (BM25) và dense semantic search (vector) nhằm cân bằng giữa độ chính xác trên định danh kỹ thuật (\texttt{check\_id}) và khả năng hiểu truy vấn ngôn ngữ tự nhiên. Bốn thành phần kế tiếp tạo thành pipeline truy hồi:
+
+\paragraph*{(a) Truy xuất song song (Parallel Execution).}
+Hai luồng truy xuất chạy song song:
+\begin{itemize}
+  \item \textbf{Luồng BM25:} ưu tiên định danh kỹ thuật (\texttt{check\_id}) và các từ khóa chuyên môn (đã qua bộ lọc \texttt{AWS\_STOPWORDS} và Snowball stemmer ở pha indexing).
+  \item \textbf{Luồng Dense:} dùng một mô hình embedding $E: \text{text} \to \mathbb{R}^d$ với $d \in [256, 768]$. Cụ thể model và dimension được trình bày ở Chương 5; ở mức thiết kế, yêu cầu là model phải hỗ trợ truy vấn cả tiếng Việt lẫn tiếng Anh (xem \S\ref{subsubsec:multilingual_strategy}).
+\end{itemize}
+
+\paragraph*{(b) Hợp nhất bằng Reciprocal Rank Fusion (RRF).}
+Hai ranked list (lexical $L_{lex}$ và dense $L_{vec}$) được hợp nhất bằng RRF \cite{cormack2009rrf} — chọn vì nó độc lập với thang điểm raw, phù hợp khi BM25 score và cosine similarity có scale rất khác nhau. Công thức:
+
+\begin{equation}
+  RRF(d) = \sum_{r \in R} \frac{1}{k + \text{rank}_r(d)}
+  \label{eq:rrf}
+\end{equation}
+
+trong đó $R = \{L_{lex}, L_{vec}\}$ là tập ranked list, $\text{rank}_r(d)$ là thứ hạng của tài liệu $d$ trong list $r$ (đếm từ 1), và $k=60$ là hằng số dập nhiễu theo khuyến nghị của paper gốc. Hệ thống lấy top-$k_{retrieval}=10$ từ mỗi luồng trước khi hợp nhất.
+
+\paragraph*{(c) Bộ lọc cứng (Hard Filters).}
+Trước khi rerank, các bộ lọc metadata được áp dụng để loại bỏ kết quả lệch domain:
+\begin{itemize}
+  \item \textit{Service Gating:} truy vấn về S3 chỉ trả kết quả từ \texttt{checks\_collection} có \texttt{service=s3}.
+  \item \textit{Doc-type Gating:} hạn chế \texttt{doc\_type} theo loại truy vấn (planning ưu tiên \texttt{check}, risk ưu tiên \texttt{check + capability}, report bao gồm cả \texttt{mapping}).
+\end{itemize}
+
+\paragraph*{(d) Cross-encoder Reranking.}
+Top-$N=20$ kết quả sau RRF được đưa qua một cross-encoder $f_{ce}: (\text{query}, \text{doc}) \to [0,1]$ để rerank. Cross-encoder đánh giá trực tiếp mối tương quan logic giữa cặp $(q, d)$ chứ không chỉ dựa trên embedding similarity. Sau rerank, hệ thống chỉ giữ top-$k_{rerank}=5$ ứng viên có điểm cao nhất để đưa vào ngữ cảnh agent.
+
+\textbf{Tradeoff Recall@k vs Latency.} Việc chọn $N$ và $k_{rerank}$ là tradeoff trực tiếp giữa độ phủ ($N$ lớn $\rightarrow$ nhiều ứng viên cho rerank thấy $\rightarrow$ Recall cao) và độ trễ (rerank chi phí $O(N)$ trên cross-encoder). Bảng~\ref{tab:rerank_tradeoff} đặc tả không gian thiết kế; bench thực nghiệm được trình bày ở \S6.7.2.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tradeoff không gian thiết kế cho Reranker}
+  \label{tab:rerank_tradeoff}
+  \footnotesize
+  \begin{tabular}{|c|c|p{4.0cm}|p{4.5cm}|}
+    \hline
+    \textbf{$N$ (input)} & \textbf{$k_{rerank}$} & \textbf{Kỳ vọng} & \textbf{Khi nào chọn} \\ \hline
+    10 & 3 & Latency thấp, Recall@3 ổn & Truy vấn định danh có exact match \\ \hline
+    20 & 5 & Cân bằng (\textbf{mặc định}) & Truy vấn ngôn ngữ tự nhiên \\ \hline
+    50 & 10 & Recall cao, latency tăng $\sim 2{,}5\times$ & Báo cáo cuối luồng (đã ngoài critical path) \\ \hline
+  \end{tabular}
+\end{table}
+
+\subsubsection{Chiến lược đa ngôn ngữ (Multilingual Strategy)}
+\label{subsubsec:multilingual_strategy}
+
+\sysnameshort{} hỗ trợ truy vấn cả tiếng Việt và tiếng Anh, trong khi corpus tri thức (Prowler check, AWS Maturity Model, mappings) hoàn toàn bằng tiếng Anh. Có ba chiến lược thiết kế đã được cân nhắc, kèm tradeoff:
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ba phương án thiết kế cross-lingual retrieval}
+  \label{tab:multilingual_options}
+  \footnotesize
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{|p{2.2cm}|p{4.6cm}|p{4.5cm}|}
+    \hline
+    \textbf{Phương án} & \textbf{Ưu điểm} & \textbf{Nhược điểm} \\ \hline
+    \textbf{(A) Translation pre-step} VI $\rightarrow$ EN ở Planning Module rồi giữ embedding EN-only (BGE-base-en, MS~MARCO cross-encoder) & Tận dụng tối đa mô hình EN đã pretrain trên corpus bảo mật EN; reranker EN-only hoạt động đồng nhất; pipeline đơn giản, chỉ một index & Thêm một bước chuẩn hoá thuật ngữ (deterministic VI$\rightarrow$EN glossary, không cần LLM) trước embedding; phụ thuộc độ phủ glossary \\ \hline
+    \textbf{(B) Multilingual embedding} (e.g.\ \textit{paraphrase-multilingual-MiniLM}, \textit{multilingual-e5}) & Không cần bước dịch; cross-lingual native & Quality EN giảm nhẹ trên thuật ngữ kỹ thuật bảo mật; reranker EN-only vẫn phải dịch query; chi phí re-index toàn bộ collection \\ \hline
+    \textbf{(C) Code-switching glossary} thuần — không có embedding fallback & Rẻ và tất định, không cần ML & Chỉ cover thuật ngữ rời rạc; câu phức tạp vẫn fail \\ \hline
+  \end{tabular}
+\end{table}
+
+\textbf{Quyết định thiết kế:} chọn phương án \textbf{(A) Translation pre-step + EN-only embedding}. Cụ thể, hệ thống dùng embedding \textit{BAAI/bge-base-en-v1.5} (384/768 chiều, EN-only) cho dense retrieval và cross-encoder \textit{ms-marco-MiniLM-L-6-v2} (EN-only) cho rerank. Truy vấn tiếng Việt được chuẩn hoá ở Planning Module thông qua một \textit{glossary tất định} ánh xạ thuật ngữ bảo mật VI$\rightarrow$EN (ví dụ ``mã hoá''~$\rightarrow$~``encryption'', ``phân quyền''~$\rightarrow$~``IAM permissions'') trước khi embedding. Lý do: (i) corpus đích (Prowler/AWS docs) hoàn toàn EN, EN-only model fit hơn về phân phối dữ liệu; (ii) reranker EN-only buộc query phải EN — nếu chọn (B) thì vẫn phải dịch query cho rerank, mất luôn lợi ích native cross-lingual; (iii) glossary tất định rẻ và audit được, không thêm latency LLM call. Phương án (B) được giữ lại như \textit{future work} nếu corpus mở rộng sang tài liệu compliance VN (ISO/IEC 27001 bản dịch, thông tư BTTTT). Phương án (C) bị loại vì không scale cho câu phức tạp.
+
+\textbf{Kế hoạch benchmark song ngữ.} Tập đánh giá gồm 50 truy vấn tiếng Việt + 50 truy vấn tiếng Anh tương đương về ngữ nghĩa (đồ án tự dịch và đối chiếu). Đo Recall@5 và MRR riêng cho mỗi nhóm; chấp nhận thiết kế khi $|R@5_{VI} - R@5_{EN}| \leq 0{,}05$ và $|MRR_{VI} - MRR_{EN}| \leq 0{,}05$. Nếu gap vượt ngưỡng, kế hoạch dự phòng là mở rộng glossary hoặc chuyển sang (B).
+
+\subsubsection*{Reranking và Quality Gate}
+\label{subsec:reranking_quality_gate}
+
+Sau RRF + cross-encoder rerank, các ứng viên đi qua một \textit{quality gate} đa lớp trước khi cấp phát cho agent:
+
+\begin{enumerate}
+  \item \textbf{Lọc ngữ cảnh \& Metadata:} loại bỏ tài liệu không khớp với scope của truy vấn (service, doc\_type, domain).
+  \item \textbf{Verification (cảnh báo, không xóa):} phát hiện các tín hiệu bất thường — thiếu \textit{exact match} cho \texttt{check\_id} đã chỉ định, vi phạm service gating, top-1 score quá thấp — và đính kèm \texttt{warnings} thay vì xóa kết quả. Lý do: agent tiêu thụ vẫn có thể quyết định dùng tập kết quả với cảnh báo.
+  \item \textbf{Confidence Scoring:} tính $c_{RAG}$ theo công thức~(\ref{eq:rag_confidence}). Đây là output cuối cùng đi vào \texttt{rag\_bundle}.
+\end{enumerate}
+
+Việc tách rerank và quality gate thành hai bước rõ ràng giúp \textit{Recall} (đảm bảo bởi rerank) và \textit{trust} (đảm bảo bởi confidence + warnings) là hai thuộc tính độc lập có thể audit riêng.
+
+
+\subsection{Context Construction \& RAG-as-a-Service Interface}
+
+\subsubsection*{Mapping Resolution (Check $\rightarrow$ Capability)}
+
+Trong hệ thống đánh giá bảo mật, các kiểm tra kỹ thuật (\textit{checks}) thường phản ánh các vấn đề ở mức chi tiết, trong khi các mục tiêu bảo mật lại được tổ chức ở mức khái niệm cao hơn dưới dạng các năng lực (\textit{capabilities}). Do đó, việc thiết lập mối liên hệ giữa hai mức này là cần thiết để hỗ trợ các tác vụ phân tích và ra quyết định. Trong hệ thống RAG, chức năng này được thực hiện thông qua cơ chế \textit{mapping resolution}, chuyển đổi từ check sang capability tương ứng.
+
+\begin{enumerate}
+    \item \textbf{Vai trò của mapping trong hệ thống}
+
+    Mapping đóng vai trò như một cầu nối giữa hai lớp tri thức:
+    \begin{itemize}
+        \item Lớp kiểm tra kỹ thuật (check-level), phản ánh các cấu hình cụ thể trong hệ thống
+        \item Lớp năng lực bảo mật (capability-level), thể hiện các mục tiêu và nguyên tắc bảo mật tổng quát
+    \end{itemize}
+
+    Nhờ có mapping, hệ thống có thể:
+    \begin{itemize}
+        \item Diễn giải ý nghĩa của một kiểm tra dưới góc nhìn kiểm soát bảo mật
+        \item Liên kết nhiều kiểm tra khác nhau về cùng một nhóm kiểm soát
+        \item Hỗ trợ các agent tổng hợp thông tin và đưa ra nhận định ở mức cao hơn
+    \end{itemize}
+
+    Đặc biệt, trong các tác vụ như đánh giá rủi ro hoặc tạo báo cáo, mapping giúp chuyển đổi từ dữ liệu kỹ thuật sang thông tin mang tính giải thích và định hướng.
+
+    \item \textbf{Nguồn và cách xây dựng mapping}
+
+    Mapping giữa check và capability được xây dựng từ hai nguồn chính:
+    \begin{itemize}
+        \item \textbf{Mapping định nghĩa sẵn:} các ánh xạ được xây dựng thủ công hoặc trích xuất từ tài liệu có cấu trúc
+        \item \textbf{Mapping sinh tự động:} được tạo ra thông qua các phương pháp heuristic dựa trên mức độ tương đồng nội dung
+    \end{itemize}
+
+    Quá trình sinh mapping tự động dựa trên các yếu tố:
+    \begin{itemize}
+        \item Sự trùng lặp về từ khóa giữa check và capability
+        \item Các cụm từ quan trọng liên quan đến nhóm kiểm soát (ví dụ: \textit{public access}, \textit{encryption})
+        \item Các quy tắc về ngữ cảnh và domain
+    \end{itemize}
+
+    Mỗi mapping được gán các thuộc tính như mức độ tin cậy (\textit{confidence}) và trạng thái kiểm duyệt (\textit{review status}), giúp phân biệt giữa các ánh xạ đã xác nhận và các ánh xạ tạm thời.
+
+    \item \textbf{Quy trình mapping resolution}
+
+    Khi hệ thống nhận được một check (từ truy vấn hoặc kết quả scan), quá trình mapping resolution được thực hiện theo các bước:
+    \begin{itemize}
+        \item Tra cứu các mapping liên quan trong chỉ mục
+        \item Ưu tiên các mapping đã được kiểm duyệt
+        \item Lọc các mapping không phù hợp dựa trên ngữ cảnh (service, domain)
+        \item Sắp xếp kết quả theo mức độ tin cậy và mức độ liên quan
+    \end{itemize}
+
+    Trong trường hợp tồn tại nhiều mapping, hệ thống có thể giữ lại một tập các ứng viên thay vì chỉ chọn một kết quả duy nhất, nhằm phục vụ các bước xây dựng ngữ cảnh phía sau.
+
+    \item \textbf{Kiểm soát tính hợp lệ của mapping}
+
+    Một thách thức quan trọng là nguy cơ tạo ra các liên kết không hợp lý giữa các domain khác nhau. Để giảm thiểu vấn đề này, hệ thống áp dụng các cơ chế kiểm soát dựa trên ngữ cảnh.
+
+    Cụ thể, hệ thống sử dụng các quy tắc kiểm tra sự phù hợp giữa check và capability. Ví dụ, một capability thuộc lĩnh vực trí tuệ nhân tạo sẽ không được gán cho một check liên quan đến lưu trữ nếu không có dấu hiệu liên quan rõ ràng. Cơ chế này giúp loại bỏ các mapping sai lệch và đảm bảo tính nhất quán của tri thức.
+
+    Kết quả đánh giá cho thấy việc áp dụng các ràng buộc này giúp hệ thống tránh được các mapping sai domain trong tập benchmark.
+
+    \item \textbf{Vai trò trong pipeline xây dựng context}
+
+    Mapping resolution là một thành phần quan trọng trong pipeline xây dựng ngữ cảnh. Kết quả mapping được sử dụng để:
+    \begin{itemize}
+        \item Bổ sung thông tin về mục tiêu kiểm soát cho mỗi check
+        \item Liên kết các kiểm tra thông qua cùng một capability
+        \item Cung cấp ngữ cảnh ở mức khái niệm cho các agent
+    \end{itemize}
+
+    Ví dụ, trong một tác vụ đánh giá rủi ro, từ một check cụ thể, hệ thống có thể xác định capability tương ứng và sử dụng thông tin này để giải thích nguyên nhân cũng như đề xuất hướng khắc phục ở mức tổng quát hơn.
+
+\end{enumerate}
+
+Mapping resolution là thành phần quan trọng giúp hệ thống vượt ra khỏi mức truy hồi thông tin đơn thuần. Thông qua việc liên kết giữa check và capability, hệ thống có thể tổ chức lại tri thức theo hướng có ý nghĩa hơn, phục vụ tốt cho các tác vụ phân tích và ra quyết định. Việc kết hợp giữa mapping định nghĩa sẵn và mapping sinh tự động, cùng với các cơ chế kiểm soát ngữ cảnh, giúp hệ thống vừa đảm bảo độ bao phủ, vừa duy trì tính chính xác của các liên kết tri thức.
+
+
+
+\subsubsection*{Context Preparation (Select \& Clean)}
+
+Sau khi hoàn thành các bước truy hồi và mapping, hệ thống thu được một tập hợp dữ liệu bao gồm các kiểm tra (\textit{checks}), các ánh xạ (\textit{mappings}) và các năng lực bảo mật (\textit{capabilities}). Tuy nhiên, tập dữ liệu này vẫn ở dạng thô và chưa phù hợp để đưa trực tiếp vào mô hình ngôn ngữ. Do đó, cần một bước xử lý trung gian nhằm lựa chọn và làm sạch thông tin, đảm bảo rằng ngữ cảnh đầu ra vừa đầy đủ, vừa cô đọng và phù hợp với mục tiêu sử dụng.
+
+\begin{enumerate}
+    \item \textbf{Lựa chọn thông tin (Selection)}
+
+    Không phải toàn bộ kết quả truy hồi đều cần được sử dụng trong ngữ cảnh cuối cùng. Việc đưa quá nhiều thông tin có thể gây nhiễu và làm giảm hiệu quả của mô hình ngôn ngữ. Vì vậy, hệ thống thực hiện bước lựa chọn nhằm xác định tập thông tin phù hợp nhất.
+
+    Quá trình lựa chọn dựa trên các tiêu chí:
+    \begin{itemize}
+        \item Mức độ liên quan của kết quả truy hồi
+        \item Độ tin cậy (\textit{confidence}) của từng tài liệu
+        \item Mức độ đa dạng nhằm đảm bảo độ bao phủ thông tin
+        \item Mục tiêu sử dụng của agent (planning, risk, report)
+    \end{itemize}
+
+    Tùy theo từng tác vụ, hệ thống ưu tiên các loại thông tin khác nhau. Ví dụ, trong bài toán đánh giá rủi ro, các kiểm tra liên quan trực tiếp đến \textit{finding} sẽ được ưu tiên, trong khi các thông tin phụ trợ chỉ được giữ lại ở mức cần thiết.
+
+    \item \textbf{Làm sạch dữ liệu (Cleaning)}
+
+    Sau khi lựa chọn, dữ liệu được làm sạch nhằm loại bỏ các thông tin dư thừa và chuẩn hóa nội dung trước khi sử dụng.
+
+    Các thao tác chính bao gồm:
+    \begin{itemize}
+        \item Loại bỏ các trường metadata không cần thiết cho quá trình suy luận
+        \item Rút gọn nội dung văn bản, giữ lại các thông tin quan trọng
+        \item Loại bỏ các đoạn trùng lặp hoặc có mức độ tương đồng cao
+        \item Chuẩn hóa định dạng các trường như \textit{description}, \textit{risk}, \textit{remediation}
+    \end{itemize}
+
+    Bước này giúp giảm kích thước ngữ cảnh và tránh làm ``loãng'' thông tin đầu vào của mô hình ngôn ngữ.
+
+    \item \textbf{Chuẩn hóa cấu trúc dữ liệu}
+
+    Một bước quan trọng là chuẩn hóa dữ liệu về một cấu trúc thống nhất trước khi chuyển sang giai đoạn xây dựng ngữ cảnh. Thay vì giữ nguyên toàn bộ nội dung tài liệu, hệ thống chỉ giữ lại các trường cần thiết, ví dụ:
+    \begin{itemize}
+        \item Định danh (\texttt{check\_id})
+        \item Service liên quan
+        \item Tiêu đề
+        \item Mô tả, rủi ro và hướng khắc phục (nếu có)
+    \end{itemize}
+
+    Cách tiếp cận này giúp giảm độ phức tạp của dữ liệu đầu vào, đảm bảo tính nhất quán giữa các tài liệu và tạo điều kiện thuận lợi cho việc xây dựng prompt ở bước sau.
+
+    \item \textbf{Vai trò trong pipeline}
+
+    Context preparation đóng vai trò là bước chuyển tiếp giữa truy hồi tri thức và xây dựng ngữ cảnh hoàn chỉnh. Nếu bỏ qua bước này, hệ thống có thể:
+    \begin{itemize}
+        \item Đưa vào mô hình ngôn ngữ quá nhiều thông tin không liên quan
+        \item Làm giảm hiệu quả suy luận do dữ liệu không được tổ chức tốt
+        \item Tăng chi phí xử lý do kích thước context lớn
+    \end{itemize}
+
+    Ngược lại, khi được thực hiện đúng, bước này giúp tối ưu hóa dữ liệu đầu vào, đảm bảo rằng mỗi thông tin được đưa vào đều có giá trị đối với tác vụ cụ thể.
+
+\end{enumerate}
+
+Context preparation là một bước quan trọng nhưng thường bị bỏ qua trong các hệ thống RAG cơ bản. Việc tách riêng bước lựa chọn và làm sạch dữ liệu giúp kiểm soát tốt hơn chất lượng ngữ cảnh đầu ra. Điều này đặc biệt quan trọng trong bối cảnh hệ thống phục vụ nhiều loại agent khác nhau, mỗi loại có yêu cầu riêng về thông tin. Bằng cách giảm nhiễu và chuẩn hóa dữ liệu, hệ thống tạo ra một nền tảng ổn định cho bước tiếp theo là xây dựng ngữ cảnh theo từng mục tiêu sử dụng.
+
+
+
+\subsubsection*{Context Bundling theo Agent (Planning / Risk / Report)}
+
+Sau khi dữ liệu đã được lựa chọn và làm sạch, bước tiếp theo là tổ chức lại thông tin thành các cấu trúc ngữ cảnh phù hợp với từng loại agent. Trong hệ thống, thay vì sử dụng một định dạng ngữ cảnh chung cho mọi trường hợp, dữ liệu được đóng gói (\textit{bundle}) theo mục tiêu sử dụng cụ thể. Đây là một điểm khác biệt quan trọng so với các hệ thống RAG truyền thống.
+
+\begin{enumerate}
+    \item \textbf{Động cơ thiết kế}
+
+    Các agent trong hệ thống đảm nhiệm các vai trò khác nhau và do đó có yêu cầu khác nhau về dữ liệu đầu vào. Một cấu trúc ngữ cảnh phù hợp với tác vụ này có thể không hiệu quả đối với tác vụ khác. Nếu sử dụng cùng một tập dữ liệu cho mọi agent, hệ thống có thể gặp các vấn đề:
+    \begin{itemize}
+        \item Dư thừa thông tin không cần thiết
+        \item Thiếu các yếu tố quan trọng cho một tác vụ cụ thể
+        \item Giảm hiệu quả suy luận của mô hình ngôn ngữ
+    \end{itemize}
+
+    Do đó, hệ thống áp dụng cách tiếp cận \textit{consumer-aware context}, trong đó ngữ cảnh được thiết kế riêng cho từng loại agent.
+
+    \item \textbf{Phân loại các loại bundle}
+
+    Hệ thống xây dựng ba loại bundle chính tương ứng với ba nhóm agent:
+    \begin{itemize}
+        \item \textbf{Planning bundle:} phục vụ agent lập kế hoạch
+        \item \textbf{Risk bundle:} phục vụ agent đánh giá rủi ro
+        \item \textbf{Report bundle:} phục vụ agent tạo báo cáo
+    \end{itemize}
+
+    Mỗi loại bundle có cấu trúc và mục tiêu khác nhau, mặc dù cùng được xây dựng từ một nguồn dữ liệu truy hồi.
+
+    \item \textbf{Planning bundle}
+
+    Planning bundle tập trung vào việc cung cấp một tập hợp các kiểm tra có độ bao phủ cao, hỗ trợ agent xác định phạm vi và nội dung cần thực hiện.
+
+    Đặc điểm của bundle này:
+    \begin{itemize}
+        \item Ưu tiên đa dạng hóa các kiểm tra theo các nhóm intent khác nhau
+        \item Đảm bảo độ bao phủ về service và domain
+        \item Không đi sâu vào chi tiết rủi ro hoặc diễn giải
+    \end{itemize}
+
+    Thay vì chỉ chọn các kết quả có điểm số cao nhất, hệ thống áp dụng chiến lược lựa chọn nhằm cân bằng giữa mức độ liên quan và độ đa dạng, giúp tránh bỏ sót các khía cạnh quan trọng trong quá trình lập kế hoạch.
+
+    \item \textbf{Risk bundle}
+
+    Risk bundle được thiết kế để phục vụ phân tích một vấn đề cụ thể, do đó tập trung vào chiều sâu thông tin.
+
+    Ngữ cảnh bao gồm:
+    \begin{itemize}
+        \item Một kiểm tra chính (\textit{primary finding}) làm trung tâm
+        \item Các kiểm tra liên quan để bổ sung ngữ cảnh
+        \item Các mapping tương ứng nhằm liên kết với capability
+        \item Thông tin về rủi ro và hướng khắc phục
+    \end{itemize}
+
+    Cách tổ chức này giúp agent hiểu rõ nguyên nhân, tác động và bối cảnh của vấn đề ở cả mức kỹ thuật và khái niệm.
+
+    \item \textbf{Report bundle}
+
+    Report bundle hướng đến việc tổng hợp thông tin để tạo nội dung báo cáo ở mức khái quát.
+
+    Các thành phần chính bao gồm:
+    \begin{itemize}
+        \item Danh sách các phát hiện quan trọng (\textit{key findings})
+        \item Các nhóm kiểm soát hoặc chủ đề chính (\textit{control themes})
+        \item Các thực hành khuyến nghị (\textit{recommended practices})
+    \end{itemize}
+
+    Thông tin được tổ chức theo hướng dễ tổng hợp và diễn giải, giúp mô hình ngôn ngữ tạo ra các đoạn văn bản mang tính báo cáo một cách mạch lạc.
+
+    \item \textbf{Vai trò của bundling trong hệ thống}
+
+    Context bundling là bước chuyển đổi từ dữ liệu truy hồi sang dữ liệu phục vụ suy luận. Việc thiết kế ngữ cảnh theo từng loại agent mang lại các lợi ích:
+    \begin{itemize}
+        \item Tối ưu hóa dữ liệu đầu vào cho từng tác vụ cụ thể
+        \item Giảm nhiễu và tăng tính liên quan của thông tin
+        \item Cải thiện chất lượng đầu ra của mô hình ngôn ngữ
+    \end{itemize}
+
+    Cách tiếp cận này cho phép hệ thống sử dụng cùng một pipeline truy hồi nhưng tạo ra các kết quả khác nhau tùy theo mục đích sử dụng.
+
+\end{enumerate}
+
+Việc xây dựng context theo từng loại agent thể hiện một bước tiến so với các hệ thống RAG cơ bản. Thay vì coi truy hồi là mục tiêu cuối cùng, hệ thống xem truy hồi là bước trung gian và tập trung vào việc tổ chức lại tri thức theo mục tiêu sử dụng. Cách tiếp cận này không chỉ nâng cao hiệu quả của hệ thống mà còn tạo nền tảng mở rộng, cho phép bổ sung các loại agent mới mà không cần thay đổi pipeline truy hồi.
+
+\subsubsection*{API và tích hợp hệ thống}
+
+Sau khi xây dựng hoàn chỉnh pipeline truy hồi và cơ chế tổ chức ngữ cảnh, hệ thống RAG được triển khai dưới dạng một dịch vụ độc lập và tích hợp với các agent thông qua các API nội bộ. Phần này trình bày cách thiết kế giao diện lập trình ứng dụng (API) và cơ chế tương tác giữa RAG Engine và các thành phần khác trong hệ thống.
+
+\begin{enumerate}
+    \item \textbf{Thiết kế RAG như một dịch vụ}
+
+    RAG Engine được triển khai theo kiến trúc hướng dịch vụ (\textit{service-oriented architecture}), cung cấp các endpoint cho phép các agent gửi yêu cầu truy hồi và nhận về ngữ cảnh đã được xử lý.
+
+    Việc tách RAG thành một service riêng biệt mang lại các lợi ích:
+    \begin{itemize}
+        \item Tăng tính mô-đun, giúp các agent không cần quan tâm đến chi tiết của quá trình truy hồi
+        \item Cho phép nâng cấp độc lập các thành phần như embedding model, chiến lược retrieval hoặc nguồn dữ liệu
+        \item Hỗ trợ mở rộng hệ thống trong các kịch bản nhiều agent sử dụng chung một nguồn tri thức
+    \end{itemize}
+
+    Cách tiếp cận này giúp tách biệt rõ ràng giữa lớp truy hồi tri thức và lớp suy luận của các agent.
+
+    \item \textbf{Các endpoint chính}
+
+    Hệ thống cung cấp các endpoint chính phục vụ cho các mục đích khác nhau trong pipeline:
+
+    \begin{itemize}
+        \item \textbf{Retrieve Checks:} nhận truy vấn hoặc danh sách định danh và trả về các kiểm tra bảo mật liên quan
+        \item \textbf{Retrieve Capabilities:} phục vụ việc truy hồi các năng lực bảo mật
+        \item \textbf{Context Build:} nhận đầu vào từ agent (query, check\_ids hoặc findings) và trả về bundle ngữ cảnh đã được tổ chức
+    \end{itemize}
+
+    Trong đó, endpoint \textit{Context Build} đóng vai trò trung tâm vì tích hợp toàn bộ pipeline từ truy hồi đến context preparation và bundling.
+
+    \item \textbf{Luồng tương tác giữa agent và RAG}
+
+    Trong quá trình vận hành, các agent tương tác với RAG Engine theo một luồng xử lý thống nhất. Thay vì truy cập trực tiếp vào dữ liệu, agent gửi yêu cầu thông qua API và nhận về kết quả đã được xử lý.
+
+    Luồng tương tác bao gồm:
+    \begin{itemize}
+        \item Agent xác định nhu cầu (planning, risk analysis hoặc reporting)
+        \item Agent gửi yêu cầu đến RAG Engine kèm theo các tham số cần thiết
+        \item RAG Engine thực hiện pipeline truy hồi và xây dựng ngữ cảnh
+        \item Kết quả được trả về dưới dạng bundle có cấu trúc
+        \item Agent sử dụng bundle làm đầu vào cho quá trình suy luận
+    \end{itemize}
+
+    Cách tiếp cận này giúp chuẩn hóa giao tiếp giữa các thành phần và giảm sự phụ thuộc giữa agent và hệ thống lưu trữ tri thức.
+
+    \item \textbf{Định dạng dữ liệu trao đổi}
+
+    Dữ liệu trao đổi giữa agent và RAG Engine được tổ chức dưới dạng JSON với cấu trúc nhất quán. Một phản hồi điển hình bao gồm:
+    \begin{itemize}
+        \item Thông tin yêu cầu (\textit{request metadata})
+        \item Danh sách các kiểm tra được chọn (\textit{selected checks})
+        \item Các mapping tương ứng (\textit{selected mappings})
+        \item Các capability liên quan (\textit{selected capabilities})
+        \item Ngữ cảnh sẵn sàng cho mô hình ngôn ngữ (\textit{prompt-ready context})
+    \end{itemize}
+
+    Việc sử dụng dữ liệu có cấu trúc giúp các agent dễ dàng xử lý và tái sử dụng thông tin mà không cần thực hiện thêm các bước chuyển đổi phức tạp.
+
+    \item \textbf{Tích hợp trong \sysnameshort{}}
+
+    Trong \sysnameshort{}, RAG Engine đóng vai trò là nguồn tri thức chung cho nhiều module tiêu thụ khác nhau. Mỗi module sử dụng cùng một API nhưng với các tham số khác nhau để nhận được ngữ cảnh phù hợp.
+
+    Ví dụ, Planning Agent có thể gửi truy vấn tổng quát để nhận danh sách các kiểm tra cần thực hiện, trong khi Risk Evaluation Agent gửi thông tin về một finding cụ thể để nhận ngữ cảnh phân tích chi tiết. Mặc dù sử dụng cùng một endpoint, kết quả trả về sẽ khác nhau nhờ cơ chế context bundling.
+
+    Cách tích hợp này mang lại các lợi ích:
+    \begin{itemize}
+        \item Giảm trùng lặp logic giữa các agent
+        \item Đảm bảo tính nhất quán của tri thức
+        \item Dễ dàng mở rộng khi bổ sung agent mới
+    \end{itemize}
+
+\end{enumerate}
+
+Việc triển khai RAG dưới dạng một dịch vụ với các API rõ ràng giúp hệ thống đạt được tính linh hoạt và khả năng mở rộng cao. Thay vì gắn chặt truy hồi tri thức vào từng module, hệ thống tách riêng chức năng này thành một lớp trung gian, cho phép nhiều thành phần cùng khai thác một nguồn tri thức thống nhất. Thiết kế này không chỉ phù hợp với kiến trúc agentic workflow phân vai mà còn tạo nền tảng cho việc phát triển các hệ thống phức tạp hơn trong tương lai.
+
+
+\section{Các Pattern thiết kế bao trùm}
+\label{sec:design_patterns}
+
+Mục này phát biểu hai pattern thiết kế bao trùm được áp dụng nhất quán ở nhiều module trong chương. Trình bày chúng độc lập trước khi đi vào chi tiết module giúp người đọc nhận diện ngay khi gặp lại pattern ở từng pha PDCA.
+
+\subsection{Constrained Tool Invocation Pattern}
+\label{subsec:constrained_tool_pattern}
+
+Ba module gọi LLM trong hệ thống (Planning, Risk Evaluation, Remediation Planner) cùng chia sẻ một pattern thiết kế chung mà chúng tôi gọi là \textbf{Constrained Tool Invocation Pattern}. Pattern này giải quyết bài toán: \textit{LLM mạnh ở việc hiểu ngôn ngữ tự nhiên nhưng yếu khi điền tham số kỹ thuật chính xác (resource ID, region, account ID, CIDR\ldots)}.
+
+\paragraph*{Phát biểu pattern.} Phân tách trách nhiệm:
+\begin{itemize}
+  \item \textbf{LLM:} chỉ chịu trách nhiệm \textit{quyết định semantic}: chọn tool name, phân loại severity, chọn capability theme. Output luôn ở dạng enum hoặc tên định danh ngắn.
+  \item \textbf{Code tất định:} chịu trách nhiệm điền \textit{tham số kỹ thuật}. Tham số được trích trực tiếp từ finding raw, AWS context, hoặc tool signature reflection.
+\end{itemize}
+
+\paragraph*{Ba instance trong hệ thống.}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ba instance của Constrained Tool Invocation Pattern}
+  \label{tab:constrained_tool_pattern}
+  \footnotesize
+  \begin{tabular}{|l|p{4.0cm}|p{4.0cm}|}
+    \hline
+    \textbf{Module} & \textbf{LLM quyết định} & \textbf{Code tất định} \\ \hline
+    Planning (\S\ref{subsec:planning_module}) & Intent classification, ambiguity refinement & Regex check\_id extraction; service gating; scoring formula \\ \hline
+    Risk Eval (\S\ref{subsec:risk_evaluation_module}) & Severity bậc + reasoning string & Whitelist validation; fallback Medium; sort key \\ \hline
+    Remediation (\S\ref{sub:remediation_module}) & Tool name từ docstring matching & Param binding qua function-signature inspection từ finding context \\ \hline
+  \end{tabular}
+\end{table}
+
+Lợi ích pattern hoá: (i) tái sử dụng cùng pattern ở 3 module thay vì design lại; (ii) audit dễ — mọi sai lệch đều có một trong hai nguồn (LLM mis-classify hoặc code param mis-bind), không lẫn lộn; (iii) khi đo lường, có thể ablation từng phần riêng để cô lập đóng góp của LLM-side và code-side.
+
+\subsection{LLM Activation Gate Pattern}
+\label{subsec:llm_activation_gate}
+
+Pattern bổ trợ cho \textit{Constrained Tool Invocation}: thiết kế cổng quyết định cho phép gọi LLM CHỈ khi tín hiệu RAG không đủ chắc chắn. Phát biểu pattern:
+
+\begin{itemize}
+  \item Mỗi module có khả năng gọi LLM được bảo vệ bởi một \textit{gate}.
+  \item Gate dùng độ chắc chắn $c_{RAG}$ (định nghĩa ở Eq.~\ref{eq:rag_confidence}) làm tín hiệu chính.
+  \item Nếu $c_{RAG} \in \Theta_{skip} = \{\textit{high}, \textit{medium}\}$: gate trả về kết quả tất định, KHÔNG gọi LLM.
+  \item Ngược lại: gate kích hoạt LLM refinement, dùng kết quả RAG đã truy hồi làm grounding.
+\end{itemize}
+
+Pattern này được áp dụng ở Planning Module (\S\ref{subsec:planning_module}) như instance gốc. Hiệu quả thiết kế: phần lớn truy vấn được phục vụ bằng nhánh tất định, chỉ kích hoạt LLM khi thật sự cần — qua đó giảm latency và chi phí so với thiết kế gọi LLM ở mọi bước, là yếu tố then chốt cho tính khả thi trên phần cứng cá nhân tầm trung (RQ5).
+
+
+\section{Worked Example: S3 Public Access end-to-end}
+\label{sec:worked_example}
+
+Để minh hoạ cách các thành phần phối hợp ở mức thiết kế, dưới đây là một phiên ngắn từ user request đến report cuối cùng cho trường hợp ``S3 bucket public access''. Ví dụ dùng giá trị số minh hoạ; chi tiết chính xác về model và benchmark sẽ ở Chương~6.
+
+\begin{enumerate}
+  \item \textbf{Input ở Planning.} Admin gõ: ``\textit{Kiểm tra bảo mật và tư vấn S3, xử lý public access}''.
+
+  Planning Module: \textsc{ClassifyIntent} $\to$ \textsc{Retrieval} (vì query ngôn ngữ tự nhiên, không có \texttt{check\_id}). Hybrid retrieval trả về top-1 \texttt{check=s3\_account\_level\_public\_access\_blocks}, $\text{score}_{1}=0{,}82$, $\text{score}_{2}=0{,}68$. Áp công thức~(\ref{eq:rag_confidence}): $0{,}82 \geq \tau_{high}=0{,}75$ \textbf{và} $0{,}82 - 0{,}68 = 0{,}14 \geq \delta_{margin}=0{,}10$ $\Rightarrow$ $c_{RAG}=\textit{high}$. Vì $c_{RAG} \in \Theta_{skip}$, gate trả về kế hoạch tất định, KHÔNG gọi LLM. \texttt{assessment\_plan} = \{services: [s3], specific\_checks: [s3\_account\_level\_public\_access\_blocks, s3\_bucket\_policy\_no\_public, s3\_public\_access\_block]\}.
+
+  \item \textbf{Scanning + Risk Eval (Pass~1).} Scanner trả về 3 finding, trong đó \texttt{s3\_account\_level\_public\_access\_blocks} ở trạng thái FAIL. Risk Eval áp rubric (Bảng~\ref{tab:risk_rubric}): trigger ``S3 \texttt{public\_access\_block=False}'' khớp dải CRITICAL nếu bucket có object PII; LLM trả về \texttt{ai\_severity=High, score=8, reasoning="account-level block off, but no PII detected in metadata"}.
+
+  \item \textbf{Risk Eval (Pass~2 contextual adjustment).} $s_{prowler}=\text{High}$, $s_1=\text{High}$ $\Rightarrow$ không escalate, không de-escalate. Whitelist validation pass. Output: \texttt{ai\_severity=High, ai\_risk\_score=8}.
+
+  \item \textbf{RAG Enrich.} Q1, Q2, Q3 fan-out:
+    \begin{itemize}
+      \item Q1 $\to$ \texttt{capability\_themes = [\textit{Block Public Access} (Data Protection), \textit{Account-level Controls} (Identity)]}.
+      \item Q2 $\to$ \texttt{control\_mappings = \{CMMC: AC.1.001, NIST CSF: PR.AC-3, CIS: 5.1\}}.
+      \item Q3 $\to$ \texttt{remediation\_guides = [`aws s3control put-public-access-block ...`]}.
+    \end{itemize}
+    $c_{RAG}=\textit{high}$, bundle persist vào checkpoint.
+
+  \item \textbf{Remediation Planner.} Áp Constrained Tool Invocation (\S\ref{subsec:constrained_tool_pattern}): LLM chọn tool name = \texttt{s3\_enable\_account\_public\_access\_block}; code tất định bind tham số $\{\text{account\_id, region}\}$ từ AWS context. \texttt{remediation\_tasks = [task\_1]}.
+
+  \item \textbf{HITL Approval.} Graph dừng tại \texttt{interrupt\_before=review\_task}, snapshot persist. FE hiển thị task\_1 với reasoning + remediation guide. Admin Approve. Orchestrator gọi \textsc{ResumeAfterDecision}.
+
+  \item \textbf{Execution + Verification.} Tool gọi AWS API thành công ($\text{status}=\text{success}$); Verification chạy micro-scan $\to$ \texttt{s3\_account\_level\_public\_access\_blocks} chuyển từ FAIL $\to$ PASS.
+
+  \item \textbf{Report.} Maturity Engine tính lại điểm capability \textit{Block Public Access}: trước đó $Score=33$ (1 PASS / 3 weighted total); sau đó $Score=100$ (3 PASS). Delta: \textit{IDENTITY\_PRESERVED}, $\Delta = +67$. Domain \textit{Data Protection} chuyển stage từ \textit{Foundational} $\to$ \textit{Efficient}. Report cuối cùng tham chiếu compliance section dùng \texttt{control\_mappings} ở Q2.
+\end{enumerate}
+
+Ví dụ này minh hoạ ba điểm thiết kế quan trọng: (i) Planning gate \textit{tất định} skip LLM khi $c_{RAG}=\textit{high}$ — minh chứng cho RQ5 (local-LLM feasibility); (ii) Two-Pass + RAG enrich cấp ngữ cảnh đủ để LLM giải thích chính xác trong reasoning — RQ2; (iii) Maturity delta phản ánh chính xác state change, không chỉ là ``count FAIL giảm 1'' — RQ1 và sự khác biệt với baseline CSPM (RQ5).
+
+
+\section{Đặc tả Module theo pha PDCA}
+\label{sec:module_specs}
+
+Hệ thống được thiết kế dựa trên sự kết hợp
+giữa logic lập trình tất định
+(\textit{Deterministic Logic})
+và khả năng suy luận linh hoạt
+của Mô hình Ngôn ngữ Lớn (LLM).
+Phần này trình bày chi tiết
+thiết kế của các mô-đun xử lý chính
+trong workflow điều phối,
+tập trung vào chiến lược Prompt Engineering
+và cơ chế xử lý hỗn hợp
+(\textit{Hybrid Processing})
+giữa suy luận dựa trên mô hình
+và các quy tắc lập trình truyền thống.
+
+\subsection{Pha Plan --- Planning + Scanner + Monitor}
+\label{sec:phase_plan}
+
+Pha \textit{Plan} của chu trình PDCA quy tụ ba module: Planning (lập kế hoạch ngữ nghĩa), Scanning (thực thi quét tất định), và Monitoring (giám sát bất đồng bộ). Cả ba đều tập trung vào tính tất định và khả năng lặp lại — tránh đưa LLM vào các bước có hệ quả vận hành.
+
+\subsubsection*{Planning Module: Kiến trúc Lập kế hoạch và Cổng quyết định lai}
+\label{sub:planning_module}
+\label{subsec:planning_module}
+
+\textbf{Vai trò.} Planning Module là điểm tiếp nhận đầu tiên của hệ thống, chịu trách nhiệm phân tích yêu cầu ngôn ngữ tự nhiên của người dùng và xác định phạm vi quét bảo mật (Scan Scope) trước khi chuyển tham số cho Scanner Module.
+
+\textbf{Chiến lược thiết kế --- ưu tiên RAG, gọi LLM có điều kiện.} Thay vì gọi LLM ở mọi bước, thiết kế áp dụng \textit{LLM Activation Gate}: LLM chỉ được gọi khi tín hiệu RAG không đủ chắc chắn. Định hướng là tối thiểu hoá tỷ lệ truy vấn rơi vào nhánh LLM refinement, qua đó giảm độ trễ trung bình và chi phí token đầu vào.
+
+\subsubsection*{Pipeline xử lý (5 giai đoạn)}
+
+\begin{enumerate}
+  \item \textbf{Semantic Parsing:} chuẩn hóa ngôn ngữ (Việt $\to$ thuật ngữ EN chuẩn), ánh xạ thuật ngữ tự do sang từ khoá bảo mật quốc tế (ví dụ ``mã hoá'' $\to$ ``encryption'') để chuẩn bị cho lexical lookup.
+  \item \textbf{Validated Fast-Track:} nếu truy vấn chứa mã \texttt{check\_id} hợp lệ (regex match + lexical lookup vào KB), pipeline trả về kế hoạch ngay, bỏ qua các bước tiếp theo. Đây là đường ngắn cho user power-user.
+  \item \textbf{Intent Classification:} truy vấn không có \texttt{check\_id} được phân vào \textsc{GroupScan} (ví dụ ``quét toàn bộ S3'') hoặc \textsc{Retrieval} (ví dụ ``kiểm duyệt mã hoá và public access'').
+  \item \textbf{Deterministic Scoring:} kết quả retrieval được chấm điểm bằng hàm tổng có trọng số: $\text{score} = \alpha \cdot \text{sim}_{RAG} + \beta \cdot \text{sev} + \gamma \cdot \text{service\_match}$, với $\alpha + \beta + \gamma = 1$. Bước này tất định, không gọi LLM.
+  \item \textbf{LLM Activation Gate:} cổng quyết định mô tả ở dưới.
+\end{enumerate}
+
+\subsubsection*{LLM Activation Gate --- định lượng}
+
+Cổng kích hoạt LLM dùng hai tham số thiết kế:
+\begin{itemize}
+  \item $\Theta_{skip} = \{\textit{high}, \textit{medium}\}$: tập giá trị $c_{RAG}$ mà tại đó \textit{bỏ qua} LLM refinement, dùng kết quả tất định.
+  \item $\rho_{drop} = 0{,}85$: \textit{score-gap filter} — chỉ giữ lại các candidate có score $\geq \rho_{drop} \cdot \text{score}_{top}$. Mục đích lọc nhiễu trước khi đưa vào gate.
+\end{itemize}
+
+Logic dưới dạng pseudocode:
+\begin{algorithmic}[1]
+  \Require user query $q$
+  \If{$\text{regex}(q) \to \text{valid check\_ids}$}
+    \State \Return \textsc{FastTrack}(check\_ids) \Comment{bypass LLM}
+  \EndIf
+  \State $\text{intent} \gets \textsc{ClassifyIntent}(q)$
+  \If{intent = GroupScan}
+    \State \Return \textsc{GroupScanPlan}(q) \Comment{bypass LLM}
+  \EndIf
+  \State $\text{cand} \gets \textsc{HybridRetrieve}(q)$
+  \State $\text{scored} \gets \textsc{ScoreAndFilter}(\text{cand},\; \rho_{drop})$
+  \State $c_{RAG} \gets \textsc{ConfidenceOf}(\text{scored})$ \Comment{Eq.~\ref{eq:rag_confidence}}
+  \If{$c_{RAG} \in \Theta_{skip}$}
+    \State \Return \textsc{DeterministicPlan}(\text{scored}) \Comment{bypass LLM}
+  \Else
+    \State \Return \textsc{LLMRefine}(q, \text{scored}) \Comment{call LLM only here}
+  \EndIf
+\end{algorithmic}
+
+\textbf{Hệ quả thiết kế.} Chỉ có nhánh cuối cùng (\textsc{LLMRefine}) gọi LLM; ba nhánh còn lại (\textsc{FastTrack}, \textsc{GroupScanPlan}, \textsc{DeterministicPlan}) đều bypass LLM. Cơ chế phân nhánh tất định ở các bước trước cho phép phần lớn truy vấn được phục vụ mà không cần kích hoạt LLM — đây chính là cơ sở giúp hệ thống khả thi trên phần cứng cá nhân tầm trung (RQ5).
+
+\subsubsection*{Handoff to Scanner Module}
+Sau khi kế hoạch hoàn tất, danh sách \textit{target groups} hoặc \textit{specific checks} được chuyển xuống Scanner Module. Scanner KHÔNG cho phép LLM tham gia thay đổi tham số thực thi — toàn bộ tham số tool được \textit{ràng buộc tất định} (xem \S\ref{subsec:constrained_tool_pattern}).
+
+
+\subsubsection*{Scanning Module: Chiến lược thực thi tất định (Deterministic Execution)}
+\label{subsec:scanner_module}
+\label{sub:scanner_strategy}
+
+\textbf{Vai trò.} Scanning Module là cầu nối thực thi giữa kế hoạch trừu tượng (Assessment Plan) và hành động cụ thể (API call) trên hạ tầng AWS.
+
+\textbf{Vấn đề gặp phải.} Việc sử dụng LLM để sinh lệnh gọi hàm (Function Calling) cho công cụ scan có hai vấn đề: (i) hallucination — LLM bịa ra Check ID không tồn tại hoặc sai định dạng; (ii) context window — khi danh sách Check ID quá dài (hàng trăm), prompt tăng cost và độ chính xác giảm.
+
+\textbf{Giải pháp thiết kế --- Direct Execution.} Với các tác vụ đã được xác định rõ về mặt kỹ thuật, Scanning Module bỏ qua hoàn toàn lớp suy luận LLM và thực thi tất định bằng code. Quy trình:
+
+\begin{enumerate}
+  \item \textbf{Phân loại đầu vào:} nhận \texttt{target\_groups} hoặc \texttt{specific\_checks} từ Planning Module.
+  \item \textbf{Xử lý Specific Checks:} nối CSV và gọi trực tiếp tool \textsc{StartScanByCheckIds}.
+  \item \textbf{Xử lý Group Scan:} lần lượt gọi \textsc{StartScanByGroup} cho từng nhóm.
+\end{enumerate}
+
+Cách tiếp cận này đảm bảo \textit{tính lặp lại} (reproducibility) của lệnh quét, đồng thời loại bỏ độ trễ phát sinh từ suy luận LLM cho một bước vốn không cần ngữ nghĩa.
+
+\subsubsection*{Monitoring Module: Cơ chế Giám sát Bất đồng bộ}
+\label{sub:monitoring_mechanism}
+
+\textbf{Đặc thù bài toán.} Quá trình quét bảo mật trên tài khoản AWS thực tế tiêu tốn từ vài phút đến hàng chục phút, tuỳ vào số lượng tài nguyên. Cơ chế chờ đồng bộ (Synchronous Waiting) sẽ gây tắc nghẽn graph runtime.
+
+\textbf{Cơ chế Asynchronous Polling.} Monitoring Module hoạt động theo pattern non-blocking polling, phù hợp với tác vụ chạy nền có thời gian thực thi dài:
+
+\begin{itemize}
+  \item \textbf{Trạng thái chờ (Non-blocking):} sau khi Scanner kích hoạt một job, định danh job được chuyển sang Monitoring Module; graph không bị block.
+  \item \textbf{Vòng lặp kiểm tra (Polling Loop):} Monitoring định kỳ gọi status-check (mặc định 5 giây/lần) cho đến khi job hoàn tất. Conditional edge \texttt{poll\_again?} ở graph kiểm soát loop này.
+  \item \textbf{Thu thập và Chuẩn hoá:} khi status chuyển sang \texttt{COMPLETED}, kết quả được tải về theo định dạng OCSF (Open Cybersecurity Schema Framework). Một lớp lọc giữ lại các trường cốt lõi (\texttt{Resource ID}, \texttt{Region}, \texttt{Status}, \texttt{Severity}) trước khi chuyển sang Risk Evaluation.
+\end{itemize}
+\subsection{Pha Check-1 (pre-remediation) --- Risk Evaluation + RAG Enrich}
+\label{sec:phase_check1}
+
+Pha \textit{Check} đầu tiên xảy ra TRƯỚC remediation: đánh giá độ nghiêm trọng và làm giàu ngữ cảnh để chuẩn bị cho pha Act. Hai module phối hợp: Risk Evaluation chấm điểm Two-Pass, RAG Enrich fan-out 3 truy vấn cấp ngữ cảnh ba chiều.
+
+\subsubsection*{Risk Evaluation Module: Chiến lược Đánh giá và Phân cấp Rủi ro}
+\label{subsec:risk_evaluation_module}
+
+\textbf{Risk Evaluation Module} là lớp phân tích trung tâm, chịu trách nhiệm chuyển đổi raw findings thành thông tin rủi ro đã định lượng và chuẩn hoá. Thiết kế tập trung vào hai mục tiêu: \textit{Noise Reduction} (giảm nhiễu trước khi tiêu thụ ngữ cảnh LLM) và \textit{Prioritization} (xếp hạng theo ngữ cảnh thực tế).
+
+\subsubsection*{Chiến lược Sàng lọc và Tối ưu hoá Ngữ cảnh}
+
+Thay vì xử lý toàn bộ output của Scanner, module áp dụng \textbf{Early Filtering}:
+
+\begin{itemize}
+  \item \textbf{Status-based Filtering:} chỉ phân tích finding \texttt{FAIL}; loại bỏ \texttt{INFO}/\texttt{PASS} ngay đầu vào để tập trung tài nguyên vào mối đe doạ thực sự có ý nghĩa bảo mật.
+  \item \textbf{Input Minimal View:} dữ liệu gửi LLM không phải toàn bộ JSON gốc mà là khung nhìn tối giản gồm \textit{Service}, \textit{Resource ID}, \textit{Description}, \textit{Remediation Text}. Mục tiêu: giảm context window và nâng độ chính xác suy luận.
+  \item \textbf{RAG Cache \& Batch Chunking:} để tránh timeout khi truy xuất RAG cho hàng trăm lỗi cùng lúc, danh sách truy vấn được batch thành chunks nhỏ; in-memory cache triệt tiêu các lệnh gọi RAG trùng nhau, đặc biệt cho check\_id lặp.
+\end{itemize}
+
+\subsubsection*{Mô hình Xếp hạng Hai chặng (Two-Pass Scoring Logic)}
+Để giảm hiện tượng ảo giác (hallucination) và đảm bảo tính \textit{lặp lại được} (reproducibility) của đánh giá rủi ro, thiết kế tách quá trình ra làm hai chặng độc lập: chặng 1 dựa trên rubric tất định, chặng 2 hiệu chỉnh bằng bằng chứng RAG.
+
+\paragraph*{Chặng 1 — Rule-based Rubric.} Bảng~\ref{tab:risk_rubric} đặc tả tiêu chí phân bậc 4 mức được nhúng vào system prompt. Mỗi bậc đi kèm một dải điểm rủi ro $score \in [0,10]$ và tập \textit{rule trigger} cụ thể; LLM phải mapping finding hiện tại vào đúng một bậc.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Decision rubric cho Pass~1 — Severity classification}
+  \label{tab:risk_rubric}
+  \renewcommand{\arraystretch}{1.25}
+  \footnotesize
+  \begin{tabular}{|p{1.6cm}|p{1.2cm}|p{4.8cm}|p{5.6cm}|}
+    \hline
+    \textbf{Bậc} & \textbf{Score} & \textbf{Tiêu chí kích hoạt (bất kỳ)} & \textbf{Ví dụ rule trigger cụ thể} \\ \hline
+    CRITICAL & 9--10 & Public exposure dữ liệu nhạy cảm; chiếm quyền admin (privilege escalation); data loss potential & SecurityGroup ingress \texttt{0.0.0.0/0} trên port admin (22, 3389, 1433); IAM policy có \texttt{Action:*} trên \texttt{Resource:*}; S3 \texttt{public\_access\_block=False} với object có PII; RDS \texttt{publicly\_accessible=True} \\ \hline
+    HIGH & 7--8 & Cấu hình sai nghiêm trọng nội bộ; thiếu mã hóa data sản xuất; service phơi bày internet & KMS key disabled cho service production; EFS/EBS \texttt{encryption=False}; ELB không bật HTTPS; security group cho phép port management từ VPC khác \\ \hline
+    MEDIUM & 4--6 & Thiếu logging/monitoring; thiếu MFA; vi phạm compliance không tức thời & CloudTrail disabled trong region active; IAM user có console-access mà không có MFA; S3 \texttt{versioning=False}; CloudWatch alarm thiếu cho metric quan trọng \\ \hline
+    LOW & 1--3 & Lỗi housekeeping; thiếu metadata; chưa bật tính năng best-practice & Resource thiếu tag bắt buộc; IAM credential không sử dụng > 90 ngày; S3 lifecycle policy thiếu; CloudWatch retention quá ngắn \\ \hline
+  \end{tabular}
+\end{table}
+
+\paragraph*{Chặng 2 — Contextual Adjustment.} Kết quả sơ bộ $s_1$ từ Pass~1 được hiệu chỉnh dựa trên (a) severity gốc do Prowler trả về ($s_{prowler}$) và (b) độ chắc chắn truy hồi RAG ($c_{RAG}$, định nghĩa ở \S\ref{subsec:retrieval_certainty}). Quy tắc hiệu chỉnh \textit{bất đối xứng}:
+\begin{itemize}
+  \item \textbf{Tăng bậc (escalation):} cho phép khi $s_{prowler} > s_1$ \textbf{và} $c_{RAG} \in \{\textit{high, medium}\}$. Mục tiêu là không bỏ sót rủi ro mà rubric tĩnh đánh giá thấp.
+  \item \textbf{Hạ bậc (de-escalation):} chỉ cho phép khi đồng thời $c_{RAG} = \textit{high}$, có tối thiểu 2 nguồn tri thức RAG đồng thuận, và $s_1 \neq \textit{CRITICAL}$. Tức là CRITICAL không bao giờ bị hạ bậc tự động.
+  \item \textbf{Whitelist validation:} đầu ra LLM phải thoả $\texttt{ai\_severity} \in \{\text{Critical, High, Medium, Low}\}$, $\texttt{ai\_risk\_score} \in [1,10] \cap \mathbb{Z}$, $\texttt{ai\_reasoning} \neq \emptyset$. Vi phạm bất kỳ điều kiện nào $\rightarrow$ fallback an toàn về \texttt{Medium}, \texttt{score=5}.
+\end{itemize}
+
+\paragraph*{Pseudocode tổng hợp:}
+\begin{algorithmic}[1]
+  \Require finding $f$, RAG bundle $b$, $c_{RAG}$ = bundle confidence
+  \State $(s_1, \text{score}_1) \gets \text{LLM}_{pass1}(f \mid \text{rubric})$ \Comment{Bảng~\ref{tab:risk_rubric}}
+  \State $s_{prowler} \gets f.\text{severity}$
+  \If{$\text{rank}(s_{prowler}) > \text{rank}(s_1)$ \textbf{and} $c_{RAG} \in \{\textit{high}, \textit{medium}\}$}
+    \State $s_2 \gets s_{prowler}$ \Comment{escalate}
+  \ElsIf{$\text{rank}(s_{prowler}) < \text{rank}(s_1)$ \textbf{and} $c_{RAG} = \textit{high}$ \textbf{and} $|b.\text{evidence}| \geq 2$ \textbf{and} $s_1 \neq \text{CRITICAL}$}
+    \State $s_2 \gets s_{prowler}$ \Comment{de-escalate (conservative)}
+  \Else
+    \State $s_2 \gets s_1$
+  \EndIf
+  \State \Return validate$(s_2, \text{score}_1)$ \Comment{whitelist; fallback Medium nếu fail}
+\end{algorithmic}
+
+\subsubsection*{Cơ chế Xếp hạng Ưu tiên Phân cấp (Hierarchical Prioritization)}
+Sau Two-Pass, danh sách finding được xếp hạng theo \textit{lex-order} trên 2 khóa: severity (chính) và risk score (phụ). Lý do không dùng \texttt{risk\_score} thuần làm khóa chính: rubric cố ý thiết kế dải điểm rời rạc để bậc xử lý không bị "lẫn" — một High score=8 và một Critical score=9 chỉ chênh 1 điểm raw nhưng phải khác bậc remediation.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ánh xạ severity $\leftrightarrow$ rank $\leftrightarrow$ score range}
+  \label{tab:severity_mapping}
+  \renewcommand{\arraystretch}{1.15}
+  \footnotesize
+  \begin{tabular}{|l|c|c|}
+    \hline
+    \textbf{ai\_severity} & \textbf{severity\_rank} & \textbf{ai\_risk\_score} \\ \hline
+    Critical & 4 & 9--10 \\ \hline
+    High     & 3 & 7--8 \\ \hline
+    Medium   & 2 & 4--6 \\ \hline
+    Low      & 1 & 1--3 \\ \hline
+  \end{tabular}
+\end{table}
+
+Quy tắc sắp xếp dưới dạng pseudocode:
+\begin{algorithmic}[1]
+  \Function{sort\_key}{$f$}
+    \State \Return $(\text{severity\_rank}(f.\text{ai\_severity}),\; f.\text{ai\_risk\_score})$
+  \EndFunction
+  \State $\text{prioritized} \gets \textsc{sorted}(\text{findings},\; \text{key=sort\_key},\; \text{reverse=True})$
+\end{algorithmic}
+
+Lý do không dùng CVSS làm khóa chính: CVSS base score không phản ánh \textit{contextual severity} (ví dụ S3 bucket chứa PII cần được bump khỏi CVSS base) — đây chính là vai trò của Pass~2 hiệu chỉnh.
+
+\subsubsection*{Multi-Query RAG Enrichment Module}
+\label{subsec:rag_enrich_module}
+
+Sau khi pha Risk Evaluation chấm điểm và sắp xếp \texttt{prioritized\_findings}, thiết kế chèn một bước \textit{làm giàu ngữ cảnh} (\textit{Context Enrichment}) trước khi chuyển cho pha Remediation. Lý do tách thành node riêng:
+\begin{enumerate}
+  \item \textbf{Phân tách yêu cầu ngữ cảnh:} Risk Evaluation cần ngữ cảnh ngắn gọn để chấm điểm nhanh, trong khi Remediation cần ngữ cảnh ba chiều (root-cause, compliance mapping, fix-guide).
+  \item \textbf{Persistence:} bundle truy hồi cần được lưu vào checkpoint để node Report cuối luồng vẫn dùng lại được, không phải gọi lại RAG.
+  \item \textbf{Isolation:} cô lập điểm fail RAG (timeout, service down) khỏi luồng đánh giá rủi ro — pha Risk vẫn chạy được khi RAG unavailable.
+\end{enumerate}
+
+\subsubsection*{Sơ đồ luồng Multi-Query: Q1 + Q2 + Q3}
+Mỗi tập \texttt{check\_id} thuộc các finding \texttt{FAIL} được biên dịch thành \textbf{ba truy vấn fan-out} tới RAG service. Ba truy vấn không trùng ngữ nghĩa mà phục vụ ba chiều thông tin khác nhau cho remediation:
+
+\begin{itemize}
+  \item \textbf{Q1 --- Root-cause / Capability themes:} truy vấn không gian \texttt{maturity\_capabilities} (Hybrid BM25 + vector + RRF), trả về top-$k_{\text{cap}}$ năng lực bảo mật bị ảnh hưởng (mặc định $k_{\text{cap}}=5$). Output trường \texttt{capability\_themes} cho biết lỗ hổng thuộc lớp năng lực nào (\textit{Identity \& Access Management}, \textit{Data Protection}, \ldots).
+  \item \textbf{Q2 --- Compliance mapping:} truy vấn không gian \texttt{maturity\_mappings} cho từng \texttt{check\_id}, trả về ánh xạ tới các framework tuân thủ: CMMC, NIST CSF, CIS AWS Foundations Benchmark. Output trường \texttt{control\_mappings}, phục vụ \textit{Compliance section} trong báo cáo cuối cùng.
+  \item \textbf{Q3 --- Fix-guide / Remediation:} truy vấn không gian \texttt{remediation\_steps} (top-$k_{\text{fix}}=3$), trả về các bước khắc phục dưới dạng AWS CLI / IaC reference, kèm URL tài liệu chính thống.
+\end{itemize}
+
+\textbf{Lưu ý đặt tên:} Q2 trong tài liệu này được dùng với nhãn \textbf{compliance mapping} (regulatory framework), không phải business/blast-radius impact --- nhãn này phản ánh đúng bản chất output của truy vấn (mapping tới các framework tuân thủ CMMC, NIST CSF, CIS) thay vì đo lường tác động nghiệp vụ của finding.
+
+Ba truy vấn được fan-out song song và hợp nhất tại client. Kết quả tạo thành \texttt{rag\_bundle} với cấu trúc:
+
+\begin{lstlisting}[language=json,caption={Cấu trúc rag\_bundle persist trong PDCAState},label={lst:rag_bundle}]
+{
+  "capability_themes": [...],     // Q1
+  "remediation_guides": [...],    // Q3
+  "control_mappings": {...},      // Q2 (per check_id)
+  "confidence": "high|medium|low|unavailable",
+  "diagnostics": {...}
+}
+\end{lstlisting}
+
+Đồng thời, mỗi \texttt{prioritized\_findings} được \textit{enrich tại chỗ} bằng các trường mới: \texttt{compliance}, \texttt{risk\_from\_rag}, \texttt{remediation\_recommendation}, \texttt{remediation\_url}, \texttt{remediation\_guide}, \texttt{control\_mappings}. Điều này giúp các node phía sau (\texttt{remediation}, \texttt{report}) đọc trực tiếp từ finding mà không cần lookup chéo bundle.
+
+\subsubsection*{Bảng ánh xạ giữa truy vấn và đối tượng tiêu thụ}
+\begin{table}[!htb]
+  \centering
+  \caption{Ánh xạ giữa ba truy vấn của \texttt{rag\_enrich} và đối tượng tiêu thụ ngữ cảnh}
+  \label{tab:rag_enrich_consumers}
+  \begin{tabular}{|l|l|l|l|}
+    \hline
+    \textbf{Truy vấn} & \textbf{Nguồn dữ liệu} & \textbf{Trường trong bundle} & \textbf{Tiêu thụ bởi} \\
+    \hline
+    Q1 & \texttt{maturity\_capabilities} (Chroma) & \texttt{capability\_themes} & \texttt{report} (Maturity Score) \\ \hline
+    Q2 & \texttt{maturity\_mappings} + \texttt{resolve\_mapping} & \texttt{control\_mappings} & \texttt{report} (Compliance section) \\ \hline
+    Q3 & \texttt{remediation\_steps} (Chroma) & \texttt{remediation\_guides} & \texttt{remediation} + \texttt{report} \\ \hline
+  \end{tabular}
+\end{table}
+
+\subsubsection*{RAG Retrieval Certainty $c_{RAG}$ — định lượng độ chắc chắn truy hồi}
+\label{subsec:retrieval_certainty}
+
+Trường \texttt{confidence} trong \texttt{rag\_bundle} không phải nhãn ad-hoc do LLM gán mà được tính tất định từ điểm số sau RRF + reranker. Gọi $s_1, s_2$ là điểm chuẩn hóa của Top-1 và Top-2 (sau cross-encoder rerank, đưa về $[0,1]$), độ chắc chắn truy hồi được định nghĩa:
+
+\begin{equation}
+  c_{RAG} = \begin{cases}
+    \textit{high}        & \text{nếu } s_1 \geq \tau_{high} \;\wedge\; (s_1 - s_2) \geq \delta_{margin} \\
+    \textit{medium}      & \text{ngược lại, nếu } s_1 \geq \tau_{med} \\
+    \textit{low}         & \text{ngược lại, nếu } s_1 \geq \tau_{low} \\
+    \textit{unavailable} & \text{ngược lại (bao gồm RAG service down hoặc tập kết quả rỗng)}
+  \end{cases}
+  \label{eq:rag_confidence}
+\end{equation}
+
+Giá trị mặc định cho các ngưỡng: $\tau_{high}=0{,}75$, $\tau_{med}=0{,}55$, $\tau_{low}=0{,}30$, $\delta_{margin}=0{,}10$. Ý nghĩa: \textit{high} không chỉ đòi hỏi top-1 đủ cao mà còn đòi hỏi gap đủ lớn so với top-2 để loại bỏ trường hợp ``hai ứng viên gần ngang ngửa, không phân biệt được''.
+
+\textbf{Lưu ý disambiguate ngữ nghĩa.} Trong báo cáo này, ba khái niệm \textit{confidence} thường bị nhầm lẫn được tách nhãn rõ:
+\begin{itemize}
+  \item \textbf{RAG Retrieval Certainty} ($c_{RAG}$): công thức~(\ref{eq:rag_confidence}) ở trên, mô tả độ chắc chắn của tập tài liệu trả về.
+  \item \textbf{Mapping Reliability} ($r_{map}$): thuộc tính tĩnh \texttt{mapping\_confidence} $\in \{\textit{high, medium, low}\}$ gắn với từng cặp $(check, capability)$ trong knowledge base, là đầu vào cho ma trận trọng số $w$ ở \S\ref{subsec:maturity_engine}.
+  \item \textbf{LLM Activation Gate}: cổng quyết định ở Planning Module (\S\ref{subsec:planning_module}) dùng $c_{RAG}$ để quyết định có gọi LLM refinement hay không.
+\end{itemize}
+
+\subsubsection*{Cơ chế fail-soft và skip}
+Module áp dụng nguyên tắc \textbf{soft-fail}: nếu RAG service trả lỗi hoặc timeout, bundle rỗng được trả về với $c_{RAG}=\textit{unavailable}$ thay vì raise exception. Logic skip áp dụng khi không có FAIL finding (delta state = $\emptyset$). Thiết kế này đảm bảo tính khả dụng của luồng PDCA tổng thể: sự cố ở tầng tri thức không làm dừng pha Act.
+
+\subsection{Pha Act --- Remediation + Tooling + Execution}
+\label{sec:phase_act}
+
+Pha \textit{Act} biến đánh giá rủi ro thành hành động cụ thể trên hạ tầng AWS. Ba module phối hợp: Remediation Planner ra quyết định semantic, Tooling Layer cung cấp khả năng có ràng buộc, Execution Module thực thi với cơ chế an toàn nhiều lớp (HITL gate, layered error handling, runtime context injection).
+
+\subsubsection*{Remediation Planner Module: Chiến lược Lập kế hoạch Khắc phục}
+\label{sub:remediation_module}
+
+Remediation Planner Module
+đóng vai trò là thành phần lập kế hoạch
+trong pha \textit{Act} của chu trình PDCA.
+Nhiệm vụ cốt lõi của mô-đun này
+là chuyển đổi các phát hiện lỗ hổng
+(\textit{Findings})
+thành các kế hoạch hành động cụ thể
+(\textit{Remediation Plans}).
+
+Để đảm bảo an toàn vận hành,
+mô-đun được thiết kế
+tuân thủ nghiêm ngặt
+nguyên tắc
+\textbf{Phân tách Trách nhiệm}
+(\textit{Separation of Concerns}):
+nó chỉ chịu trách nhiệm
+\textbf{ra quyết định ở mức logic}
+(\textit{Decision Making})
+và \textbf{tuyệt đối không thực thi}
+bất kỳ hành động nào
+lên hạ tầng AWS.
+
+\subsubsection*{Cơ chế Lựa chọn Công cụ dựa trên Ngữ nghĩa (Semantic Tool Selection)}
+Thách thức lớn nhất trong việc tự động khắc phục lỗi là sự đa dạng của các lỗ hổng bảo mật. Một mô tả lỗi như "S3 bucket allows public access" có thể được giải quyết bằng nhiều cách khác nhau tùy thuộc vào ngữ cảnh. Để giải quyết vấn đề này, chúng em áp dụng chiến lược \textbf{Lựa chọn dựa trên Mô tả (Description-based Selection)}.
+
+Quy trình hoạt động như sau:
+\begin{enumerate}
+  \item \textbf{Trích xuất Tri thức Công cụ:}
+    Hệ thống duy trì
+    một thư viện các công cụ khắc phục
+    (\textit{Remediation Tools}),
+    trong đó mỗi công cụ
+    được gắn kèm
+    một bản mô tả chức năng chi tiết
+    (\textit{Function Description}),
+    làm rõ mục đích,
+    điều kiện sử dụng
+    và các giới hạn an toàn.
+
+  \item \textbf{Ánh xạ Ngữ nghĩa (Semantic Mapping):}
+    Danh sách
+    ``Tên công cụ – Mô tả''
+    được đưa vào ngữ cảnh suy luận
+    của mô hình ngôn ngữ lớn (LLM).
+    Dựa trên mô tả của lỗ hổng,
+    mô hình thực hiện suy luận ngữ nghĩa
+    để xác định công cụ
+    có chức năng phù hợp nhất.
+    Ví dụ,
+    nếu lỗ hổng liên quan đến
+    ``Versioning'',
+    mô hình sẽ ưu tiên
+    các công cụ
+    có khả năng
+    ``Enable Versioning''.
+\end{enumerate}
+
+Phương pháp này giúp hệ thống linh hoạt thích ứng với các loại lỗi mới mà không cần lập trình cứng (Hard-coding) các quy tắc ánh xạ \texttt{if-else} phức tạp.
+
+\subsubsection*{Cơ chế Ràng buộc Tham số Tất định (Deterministic Parameter Binding)}
+Mặc dù LLM rất mạnh trong việc hiểu ngôn ngữ tự nhiên để \textit{chọn} công cụ, nhưng chúng thường thiếu chính xác trong việc trích xuất các thông tin kỹ thuật chính xác như \texttt{Resource ID}, \texttt{Account ID} hay \texttt{Region}. Hiện tượng "ảo giác" (Hallucination) ở khâu này có thể dẫn đến việc thực thi lệnh sai đối tượng.
+
+Để khắc phục, Remediation Planner sử dụng cơ chế lai (Hybrid Mechanism):
+\begin{itemize}
+  \item \textbf{AI (LLM):} Chỉ chịu trách nhiệm chọn \textbf{Tên công cụ (Tool Name)} và đưa ra lý giải (Reasoning).
+  \item \textbf{Code (Deterministic Logic):} Chịu trách nhiệm điền \textbf{Tham số (Parameters)}. Hệ thống sử dụng kỹ thuật ánh xạ chữ ký hàm (Function Signature Inspection) để tự động trích xuất các giá trị cần thiết (như \texttt{bucket\_name}, \texttt{region}) trực tiếp từ dữ liệu lỗ hổng và ngữ cảnh AWS.
+\end{itemize}
+
+Cách tiếp cận này đảm bảo rằng: dù AI có thể chọn sai công cụ (rủi ro thấp), nhưng \textbf{không thể bịa đặt giá trị cho các tham số định danh tài nguyên} (\texttt{region}, \texttt{bucket\_name}, \texttt{resource\_id}, \texttt{account\_id}) — các tham số này được code đè dựa trên dữ liệu finding và \texttt{aws\_context}, không lấy từ output của LLM. Tỷ lệ tool selection error định lượng được trình bày ở Chương~6.
+
+\subsubsection*{Xử lý các Tác vụ Yêu cầu Thủ công (Manual Intervention Handling)}
+Không phải mọi lỗ hổng đều có thể hoặc nên được khắc phục tự động (ví dụ: việc xóa quyền truy cập Cross-account cần sự đánh giá của con người). Planner Module được tích hợp một danh sách các công cụ "Luôn yêu cầu thủ công" (\texttt{ALWAYS\_MANUAL\_TOOLS}).
+
+Khi LLM lựa chọn một trong các công cụ này, hệ thống sẽ tự động gắn cờ \texttt{manual\_required} vào kế hoạch. Điều này đảm bảo rằng quy trình tự động hóa không vượt quá giới hạn an toàn, giữ vai trò của con người trong vòng lặp kiểm soát đối với các quyết định nhạy cảm.
+
+\subsubsection*{Thiết kế Hệ thống Công cụ: Định hướng Ngữ nghĩa và Ràng buộc}
+
+Trong kiến trúc điều phối của hệ thống,
+các công cụ tích hợp
+(\textit{tooling system})
+không chỉ được xem
+như các thư viện chức năng thuần túy,
+mà được thiết kế
+như một \textbf{Tầng Khả năng}
+(\textit{Capability Layer})
+có tri thức ngữ nghĩa.
+Mục tiêu của tầng này
+là thu hẹp khoảng cách
+giữa ngôn ngữ tự nhiên
+của mô hình ngôn ngữ lớn (LLM)
+và các lệnh máy
+có cấu trúc chặt chẽ
+của AWS SDK.
+
+Để đạt được điều đó,
+hệ thống áp dụng
+chiến lược thiết kế
+dựa trên định hướng ngữ nghĩa,
+kết hợp với các ràng buộc dữ liệu
+mang tính tất định và kiểm soát được.
+
+\subsubsection*{Cơ chế Lựa chọn dựa trên Chỉ dẫn Ngữ nghĩa (Docstring-driven Selection)}
+
+Một trong những thách thức cốt lõi
+của mô-đun lập kế hoạch khắc phục
+là xác định đúng công cụ cần sử dụng
+trong bối cảnh tồn tại
+nhiều công cụ khắc phục khác nhau.
+Thay vì xây dựng
+các quy tắc điều kiện cứng nhắc,
+hệ thống chuyển đổi
+phần chú thích hàm
+(\textit{docstring})
+của mỗi công cụ
+thành các \textbf{chỉ dẫn ngữ nghĩa}
+(\textit{semantic prompts})
+để hỗ trợ quá trình suy luận.
+
+Mỗi công cụ trong hệ thống
+đều được trang bị
+một bản mô tả chức năng chi tiết,
+tuân thủ cấu trúc bao gồm:
+mục đích sử dụng,
+điều kiện kích hoạt
+và hành động cụ thể.
+Trong quá trình suy luận,
+mô hình ngôn ngữ lớn
+không tiếp cận
+mã nguồn Python,
+mà chỉ dựa trên
+các mô tả ngữ nghĩa này
+để đưa ra quyết định
+lựa chọn công cụ phù hợp.
+
+Ví dụ, công cụ \texttt{s3\_enable\_kms\_encryption} có docstring mô tả rõ ràng rằng công cụ được sử dụng trong trường hợp phát hiện bucket S3 chưa bật mã hóa mặc định. Khi LLM phân tích một lỗ hổng bảo mật, nó thực hiện so khớp ngữ nghĩa giữa mô tả lỗi và các docstring của công cụ, từ đó tự động liên kết vấn đề với giải pháp phù hợp. Cách tiếp cận này cho phép hệ thống hình thành cơ chế ánh xạ \textit{Problem--Solution} mà không cần hard-code các cấu trúc điều kiện phức tạp.
+
+\subsubsection*{Ràng buộc Dữ liệu và Tính Nguyên tử (Grounding \& Atomicity)}
+
+Để hạn chế hiện tượng ``ảo giác'' (hallucination) về tham số khi LLM tương tác với các API, mỗi công cụ được gắn kết với một lớp định nghĩa dữ liệu (schema) sử dụng thư viện Pydantic. Lớp schema này đóng vai trò như một hợp đồng dữ liệu (data contract), đảm bảo rằng mọi tham số truyền vào AWS SDK đều tuân thủ đúng kiểu dữ liệu và định dạng đã được xác định trước.
+
+Bên cạnh đó,
+các công cụ
+được thiết kế
+theo nguyên tắc
+\textbf{nguyên tử}
+(\textit{atomic})
+và
+\textbf{đóng gói}
+(\textit{encapsulated}).
+Các quy trình nghiệp vụ phức tạp,
+chẳng hạn như
+bật logging cho S3
+(gồm nhiều bước
+  như tạo bucket,
+  thiết lập policy
+và kích hoạt log),
+được đóng gói
+trong một công cụ duy nhất. Nhờ vậy,
+tầng lập kế hoạch
+chỉ cần
+đưa ra quyết định
+ở mức độ cao,
+trong khi toàn bộ
+chi tiết thực thi
+được xử lý nội bộ
+bởi công cụ,
+giúp giảm đáng kể
+độ phức tạp
+và rủi ro vận hành
+của hệ thống.
+
+\subsubsection*{Execution Module: Động cơ Thực thi và Quản lý An toàn}
+
+Execution Module là hiện thân của pha \textit{Do} (Thực hiện)
+trong chu trình PDCA.
+Thành phần này chịu trách nhiệm
+chuyển đổi các kế hoạch hành động trừu tượng
+thành các thay đổi kỹ thuật cụ thể
+trên hạ tầng đám mây AWS.
+
+Do tính chất nhạy cảm của các thao tác
+ghi đè cấu hình (write operations),
+Execution Module không được thiết kế
+như một trình chạy script đơn giản,
+mà hoạt động như một
+\textbf{môi trường thực thi có quản lý}
+(\textit{Managed Runtime Environment}),
+dựa trên bốn trụ cột kỹ thuật chính:
+tiêm ngữ cảnh thời gian thực,
+cổng kiểm soát quyết định,
+xử lý lỗi phân tầng,
+và chuẩn hóa đầu ra gắn với khả năng quan sát.
+
+\subsubsection*{Cơ chế Tiêm Ngữ cảnh Thời gian thực (Runtime Context Injection)}
+
+Một thách thức phổ biến
+trong các hệ thống điều phối bất đồng bộ
+là sự không đồng nhất về ngữ cảnh
+giữa các mô-đun xử lý.
+Trong khi các công cụ khắc phục
+được thiết kế theo hướng phi trạng thái
+(stateless) để tăng khả năng tái sử dụng,
+các lời gọi API của AWS
+lại yêu cầu các tham số ngữ cảnh cụ thể
+như vùng địa lý (Region)
+hoặc định danh tài khoản (Account ID).
+
+Để giải quyết mâu thuẫn này mà không làm gia tăng độ phức tạp cho Planning Module, Execution Module áp dụng cơ chế tiêm ngữ cảnh ngay tại thời điểm thực thi. Quy trình nội suy tham số được thực hiện tuần tự theo các bước sau:
+\begin{itemize}
+  \item \textbf{Kiểm tra tham số đầu vào}: Hệ thống rà soát tập tham số được truyền từ Planning Module nhằm xác định các giá trị đã được chỉ định.
+  \item \textbf{Phát hiện thiếu hụt ngữ cảnh}: Nếu thiếu các tham số môi trường cốt lõi như \textit{region} hoặc \textit{account ID}, Agent truy xuất các giá trị tương ứng từ ngữ cảnh AWS toàn cục được khởi tạo khi bắt đầu phiên làm việc.
+  \item \textbf{Chèn tham số và gọi tool}: Các tham số còn thiếu được tự động chèn vào lời gọi hàm trước khi gọi tool, đảm bảo lệnh thực thi được áp đúng resource đích.
+\end{itemize}
+
+Cách tiếp cận này cho phép duy trì tính phi trạng thái của các công cụ, đồng thời đảm bảo tính nhất quán ngữ cảnh trong toàn bộ vòng đời thực thi.
+
+\subsubsection*{Cổng Kiểm soát Quyết định (Decision Enforcement Gate)}
+
+Execution Module
+đóng vai trò
+là chốt kiểm soát cuối cùng
+trong cơ chế
+\textit{Human-in-the-Loop}.
+Trước khi thực hiện
+bất kỳ hành động ghi nào
+lên hạ tầng,
+hệ thống luôn kiểm tra
+trạng thái phê duyệt
+đi kèm với kế hoạch thực thi.
+
+Cơ chế kiểm soát được triển khai dựa trên các nguyên tắc sau:
+\begin{itemize}
+  \item Chỉ cho phép thực thi khi trạng thái quyết định là \textit{approve}.
+  \item Tự động bỏ qua việc gọi API đối với các trạng thái \textit{skip} hoặc \textit{reject}.
+  \item Ghi nhận rõ ràng trạng thái \textit{skipped} nhằm phục vụ mục đích kiểm toán và báo cáo.
+\end{itemize}
+
+Thiết kế này đảm bảo quyền kiểm soát tối cao luôn thuộc về quản trị viên hệ thống, đồng thời ngăn chặn việc mô hình AI tự ý thực hiện các thay đổi ngoài ý muốn.
+
+\subsubsection*{Kiến trúc Xử lý Lỗi Phân tầng (Layered Error Handling)}
+
+Môi trường đám mây phân tán tiềm ẩn nhiều rủi ro liên quan đến kết nối mạng, phân quyền truy cập, và tính nhất quán cấu hình. Execution Module triển khai kiến trúc xử lý lỗi ba tầng thay vì cơ chế bắt lỗi chung chung:
+
+\begin{itemize}
+  \item \textbf{Tầng lỗi phía dịch vụ (ClientError):} xử lý lỗi phản hồi từ AWS như từ chối truy cập hoặc không tìm thấy tài nguyên. Mã lỗi và thông điệp chi tiết được trích xuất phục vụ phân tích.
+  \item \textbf{Tầng lỗi lõi SDK (BotoCoreError):} phát hiện sự cố phía SDK như sai cấu hình credential, lỗi định dạng dữ liệu, hoặc mất kết nối cục bộ.
+  \item \textbf{Tầng lỗi không xác định (Generic Exception):} bắt mọi exception còn lại để pipeline không bị gián đoạn đột ngột; ghi nhận đầy đủ stack trace cho audit.
+\end{itemize}
+
+Cách tiếp cận phân tầng giúp hệ thống phản ứng phù hợp với từng loại lỗi và tăng khả năng phục hồi.
+
+\subsubsection*{Chuẩn hóa Kết quả và Khả năng Quan sát (Observability)}
+
+Mọi kết quả thực thi, bất kể thành công hay thất bại, đều được chuẩn hóa thông qua một cấu trúc dữ liệu thống nhất. Cấu trúc này bao gồm các thành phần chính sau:
+\begin{itemize}
+  \item Trạng thái thực thi (ví dụ: \textit{success}, \textit{failed}, \textit{manual\_required})
+  \item Thời gian xử lý (duration)
+  \item Dấu thời gian thực thi (timestamp)
+\end{itemize}
+
+Đặc biệt, hệ thống chú trọng đến việc phát hiện trạng thái \textit{manual\_required}, đại diện cho các tác vụ cần sự can thiệp thủ công từ con người, chẳng hạn như các thao tác yêu cầu thiết bị xác thực đa yếu tố vật lý. Việc phân loại rõ ràng các trạng thái này giúp tầng báo cáo phía sau cung cấp hướng dẫn khắc phục chính xác và có ý nghĩa hơn, thay vì chỉ phản hồi bằng các thông báo lỗi tổng quát.
+
+\subsection{Pha Check-2 (post-remediation) --- Analysis + Maturity Engine}
+\label{sec:phase_check2}
+
+Pha \textit{Check} thứ hai xảy ra SAU remediation: kiểm chứng hiệu quả thay đổi (Analysis Module với differential state analysis) và quy đổi thành điểm trưởng thành (Maturity Engine với capability-level scoring 4-state).
+
+\subsubsection*{Analysis Module: Cơ chế Đánh giá Hiệu quả và Truy vết}
+
+Trong chu trình PDCA, sau pha \textit{Do} (khắc phục), hệ thống cần một cơ chế khách quan để xác minh hiệu quả của các thay đổi (pha \textit{Check}). Analysis Module đảm nhận vai trò này.
+
+Module không dừng ở việc so sánh kết quả trước--sau mà thực hiện \textbf{Differential Analysis} và làm giàu dữ liệu ngữ cảnh, nhằm xây dựng \textit{Audit Trail} minh bạch và có khả năng truy vết cao.
+
+\subsubsection*{Chiến lược So sánh Vi sai Trạng thái (Differential State Analysis)}
+
+Module so sánh hai snapshot tại các thời điểm khác nhau: \textit{Pre-Scan} (trước khắc phục) và \textit{Post-Scan} (sau khắc phục).
+Hệ thống sử dụng
+định danh duy nhất
+\textit{finding\_uid}
+để theo dõi
+vòng đời
+của từng lỗ hổng,
+từ đó phân loại
+sự thay đổi trạng thái
+dựa trên
+ma trận chuyển đổi sau:
+
+\begin{itemize}
+  \item \textbf{FIXED (Đã khắc phục):}
+    Trạng thái chuyển từ
+    \textit{FAIL}
+    sang
+    \textit{PASS}.
+    Đây là chỉ dấu rõ ràng
+    cho thấy
+    hành động khắc phục
+    đã được thực hiện
+    thành công.
+
+  \item \textbf{REGRESSION (Lỗi mới phát sinh):}
+    Trạng thái chuyển từ
+    \textit{PASS}
+    sang
+    \textit{FAIL}.
+    Đây là tín hiệu cảnh báo quan trọng,
+    cho thấy
+    các thay đổi cấu hình
+    có thể đã gây ra
+    tác dụng phụ
+    không mong muốn.
+
+  \item \textbf{PERSISTENT FAILURE (Lỗi dai dẳng):}
+    Trạng thái giữ nguyên
+    là
+    \textit{FAIL}
+    dù đã có
+    nỗ lực khắc phục.
+    Trường hợp này
+    giúp hệ thống
+    nhận diện
+    các vấn đề phức tạp
+    mà logic tự động hiện tại
+    chưa xử lý được.
+
+  \item \textbf{MANUAL REQUIRED (Cần thủ công):}
+    Các lỗ hổng
+    mà quá trình khắc phục
+    đã trả về
+    tín hiệu
+    \textit{manual\_required}
+    được đánh dấu riêng.
+    Việc phân loại rạch ròi này
+    giúp báo cáo cuối cùng
+    không đánh đồng
+    giữa các lỗi kỹ thuật
+    và các trường hợp
+    cần sự can thiệp
+    trực tiếp của con người.
+\end{itemize}
+
+Cách phân loại dựa trên vi sai trạng thái cho phép hệ thống đánh giá chính xác hiệu quả của từng hành động khắc phục, thay vì chỉ dựa vào ảnh chụp trạng thái tại một thời điểm đơn lẻ.
+
+\subsubsection*{Cơ chế Làm giàu Ngữ cảnh Kiểm toán (Audit Context Enrichment)}
+
+Một báo cáo bảo mật chất lượng cao không chỉ phản ánh kết quả cuối cùng mà còn cần thể hiện rõ hệ thống đã thực hiện những hành động gì để đạt được kết quả đó. Analysis Module thực hiện kỹ thuật làm giàu ngữ cảnh bằng cách hợp nhất dữ liệu từ nhiều nguồn khác nhau nhằm xây dựng hồ sơ kiểm toán chi tiết.
+
+Cụ thể, ngữ cảnh kiểm toán được làm giàu từ hai nhóm dữ liệu chính:
+\begin{itemize}
+  \item \textbf{Dữ liệu hành vi (Behavioral Data):}
+    Được thu thập
+    từ nhật ký thực thi
+    của pipeline,
+    bao gồm:
+    tên công cụ đã sử dụng
+    (\textit{tool\_name}),
+    tập tham số đầu vào
+    (\textit{tool\_params})
+    và kết quả phản hồi
+    từ API
+    (\textit{execution\_output}).
+
+  \item \textbf{Dữ liệu định nghĩa (Definition Data):}
+    Hệ thống truy xuất
+    ngược lại
+    mô tả kỹ thuật
+    (docstring)
+    của công cụ
+    đã được sử dụng,
+    nhằm cung cấp
+    bối cảnh đầy đủ
+    về logic xử lý
+    tại thời điểm thực thi.
+\end{itemize}
+
+Quy trình này chuyển đổi các dòng log rời rạc thành một hồ sơ kiểm toán dạng \textit{white-box}. Ví dụ, đối với một lỗ hổng đã được khắc phục, báo cáo không chỉ ghi nhận trạng thái \textit{Fixed} mà còn cung cấp bằng chứng kỹ thuật chi tiết, chẳng hạn như việc sử dụng công cụ \textit{s3\_enable\_encryption} với các tham số cụ thể và logic xử lý tương ứng được trích xuất tại thời điểm chạy. Cách tiếp cận này đảm bảo mức độ giải trình (\textit{Accountability}) cao nhất cho hệ thống tự động.
+
+\subsubsection*{Maturity Engine \& Compliance Mapping}
+\label{subsec:maturity_engine}
+
+Maturity Engine là thành phần chuyển đổi danh sách finding thô thành \textit{điểm trưởng thành an ninh} (\textit{Security Maturity Score}) theo mô hình AWS Security Maturity Model. Đây là điểm khác biệt cốt lõi so với các công cụ CSPM truyền thống vốn chỉ đếm số FAIL: thiết kế đề xuất xếp hạng \textit{năng lực bảo mật} (capability) thay vì \textit{check}, và tổ chức theo bốn giai đoạn trưởng thành (\textit{Quick Wins} $\rightarrow$ \textit{Foundational} $\rightarrow$ \textit{Efficient} $\rightarrow$ \textit{Optimized}).
+
+\subsubsection*{Bảng tra cứu và Ma trận trọng số}
+Engine duy trì ba bảng tra cứu nội bộ: \texttt{check\_to\_mappings} (\texttt{check\_id} $\rightarrow$ danh sách \texttt{capability\_id}), \texttt{cap\_info} (metadata mỗi năng lực), và \texttt{canonical\_domain} (domain duy nhất cho mỗi năng lực, ưu tiên các mapping có \texttt{review\_status=approved} và \texttt{mapping\_confidence} $\in \{\textit{high, medium}\}$).
+
+Mỗi cặp $(check, capability)$ gắn một trọng số $w$ tra trong ma trận \textsc{MappingWeights} hai chiều: \textit{mapping\_type} $\in \{\textit{direct, related, weak}\}$ và \textit{mapping\_confidence} $\in \{\textit{high, medium, low}\}$. Bảng~\ref{tab:mapping_weights} trình bày toàn bộ ma trận:
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ma trận trọng số ánh xạ \textsc{MappingWeights}: $w(type, confidence)$}
+  \label{tab:mapping_weights}
+  \renewcommand{\arraystretch}{1.2}
+  \footnotesize
+  \begin{tabular}{|l|c|c|c|}
+    \hline
+    \diagbox{\textbf{type}}{\textbf{conf.}} & \textbf{high} & \textbf{medium} & \textbf{low} \\ \hline
+    \textit{direct}  & 1.0 & 0.8 & 0.6 \\ \hline
+    \textit{related} & 0.7 & 0.5 & 0.3 \\ \hline
+    \textit{weak}    & 0.3 & 0.2 & 0.2 \\ \hline
+  \end{tabular}
+\end{table}
+
+\subsubsection*{Định nghĩa điểm năng lực — bốn trạng thái}
+
+Gọi $\mathcal{S}_{cap}$ là tập \textit{scoped capability} (các capability thuộc phạm vi của assessment hiện tại, được xác định từ \texttt{assessment\_plan}). Gọi $F_{cap}$ là tập finding ánh xạ tới capability $cap$ qua \texttt{check\_to\_mappings}, $w_f$ là trọng số của ánh xạ tương ứng. Điểm capability được định nghĩa theo bốn trạng thái:
+
+\begin{equation}
+  Score(cap) = \begin{cases}
+    \textbf{NOT\_MAPPED}     & \text{nếu } cap \notin \mathcal{S}_{cap} \\
+    \textbf{OUT\_OF\_SCOPE}  & \text{nếu } cap \in \mathcal{S}_{cap} \;\wedge\; |F_{cap}| = 0 \\
+    \textbf{PARTIAL}         & \text{nếu } |F_{cap}| > 0 \;\wedge\; \forall f \in F_{cap}: \text{type}_f = \textit{weak} \\
+    100 \cdot \dfrac{\sum_{f \in F_{cap}} w_f \cdot \mathbb{1}[f.\text{status}=\text{PASS}]}{\sum_{f \in F_{cap}} w_f} & \text{ngược lại (\textbf{ASSESSED})}
+  \end{cases}
+  \label{eq:capability_score}
+\end{equation}
+
+Ba trạng thái đầu (NOT\_MAPPED, OUT\_OF\_SCOPE, PARTIAL) đóng vai trò nhãn định tính; chỉ nhánh ASSESSED trả về giá trị số trong $[0, 100]$. Phép so sánh $Score(cap) \geq \tau_{cap}$ chỉ áp dụng cho nhánh ASSESSED; các công thức tham chiếu nhánh khác dùng ký hiệu thuộc tính (ví dụ $Score(cap) \in \{\textit{ASSESSED, PARTIAL}\}$) thay vì so sánh số. Phân loại bốn trạng thái nhằm tránh \textit{silent ambiguity}: trạng thái \textit{ASSESSED} với $Score=0$ (tất cả check FAIL) không bị nhầm với \textit{OUT\_OF\_SCOPE} (không có check nào để đánh giá). Đây là điểm khác biệt quan trọng so với cách tiếp cận count-based truyền thống.
+
+\subsubsection*{Stage Completion}
+
+Một capability $cap$ được coi là \textit{passing} khi $Score(cap) \geq \tau_{cap}$ với $\tau_{cap}=50\%$. Một stage $S$ (Quick Wins / Foundational / Efficient / Optimized) được coi là \textit{hoàn tất} theo công thức:
+
+\begin{equation}
+  \text{Completed}(S) \iff \begin{cases}
+    \text{N/A} & \text{nếu } \big|\{cap \in S : Score(cap) \in \{\textit{ASSESSED}, \textit{PARTIAL}\}\}\big| = 0 \\[6pt]
+    \dfrac{\big|\{cap \in S : Score(cap) \geq \tau_{cap}\}\big|}{\big|\{cap \in S : Score(cap) \in \{\textit{ASSESSED}, \textit{PARTIAL}\}\}\big|} \geq \tau_{stage} & \text{ngược lại}
+  \end{cases}
+  \label{eq:stage_completion}
+\end{equation}
+
+với $\tau_{stage}=70\%$. Trường hợp N/A xảy ra khi toàn bộ capability của stage là NOT\_MAPPED hoặc OUT\_OF\_SCOPE --- stage đó không được chấm điểm hoàn tất. Mẫu số chỉ tính các capability \textit{đã có dữ liệu để đánh giá} (loại trừ NOT\_MAPPED và OUT\_OF\_SCOPE) — tránh penalize stage chỉ vì assessment chưa quét tới các capability nằm ngoài scope hiện tại.
+
+\paragraph*{Ví dụ minh hoạ.} Capability \textit{``Block Public Access''} có 5 finding mapping (3 PASS, 2 FAIL):
+
+\begin{table}[!htb]
+  \centering
+  \footnotesize
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \textbf{check} & \textbf{type} & \textbf{conf.} & $w$ & \textbf{status} \\ \hline
+    s3\_public\_access\_block        & direct  & high   & 1.0 & PASS \\ \hline
+    s3\_bucket\_policy\_no\_public   & direct  & high   & 1.0 & PASS \\ \hline
+    s3\_account\_level\_pa\_block    & direct  & medium & 0.8 & FAIL \\ \hline
+    s3\_multi\_region\_pa\_block     & related & high   & 0.7 & PASS \\ \hline
+    s3\_versioning                   & weak    & low    & 0.2 & FAIL \\ \hline
+  \end{tabular}
+\end{table}
+
+Áp công thức~(\ref{eq:capability_score}) (nhánh ASSESSED): $Score = 100 \cdot \frac{1{,}0+1{,}0+0+0{,}7+0}{1{,}0+1{,}0+0{,}8+0{,}7+0{,}2} = 100 \cdot \frac{2{,}7}{3{,}7} \approx 73{,}0$. Vì $73{,}0 \geq \tau_{cap}=50$, capability này được phân vào nhóm \textit{passing}.
+
+\subsubsection*{Roll-up theo domain và pre/post delta}
+Sau khi chấm điểm capability, engine roll-up theo \texttt{canonical\_domain} (5 domain: \textit{Data Protection, Identity \& Access, Logging \& Monitoring, Resilience, Network Security}) và xác định stage thấp nhất cho mỗi domain. Hàm \textsc{ComputeDelta}$(pre, post)$ so sánh hai assessment để báo cáo \textit{độ cải thiện} sau remediation: số capability chuyển trạng thái từ FAIL$\rightarrow$PASS, mức tăng điểm domain, sự thay đổi stage.
+
+\textbf{Resource identity preservation.} Pre/Post delta dựa trên \texttt{finding\_uid} ổn định. Bốn trường hợp xử lý khi resource topology thay đổi giữa hai lần quét:
+\begin{itemize}
+  \item \textit{IDENTITY\_PRESERVED} (uid trùng): so sánh status trực tiếp.
+  \item \textit{NEW\_RESOURCE} (uid chỉ có ở Post): nếu FAIL $\rightarrow$ tính là REGRESSION; nếu PASS $\rightarrow$ counted as positive.
+  \item \textit{MISSING\_RESOURCE} (uid chỉ có ở Pre): bị bỏ khỏi phân tích delta để không inflate điểm.
+  \item \textit{RENAMED\_RESOURCE}: heuristic match qua $(arn$ hoặc $resource\_type, account, region, name)$; nếu match $\rightarrow$ coi như IDENTITY\_PRESERVED, ngược lại fallback về NEW + MISSING.
+\end{itemize}
+
+\subsubsection*{Bảng ánh xạ kết quả Engine $\leftrightarrow$ Compliance framework}
+\begin{table}[!htb]
+  \centering
+  \caption{Output của Maturity Engine và ánh xạ compliance tương ứng}
+  \label{tab:maturity_outputs}
+  \begin{tabular}{|l|p{6cm}|l|}
+    \hline
+    \textbf{Trường output} & \textbf{Ý nghĩa} & \textbf{Compliance map} \\ \hline
+    \texttt{capability\_results} & Điểm $\in [0,100]$ cho mỗi capability & CMMC L1--L3 \\ \hline
+    \texttt{domain\_results} & Điểm \& stage cho 5 domain & NIST CSF (PR/DE/RS/RC) \\ \hline
+    \texttt{overall.score} & Điểm trung bình có trọng số & --- \\ \hline
+    \texttt{overall.stage} & Stage thấp nhất trong các domain & --- \\ \hline
+    \texttt{coverage} & Tỷ lệ scoped capability đã có dữ liệu quét & CIS AWS FB \\ \hline
+    \texttt{unmapped} & Capability/check thiếu mapping & --- \\ \hline
+    \texttt{delta} & Pre $\rightarrow$ Post improvement & --- \\ \hline
+  \end{tabular}
+\end{table}
+
+Đầu ra của Maturity Engine được tiêu thụ bởi node \texttt{report} (xem \texttt{ReportDataBuilder} ở §\ref{sec:reporting_module_subsec}) để render bảng điểm Maturity, biểu đồ radar 5-domain, và phần \textit{Compliance Mapping} với CMMC/NIST CSF/CIS AWS Foundations Benchmark.
+
+\subsection{Pha Report --- Reporting Module}
+\label{sec:phase_report}
+
+Pha cuối tổng hợp toàn bộ kết quả thành báo cáo cấp quản trị viên. Nguyên tắc: tách thành phần tất định (số liệu thống kê) khỏi thành phần generative (diễn giải ngôn ngữ tự nhiên), với cơ chế \textit{context grounding} để hạn chế hallucination ở nội dung sinh.
+
+\subsubsection*{Reporting Module: Tổng hợp và Trực quan hóa}
+\label{sec:reporting_module_subsec}
+
+Trong quy trình kiểm toán bảo mật,
+dữ liệu chỉ thực sự trở thành
+thông tin hữu ích
+khi được trình bày
+theo cách dễ hiểu
+đối với con người.
+Reporting Module
+đóng vai trò
+là tầng trình diễn
+(\textit{Presentation Layer})
+của hệ thống.
+
+Thành phần này
+không chỉ đơn thuần
+tổng hợp và nối chuỗi văn bản,
+mà áp dụng
+một quy trình tạo nội dung lai
+(\textit{Hybrid Content Generation}),
+kết hợp giữa
+tính chính xác tuyệt đối
+của dữ liệu thống kê
+và khả năng diễn giải
+ngôn ngữ tự nhiên
+của mô hình ngôn ngữ lớn.
+
+\subsubsection*{Chiến lược Tạo nội dung Lai (Hybrid Content Generation)}
+
+Để đảm bảo báo cáo vừa chính xác về mặt số liệu, vừa mượt mà về mặt văn phong, nội dung báo cáo được chia thành hai thành phần riêng biệt, mỗi thành phần được xử lý bởi một cơ chế phù hợp với đặc thù của nó.
+
+\begin{itemize}
+  \item \textbf{Thành phần Tất định (Deterministic Components):}
+    Bao gồm các dữ liệu định lượng
+    như bảng tổng hợp kết quả,
+    biểu đồ phân bố
+    và danh sách lỗ hổng.
+    Các thành phần này
+    được xây dựng
+    trực tiếp
+    từ mã nguồn Python thuần túy.
+
+    \begin{itemize}
+      \item Reporting Module
+        sử dụng các thư viện
+        xử lý dữ liệu
+        để tính toán thống kê,
+        chẳng hạn như
+        số lượng kết quả
+        \textit{PASS}/\textit{FAIL},
+        phân loại
+        theo mức độ nghiêm trọng
+        và tạo
+        các biểu đồ trực quan
+        tương ứng.
+
+      \item Cách tiếp cận này
+        đảm bảo rằng
+        mọi con số
+        xuất hiện trong báo cáo
+        đều có tính xác định,
+        không bị ảnh hưởng
+        bởi yếu tố ngẫu nhiên
+        của mô hình AI.
+    \end{itemize}
+
+  \item \textbf{Thành phần Sáng tạo (Generative Components):}
+    Bao gồm các nội dung
+    mang tính phân tích
+    và khuyến nghị,
+    chẳng hạn như
+    tóm tắt điều hành,
+    đánh giá xu hướng
+    và hướng dẫn
+    khắc phục thủ công.
+    Các phần này
+    được sinh ra
+    bởi mô hình ngôn ngữ lớn.
+
+    \begin{itemize}
+      \item Hệ thống
+        sử dụng lớp
+        \textit{LLMWriter}
+        để soạn thảo
+        các đoạn văn
+        dựa trên
+        ngữ cảnh đã được cung cấp.
+
+      \item Trong vai trò này,
+        mô hình ngôn ngữ
+        hoạt động
+        như một thành phần
+        diễn giải chuyên sâu,
+        giúp giải thích
+        mức độ nghiêm trọng
+        của các vấn đề
+        và đề xuất
+        hướng cải thiện
+        quy trình quản trị bảo mật.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection*{Cơ chế Neo ngữ cảnh (Context Grounding)}
+
+Một rủi ro lớn khi sử dụng mô hình ngôn ngữ lớn để viết báo cáo là khả năng mô hình phóng đại mức độ nghiêm trọng hoặc suy diễn ra các hành động chưa từng xảy ra. Để khắc phục vấn đề này, Reporting Module áp dụng kỹ thuật neo ngữ cảnh (\textit{Context Grounding}).
+
+Trước khi yêu cầu
+mô hình ngôn ngữ
+sinh bất kỳ nội dung nào,
+hệ thống xây dựng
+một bộ dữ liệu
+ngữ cảnh cô lập,
+thường được ký hiệu là
+\textit{llm\_post\_ctx}.
+Bộ dữ liệu này
+chỉ bao gồm
+các sự thật nền tảng
+đã được xác minh
+từ quá trình phân tích,
+bao gồm:
+
+\begin{itemize}
+  \item Số lượng lỗ hổng đã được khắc phục tự động.
+  \item Số lượng lỗ hổng yêu cầu can thiệp thủ công.
+  \item Các ràng buộc logic, chẳng hạn như mối quan hệ giữa các lỗi thủ công và các lỗi thất bại.
+\end{itemize}
+
+Bằng cách giới hạn mô hình chỉ được phép tham chiếu đến tập dữ liệu ngữ cảnh này và ngăn chặn việc truy cập trực tiếp vào dữ liệu thô không kiểm soát, hệ thống đảm bảo rằng mọi nhận định và kết luận trong báo cáo luôn nhất quán với thực tế kỹ thuật đã diễn ra, qua đó nâng cao độ tin cậy và tính nhất quán của báo cáo cuối cùng.
+
+\section{Tổng kết và Traceability}
+\label{sec:summary}
+
+Mục này tổng hợp năm đóng góp thiết kế, ánh xạ chúng tới RQ và phép đo, định vị so với baseline, và liệt kê đầy đủ các tham số thiết kế xuất hiện rải rác trong chương.
+
+\subsection{Tổng kết đóng góp thiết kế của Chương 4}
+\label{sec:design_contributions}
+
+Năm đóng góp thiết kế chính của Chương 4, mỗi đóng góp gắn với một RQ và một section đánh giá:
+
+\begin{enumerate}
+  \item \textbf{C1 --- Stateful Agentic PDCA Graph (\S\ref{sec:orchestration_design}):} thiết kế topology 13 node với conditional edges và \texttt{interrupt\_before} đóng vòng đầy đủ chu trình PDCA. Hỗ trợ RQ1 (PDCA closure), được kiểm chứng ở \S{}6.4.
+  \item \textbf{C2 --- Two-Pass Risk Evaluation (\S\ref{subsec:risk_evaluation_module}):} tách rule-based rubric khỏi LLM contextual reasoning, với hiệu chỉnh bất đối xứng escalate vs de-escalate. Hỗ trợ RQ2, được kiểm chứng ở \S{}6.7.1.
+  \item \textbf{C3 --- Multi-Query RAG Enrichment (\S\ref{subsec:rag_enrich_module}):} ba truy vấn fan-out (root-cause / compliance mapping / fix-guide) cho ngữ cảnh ba chiều, kết hợp Hybrid Retrieval + RRF + cross-encoder reranker (\S\ref{subsec:hybrid_retrieval}). Hỗ trợ RQ3, được kiểm chứng ở \S{}6.7.2.
+  \item \textbf{C4 --- Capability-level Maturity Engine (\S\ref{subsec:maturity_engine}):} cơ chế chấm điểm 4-state theo capability (thay vì count FAIL), với mapping weight matrix và stage completion threshold. Khác biệt cốt lõi so với các CSPM truyền thống. Hỗ trợ RQ1 và \S{}6.10 baseline comparison.
+  \item \textbf{C5 --- Constrained Tool Invocation Pattern (\S\ref{subsec:constrained_tool_pattern}):} pattern thiết kế tách quyết định semantic (LLM) khỏi binding tham số kỹ thuật (code), áp dụng nhất quán ở 3 module (Planning, Risk Eval, Remediation). Hỗ trợ RQ4 và RQ5.
+\end{enumerate}
+
+Mỗi đóng góp $C_i$ được thiết kế \textit{ablation-able}: có thể bật/tắt độc lập trong các thực nghiệm ở Chương~6 để đo lường rõ ràng đóng góp riêng. Điều này đảm bảo từng quyết định thiết kế đều có \textit{địa chỉ kiểm chứng} cụ thể, tránh tình trạng đóng góp mang tính ``đề xuất chung'' không kiểm tra được.
+
+% =====================================================================
+
+
+\subsection{Ánh xạ Câu hỏi Nghiên cứu $\leftrightarrow$ Thiết kế $\leftrightarrow$ Đánh giá}
+\label{sec:rq_design_eval_mapping}
+
+Để minh chứng rằng mọi câu hỏi nghiên cứu (RQ) đặt ra ở §1.4 đều được hậu thuẫn bởi (a) một quyết định thiết kế cụ thể trong Chương 4, (b) một module hiện thực ở Chương 5, và (c) một thực nghiệm đo đạc ở Chương 6, Bảng~\ref{tab:rq_mapping} tổng hợp ánh xạ ba chiều này.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ánh xạ RQ $\leftrightarrow$ Quyết định thiết kế $\leftrightarrow$ Phương án đánh giá $\leftrightarrow$ Acceptance criteria}
+  \label{tab:rq_mapping}
+  \renewcommand{\arraystretch}{1.35}
+  \setlength{\tabcolsep}{3pt}
+  \scriptsize
+  \begin{tabular}{|p{1.8cm}|p{4.0cm}|p{3.0cm}|p{4.0cm}|}
+    \hline
+    \textbf{RQ} & \textbf{Quyết định thiết kế (\S{}4)} & \textbf{Phương án đánh giá (\S{}6)} & \textbf{Acceptance criteria}\,\protect\footnotemark[1] \\ \hline
+    RQ1 --- PDCA closure & Topology 13-node + \texttt{route\_after\_risk} + \texttt{interrupt\_before} (\S\ref{sec:orchestration_design}) & \S{}6.4 End-to-end PDCA closure rate & End-to-end success rate $\geq 90\%$ trên tập kịch bản test \\ \hline
+    RQ2 --- Two-Pass risk evaluation & Rule-based rubric + RAG-aware contextual adjustment (\S\ref{subsec:risk_evaluation_module}) & \S{}6.7 Severity accuracy \& QWK; ablation Single vs Two-Pass & Severity QWK $\geq 0{,}65$; giảm false-Critical $\geq 30\%$ so với Single-Pass \\ \hline
+    RQ3 --- Multi-query hybrid retrieval & Q1+Q2+Q3 fan-out (\S\ref{subsec:rag_enrich_module}); Hybrid BM25 + dense + RRF + Cross-encoder (\S\ref{sec:retrieval_design}) & \S{}6.7 Recall@k, MRR, NDCG; ablation BM25 / Vector / Hybrid / +Reranker & Recall@5 $\geq 0{,}85$; MRR $\geq 0{,}70$; gap $|R@5_{VI}-R@5_{EN}| \leq 0{,}05$ \\ \hline
+    RQ4 --- HITL safety & \texttt{interrupt\_before} + transactional Persistence/Resume (\S\ref{subsec:persistence_resume}); Constrained Tool (\S\ref{subsec:constrained_tool_pattern}) & \S{}6.9 HITL usability + safety violation rate & 0 unauthorized writes; 100\% session recovery rate sau orchestrator restart \\ \hline
+    RQ5 --- Local-LLM feasibility & SLM $\leq$ 4B + Q4; Confidence-gated LLM activation (\S\ref{subsec:llm_activation_gate}) & \S{}6.2 hardware footprint; \S{}6.x latency \& cost & Median latency $\leq 30\text{s}$/decision; tối thiểu hoá tỷ lệ truy vấn cần LLM refinement; chạy trên GPU 6GB VRAM \\ \hline
+  \end{tabular}
+\end{table}
+
+\footnotetext[1]{Acceptance criteria là ngưỡng pass/fail dự kiến để tuyên bố thiết kế đạt yêu cầu. Số cụ thể được calibrate trên dev set ở Chương 6; các giá trị ở đây mang tính heuristic định hướng.}
+
+Bảng~\ref{tab:rq_mapping} đóng vai trò \textit{kim chỉ nam}: mỗi luận điểm thiết kế trong Chương 4 đều có địa chỉ kiểm chứng cụ thể trong Chương 6, tránh tình trạng ``thiết kế trống'' không đo lường được. So sánh thiết kế với các baseline CSPM tiêu biểu (Prowler CLI, AWS Security Hub, ScoutSuite) đã được trình bày ở Chương~2 (Related Work); ablation matrix chi tiết và bảng tham số thiết kế (hyperparameters) được trình bày trong Chương~6 (Evaluation Plan) cùng các thực nghiệm tương ứng.
+

@@ -1,0 +1,28 @@
+% =====================================================================
+% D2(a) -- Bảng Deliverable Quality, sinh từ:
+%   benchmarks/results/d1_20260506/holistic/deliverable_quality.csv
+% Trình bày tóm tắt n=5 (mỗi tiêu chí lặp lại tất định trên 5 phiên,
+% phương sai = 0); chi tiết per-run lưu trong CSV nguồn.
+% =====================================================================
+\begin{table}[H]
+  \centering
+  \caption{Chất lượng deliverable trên 5 phiên D1 (broad-scan group \texttt{s3}, $n=5$). \textit{Coverage} = tỷ lệ finding phát hiện được trong 11 finding ground truth độc lập (7 check do degrade script chủ động tạo + 4 finding pre-existing đã verify thủ công trước khi chạy hệ thống; xem \S\ref{subsec:target_environment}). \textit{Completeness} = số nhóm tạo phẩm PDCA hiện diện trên 5 (Detect/Analyse/Plan/Apply/Verify). \textit{Mapping} = tỷ lệ finding có capability\_id và domain khớp \texttt{maturity\_mappings.json} với \texttt{review\_status=approved}. \textit{Maturity} cột "rubric" tính độc lập theo trọng số mức nghiêm trọng; cột "system" trích từ báo cáo Markdown.}
+  \label{tab:d2_deliverable_quality}
+  \small
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Tiêu chí} & \textbf{Giá trị (n=5)} & \textbf{Phương sai} & \textbf{Ghi chú} \\
+    \midrule
+    Coverage             & 100.0\%  & 0     & 11/11 finding ground truth \\
+    Completeness         & 5/5      & 0     & đủ 5 nhóm tạo phẩm PDCA \\
+    Mapping consistency  & 100.0\%  & 0     & toàn bộ finding map approved \\
+    Maturity rubric      & 46.43    & 0     & rubric severity-only baseline \\
+    Maturity system      & 78.10    & 0     & Maturity Engine, post-remediation \\
+    $\Delta$ Maturity    & $+31.67$ & 0     & post -- rubric \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{1mm}
+  \footnotesize
+  \textit{Lưu ý về phương sai bằng 0.} Mỗi tiêu chí trong bảng này tính trên cùng tập 11 finding và 34 verification record; với cấu hình \texttt{temperature=0} và Maturity Engine tất định, đầu ra của 5 phiên giống hệt nhau theo thiết kế --- bảng này nhằm xác nhận tính lặp lại (replay), \emph{không} đo phương sai ngẫu nhiên. Phương sai thuần thời gian giữa các phiên được đo riêng ở Bảng~\ref{tab:pdca_timing_v2}.
+\end{table}

@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 760" font-family="Inter, system-ui, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">Kiến trúc AWS Security Maturity Agent — PDCA Agentic Workflow</title>
+  <desc id="desc">Sơ đồ kiến trúc PDCA: User/Frontend → LangGraph Orchestrator → AWS, nền tảng Local LLM, Hybrid RAG, Langfuse, HITL.</desc>
+
+  <defs>
+    <style>
+      .lbl-section { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; fill: #424750; }
+      .lbl-title   { font-size: 18px; font-weight: 700; fill: #111c2d; }
+      .lbl-sub     { font-size: 13px; font-weight: 500; fill: #424750; }
+      .lbl-stage   { font-size: 20px; font-weight: 800; fill: #ffffff; }
+      .lbl-stagek  { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; fill: #d6e3ff; }
+      .lbl-cap     { font-size: 11px; font-weight: 600; fill: #ffffff; }
+      .lbl-flow    { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; fill: #0e4686; }
+      .card        { fill: #ffffff; stroke: #c3c6d2; stroke-width: 1.5; }
+      .card-accent { fill: #ffffff; stroke: #06B6D4; stroke-width: 2.5; }
+      .stage-p     { fill: #002a58; }
+      .stage-d     { fill: #0059bb; }
+      .stage-c     { fill: #0070ea; }
+      .stage-a     { fill: #0e4686; }
+      .arrow       { stroke: #305ea0; stroke-width: 2.2; fill: none; }
+      .arrow-soft  { stroke: #737781; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+      .arrow-cycle { stroke: #06B6D4; stroke-width: 3; fill: none; }
+    </style>
+
+    <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#305ea0"/>
+    </marker>
+    <marker id="arrowHeadSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#737781"/>
+    </marker>
+    <marker id="arrowHeadCycle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#06B6D4"/>
+    </marker>
+
+    <linearGradient id="orchBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e7eeff"/>
+      <stop offset="100%" stop-color="#d8e3fb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- BACKDROP -->
+  <rect x="0" y="0" width="1800" height="760" fill="#f9f9ff"/>
+
+  <!-- ============= LAYER 1: INTERFACE (LEFT) ============= -->
+  <!-- right edge = 100 + 200 = 300 -->
+  <g transform="translate(100,140)">
+    <text class="lbl-section" x="0" y="-16">① INTERFACE LAYER</text>
+
+    <rect class="card" x="0" y="0" width="200" height="92" rx="10"/>
+    <circle cx="36" cy="46" r="20" fill="#d6e3ff" stroke="#0059bb" stroke-width="2"/>
+    <circle cx="36" cy="40" r="7" fill="#0059bb"/>
+    <path d="M22,58 Q36,48 50,58 L50,62 L22,62 Z" fill="#0059bb"/>
+    <text class="lbl-title" x="68" y="44">SecOps / CISO</text>
+    <text class="lbl-sub"   x="68" y="64">Vận hành &amp; phê duyệt</text>
+
+    <rect class="card" x="0" y="120" width="200" height="92" rx="10"/>
+    <rect x="14" y="134" width="48" height="64" rx="6" fill="#dee8ff" stroke="#0059bb" stroke-width="1.5"/>
+    <rect x="20" y="142" width="36" height="6" rx="2" fill="#0059bb"/>
+    <rect x="20" y="154" width="28" height="4" rx="2" fill="#83aef5"/>
+    <rect x="20" y="162" width="32" height="4" rx="2" fill="#83aef5"/>
+    <rect x="20" y="170" width="24" height="4" rx="2" fill="#83aef5"/>
+    <text class="lbl-title" x="74" y="160">Frontend</text>
+    <text class="lbl-sub"   x="74" y="178">Chatbot · Dashboard</text>
+    <text class="lbl-sub"   x="74" y="196">Báo cáo · HITL UI</text>
+
+    <rect class="card" x="0" y="240" width="200" height="68" rx="10"/>
+    <rect x="14" y="258" width="36" height="36" rx="6" fill="#002a58"/>
+    <text x="32" y="282" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">API</text>
+    <text class="lbl-title" x="62" y="276">FastAPI Server</text>
+    <text class="lbl-sub"   x="62" y="294">Runs API · Polling · HITL</text>
+  </g>
+
+  <!-- ============= LAYER 2: PDCA ORCHESTRATOR (CENTER) ============= -->
+  <!-- left edge = 390, right edge = 390 + 940 = 1330 -->
+  <g transform="translate(390,80)">
+    <text class="lbl-section" x="0" y="20">② AGENTIC WORKFLOW — PDCA ORCHESTRATOR (LangGraph)</text>
+
+    <!-- Container -->
+    <rect x="0" y="36" width="940" height="298" rx="18" fill="url(#orchBg)" stroke="#002a58" stroke-width="2.5"/>
+    <rect x="0" y="36" width="940" height="36" rx="18" fill="#002a58"/>
+    <rect x="0" y="56" width="940" height="16" fill="#002a58"/>
+    <text x="20" y="60" font-size="14" font-weight="800" fill="#ffffff" letter-spacing="0.08em">⟳ LANGGRAPH STATEFUL WORKFLOW — PDCA</text>
+    <text x="920" y="60" font-size="11" font-weight="700" fill="#a9c7ff" text-anchor="end" letter-spacing="0.08em">CHECKPOINT · STATE PERSISTENCE</text>
+
+    <!-- P · PLAN -->
+    <g transform="translate(20,82)">
+      <rect class="stage-p" x="0" y="0" width="205" height="140" rx="12"/>
+      <text class="lbl-stagek" x="14" y="24">P · PLAN</text>
+      <text class="lbl-stage"  x="14" y="54">Planning</text>
+      <text class="lbl-cap"    x="14" y="76">• Khám phá AWS</text>
+      <text class="lbl-cap"    x="14" y="92">• Hiểu yêu cầu</text>
+      <text class="lbl-cap"    x="14" y="108">• Chọn scope/tool</text>
+    </g>
+
+    <!-- D · DO -->
+    <g transform="translate(239,82)">
+      <rect class="stage-d" x="0" y="0" width="205" height="140" rx="12"/>
+      <text class="lbl-stagek" x="14" y="24">D · DO</text>
+      <text class="lbl-stage"  x="14" y="54">Scanner</text>
+      <text class="lbl-cap"    x="14" y="76">• Quét S3 bằng Prowler</text>
+      <text class="lbl-cap"    x="14" y="92">• Theo dõi job ⟲</text>
+      <text class="lbl-cap"    x="14" y="108">• Chuẩn hóa findings</text>
+    </g>
+
+    <!-- C · CHECK -->
+    <g transform="translate(458,82)">
+      <rect class="stage-c" x="0" y="0" width="205" height="140" rx="12"/>
+      <text class="lbl-stagek" x="14" y="24">C · CHECK</text>
+      <text class="lbl-stage"  x="14" y="54">Risk Eval</text>
+      <text class="lbl-cap"    x="14" y="76">• Chấm điểm bằng LLM</text>
+      <text class="lbl-cap"    x="14" y="92">• Ưu tiên rủi ro</text>
+    </g>
+
+    <!-- A · ACT -->
+    <g transform="translate(677,82)">
+      <rect class="stage-a" x="0" y="0" width="243" height="140" rx="12"/>
+      <text class="lbl-stagek" x="14" y="22">A · ACT</text>
+      <text class="lbl-stage"  x="14" y="50">Remediation</text>
+      <text class="lbl-cap"    x="14" y="72">• Lập kế hoạch</text>
+      <text x="14" y="89" font-size="11" font-weight="700" fill="#ffa8a8">• ── HITL Gate ──</text>
+      <text class="lbl-cap"    x="14" y="106">• Thực thi · Xác minh</text>
+      <text class="lbl-cap"    x="14" y="122">• Báo cáo chiến lược</text>
+    </g>
+
+    <!-- Forward arrows P→D→C→A -->
+    <path class="arrow-cycle" d="M225,152 L239,152" marker-end="url(#arrowHeadCycle)"/>
+    <path class="arrow-cycle" d="M444,152 L458,152" marker-end="url(#arrowHeadCycle)"/>
+    <path class="arrow-cycle" d="M663,152 L677,152" marker-end="url(#arrowHeadCycle)"/>
+
+    <!-- HITL badge below ACT -->
+    <rect x="677" y="230" width="243" height="22" rx="6" fill="#ffdad6" stroke="#ba1a1a" stroke-width="1.5"/>
+    <text x="798" y="245" font-size="9" font-weight="700" fill="#ba1a1a" text-anchor="middle">⚑ interrupt_before: review_task</text>
+  </g>
+
+  <!-- ============= LAYER 3: AWS TARGET (RIGHT) ============= -->
+  <!-- left edge = 1420, gap from orchestrator right (1330) = 90px -->
+  <g transform="translate(1420,140)">
+    <text class="lbl-section" x="0" y="-16">③ TARGET ENVIRONMENT</text>
+
+    <rect class="card" x="0" y="0" width="280" height="308" rx="14"/>
+    <rect x="0" y="0" width="280" height="44" rx="14" fill="#232f3e"/>
+    <rect x="0" y="22" width="280" height="22" fill="#232f3e"/>
+    <text x="140" y="29" font-size="16" font-weight="800" fill="#ff9900" text-anchor="middle" letter-spacing="0.18em">aws</text>
+    <text x="140" y="42" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="0.14em">CLOUD ACCOUNT (Read · Remediate)</text>
+
+    <rect x="20" y="64" width="240" height="68" rx="10" fill="#fff7e6" stroke="#ff9900" stroke-width="2"/>
+    <text x="36" y="88" font-size="14" font-weight="800" fill="#7a4a00">Amazon S3</text>
+    <text x="36" y="106" font-size="11" font-weight="600" fill="#7a4a00">Buckets · Policies · Encryption</text>
+    <text x="36" y="122" font-size="10" font-weight="700" fill="#15803d" letter-spacing="0.08em">● CURRENT SCOPE</text>
+
+    <rect x="20" y="142" width="240" height="56" rx="10" fill="#f5f5f5" stroke="#a0a0a0" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <text x="36" y="164" font-size="12" font-weight="700" fill="#737781">IAM · EC2 · RDS · VPC</text>
+    <text x="36" y="182" font-size="10" font-weight="600" fill="#737781" letter-spacing="0.08em">○ FUTURE SCOPE</text>
+
+    <rect x="20" y="212" width="240" height="76" rx="10" fill="#f0f3ff" stroke="#002a58" stroke-width="1.8"/>
+    <text x="36" y="236" font-size="13" font-weight="800" fill="#002a58">PROWLER ENGINE</text>
+    <text x="36" y="254" font-size="11" font-weight="500" fill="#424750">CIS · AWS Well-Architected</text>
+    <text x="36" y="270" font-size="11" font-weight="500" fill="#424750">→ JSON findings</text>
+    <text x="36" y="284" font-size="11" font-weight="700" fill="#0059bb">read-only / remediate w/ HITL</text>
+  </g>
+
+  <!-- ============= LAYER 4: FOUNDATION (BOTTOM) ============= -->
+  <g transform="translate(100,500)">
+    <text class="lbl-section" x="0" y="-16">④ FOUNDATION — LOCAL-FIRST · GROUNDED · OBSERVABLE</text>
+
+    <!-- Local LLM -->
+    <g transform="translate(0,0)">
+      <rect class="card-accent" x="0" y="0" width="360" height="140" rx="12"/>
+      <circle cx="40" cy="40" r="22" fill="#d6e3ff"/>
+      <text x="40" y="46" font-size="22" font-weight="800" fill="#002a58" text-anchor="middle">🦙</text>
+      <text class="lbl-title" x="76" y="36">Local LLM (Ollama)</text>
+      <text class="lbl-sub"   x="76" y="56">Gemma 3 (4B) · privacy-first inference</text>
+      <g font-size="11" font-weight="700" letter-spacing="0.04em">
+        <rect x="14" y="88" width="160" height="22" rx="11" fill="#e7eeff" stroke="#0059bb"/>
+        <text x="94" y="103" text-anchor="middle" fill="#0059bb">No cloud LLM API</text>
+      </g>
+    </g>
+
+    <!-- Hybrid RAG -->
+    <g transform="translate(390,0)">
+      <rect class="card-accent" x="0" y="0" width="360" height="140" rx="12"/>
+      <g transform="translate(18,18)">
+        <rect x="0" y="0" width="44" height="44" rx="8" fill="#d8e3fb" stroke="#0059bb" stroke-width="1.5"/>
+        <text x="22" y="29" font-size="14" font-weight="800" fill="#0059bb" text-anchor="middle">🔍</text>
+      </g>
+      <text class="lbl-title" x="76" y="36">Hybrid RAG</text>
+      <text class="lbl-sub"   x="76" y="56">Vector (Chroma) + BM25 keyword</text>
+      <g font-size="11" font-weight="700">
+        <rect x="14" y="78"  width="160" height="22" rx="11" fill="#dee8ff" stroke="#305ea0"/>
+        <text x="94" y="93"  text-anchor="middle" fill="#0e4686">CIS · AWS Well-Architected</text>
+        <rect x="182" y="78" width="164" height="22" rx="11" fill="#dee8ff" stroke="#305ea0"/>
+        <text x="264" y="93" text-anchor="middle" fill="#0e4686">Grounded citations</text>
+      </g>
+    </g>
+
+    <!-- Langfuse -->
+    <g transform="translate(780,0)">
+      <rect class="card-accent" x="0" y="0" width="360" height="140" rx="12"/>
+      <g transform="translate(18,18)">
+        <rect x="0" y="0" width="44" height="44" rx="8" fill="#ffe4cc" stroke="#cc5500" stroke-width="1.5"/>
+        <text x="22" y="30" font-size="16" font-weight="800" fill="#cc5500" text-anchor="middle">📊</text>
+      </g>
+      <text class="lbl-title" x="76" y="36">Langfuse Observability</text>
+      <text class="lbl-sub"   x="76" y="56">End-to-end tracing &amp; eval</text>
+      <g font-size="11" font-weight="700">
+        <rect x="14" y="78"  width="98" height="22" rx="11" fill="#fff3e0" stroke="#cc5500"/>
+        <text x="63" y="93" text-anchor="middle" fill="#cc5500">Tracing</text>
+        <rect x="120" y="78" width="98" height="22" rx="11" fill="#fff3e0" stroke="#cc5500"/>
+        <text x="169" y="93" text-anchor="middle" fill="#cc5500">Latency</text>
+        <rect x="226" y="78" width="120" height="22" rx="11" fill="#fff3e0" stroke="#cc5500"/>
+        <text x="286" y="93" text-anchor="middle" fill="#cc5500">Trace replay</text>
+      </g>
+    </g>
+
+    <!-- Strategic Outputs -->
+    <g transform="translate(1170,0)">
+      <rect class="card-accent" x="0" y="0" width="350" height="140" rx="12"/>
+      <g transform="translate(18,18)">
+        <rect x="0" y="0" width="44" height="44" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+        <text x="22" y="30" font-size="16" font-weight="800" fill="#15803d" text-anchor="middle">📑</text>
+      </g>
+      <text class="lbl-title" x="76" y="36">Strategic Outputs</text>
+      <text class="lbl-sub"   x="76" y="56">Cho CISO / CIO / Audit</text>
+      <g font-size="11" font-weight="700">
+        <rect x="14" y="78"  width="142" height="22" rx="11" fill="#dcfce7" stroke="#15803d"/>
+        <text x="85" y="93" text-anchor="middle" fill="#15803d">Maturity Score</text>
+        <rect x="164" y="78" width="172" height="22" rx="11" fill="#dcfce7" stroke="#15803d"/>
+        <text x="250" y="93" text-anchor="middle" fill="#15803d">Prioritized Remediation</text>
+        <rect x="14" y="106" width="322" height="22" rx="11" fill="#dcfce7" stroke="#15803d"/>
+        <text x="175" y="121" text-anchor="middle" fill="#15803d">Compliance evidence (CIS · Well-Architected)</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============= GLOBAL CONNECTORS ============= -->
+
+  <!-- Interface (right=300) ↔ Orchestrator (left=390) — gap 90px -->
+  <path class="arrow" d="M300,186 L390,186" marker-end="url(#arrowHead)"/>
+  <text class="lbl-flow" x="308" y="178">request</text>
+  <path class="arrow" d="M390,206 L300,206" marker-end="url(#arrowHead)"/>
+  <text class="lbl-flow" x="304" y="222">state / HITL</text>
+
+  <!-- Orchestrator (right=1330) → AWS (left=1420) — gap 90px, horizontal -->
+  <path class="arrow" d="M1330,215 L1420,215" marker-end="url(#arrowHead)"/>
+  <text class="lbl-flow" x="1342" y="209">scan / act</text>
+  <path class="arrow" d="M1420,260 L1330,260" marker-end="url(#arrowHead)"/>
+  <text class="lbl-flow" x="1346" y="254">findings</text>
+
+  <!-- Orchestrator → Foundation (dashed) -->
+  <path class="arrow-soft" d="M530,420 L280,500" marker-end="url(#arrowHeadSoft)"/>
+  <path class="arrow-soft" d="M690,420 L670,500" marker-end="url(#arrowHeadSoft)"/>
+  <path class="arrow-soft" d="M860,420 L1060,500" marker-end="url(#arrowHeadSoft)"/>
+  <path class="arrow-soft" d="M1080,420 L1445,500" marker-end="url(#arrowHeadSoft)"/>
+
+</svg>

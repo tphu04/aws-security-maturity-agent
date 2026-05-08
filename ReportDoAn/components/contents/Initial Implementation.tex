@@ -1,0 +1,382 @@
+% =============================================================================
+% Initial Implementation.tex — Chương 5 Hiện thực hệ thống
+% Cấu trúc 8 section, prose-first (không show code listing), không bảng tool.
+% =============================================================================
+
+\chapter{Hiện thực hệ thống}
+
+Chương này trình bày hiện thực của \sysname{} (\sysnameshort{}) — hệ thống đã thiết kế ở Chương~4. \sysnameshort{} gồm ba tiến trình giao tiếp qua HTTP: Backend FastAPI hợp nhất Scanner API (prefix \texttt{/scan/*}, \texttt{/job/*}) và Orchestrator API (prefix \texttt{/v1/*}); RAG service cung cấp hybrid retrieval; Frontend React/Vite phụ trách giao diện chat và phê duyệt HITL, chỉ gọi Backend. Phạm vi hiện thực giới hạn ở AWS với Prowler v4 cho khâu quét, S3 cho khâu remediation, và LLM Gemma 3 4B IT (Q4\_K\_M) chạy local qua Ollama --- mô hình hạt nhân thống nhất cho mọi agent gọi LLM (xem Phụ lục~\ref{app:model_benchmark} cho quá trình lựa chọn). Các giả định môi trường (credential AWS đã cấu hình, ChromaDB build offline, Python 3.11+, phần cứng CPU-only) được trình bày kèm reproducibility note ở mục Tổng kết cuối chương. Trình tự trình bày đi từ thành phần cốt lõi nhất là đồ thị điều phối, qua các tầng phụ trợ (state, API, công cụ, RAG), tới các concerns xuyên suốt và phòng vệ ứng dụng, sau đó là mô hình mối đe doạ đặc thù cho chính agent, và kết bằng phần tổng kết.
+
+
+%==============================================================================
+% 5.1 — Đồ thị điều phối PDCA
+%==============================================================================
+
+\section{Đồ thị điều phối PDCA}
+\label{sec:graph_impl}
+
+\subsection{Tô-pô đồ thị}
+
+Đồ thị được khởi tạo bởi hàm \texttt{build\_graph()}. Hàm này thuần tô-pô (không chứa logic nghiệp vụ): đăng ký mười ba node, khai báo mười cạnh tuyến tính cho luồng PDCA cơ bản, gắn ba conditional edge cho rẽ nhánh, và compile đồ thị với checkpointer cùng tham số \texttt{interrupt\_before=["review\_task"]}. Việc tách logic nghiệp vụ khỏi tô-pô giúp đồ thị dễ test (chỉ cần kiểm tra danh sách node và cạnh) và dễ thay đổi luồng mà không động vào hiện thực từng node.
+
+Bảng~\ref{tab:node_impl_mapping_v2} ánh xạ tên mười ba node trong \texttt{StateGraph} với vai trò chính. Một điểm cần lưu ý là tên node trong code là \texttt{operational\_planning} nhưng hàm hiện thực được đặt tên là \texttt{remediation\_node}. Sự khác biệt này có chủ ý: \emph{operational\_planning} mô tả vai trò trong sơ đồ PDCA (lập kế hoạch tác nghiệp), còn \emph{remediation} là module domain (khắc phục cụ thể). Phần còn lại của báo cáo dùng nhất quán tên \texttt{operational\_planning} khi nói về node.
+
+\begin{table}[!htb]
+  \centering
+  \caption{13 node của đồ thị PDCA}
+  \label{tab:node_impl_mapping_v2}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{|l|p{9.0cm}|}
+    \hline
+    \textbf{Tên node} & \textbf{Vai trò} \\ \hline
+    \texttt{environment}           & Lấy AWS context (account ID, region, IAM principal) qua STS. \\ \hline
+    \texttt{planning}              & Sinh \texttt{assessment\_plan} bằng RAG-first; fallback LLM. \\ \hline
+    \texttt{scan\_submit}          & POST job tới Scanner API (\texttt{/scan/check} hoặc \texttt{/scan/specific}). \\ \hline
+    \texttt{scan\_poll}            & Polling \texttt{/job/status} với backoff 5\,s. \\ \hline
+    \texttt{scan\_collect}         & Aggregate \texttt{raw\_findings} từ JSON OCSF. \\ \hline
+    \texttt{risk\_evaluation}      & Two-pass scoring (rule + LLM rubric). \\ \hline
+    \texttt{rag\_enrich}           & Multi-query RAG: 3 truy vấn song song. \\ \hline
+    \texttt{operational\_planning} & Sinh \texttt{remediation\_tasks} với param introspection. \\ \hline
+    \texttt{review\_task}          & HITL gate (\texttt{interrupt\_before}). \\ \hline
+    \texttt{reset\_index}          & Reset \texttt{current\_task\_index=0} trước execution. \\ \hline
+    \texttt{execution}             & Boto3 apply approved tasks. \\ \hline
+    \texttt{verification}          & Micro-scan post-fix; differential analysis. \\ \hline
+    \texttt{report}                & Sinh maturity score và báo cáo Markdown/PDF. \\ \hline
+  \end{tabular}
+\end{table}
+
+Pha quét được tách ý chủ đích thành ba node riêng biệt — \texttt{scan\_submit}, \texttt{scan\_poll}, \texttt{scan\_collect} — thay vì một node monolithic chạy đến khi xong. Lý do là Prowler có thể mất từ vài chục giây tới ba mươi phút cho một lần quét; nếu gói tất cả vào một node thì LangGraph chỉ checkpoint trước và sau, mất khả năng resume khi process restart giữa chừng. Tách thành ba node cho phép checkpoint sau mỗi vòng polling, đồng thời để vòng lặp polling khớp tự nhiên với cơ chế conditional edge \texttt{route\_scan\_poll}. Cái giá phải trả là state schema phức tạp hơn (\texttt{pending\_jobs}, \texttt{completed\_jobs}, \texttt{scan\_started\_at}, \texttt{scan\_poll\_count} đều phải được persist), nhưng đổi lại là khả năng resume sau crash giữa scan dài.
+
+\subsection{Logic rẽ nhánh}
+
+Hệ thống có ba conditional edge. Conditional edge thứ nhất là \texttt{route\_scan\_poll}: sau \texttt{scan\_submit}, node \texttt{scan\_poll} được gọi liên tục; nếu mọi job đã ở trạng thái \texttt{completed} hoặc \texttt{failed} thì đi tiếp \texttt{scan\_collect}, ngược lại quay về \texttt{scan\_poll} (sleep 5\,s nội bộ trong node). Số lần lặp tối đa được giới hạn ở 360 vòng, tương ứng timeout 30 phút; vượt ngưỡng sẽ raise \texttt{TimeoutError} và đưa run vào trạng thái \texttt{FAILED}.
+
+Conditional edge thứ hai là \texttt{route\_after\_risk}: nếu danh sách \texttt{prioritized\_findings} có ít nhất một mục với \texttt{status="FAIL"}, đồ thị đi tiếp \texttt{rag\_enrich} rồi \texttt{operational\_planning}; ngược lại nhảy thẳng \texttt{report}. Quy tắc đơn giản này tránh chi phí RAG và LLM khi không có vi phạm cần khắc phục.
+
+Conditional edge thứ ba là \texttt{route\_review\_task}: tại pha Act, đồ thị \emph{interrupt\_before} \texttt{review\_task} cho từng \texttt{remediation\_task} không có cờ \texttt{manual\_required}. Sau khi user phê duyệt, đồ thị tăng \texttt{current\_task\_index} và quay lại \texttt{review\_task} cho task kế tiếp. Khi mọi task tự động đã được duyệt, route trả nhánh \texttt{reset\_then\_execute} và đi tới \texttt{reset\_index} rồi \texttt{execution}.
+
+\subsection{HITL bằng \texttt{interrupt\_before}}
+
+Đồ thị compile với tham số \texttt{interrupt\_before=["review\_task"]}. LangGraph sẽ checkpoint trạng thái và thoát thread khi sắp chạy \texttt{review\_task}, cho phép Frontend poll snapshot và hiển thị task chờ duyệt cho người dùng. Người duyệt gửi quyết định qua endpoint \texttt{POST /v1/runs/\{run\_id\}/approvals/\{task\_id\}}; Backend gọi \texttt{app.update\_state()} ghi quyết định vào \texttt{task\_execution\_plan} rồi spawn thread mới gọi \texttt{app.stream(None, config)} để tiếp tục từ checkpoint cuối. Cơ chế này yêu cầu Frontend poll, không có push notification — đây là giới hạn đã biết, được liệt kê ở mục giới hạn cuối chương.
+
+
+%==============================================================================
+% 5.2 — Quản lý trạng thái và persistence
+%==============================================================================
+
+\section{Quản lý trạng thái và persistence}
+\label{sec:state_impl}
+
+\subsection{State schema}
+
+Trạng thái phiên được mô hình hoá bằng \texttt{TypedDict PDCAState}, tổ chức thành các nhóm trường theo vai trò: định danh (\texttt{run\_id}), input (\texttt{user\_request}, \texttt{aws\_context}, \texttt{cycle\_iteration}), trạng thái RAG (\texttt{rag\_available}, \texttt{rag\_bundle}), kế hoạch (\texttt{assessment\_plan}), luồng quét (\texttt{raw\_findings}, \texttt{normalized\_findings}, \texttt{pending\_jobs}, \texttt{completed\_jobs}, \texttt{scan\_started\_at}, \texttt{scan\_poll\_count}), phân tích rủi ro (\texttt{prioritized\_findings}), khắc phục (\texttt{remediation\_tasks}, \texttt{task\_execution\_plan}, \texttt{current\_task\_index}), thực thi và kiểm chứng (\texttt{execution\_logs}, \texttt{pipeline\_context}, \texttt{verification\_results}, \texttt{analysis\_results}), snapshot trước/sau cho phân tích vi sai (\texttt{pre\_scan\_snapshot}, \texttt{post\_scan\_snapshot}), báo cáo (\texttt{final\_report}), tích luỹ lỗi (\texttt{errors}), và ngữ cảnh observability để resume (\texttt{\_langfuse\_trace\_id}, \texttt{\_langfuse\_parent\_span\_id}). Mỗi node trả về một \texttt{dict} chỉ chứa các trường thay đổi, LangGraph sẽ merge vào state chung.
+
+Hai trường được khai báo \texttt{Annotated[List[\dots], operator.add]} là \texttt{execution\_logs} và \texttt{errors} — LangGraph sẽ \emph{nối thêm} thay vì ghi đè. Các trường còn lại không có reducer, đặc biệt là bốn trường liên quan đến luồng quét (\texttt{raw\_findings}, \texttt{normalized\_findings}, \texttt{pending\_jobs}, \texttt{completed\_jobs}); mỗi node tự quản lý logic merge trong code (ví dụ \texttt{scan\_poll} đọc \texttt{state.get("raw\_findings", []) + new\_raw}). Quyết định không dùng reducer ở đây tránh được race condition giữa các vòng polling — nếu hai vòng polling cùng append qua reducer thì có thể tạo entry trùng.
+
+Việc chọn \texttt{TypedDict} thay vì Pydantic \texttt{BaseModel} là quyết định chủ động ở tầng hiện thực. \texttt{StateGraph(PDCAState)} của LangGraph chấp nhận trực tiếp \texttt{TypedDict}, không yêu cầu adapter. Mỗi node return một \texttt{dict} chứa các trường thay đổi và LangGraph merge tự động — nếu dùng Pydantic thì mỗi node phải gọi \texttt{model\_dump()}, thêm overhead không cần thiết. Reducer \texttt{Annotated[List[\dots], operator.add]} cũng chỉ work với \texttt{TypedDict} trong API hiện tại của LangGraph. Cái giá phải trả là không có guard runtime cho schema sai — schema drift được type checker (mypy/Pylance) bắt ở dev time, và bộ test schema bù lại ở thời điểm CI.
+
+\subsection{Checkpointer SqliteSaver}
+
+LangGraph mặc định dùng \texttt{MemorySaver}, lưu state trong dict in-memory. Cấu hình này không đảm bảo persistence qua restart — chu trình HITL có thể chờ phê duyệt nhiều giờ, nếu server restart thì toàn bộ checkpoint mất. Hệ thống chuyển sang \texttt{SqliteSaver} ghi xuống file SQLite cục bộ. Lựa chọn SQLite (so với \texttt{PostgresSaver}) phù hợp với scope đề tài: zero-ops, file-based, đủ scale cho lưu lượng vài run mỗi giờ; nếu scale-out thì có thể đổi backend mà không cần thay đổi logic node.
+
+\texttt{SqliteSaver} được khởi tạo qua \texttt{sqlite3.connect(path, check\_same\_thread=False)} thay vì factory \texttt{SqliteSaver.from\_conn\_string()}: factory được khai báo \texttt{@contextmanager} nên connection bị đóng khi context ra ngoài scope hàm. Cờ \texttt{check\_same\_thread=False} cần thiết vì worker thread Uvicorn và daemon thread LangGraph khác thread tạo connection; thread-safety ở tầng ứng dụng do LangGraph quản lý lock nội bộ.
+
+\subsection{Bảng job quét tách biệt}
+
+Trạng thái job quét được lưu trong một file SQLite tách biệt với checkpointer của đồ thị. Tách hai file SQLite có lý do: Scanner và Orchestrator có lifecycle độc lập (Scanner job có thể được spawn ngoài context một run cụ thể), checkpoint là binary blob của LangGraph không nên trộn schema với job table, và file \texttt{scanner\_jobs} bật chế độ WAL (\texttt{PRAGMA journal\_mode=WAL}) để Backend Orchestrator (process khác) đọc song song với Scanner API ghi — nếu chung file, lock contention sẽ ảnh hưởng latency checkpoint. Đổi lại có hai retention policy, nhưng đơn giản backup và cleanup. Endpoint \texttt{GET /v1/runs} của Backend đọc cả hai DB rồi join trên \texttt{run\_id} với danh sách \texttt{job\_ids} để hiển thị thống nhất cho người dùng.
+
+
+%==============================================================================
+% 5.3 — Lớp REST API và Frontend
+%==============================================================================
+
+\section{Lớp REST API và Frontend}
+\label{sec:api_impl}
+
+\subsection{Tổng kết endpoint}
+
+\sysnameshort{} expose hai service HTTP. Bảng~\ref{tab:api_summary} tóm tắt các endpoint cốt lõi; schema chi tiết của payload và response được khai báo bằng Pydantic v2 ở Backend.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tổng kết REST API của \sysnameshort{}}
+  \label{tab:api_summary}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{|l|l|p{6.5cm}|}
+    \hline
+    \textbf{Service} & \textbf{Endpoint} & \textbf{Tác dụng} \\ \hline
+    Scanner          & \texttt{GET /scan/check}        & Quét theo nhóm dịch vụ AWS (whitelist). \\ \hline
+    Scanner          & \texttt{GET /scan/specific}     & Quét theo danh sách \texttt{check\_ids}. \\ \hline
+    Scanner          & \texttt{GET /scan/custom}       & Quét theo file JSON (whitelist filename). \\ \hline
+    Scanner          & \texttt{GET /job/status}        & Trả status và result OCSF. \\ \hline
+    Scanner          & \texttt{GET /job/list}          & Liệt kê job (debug). \\ \hline
+    Orchestrator     & \texttt{GET /v1/environment}    & Ping AWS và RAG (cache 30\,s). \\ \hline
+    Orchestrator     & \texttt{POST /v1/runs}          & Tạo run, spawn thread chạy đồ thị. \\ \hline
+    Orchestrator     & \texttt{GET /v1/runs}           & Liệt kê run từ checkpointer và scanner DB. \\ \hline
+    Orchestrator     & \texttt{GET /v1/runs/\{id\}}    & Snapshot \texttt{PDCAState}. \\ \hline
+    Orchestrator     & \texttt{POST /v1/runs/\{id\}/approvals/\{task\_id\}} & Phê duyệt HITL, resume. \\ \hline
+    Orchestrator     & \texttt{GET /v1/runs/\{id\}/report} & Xuất báo cáo Markdown / JSON. \\ \hline
+    RAG              & \texttt{POST /api/v1/retrieval/retrieve} & Hybrid retrieval. \\ \hline
+  \end{tabular}
+\end{table}
+
+\subsection{Bất đồng bộ trong Scanner API}
+
+Một phiên Prowler điển hình dài 30\,s đến 1800\,s. Nếu Scanner gọi đồng bộ trong handler FastAPI thì worker thread sẽ bị chiếm trọn thời gian này, làm các request khác xếp hàng. Để không chặn FastAPI worker, Scanner sử dụng \texttt{BackgroundTasks} của FastAPI kết hợp với \texttt{subprocess}. Khi một request \texttt{POST /scan/check} đến, handler sinh \texttt{job\_id} dạng UUID, ghi trạng thái \texttt{PENDING} vào DB và trả về 202 Accepted ngay lập tức cho client. Sau đó \texttt{BackgroundTasks} chạy hàm \texttt{\_run\_prowler\_command\_worker(job\_id)} ở thread khác: hàm này fork process con qua \texttt{subprocess}, chờ kết quả, đọc output JSON OCSF từ file output, và cập nhật trạng thái job trong DB từ \texttt{PENDING} lên \texttt{RUNNING} rồi \texttt{COMPLETED} hoặc \texttt{FAILED}. Việc tách Prowler ra subprocess riêng có hai lợi ích: cách ly lỗi (Prowler crash không kéo Scanner API sập theo) và cho phép Scanner API tiếp tục phục vụ client khác trong khi Prowler chạy.
+
+\subsection{Daemon thread trong Orchestrator API}
+
+Mỗi run của đồ thị được chạy trong một \texttt{daemon=True} thread riêng. Thread chạy \texttt{app.stream(initial\_state, config)} đến khi đồ thị hoặc interrupt tại \texttt{review\_task}, hoặc đến \texttt{END}. Việc dùng threading thay vì \texttt{asyncio} là quyết định chủ động: \texttt{app.stream()} của LangGraph là sync iterator, không phải \texttt{async generator}; các node gọi blocking I/O thuần (boto3, subprocess, sqlite3); và FastAPI tự run sync handler trong threadpool sẵn. Wrap async sẽ chỉ thêm overhead mà không có lợi vì work là I/O-bound chứ không phải CPU-bound.
+
+Race condition double-spawn được phòng ngừa bằng dict \texttt{\_run\_locks: Dict[str, Lock]}: mỗi lần \texttt{\_spawn()} lấy lock cho \texttt{run\_id} trước khi tạo thread; nếu lock đã held (run đang chạy), endpoint trả 409 cho client thay vì tạo thread thứ hai. Lock được giữ suốt đời run và giải phóng khi thread thoát (\texttt{interrupt} hoặc \texttt{END}).
+
+\subsection{Resume sau quyết định HITL}
+
+Endpoint \texttt{POST /v1/runs/\{run\_id\}/approvals/\{task\_id\}} thực hiện ba bước có ràng buộc bất biến chặt chẽ. Bước một là đọc snapshot bằng \texttt{app.get\_state(config)}: nếu \texttt{snapshot.next} không phải \texttt{("review\_task",)} thì trả 409 Conflict — ràng buộc này đảm bảo client không thể phê duyệt khi đồ thị không dừng ở review (chống nhầm lẫn UI hoặc race với poller). Bước hai là ghi quyết định vào state qua \texttt{app.update\_state(config, ...)}: cập nhật \texttt{task\_execution\_plan[task\_id] = decision} và tăng \texttt{current\_task\_index} lên một. Bước ba là spawn thread mới gọi \texttt{app.stream(None, config)} — đối số \texttt{None} báo LangGraph tiếp tục từ checkpoint cuối thay vì khởi tạo lại từ \texttt{initial\_state}.
+
+\subsection{Tích hợp Frontend}
+\label{sub:frontend_integration}
+
+Frontend là một Single-Page Application viết bằng React 18.3, TypeScript và Vite 5.4. Hệ thống không dùng framework state management nặng (Redux, Zustand) mà chỉ dựa vào \texttt{React.Context}. Lựa chọn này phù hợp với scope của ứng dụng: state phía client gọn (một active run cộng một history list), không có optimistic update phức tạp, và phần lớn data đến từ Backend qua polling chứ không phải mutation cục bộ. Dùng Context cũng giảm thiểu boilerplate và phụ thuộc — phù hợp với LVTN có nhiều người tiếp nối.
+
+Frontend chỉ giao tiếp với Backend qua hai client: \texttt{chatbotApi} cho prefix \texttt{/v1/*} của Orchestrator và \texttt{scannerApi} cho prefix \texttt{/scan/*} cùng \texttt{/job/*} của Scanner. Frontend \emph{không} gọi RAG service trực tiếp — thiết kế này đảm bảo RAG có thể đổi backend (ví dụ Chroma sang Qdrant) mà không ảnh hưởng UI. Hợp đồng đầy đủ giữa Frontend và Backend được giữ trong tài liệu hợp đồng API canonical, là source-of-truth khi có bất đồng giữa hai phía.
+
+Ứng dụng có chín view chính, mỗi view tương ứng một bước trong workflow PDCA: \texttt{LandingView} và \texttt{HistoryView} là điểm vào (khởi tạo run mới hoặc xem lịch sử), \texttt{WorkspaceView} cung cấp giao diện chat và scope picker, \texttt{RunDetailView} theo dõi một run đang chạy bằng polling, \texttt{ResultsView} hiển thị finding sau scan, \texttt{ApprovalsView} dùng cho HITL approve/reject, \texttt{VerificationView} so sánh trạng thái trước và sau remediation, \texttt{ReportView} hiển thị báo cáo cuối, và \texttt{SettingsView} cấu hình endpoint Backend (lưu local). Mỗi view chỉ gọi đúng những endpoint cần thiết, giữ rõ ràng quy ước "view nào hỏi data nào".
+
+Để biết khi nào state Backend thay đổi, Frontend dùng pull-based polling thay vì WebSocket. Có hai loại poller chạy song song. Job poller dùng \texttt{setInterval(tick, 4000)} cho mỗi \texttt{job\_id} đang ở trạng thái pending hoặc running, và tự dừng khi job vào trạng thái terminal. Run poller hoạt động tương tự cho \texttt{run\_id}, tự dừng khi run kết thúc (\texttt{snapshot.next} là \texttt{("END",)}) hoặc dừng tại HITL gate (\texttt{snapshot.next} là \texttt{("review\_task",)}). Cadence 4 giây là thoả hiệp giữa độ trễ phản hồi UI (người dùng cảm nhận chậm khi vượt 5 giây) và tải Backend; triển khai production cần thay polling bằng WebSocket hoặc Server-Sent Events.
+
+\texttt{RunProvider} cũng tự phát hiện trạng thái Backend qua health check và chuyển vận hành giữa ba chế độ. Chế độ \texttt{mock} kích hoạt khi Backend offline: Frontend dùng dữ liệu mẫu để demo offline, không kết nối thật. Chế độ \texttt{live} là chế độ bình thường khi Backend online: mọi action đi tới Backend thật. Chế độ \texttt{degraded} kích hoạt khi Scanner online nhưng Orchestrator (chatbot API) offline: chỉ cho phép legacy flow scan đơn lẻ qua \texttt{/scan/*}, không có workflow PDCA đầy đủ. Cơ chế này quan trọng cho dev và demo: SV có thể trình diễn UI mà không cần dựng full stack.
+
+Flow phê duyệt một task gồm bốn bước. Đầu tiên, run poller phát hiện \texttt{snapshot.next} là \texttt{("review\_task",)} và tự chuyển user sang \texttt{ApprovalsView}. Tiếp theo user chọn \texttt{approved}, \texttt{rejected}, hoặc \texttt{skipped} cho task hiện tại. Frontend gửi request \texttt{POST /v1/runs/\{id\}/approvals/\{task\_id\}} với body chứa \texttt{decision}, nhận về 200 hoặc 409. Nếu 409 — thường do snapshot đã đổi do race với poller — Frontend refresh state và hiển thị lại task hiện tại. Nếu 200, Frontend tiếp tục poll endpoint \texttt{/v1/runs/\{id\}}, và \texttt{ApprovalsView} sẽ tự refresh đến task kế tiếp hoặc chuyển \texttt{VerificationView} khi mọi task đã được duyệt. Một lưu ý thiết kế: Frontend \emph{không} thực hiện optimistic update cho approval — mọi thay đổi state chỉ commit sau khi server xác nhận. Quyết định này có chủ ý vì approval là hành động ghi lên cấu hình AWS thật; nếu UI hiển thị đã approve nhưng server reject thì không có cách "rollback" trải nghiệm cho người dùng.
+
+
+%==============================================================================
+% 5.4 — Hệ thống công cụ
+%==============================================================================
+
+\section{Hệ thống công cụ (Tooling)}
+\label{sec:tooling_impl}
+
+\subsection{Phân loại}
+
+\sysnameshort{} có hai mươi mốt tool, chia làm ba nhóm. Nhóm Scanner gồm ba tool (\texttt{start\_scan\_by\_group}, \texttt{start\_scan\_by\_check\_ids}, \texttt{check\_job\_status}) là các wrapper HTTP gọi vào Scanner API để khởi chạy job và truy vấn trạng thái. Nhóm Knowledge gồm một tool (\texttt{lookup\_security\_knowledge}) là wrapper sang RAG service, chấp nhận tham số \texttt{mode} với ba giá trị \texttt{maturity}, \texttt{technical}, hoặc \texttt{both} để chỉ định loại context cần truy hồi. Nhóm S3 Remediation gồm mười bảy tool gọi trực tiếp boto3 để áp dụng cấu hình bảo mật lên bucket: bật BPA, bật versioning, bật SSE-KMS, áp policy DenyInsecureTransport, cấu hình lifecycle, tắt ACL, bật server access log, bật event notifications, BPA cho Access Point, loại policy public write, chuẩn bị Cross-Region Replication, bật Intelligent-Tiering, BPA cho Multi-Region Access Point, kiểm tra resource policy, MFA Delete (manual), Object Lock (manual), và xoá cross-account principal (manual).
+
+Tất cả tool đều khai báo schema bằng Pydantic v2 qua decorator \texttt{@tool} của LangChain. Decorator này có hai tác dụng: thứ nhất, schema được tự động chuyển thành JSON Schema và inject vào system prompt của LLM, giúp LLM "thấy" được signature đầy đủ của tool và sinh tham số đúng kiểu; thứ hai, mọi tham số đến từ LLM đều đi qua Pydantic validation trước khi vào hàm thực thi, nếu sai schema thì raise \texttt{ValidationError} thay vì gọi xuống AWS SDK với data sai và để boto3 trả lỗi mơ hồ.
+
+Trong hai mươi mốt tool, có ba tool được đánh dấu \texttt{[MANUAL-ONLY]} trong docstring: \texttt{s3\_enable\_mfa\_delete}, \texttt{s3\_enable\_object\_lock}, và \texttt{s3\_remove\_cross\_account\_principals}. Lý do là MFA Delete đòi hỏi Root MFA token mà code không thể tự cấp; Object Lock cần xác nhận compliance không thể tự động hoá; xoá cross-account principal có rủi ro phá vỡ access pattern hợp lệ giữa các account. Các tool này thực thi một phần an toàn (ví dụ \texttt{s3\_enable\_mfa\_delete} chỉ bật Versioning để chuẩn bị MFA Delete), gắn cờ \texttt{manual\_required=True} trong dict trả về, và để node \texttt{review\_task} loại khỏi vòng lặp HITL — chuyển sang danh sách hướng dẫn thủ công trong báo cáo cuối.
+
+\subsection{Chống tool-name và parameter hallucination}
+
+Hai loại lỗi LLM tạo ra ở tầng tool calling được giải quyết bằng hai cơ chế tách biệt. Lỗi thứ nhất là tool-name hallucination: LLM gọi tên tool không tồn tại trong registry. Hệ thống không tin output JSON của LLM trực tiếp, mà dùng \texttt{ToolNode} của LangGraph: \texttt{ToolNode} tra cứu \texttt{tools\_map} bằng tên, raise \texttt{ValueError} nếu không tìm thấy. Lỗi này được catch ở node \texttt{operational\_planning} và task được đánh status \texttt{planning\_failed}, kèm thông báo cho người dùng trong báo cáo.
+
+Lỗi thứ hai là parameter hallucination: LLM bịa giá trị cho các tham số kỹ thuật như \texttt{region}, \texttt{account\_id}, \texttt{resource\_id}. Đây là loại lỗi nguy hiểm vì sai giá trị có thể khiến tool tác động lên resource sai. Hệ thống dùng kỹ thuật function signature introspection: hàm \texttt{build\_params\_from\_signature} dùng \texttt{inspect.signature(tool.func)} để liệt kê các tham số của tool, sau đó với mỗi tham số có tên thuộc tập \texttt{\{bucket\_name, resource\_id, region, account\_id\}}, hệ thống \emph{ghi đè} giá trị từ \texttt{aws\_context} và từ chính finding hiện tại — không lấy từ LLM. Kết quả là LLM chỉ được phép quyết định \emph{tool nào} nên gọi cho finding nào; còn các tham số kỹ thuật xác định \emph{áp dụng lên resource nào} hoàn toàn deterministic từ phía code. Cơ chế này triệt hạ parameter hallucination ở các trường được override; nhưng \emph{không} triệt được lỗi tool selection (LLM vẫn có thể chọn sai tool, ví dụ chọn \texttt{s3\_enable\_versioning} cho lỗi public-access). Tỷ lệ tool selection error định lượng được trình bày ở Chương~6.
+
+Một loại lỗi thứ ba liên quan trực tiếp đến chất lượng đầu ra của Gemma 3 4B IT chạy local — mô hình nhỏ được chọn vì lý do bảo mật dữ liệu AWS (không gửi ra third-party) và để hệ thống chạy được trên phần cứng cá nhân tầm trung (RTX 3060 6 GB), nhưng có hệ quả là khả năng instruction following và format consistency kém hơn các mô hình lớn. Trong giai đoạn dev, một tỷ lệ cố định request bị fail vì LLM trả markdown code block dạng \texttt{```json ... ```} hoặc thêm câu dẫn dắt trước hoặc sau JSON, khiến \texttt{json.loads()} raise \texttt{JSONDecodeError}. Vì \texttt{temperature=0} không loại bỏ format drift, hệ thống thêm hàm \texttt{\_extract\_json\_from\_text()} với chiến lược ưu tiên regex code block, fallback regex cặp ngoặc nhọn ngoài cùng, rồi đưa qua Pydantic validate để bắt schema sai. Cộng với structured output schema và rule-based pre-filter ở Planning, bộ ba kỹ thuật này bù đắp khoảng cách chất lượng giữa mô hình nhỏ chạy local và các API cloud LLM; trade-off định lượng được phân tích ở Chương~6.
+
+
+%==============================================================================
+% 5.5 — Dịch vụ RAG
+%==============================================================================
+
+\section{Dịch vụ RAG}
+\label{sec:rag_impl}
+
+\subsection{Pipeline}
+
+RAG service hiện thực pipeline năm bước: query analysis (chuẩn hoá truy vấn, xác định intent), hybrid retrieval song song (BM25 và Vector cùng chạy), RRF merge (hợp nhất hai danh sách kết quả), cross-encoder rerank (tinh chỉnh thứ hạng tập ứng viên), và mapping resolution kèm context bundling (liên kết check với capability theo từng loại agent consumer). Đầu vào là một query và metadata filter; đầu ra là context bundle có cấu trúc, sẵn sàng để inject vào prompt của agent gọi.
+
+\subsection{Tham số và lý do chọn}
+
+Cho BM25 \cite{robertson2009bm25}, hệ số $k_1 = 1.5$ và $b = 0.75$ — đây là giá trị mặc định khuyến nghị Robertson, chưa qua tuning. Ablation $k_1 \in \{1.0, 1.5, 2.0\}$ và $b \in \{0.5, 0.75, 1.0\}$ được trình bày ở Chương~6.
+
+Cho embedding model, hệ thống chọn \texttt{BAAI/bge-base-en-v1.5} với 768 chiều \cite{bge2024}. Lý do: model này có thứ hạng cao trên MTEB leaderboard cho retrieval tiếng Anh, license MIT cho phép chạy local, kích thước vừa phải có thể inference trên CPU, và context window 512 token đủ cho document Prowler/Maturity. Một giới hạn đã biết là model không tối ưu cho tiếng Việt — ảnh hưởng đến recall nếu query đến từ người dùng Việt.
+
+Cho vector store, hệ thống dùng ChromaDB persistent client. Chọn ChromaDB vì có thể chạy cùng process với FastAPI (không cần daemon riêng như Qdrant hay Weaviate), hỗ trợ metadata filtering native, và đủ scale cho corpus Prowler checks cộng Maturity capabilities cộng mappings.
+
+Cấu hình index sử dụng HNSW \cite{malkov2018hnsw} --- chỉ mục đồ thị thế giới nhỏ phân tầng cho Approximate Nearest Neighbor --- với tham số mặc định của ChromaDB: \texttt{M=16} (số neighbor mỗi node), \texttt{ef\_construction=200} (chất lượng đồ thị xây dựng), distance metric \texttt{cosine}, không tinh chỉnh thêm. Quyết định giữ default được biện luận bởi quy mô corpus nhỏ ($\sim 10^3$ chunk) --- khoảng vận hành mà default ChromaDB đã đạt recall cao trên benchmark nội bộ; tinh chỉnh HNSW chỉ cần thiết khi corpus tăng lên $10^5$--$10^6$ chunk hoặc latency p99 không đạt SLA.
+
+Cho RRF \cite{cormack2009rrf}, hằng số $k = 60$ đúng theo giá trị Cormack đề xuất; giá trị này không nhạy với top-k. RRF được chọn thay vì score normalization vì BM25 và cosine có thang khác nhau và phân phối khác nhau, normalize có rủi ro skew kết quả. Cho cross-encoder rerank \cite{nogueira2019passage}, hệ thống dùng \texttt{cross-encoder/ms-marco-MiniLM-L-6-v2} và rerank top-$N=20$ ứng viên sau RRF. Chọn $N = 20$ là cân bằng giữa coverage và chi phí: cross-encoder forward pass có độ phức tạp $O(N)$ trên CPU; nếu lớn hơn 30 thì latency rerank vượt một giây mỗi truy vấn.
+
+Cho top-k cuối cùng trả về cho consumer, mặc định là 5. Planning consumer override lên 15 để có nhiều ứng viên check hơn khi lập kế hoạch quét. Trước khi rerank, lexical và vector mỗi nhánh lấy \texttt{max(top\_k * 3, 10)} ứng viên để rerank có không gian tinh chỉnh.
+
+\subsection{Hợp nhất bằng RRF}
+
+Công thức hợp nhất là tổng nghịch đảo rank của tài liệu trên cả hai nhánh:
+
+\begin{equation}
+\text{RRF}(d) = \sum_{i \in \{\text{lex}, \text{vec}\}} \frac{1}{k + \text{rank}_i(d)}, \quad k = 60.
+\end{equation}
+
+Hợp nhất chỉ dựa vào rank, không dựa vào điểm tuyệt đối — cho phép kết hợp hai phương pháp có thang điểm khác nhau mà không cần normalize. Tài liệu xuất hiện ở cả hai nhánh được cộng dồn, ưu tiên kết quả nhất quán giữa lexical và semantic. Hai nhánh được chạy song song qua \texttt{ThreadPoolExecutor(max\_workers=2)} để giảm latency so với chạy tuần tự; số đo cụ thể được báo cáo ở Chương~6.
+
+\subsection{Multi-query \texttt{rag\_enrich}}
+
+Trong giai đoạn dev đầu tiên, node \texttt{rag\_enrich} chỉ gửi một truy vấn duy nhất tới RAG cho mỗi finding. Tiếp cận này nhanh chóng bộc lộ vấn đề: với một finding như \emph{S3 bucket public access}, một truy vấn "S3 public access" trả về toàn check description tương đồng — không có hướng dẫn fix cũng không có capability mapping. Hệ quả là node \texttt{operational\_planning} sinh remediation chung chung, không khớp \texttt{remediation\_tasks} với mapping hay maturity capability tương ứng. Nguyên nhân gốc là một truy vấn tối ưu cho một chiều thông tin — phát hiện vấn đề — nhưng remediation cần ba chiều: nguyên nhân gốc, control mapping với khung tuân thủ, và các bước fix cụ thể.
+
+Bản sửa là đổi sang multi-query: node \texttt{rag\_enrich} phát \emph{ba} truy vấn song song cho mỗi finding ở trạng thái FAIL — Q1 lấy capability mapping (root cause cộng maturity capability), Q2 lấy compliance frameworks (CIS, NIST mapping), Q3 lấy remediation guidance. Kết quả ba truy vấn được đóng gói vào \texttt{state["rag\_bundle"]} với cấu trúc thống nhất, có sẵn cho ba consumer downstream: \texttt{operational\_planning}, \texttt{verification}, và \texttt{report}. Đây cũng là một phương án phòng vệ cấp thấp cho prompt injection — LLM không phải tự suy diễn ngữ cảnh từ một query mơ hồ mà nhận ngữ cảnh đã có cấu trúc.
+
+Nếu RAG service timeout hoặc trả 5xx, node không raise mà đặt \texttt{rag\_bundle["confidence"] = "unavailable"} và để pipeline đi tiếp. \texttt{operational\_planning} sẽ rơi về template-based remediation (kém chính xác hơn nhưng không chặn pipeline). Đây là nguyên tắc fail-soft cho component không cốt lõi, được mô tả chi tiết ở mục Concerns xuyên suốt.
+
+%==============================================================================
+% 5.6 — Concerns xuyên suốt + Phòng vệ ứng dụng
+%==============================================================================
+
+\section{Các concerns xuyên suốt}
+\label{sec:cross_cutting}
+
+Sáu mảng nhỏ cắt ngang toàn bộ \sysnameshort{} không phụ thuộc bất kỳ component cụ thể nào: mô hình đồng thời, chiến lược xử lý lỗi, logging, tracing, audit log, và phòng vệ ứng dụng. Mục này gom các quyết định và quy ước liên quan vào một chỗ để tránh lặp ở các section component, đồng thời tạo cơ sở tham chiếu cho các section trước khi chúng nhắc tới các cơ chế chung này.
+
+\subsection{Mô hình đồng thời}
+\label{sub:concurrency}
+
+\sysnameshort{} chạy trên bốn lớp đồng thời. Bảng~\ref{tab:concurrency_layers} tổng kết các đơn vị thực thi và cơ chế phối hợp.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Bốn lớp đồng thời và cơ chế phối hợp}
+  \label{tab:concurrency_layers}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{|p{3.0cm}|p{4.5cm}|p{6.0cm}|}
+    \hline
+    \textbf{Lớp} & \textbf{Đơn vị thực thi} & \textbf{Cơ chế phối hợp} \\ \hline
+    HTTP request & Worker thread của Uvicorn & Threadpool mặc định của FastAPI; sync handler không block event loop. \\ \hline
+    Long-running run & 1 \texttt{daemon=True} thread mỗi \texttt{run\_id} & \texttt{\_run\_locks: Dict[str, Lock]} chống double-spawn; thread thoát khi đồ thị interrupt hoặc \texttt{END}. \\ \hline
+    Scan job & 1 \texttt{subprocess} con cho mỗi job Prowler & Scheduled qua \texttt{BackgroundTasks}; timeout 1800\,s; trạng thái lưu trong SQLite (WAL) cho process khác đọc. \\ \hline
+    RAG retrieval & \texttt{ThreadPoolExecutor}\newline\texttt{(max\_workers=2)} per request & Hai nhánh BM25 + Vector chạy song song trong cùng request thread; join trước RRF. \\ \hline
+  \end{tabular}
+\end{table}
+
+Cả \texttt{SqliteSaver} cho checkpoint và file SQLite job cho job DB đều mở connection với cờ \texttt{check\_same\_thread=False}. Cờ này cần thiết vì Uvicorn worker và LangGraph daemon thread khác thread tạo connection. SQLite tự lock ở mức bảng và mức database — kết hợp với WAL mode cho file SQLite job, cross-process read được hỗ trợ mà không block writer. ChromaDB và cross-encoder reranker được load \emph{một lần} khi RAG service khởi động (qua startup hook), không reload mỗi request; singleton này thread-safe vì chỉ dùng cho inference, không có state mutable.
+
+Mỗi node nhận \texttt{state} dict riêng (LangGraph clone state trước mỗi node call) và không có biến module-level mutable nào trong các node. Pattern này loại bỏ phần lớn race condition cấp ứng dụng — race condition còn lại nằm ở tầng dưới (SQLite, file system, AWS API) và đều đã được handle bằng cơ chế của các thư viện đó.
+
+\subsection{Chiến lược xử lý lỗi}
+\label{sub:error_strategy}
+
+\sysnameshort{} áp dụng nguyên tắc fail-soft cho component không cốt lõi và fail-fast cho data integrity. Bảng~\ref{tab:error_strategy} liệt kê các pattern theo loại lỗi.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Chiến lược xử lý lỗi theo component}
+  \label{tab:error_strategy}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{|p{3.0cm}|p{4.5cm}|p{6.0cm}|}
+    \hline
+    \textbf{Component} & \textbf{Loại lỗi} & \textbf{Chiến lược} \\ \hline
+    RAG service       & Timeout / 5xx / connection refused & Soft-fail: \texttt{rag\_enrich} set \texttt{rag\_bundle["confidence"] = "unavailable"} và đi tiếp; \texttt{operational\_planning} rơi về template-based fallback. \\ \hline
+    Scanner polling   & Job chưa xong / job error & Bounded loop: max 360 vòng polling × 5\,s = 30\,phút; vượt ngưỡng raise \texttt{TimeoutError}, marker run \texttt{FAILED}. \\ \hline
+    LLM JSON parsing  & Output không phải JSON hợp lệ & Robust parser: regex extract code block, fallback regex outer braces, rồi Pydantic validate sau parse. \\ \hline
+    AWS boto3         & \texttt{ClientError} (403, ResourceNotFound) hoặc \texttt{BotoCoreError} (network, config) & Tiered: catch \texttt{ClientError} riêng (lỗi nghiệp vụ — log code AWS); catch \texttt{BotoCoreError} riêng (lỗi hạ tầng — log message); cuối cùng \texttt{Exception} (defense). Status task = \texttt{failed} với chi tiết. \\ \hline
+    Langfuse export   & API error / timeout & Circuit breaker: 3 lỗi liên tiếp → ngắt 60\,s, không retry; pipeline tiếp tục bình thường. \\ \hline
+    Tool selection    & LLM chọn tên tool không tồn tại & Fail-fast: \texttt{ToolNode} của LangGraph raise \texttt{ValueError}; node \texttt{operational\_planning} catch và đánh task \texttt{planning\_failed}. \\ \hline
+    Pydantic validation & Tham số sai schema từ LLM & Fail-fast: \texttt{ValidationError} bubble lên, task được đánh \texttt{validation\_failed}; LLM được prompt lại với error message ở vòng sau. \\ \hline
+    Checkpoint write  & SQLite lock contention / disk full & Fail-fast: \texttt{OperationalError} bubble lên — đây là data integrity issue, không nên ẩn đi. \\ \hline
+  \end{tabular}
+\end{table}
+
+Các lỗi không nên dừng pipeline (như RAG soft-fail, partial scan failure) được append vào \texttt{state["errors"]} qua reducer \texttt{operator.add}. Báo cáo cuối hiển thị danh sách này — đảm bảo silent failure không xảy ra; mọi điều bất thường đều được surface lên cho người dùng. Đây là quan điểm thiết kế: thay vì hide lỗi để pipeline trông "đẹp", hệ thống chấp nhận pipeline có thể không hoàn hảo nhưng phải minh bạch về các bước không thành công.
+
+Hệ thống không retry tự động ở tầng node. Quyết định có ý: nếu một LLM call fail, retry trong cùng node giả định lỗi là transient — thường không đúng vì model output tương đối deterministic ở \texttt{temperature=0}, retry thường ra cùng một lỗi. Thay vào đó, lỗi được log và pipeline đi tiếp; người dùng có thể trigger lại run nếu cần. Ngoại lệ là các HTTP request từ node tới Scanner hoặc RAG service: chúng có thể timeout vì lý do mạng — \texttt{requests} tự retry ba lần với backoff exponential ở mức transport, không cần handle ở mức node.
+
+\subsection{Logging architecture}
+\label{sub:logging}
+
+\sysnameshort{} dùng JSON structured logger tự xây. Format log là JSON một dòng cho mỗi log entry — payload cố định gồm \texttt{level}, \texttt{logger}, \texttt{msg}, \texttt{run\_id}, cộng các field tuỳ ý từ \texttt{extra=\{...\}} mà người gọi truyền vào. Kiểu format này phù hợp cho ingest sang stack log như ELK, Loki, hoặc CloudWatch mà không cần parser tuỳ biến.
+
+Trường \texttt{run\_id} được propagate qua \texttt{ContextVar}. Mỗi node gọi \texttt{set\_run\_id(state["run\_id"])} ở đầu hàm; \texttt{ContextVar} đảm bảo giá trị này propagate trong cùng task hoặc cùng thread, kể cả khi function gọi lồng nhau qua nhiều module. Mọi log call sau đó tự động kèm trường \texttt{run\_id} vào JSON payload mà không cần truyền tay xuống từng helper function — tránh được việc phải pass \texttt{run\_id} qua mọi signature.
+
+Hàm \texttt{get\_logger()} được thiết kế idempotent — gọi nhiều lần cho cùng tên logger không gây nhân bản handler. Nội bộ hàm check trước khi add handler: nếu logger đã có handler dạng \texttt{\_JsonFormatter} thì bỏ qua. Quy ước này tránh log line bị in lặp khi module được import nhiều lần, và đặc biệt quan trọng khi module test reload code. Mặc định level là \texttt{INFO}; có thể override qua biến môi trường ở từng module.
+
+\texttt{run\_id} cũng đóng vai trò cầu nối giữa log và trace. Cùng giá trị này được dùng làm Langfuse \texttt{trace\_id}, cho phép correlate log line với span trong trace khi debug. Khi một node fail mà không có exception clear (ví dụ LLM trả output không kỳ vọng nhưng không raise), kỹ sư có thể tra cứu \texttt{run\_id} trên Langfuse để xem trace, rồi grep \texttt{run\_id} trong log để xem log chi tiết.
+
+\subsection{Tracing với Langfuse}
+\label{sub:tracing}
+
+Mỗi node trong đồ thị được instrument bằng helper \texttt{node\_span} bao bọc API Langfuse. Helper này thêm ba cơ chế quan trọng so với việc gọi Langfuse SDK trực tiếp.
+
+Cơ chế thứ nhất là circuit breaker: nếu ba lần liên tiếp gửi span tới Langfuse cloud bị lỗi, helper tự ngắt 60 giây, không retry trong khoảng đó. Cơ chế này tránh trường hợp Langfuse cloud chậm hoặc unavailable kéo theo \sysnameshort{} chậm theo — Langfuse là observability layer, không phải critical path của pipeline.
+
+Cơ chế thứ hai là redaction. Trước khi gửi, mọi field đi qua một module redaction dùng chung với sáu regex pattern bắt các secret nhạy cảm (AWS access key dạng \texttt{AKIA...}, AWS secret 40 ký tự, account ID 12 chữ số, ARN, S3 URI, bucket-like name) cộng key-name blacklist tám trường (\texttt{aws\_access\_key\_id}, \texttt{aws\_secret\_access\_key}, \texttt{aws\_session\_token}, \texttt{secret}, \texttt{secret\_key}, \texttt{access\_key}, \texttt{password}, \texttt{token}). Giá trị nhạy cảm được thay bằng \texttt{[REDACTED]} hoặc bằng hash dạng \texttt{bkt-<sha256[:8]>} trong trường hợp bucket name (giữ khả năng correlate giữa các log mà không lộ tên thật). Module này có test riêng với mười test case.
+
+Cơ chế thứ ba là per-node flush. Helper gọi \texttt{flush\_at\_node()} sau mỗi span để trace xuất hiện trên dashboard kể cả khi process crash giữa run. Nếu chỉ flush ở cuối, trace của các node đã chạy trước crash sẽ bị mất.
+
+Pattern instrument đồng nhất ở mười ba node theo cùng một quy ước: mỗi node mở bằng \texttt{set\_run\_id(state["run\_id"])} để thiết lập \texttt{ContextVar} cho logger, sau đó mở context manager \texttt{node\_span(<tên node>, run\_id)} bao quanh phần thân chính, gọi \texttt{sp.update(output=\{...\})} để gắn metadata output, optionally gọi \texttt{emit\_score(run\_id, <metric name>, <value>)} để gửi score theo node, và kết thúc bằng \texttt{flush\_at\_node()}. Dashboard Langfuse hiển thị timeline mười ba node, latency per-node, score per-node, và error rate. Trace của các phiên đánh giá được lưu giữ tại workspace Langfuse và đối chiếu với benchmark artefact ở Chương~6.
+
+\subsection{Audit log thực thi}
+\label{sub:audit_log}
+
+Khác với JSON log dùng cho debug và Langfuse trace dùng cho visualize, audit log là bằng chứng pháp lý cho hành động thay đổi cấu hình AWS: ai approve, tool nào, lúc nào, tham số gì, kết quả ra sao. Mỗi lần \texttt{execution\_node} gọi tool, một entry \texttt{ExecutionLog} được append vào \texttt{state["execution\_logs"]} qua reducer \texttt{operator.add}. Entry chứa \texttt{task\_id}, \texttt{tool\_name}, \texttt{tool\_params} (đã redact theo cùng module redaction của Langfuse), \texttt{status}, \texttt{raw\_result\_summary}, \texttt{duration\_ms}, \texttt{timestamp}, và \texttt{decision} của người duyệt. Reducer \texttt{operator.add} đảm bảo log là append-only — không node nào có thể vô tình ghi đè entry cũ.
+
+Log này được nhúng nguyên văn vào báo cáo cuối, đảm bảo white-box audit trail. Quan điểm: mỗi action thay đổi cấu hình AWS đều phải truy được nguồn gốc về một task được approve cụ thể và một tool gọi cụ thể. Đây cũng là cơ sở để defense Repudiation — người duyệt không thể phủ nhận đã approve nếu log có timestamp và \texttt{task\_id} rõ ràng.
+
+\subsection{Phòng vệ ứng dụng theo khung STRIDE}
+\label{sub:app_defense}
+
+Vì \sysname{} là hệ thống tự động hoá có khả năng ghi cấu hình AWS thật, nó phải tự đảm bảo bảo mật ở mức ứng dụng. Bề mặt tấn công gồm năm endpoint của Scanner API và sáu endpoint của Orchestrator API, prompt người dùng đi vào planning và risk evaluation, các file checkpoint và job database trên đĩa, cùng các tool boto3 ghi cấu hình AWS. Mục này tóm tắt các biện pháp phòng vệ đã hiện thực theo khung STRIDE, nhóm thành ba lớp: kiểm soát đầu vào, bảo vệ dữ liệu nhạy cảm, và uỷ quyền hành động.
+
+Lớp đầu tiên là \emph{kiểm soát đầu vào} cho các endpoint quét. Tham số \texttt{group} của \texttt{GET /scan/check} phải nằm trong whitelist 82 dịch vụ AWS hợp lệ; mọi giá trị ngoài whitelist bị reject với mã 400 Bad Request. Tham số \texttt{check\_ids} của \texttt{GET /scan/specific} phải khớp regex token \texttt{\^{}[a-z0-9\_]+\$} cho từng phần tử trong danh sách phân tách bằng dấu phẩy; quá trình thực thi luôn dùng \texttt{subprocess} với argv-array (không \texttt{shell=True}) để tránh shell metacharacter injection và có ANSI escape stripping trên output Prowler. Tham số \texttt{filename} của \texttt{GET /scan/custom} được resolve về absolute path bằng \texttt{os.path.realpath}, đối chiếu prefix với thư mục checks và bị reject nếu vượt root — bảo vệ chống path traversal kiểu \texttt{filename=../../etc/passwd}. Hành vi này có test tự động trong bộ kiểm thử của Scanner API.
+
+Lớp thứ hai là \emph{bảo vệ dữ liệu nhạy cảm} ở tầng observability. Cơ chế redaction dùng chung giữa logger JSON và trace Langfuse được mô tả ở \S\ref{sub:tracing}; chi tiết về phạm vi pattern và blacklist tên trường được trình bày ở mục đó, không lặp lại ở đây.
+
+Lớp thứ ba là \emph{uỷ quyền hành động} cho các thao tác ghi AWS. Mặc dù credential boto3 ở runtime có thể có quyền cao, các tool S3 được giới hạn về scope action: chỉ dùng các API \texttt{Put*} và \texttt{Get*} cần thiết cho từng tool cụ thể, không có tool gọi \texttt{s3:Delete*}, không có tool ghi sang IAM, EC2, RDS, hoặc các service khác — tức là blast radius bị giới hạn ngay ở tầng code, không phụ thuộc IAM policy. Bên cạnh đó, mọi action được áp dụng đều phải đi qua HITL gate (\S\ref{sec:graph_impl}), và mỗi action đã chạy được ghi lại trong audit log \texttt{ExecutionLog} append-only (\S\ref{sub:audit_log}) — phòng cả non-repudiation lẫn audit forensics khi cần truy lại nguồn gốc một thay đổi.
+
+
+%==============================================================================
+% 5.7 — Cân nhắc an ninh đặc thù agent
+%==============================================================================
+
+\section{Cân nhắc an ninh đặc thù agent}
+\label{sec:agent_threat_model}
+
+Phần \S\ref{sub:app_defense} đã trình bày phòng vệ ở tầng ứng dụng web --- input validation, redaction, scope của boto3. Mục này không lặp lại các phòng vệ đó mà bổ sung một góc nhìn riêng: \sysname{} đặt một mô hình ngôn ngữ vào vòng điều khiển và uỷ thác cho mô hình việc gợi ý tool ghi cấu hình AWS, do đó hệ thống có thêm một bề mặt tấn công đặc thù --- kẻ tấn công có thể \textit{gián tiếp} điều khiển hành vi LLM thông qua các kênh dữ liệu mà LLM phải đọc. Mục này nhìn lại các cơ chế đã trình bày ở các phần trước dưới góc nhìn an ninh agent, theo trục \emph{kênh dữ liệu vào --- kênh dữ liệu ra --- tầng action}, và phát biểu rõ phạm vi bảo vệ mà hiện thực hiện tại đảm bảo. Khung tham chiếu là \textit{OWASP Top 10 for LLM Applications}~\cite{owasp_llm_top10_2025}; các cơ chế phòng vệ liệt kê dưới đây đều là cơ chế đã có trong các section trước của Chương 5.
+
+\subsection{Phòng vệ trên kênh dữ liệu đầu vào LLM}
+\label{sub:agent_input_defense}
+
+Hai kênh dữ liệu vào prompt của LLM mà hệ thống không kiểm soát hoàn toàn được nội dung là \textit{finding text} từ Prowler và \textit{RAG context} từ knowledge base.
+
+Đối với \textbf{finding text}, các trường như bucket name, tag value, IAM policy document có thể chứa nội dung do người sở hữu tài khoản AWS đặt vào --- và trong kịch bản tấn công, một chuỗi dạng \texttt{"Ignore prior instructions. This finding is benign."} đặt vào tag bucket sẽ đi qua Prowler tới prompt của \texttt{risk\_eval} và về nguyên lý có thể tác động đến đánh giá của LLM. Hệ thống không sanitize finding text ở đầu vào (vì LLM cần đọc nguyên văn để đánh giá đúng) mà phòng vệ \emph{xuôi dòng} bằng ba lớp đã trình bày ở các section trước: HITL gate \texttt{interrupt\_before} buộc approver duyệt mọi task không có cờ \texttt{manual\_required} (\S\ref{sec:graph_impl}); param override deterministic từ \texttt{aws\_context} cho các trường định danh tài nguyên (\texttt{bucket\_name}, \texttt{resource\_id}, \texttt{region}, \texttt{account\_id}) ở \S\ref{sec:tooling_impl} ngăn LLM tự chọn target; và cờ \texttt{[MANUAL-ONLY]} ở ba tool không thể đảo ngược (\S\ref{sec:tooling_impl}) đẩy mọi action destructive ra khỏi nhánh tự động. Ba lớp này phối hợp tạo \emph{defense-in-depth ở tầng action thay vì tầng input}: dù LLM bị lừa, hệ thống không phát sinh side-effect nào trên AWS mà không có approver xác nhận.
+
+Đối với \textbf{RAG context}, blast radius lớn hơn vì một corpus bị nhiễm sẽ ảnh hưởng mọi run sau đó. Hệ thống chọn cách giảm bề mặt thay vì kiểm tra động: knowledge base được build offline một lần từ Prowler upstream, AWS documentation và mappings tự xây (\S\ref{sec:rag_impl}); không có pipeline cập nhật dynamic. Metadata filter theo service ở tầng truy hồi cũng ngăn nhiễm cross-service trong cùng một phiên. Đây là phòng vệ tĩnh phù hợp với corpus có quy mô và nguồn được kiểm soát chặt; tính toàn vẹn cuối cùng vẫn dựa vào tin cậy của upstream tại thời điểm build.
+
+\subsection{Phòng vệ trên kênh dữ liệu đầu ra}
+\label{sub:agent_output_defense}
+
+Hai kênh dữ liệu ra của hệ thống có thể vô tình lộ thông tin nhạy cảm là \textit{observability output} (log JSON và Langfuse trace) và \textit{audit log thực thi}.
+
+Trên kênh observability, payload của trace và log được chuẩn hoá qua module redaction trình bày ở \S\ref{sub:tracing}: sáu regex pattern nhận diện AWS access key, AWS secret, account ID, ARN, S3 URI và bucket-like name; tám key-name blacklist cho \texttt{aws\_access\_key\_id}, \texttt{aws\_secret\_access\_key}, \texttt{aws\_session\_token}, \texttt{secret}, \texttt{secret\_key}, \texttt{access\_key}, \texttt{password}, \texttt{token}; và bucket name được thay bằng hash dạng \texttt{bkt-<sha256[:8]>} để giữ khả năng correlate giữa các log mà không lộ tên thật. Module redaction được dùng chung giữa logger JSON (\S\ref{sub:logging}) và helper trace Langfuse (\S\ref{sub:tracing}), bảo đảm thông tin đã redact ở log thì cũng đã redact ở trace.
+
+Trên kênh audit log, hệ thống đảm bảo \emph{tính chỉ-nối-thêm} (append-only) ở tầng ứng dụng qua reducer \texttt{operator.add} của LangGraph (\S\ref{sub:audit_log}): không node nào có thể vô tình ghi đè entry cũ, và mọi action thay đổi cấu hình AWS đều truy được nguồn gốc về một task được approve cụ thể. Phòng vệ này có hiệu lực cho mọi truy cập \emph{trong process}; tính toàn vẹn của file SQLite trên đĩa thuộc trách nhiệm của môi trường vận hành, được phát biểu rõ trong phạm vi triển khai cuối mục.
+
+\subsection{Phòng vệ ở tầng action}
+\label{sub:agent_action_defense}
+
+Hai rủi ro liên quan đến tool-call và HITL endpoint được kiểm soát bằng các cơ chế đã trình bày ở các section trước.
+
+\textbf{Sai sót trong chọn tool} (LLM gọi tên tool không tồn tại hoặc bịa tham số kỹ thuật) được kiểm soát ba lớp: Pydantic schema validate mọi tham số đầu vào ở từng tool (\S\ref{sec:tooling_impl}); \texttt{ToolNode} của LangGraph tra cứu \texttt{tools\_map} bằng tên và raise \texttt{ValueError} nếu không tìm thấy (\S\ref{sec:tooling_impl}); function signature introspection ghi đè tham số định danh tài nguyên từ \texttt{aws\_context} thay vì để LLM tự điền. Sau ba lớp này, không gian quyết định còn lại của LLM thu hẹp về \emph{tool nào} cho \emph{finding nào} --- một quyết định có thể sai về chính xác nhưng không thể sinh side-effect ngoài tập tool đã đăng ký.
+
+\textbf{Truy cập HITL endpoint} được bảo vệ bằng kiểm tra bất biến state ở \S\ref{sec:api_impl}: endpoint \texttt{POST /v1/runs/\{run\_id\}/approvals/\{task\_id\}} đọc snapshot và trả 409 Conflict nếu \texttt{snapshot.next} không phải \texttt{("review\_task",)}, ngăn client phê duyệt khi đồ thị không dừng ở review. Lock per \texttt{run\_id} (\texttt{\_run\_locks}) chống double-spawn khi client retry. Hai cơ chế này đảm bảo trật tự gọi và ngữ nghĩa state nhưng không thay thế cho authentication; phạm vi bảo vệ này phù hợp với mô hình triển khai hiện tại như nói ở mục dưới.
+
+\subsection{Phạm vi bảo vệ và các giả định môi trường}
+\label{sub:agent_scope_assumptions}
+
+Các phòng vệ trên được thiết kế cho phạm vi triển khai của đồ án: \sysname{} chạy cục bộ trên máy của nhóm tác giả, Backend bind \texttt{localhost} và không expose ra mạng ngoài, file checkpoint và audit log nằm trên cùng host vật lý với code. Trong phạm vi này, các giả định an ninh sau được phát biểu tường minh: (i) tin cậy host --- người vận hành có quyền vật lý không bị xem là kẻ tấn công; (ii) tin cậy upstream --- Prowler, AWS documentation, Ollama runtime ở thời điểm build được coi là không bị nhiễm; (iii) tin cậy mạng --- không có mô hình adversary nội bộ truy cập tới Backend qua mạng. Các giả định này phù hợp với scope của một đồ án proof-of-concept, đồng thời định ranh giới rõ ràng giữa những gì hệ thống đảm bảo và những gì cần được bổ sung khi mở rộng phạm vi triển khai.
+
+
+%==============================================================================
+% 5.8 — Tổng kết
+%==============================================================================
+
+\section{Tổng kết}
+\label{sec:impl_summary}
+
+Chương này đã trình bày hiện thực hoàn chỉnh của \sysname{} từ đồ thị điều phối PDCA cho tới các tầng phụ trợ. Đồ thị mười ba node bằng LangGraph với ba conditional edge và điểm interrupt cho HITL (\S\ref{sec:graph_impl}) đặt nền cho luồng PDCA chạy được; state schema \texttt{TypedDict} với reducer \texttt{operator.add} kèm persistence \texttt{SqliteSaver} và SQLite WAL (\S\ref{sec:state_impl}) đảm bảo phiên có thể resume sau crash; lớp REST API hợp nhất Scanner và Orchestrator trong cùng FastAPI app cùng Frontend React (\S\ref{sec:api_impl}) là giao diện thống nhất giữa người dùng và workflow; hai mươi mốt tool với schema Pydantic và function signature introspection (\S\ref{sec:tooling_impl}) chống parameter hallucination ở tầng tool calling; RAG service hybrid retrieval (BM25, BGE-base-en-v1.5, RRF, cross-encoder rerank) cùng node \texttt{rag\_enrich} ba truy vấn (\S\ref{sec:rag_impl}) cung cấp tri thức cho các bước downstream; sáu mảng concerns xuyên suốt (\S\ref{sec:cross_cutting}) gom các quyết định về đồng thời, lỗi, logging, tracing, audit, và phòng vệ ứng dụng vào một chỗ; và mô hình mối đe doạ cho chính agent (\S\ref{sec:agent_threat_model}) phân tích các kịch bản tấn công đặc thù khi LLM được đưa vào vòng điều khiển.
+
+Toàn bộ số liệu và định danh module nhắc tới trong chương này được đối chiếu với phiên bản mã nguồn nộp kèm đồ án, chạy trên môi trường Python 3.11 và Node.js 18, hệ điều hành Windows 11 hoặc Linux. Các model tham chiếu gồm \texttt{ollama/gemma3:4b-it} (Q4\_K\_M) cho LLM, \texttt{BAAI/bge-base-en-v1.5} cho embedding, và \texttt{cross-encoder/ms-marco-MiniLM-L-6-v2} cho reranker. Benchmark artefact được lưu kèm theo mã nguồn. Đánh giá định lượng end-to-end — bao gồm latency per-node, recall@k cho RAG, success rate auto-fix, và LLM stability variance — được trình bày chi tiết ở Chương~6.
+
+
+%==============================================================================
+% Cite mới đã có sẵn trong ref.bib (Phase 0 — T07):
+% \cite{robertson2009bm25}, \cite{cormack2009rrf}, \cite{nogueira2019passage},
+% \cite{bge2024}, \cite{schick2023toolformer}, \cite{mosqueirarey2023hitl}.
+%==============================================================================

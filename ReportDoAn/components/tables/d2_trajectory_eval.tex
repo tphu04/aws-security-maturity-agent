@@ -1,0 +1,30 @@
+% =====================================================================
+% D2(b) -- Bảng Trajectory Evaluation, sinh từ:
+%   benchmarks/results/d1_20260506/holistic/trajectory_eval.csv
+% Trình bày tóm tắt n=5 (replay tất định, phương sai = 0); chi tiết
+% per-run lưu trong CSV nguồn.
+% =====================================================================
+\begin{table}[H]
+  \centering
+  \caption{Đánh giá trajectory trên 5 phiên D1 ($n=5$). \textit{Path} = tỷ lệ node khớp đường đi kinh điển 13 node sau khi gộp lặp \texttt{review\_task}. \textit{Cycles} = số chu trình PDCA hoàn tất. \textit{Tools} = số tool call trên tổng, kèm tỷ lệ "hợp lệ về ngữ nghĩa" (success hoặc fail có lý do \texttt{manual\_only}). \textit{Handoff} = số bất biến trạng thái giữa các node được thoả mãn trên 5 (xem chú thích bên dưới). \textit{HITL spans} = số lần Langfuse ghi nhận \texttt{review\_task}.}
+  \label{tab:d2_trajectory_eval}
+  \small
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Tiêu chí} & \textbf{Giá trị (n=5)} & \textbf{Phương sai} & \textbf{Ghi chú} \\
+    \midrule
+    Path correctness     & 100.00\% & 0 & khớp 13 node thiết kế \\
+    Cycles               & 1        & 0 & happy path, không kích hoạt self-correction \\
+    Tools                & 12/12    & 0 & toàn bộ tool call hoàn tất đúng thiết kế \\
+    Legitimacy           & 100.0\%  & 0 & success hoặc \texttt{manual\_required} có lý do \\
+    State handoff        & 5/5      & 0 & toàn bộ 5 bất biến thoả mãn \\
+    HITL review spans    & 4        & 0 & số tác vụ chờ duyệt được Langfuse ghi nhận \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{1mm}
+  \footnotesize
+  \textit{Bất biến handoff:} (i)~\texttt{findings} $\geq 1$ sau \texttt{scan\_collect}; (ii)~\texttt{remediation\_tasks} $\geq 1$ sau \texttt{operational\_planning}; (iii)~mỗi task có ít nhất một \texttt{execution\_log} (kể cả \texttt{manual\_only} cũng log status \texttt{manual\_required}); (iv)~\texttt{verifications} $\geq$ \texttt{execution\_logs}; (v)~\texttt{report.status = ready}.
+
+  \textit{Lưu ý về phương sai bằng 0.} Bảng này xác nhận pipeline lặp lại tất định trên cùng input với \texttt{temperature=0}, không nhằm đo độ ổn định ngẫu nhiên.
+\end{table}

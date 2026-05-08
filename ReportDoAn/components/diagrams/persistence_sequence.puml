@@ -1,0 +1,86 @@
+@startuml
+' =====================================================================
+' B5: Sequence diagram cơ chế Persistence + HITL Resume
+' Render: plantuml persistence_sequence.puml -tpng
+' Output: persistence_sequence.png → đặt vào ReportDoAn/Images/
+' =====================================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ArrowColor #333333
+    LifeLineBorderColor #555555
+    ParticipantBorderColor #555555
+    ParticipantBackgroundColor #E3F2FD
+    ParticipantFontStyle bold
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #BDB76B
+}
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 11
+
+title Cơ chế Persistence và Resume sau HITL Approval
+
+actor Admin as A
+participant "Frontend\n(ChatWindow)" as FE
+participant "Chatbot API\n(/v1/runs)" as API
+participant "graph_runtime\n(daemon thread)" as RT
+participant "LangGraph\nStateGraph" as LG
+database "SqliteSaver\n(pdca_state.db)" as CKPT
+participant "review_task\nnode" as RT_NODE
+
+A -> FE : Gửi yêu cầu mới
+FE -> API : POST /v1/runs\n{user_request, aws_context}
+API -> RT : start_run(run_id, state)
+activate RT
+
+RT -> LG : invoke(state, config={thread_id})
+activate LG
+
+LG -> CKPT : checkpoint(state) sau mỗi node
+note right : Lưu state sau\nenvironment, planning,\nscan_*, risk_eval...
+
+LG -> RT_NODE : tới node review_task
+activate RT_NODE
+RT_NODE -> CKPT : checkpoint(state) trước interrupt
+note right : interrupt_before=\n["review_task"]
+RT_NODE -->> LG : interrupt
+deactivate RT_NODE
+
+LG -->> RT : return InterruptedException
+deactivate LG
+RT -->> API : run state = "awaiting_approval"
+deactivate RT
+
+API -->> FE : 200 OK\n{tasks_pending: [...]}
+FE -->> A : Hiển thị danh sách task\nchờ phê duyệt
+
+== Chờ Admin quyết định (có thể vài phút – nhiều giờ) ==
+
+A -> FE : Click "Approve" / "Skip"
+FE -> API : POST /v1/runs/{id}/approvals/{task_id}\n{decision}
+
+API -> RT : resume_after_decision(run_id, decision)
+activate RT
+RT -> CKPT : load_state(thread_id)
+note right : Khôi phục state\ntừ checkpoint cuối
+CKPT --> RT : last_state
+
+RT -> LG : invoke(resumed_state, config)
+activate LG
+LG -> RT_NODE : tiếp tục từ review_task
+activate RT_NODE
+RT_NODE -> RT_NODE : ghi nhận decision\nvào task_execution_plan
+RT_NODE -->> LG : continue
+deactivate RT_NODE
+
+LG -> LG : reset_index → execution → verification → report
+LG -> CKPT : checkpoint final state
+LG -->> RT : run completed
+deactivate LG
+
+RT -->> API : run state = "completed"
+deactivate RT
+API -->> FE : 200 OK\n{report_ready: true}
+FE -->> A : Hiển thị báo cáo cuối
+
+@enduml

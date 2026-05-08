@@ -1,0 +1,116 @@
+% =====================================================================
+% B2: Sơ đồ LangGraph topology phản ánh đúng pdca/graph/graph.py
+% Cách dùng: \input{components/diagrams/langgraph_topology}
+% Yêu cầu preamble: \usepackage{tikz} + \usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit}
+% =====================================================================
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      node distance=8mm and 14mm,
+      every node/.style={font=\small\sffamily},
+      phase/.style={
+        rectangle, rounded corners=2pt, draw=black!60, very thick,
+        minimum width=22mm, minimum height=8mm, align=center,
+        fill=blue!8
+      },
+      decision/.style={
+        diamond, draw=black!70, very thick, aspect=2,
+        minimum width=18mm, minimum height=10mm, align=center,
+        fill=orange!15, inner sep=1pt
+      },
+      hitl/.style={
+        rectangle, rounded corners=2pt, draw=red!60, very thick,
+        minimum width=22mm, minimum height=8mm, align=center,
+        fill=red!10
+      },
+      terminal/.style={
+        rectangle, rounded corners=8pt, draw=black!60, very thick,
+        minimum width=14mm, minimum height=6mm, fill=gray!15
+      },
+      edge/.style={-Stealth, thick, draw=black!70},
+      condedge/.style={-Stealth, thick, draw=orange!80!black, dashed},
+      loopedge/.style={-Stealth, thick, draw=blue!70, dashed},
+      label/.style={font=\scriptsize\itshape, text=black!70}
+    ]
+
+    % --- PHASE PLAN ---
+    \node[terminal] (start) {START};
+    \node[phase, right=of start] (env) {environment};
+    \node[phase, right=of env] (plan) {planning};
+
+    % --- PHASE DO ---
+    \node[phase, below=12mm of plan] (submit) {scan\_submit};
+    \node[phase, left=of submit] (poll) {scan\_poll};
+    \node[decision, left=of poll] (rpoll) {pending?};
+    \node[phase, below=10mm of rpoll] (collect) {scan\_collect};
+
+    % --- PHASE CHECK ---
+    \node[phase, right=of collect] (risk) {risk\_evaluation};
+    \node[decision, right=of risk] (rrisk) {has\\FAIL?};
+
+    % --- PHASE ACT ---
+    \node[phase, below=10mm of rrisk] (rag) {rag\_enrich};
+    \node[phase, left=of rag] (opplan) {remediation\\(operational\_planning)};
+    \node[hitl, left=of opplan] (review) {review\_task\\\scriptsize(interrupt\_before)};
+    \node[decision, below=10mm of review] (rreview) {approved?};
+    \node[phase, below=10mm of rreview] (reset) {reset\_index};
+    \node[phase, right=of reset] (exec) {execution};
+    \node[phase, right=of exec] (verify) {verification};
+    \node[phase, right=of verify] (report) {report};
+    \node[terminal, right=of report] (end) {END};
+
+    % --- EDGES tuyến tính ---
+    \draw[edge] (start) -- (env);
+    \draw[edge] (env) -- (plan);
+    \draw[edge] (plan) -- (submit);
+    \draw[edge] (submit) -- (poll);
+    \draw[edge] (poll) -- (rpoll);
+
+    % conditional poll loop
+    \draw[loopedge] (rpoll.north) |- ++(0,5mm) -| (poll.north)
+      node[label, midway, above]{yes (loop)};
+    \draw[condedge] (rpoll) -- (collect) node[label, midway, right]{no};
+
+    \draw[edge] (collect) -- (risk);
+    \draw[edge] (risk) -- (rrisk);
+
+    % conditional after risk
+    \draw[condedge] (rrisk) -- (rag) node[label, midway, right]{yes};
+    \draw[condedge] (rrisk.north) |- ++(0,8mm) -| (report.north)
+      node[label, near start, above]{no $\rightarrow$ report only};
+
+    \draw[edge] (rag) -- (opplan);
+    \draw[edge] (opplan) -- (review);
+    \draw[edge] (review) -- (rreview);
+
+    % review loop
+    \draw[loopedge] (rreview.west) -| ++(-5mm,0) |- (review.west)
+      node[label, near start, left]{retry};
+    \draw[condedge] (rreview) -- (reset) node[label, midway, right]{approved};
+
+    \draw[edge] (reset) -- (exec);
+    \draw[edge] (exec) -- (verify);
+    \draw[edge] (verify) -- (report);
+    \draw[edge] (report) -- (end);
+
+    % --- Phase grouping (background) ---
+    \begin{scope}[on background layer]
+      \node[draw=blue!30, dashed, thick, rounded corners=4pt,
+            fit=(env)(plan), inner sep=4pt,
+            label={[blue!60, font=\scriptsize\bfseries]above:PLAN}] {};
+      \node[draw=blue!30, dashed, thick, rounded corners=4pt,
+            fit=(submit)(poll)(rpoll)(collect), inner sep=4pt,
+            label={[blue!60, font=\scriptsize\bfseries]above:DO (Scan)}] {};
+      \node[draw=blue!30, dashed, thick, rounded corners=4pt,
+            fit=(risk)(rrisk), inner sep=4pt,
+            label={[blue!60, font=\scriptsize\bfseries]above:CHECK}] {};
+      \node[draw=blue!30, dashed, thick, rounded corners=4pt,
+            fit=(rag)(opplan)(review)(rreview)(reset)(exec)(verify), inner sep=4pt,
+            label={[blue!60, font=\scriptsize\bfseries]below:ACT}] {};
+    \end{scope}
+
+  \end{tikzpicture}
+  \vspace{10mm}
+  \caption{Sơ đồ luồng trạng thái LangGraph của hệ thống. Các node đặc biệt: \texttt{review\_task} (đỏ) là điểm \texttt{interrupt\_before} cho HITL; cạnh nét đứt cam là \textit{conditional edge}; cạnh nét đứt xanh là vòng lặp.}
+  \label{fig:langgraph_topology}
+\end{figure}
