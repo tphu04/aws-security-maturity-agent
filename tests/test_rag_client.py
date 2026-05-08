@@ -26,15 +26,15 @@ class TestRAGClientInit(unittest.TestCase):
         self.assertEqual(client.base_url, "http://rag-service:9000")
 
     def test_trailing_slash_stripped(self):
-        client = RAGClient(base_url="http://localhost:8001/")
-        self.assertEqual(client.base_url, "http://localhost:8001")
+        client = RAGClient(base_url="http://localhost:9005/")
+        self.assertEqual(client.base_url, "http://localhost:9005")
 
     def test_custom_timeout(self):
-        client = RAGClient(base_url="http://localhost:8001", timeout=30.0)
+        client = RAGClient(base_url="http://localhost:9005", timeout=30.0)
         self.assertEqual(client.timeout, 30.0)
 
     def test_session_created(self):
-        client = RAGClient(base_url="http://localhost:8001")
+        client = RAGClient(base_url="http://localhost:9005")
         self.assertIsNotNone(client._session)
 
 
@@ -42,7 +42,7 @@ class TestRAGClientPublicMethods(unittest.TestCase):
     """Verify 5 public methods tồn tại và có type hints."""
 
     def setUp(self):
-        self.client = RAGClient(base_url="http://localhost:8001")
+        self.client = RAGClient(base_url="http://localhost:9005")
 
     def test_has_is_healthy(self):
         self.assertTrue(callable(getattr(self.client, "is_healthy", None)))
@@ -64,7 +64,7 @@ class TestRAGClientErrorHandling(unittest.TestCase):
     """Test error handling — methods KHÔNG raise exception, return None."""
 
     def setUp(self):
-        self.client = RAGClient(base_url="http://localhost:8001", timeout=1.0)
+        self.client = RAGClient(base_url="http://localhost:9005", timeout=1.0)
 
     @patch.object(RAGClient, "_post", return_value=None)
     def test_retrieve_checks_returns_none_on_error(self, mock_post):
@@ -91,7 +91,7 @@ class TestRAGClientIsHealthy(unittest.TestCase):
     """Test is_healthy() với mock responses."""
 
     def setUp(self):
-        self.client = RAGClient(base_url="http://localhost:8001", timeout=1.0)
+        self.client = RAGClient(base_url="http://localhost:9005", timeout=1.0)
 
     @patch("pdca.agents.shared.rag_client.requests.Session.get")
     def test_healthy_when_ready(self, mock_get):
@@ -123,7 +123,7 @@ class TestRAGClientPostHelper(unittest.TestCase):
     """Test _post() internal helper với mock responses."""
 
     def setUp(self):
-        self.client = RAGClient(base_url="http://localhost:8001", timeout=1.0)
+        self.client = RAGClient(base_url="http://localhost:9005", timeout=1.0)
 
     def test_success_response(self):
         mock_resp = MagicMock()
@@ -138,7 +138,7 @@ class TestRAGClientPostHelper(unittest.TestCase):
         mock_resp.raise_for_status = MagicMock()
         self.client._session.post = MagicMock(return_value=mock_resp)
 
-        result = self.client._post("http://localhost:8001/v1/test", {}, "test")
+        result = self.client._post("http://localhost:9005/v1/test", {}, "test")
         self.assertIsNotNone(result)
         self.assertIn("results", result)
 
@@ -155,7 +155,7 @@ class TestRAGClientPostHelper(unittest.TestCase):
         mock_resp.raise_for_status = MagicMock()
         self.client._session.post = MagicMock(return_value=mock_resp)
 
-        result = self.client._post("http://localhost:8001/v1/test", {}, "test")
+        result = self.client._post("http://localhost:9005/v1/test", {}, "test")
         self.assertIsNone(result)
 
     def test_partial_status_returns_data(self):
@@ -171,7 +171,7 @@ class TestRAGClientPostHelper(unittest.TestCase):
         mock_resp.raise_for_status = MagicMock()
         self.client._session.post = MagicMock(return_value=mock_resp)
 
-        result = self.client._post("http://localhost:8001/v1/test", {}, "test")
+        result = self.client._post("http://localhost:9005/v1/test", {}, "test")
         self.assertIsNotNone(result)
         self.assertIn("results", result)
 
@@ -180,7 +180,7 @@ class TestRAGClientPostHelper(unittest.TestCase):
         self.client._session.post = MagicMock(
             side_effect=req.exceptions.Timeout("timeout")
         )
-        result = self.client._post("http://localhost:8001/v1/test", {}, "test")
+        result = self.client._post("http://localhost:9005/v1/test", {}, "test")
         self.assertIsNone(result)
 
     def test_connection_error_returns_none(self):
@@ -188,7 +188,7 @@ class TestRAGClientPostHelper(unittest.TestCase):
         self.client._session.post = MagicMock(
             side_effect=req.exceptions.ConnectionError("refused")
         )
-        result = self.client._post("http://localhost:8001/v1/test", {}, "test")
+        result = self.client._post("http://localhost:9005/v1/test", {}, "test")
         self.assertIsNone(result)
 
 
@@ -196,7 +196,7 @@ class TestRAGClientBuildContext(unittest.TestCase):
     """Test build_context() response parsing — verify bundle extraction."""
 
     def setUp(self):
-        self.client = RAGClient(base_url="http://localhost:8001", timeout=1.0)
+        self.client = RAGClient(base_url="http://localhost:9005", timeout=1.0)
 
     def _mock_context_response(self, consumer: str):
         """Helper tạo mock response cho build_context."""

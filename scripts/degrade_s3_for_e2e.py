@@ -33,6 +33,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Force UTF-8 stdout/stderr on Windows (cp1252 default crashes on Unicode log messages)
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import boto3
@@ -185,7 +193,7 @@ def degrade_policy(s3, bucket: str, dry: bool):
 
 def revert_versioning(s3, bucket: str, snap: dict, dry: bool):
     v = (snap.get("versioning") or {}).get("Status", "Enabled")
-    log(f"Revert versioning → {v}")
+    log(f"Revert versioning -> {v}")
     if dry:
         return
     s3.put_bucket_versioning(Bucket=bucket, VersioningConfiguration={"Status": v})
@@ -224,7 +232,7 @@ def revert_ownership(s3, bucket: str, snap: dict, dry: bool):
         rules = own.get("OwnershipControls", {}).get("Rules", [])
         if rules:
             target = rules[0].get("ObjectOwnership", target)
-    log(f"Revert ObjectOwnership → {target}")
+    log(f"Revert ObjectOwnership -> {target}")
     if dry:
         return
     s3.put_bucket_ownership_controls(
@@ -265,7 +273,7 @@ def main():
     parser.add_argument("--region", default=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Show actions without executing")
-    mode.add_argument("--degrade", action="store_true", help="Flip PASS → FAIL")
+    mode.add_argument("--degrade", action="store_true", help="Flip PASS -> FAIL")
     mode.add_argument("--revert", action="store_true", help="Restore from snapshot")
     parser.add_argument("--yes", action="store_true", help="Skip confirmation prompt")
     args = parser.parse_args()
@@ -301,7 +309,7 @@ def main():
         degrade_ownership(s3, args.bucket, dry)
         degrade_policy(s3, args.bucket, dry)
         print()
-        log("Degrade complete. Expected 5-7 S3 checks to flip PASS → FAIL:", "OK")
+        log("Degrade complete. Expected 5-7 S3 checks to flip PASS -> FAIL:", "OK")
         print("    - s3_bucket_object_versioning")
         print("    - s3_bucket_default_encryption (nếu AWS default không auto-apply)")
         print("    - s3_bucket_kms_encryption")

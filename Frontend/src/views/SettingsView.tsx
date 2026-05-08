@@ -24,7 +24,7 @@ export function SettingsView({ run }: { run: RunSession }) {
   const initial = loadEndpoints();
   const [scannerUrl, setScannerUrl] = useState(initial.scanner);
   const [ragUrl, setRagUrl]         = useState(initial.rag);
-  const [chatbotUrl, setChatbotUrl] = useState(initial.chatbot ?? "http://127.0.0.1:8002");
+  const [chatbotUrl, setChatbotUrl] = useState(initial.chatbot ?? "http://127.0.0.1:9002");
   const [scannerProbe, setScannerProbe] = useState<{ state: ProbeState; reason?: string }>({ state: "idle" });
   const [ragProbe, setRagProbe]         = useState<{ state: ProbeState; reason?: string }>({ state: "idle" });
   const [chatbotProbe, setChatbotProbe] = useState<{ state: ProbeState; reason?: string }>({ state: "idle" });
@@ -138,7 +138,7 @@ export function SettingsView({ run }: { run: RunSession }) {
                   value={chatbotUrl}
                   onChange={(e) => setChatbotUrl(e.target.value)}
                   className="font-mono"
-                  placeholder="http://127.0.0.1:8002 (optional — drives /v1/environment, /v1/runs)"
+                  placeholder="http://127.0.0.1:9002 (optional — drives /v1/environment, /v1/runs)"
                 />
                 <ProbeBadge probe={chatbotProbe} />
               </div>

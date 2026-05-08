@@ -1,6 +1,6 @@
 """End-to-end test for the Phase 5 validation gate.
 
-Requires a live RAG server on :8001 and Ollama on :11434. Skipped
+Requires a live RAG server on :9005 and Ollama on :11434. Skipped
 automatically when either is unreachable so `pytest` can still be run
 in environments without the full stack up.
 
@@ -23,7 +23,7 @@ import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-RAG_URL = "http://localhost:8001/ready"
+RAG_URL = "http://localhost:9005/ready"
 OLLAMA_URL = "http://localhost:11434/api/tags"
 
 
@@ -37,7 +37,7 @@ def _alive(url: str) -> bool:
 
 pytestmark = pytest.mark.skipif(
     not _alive(RAG_URL) or not _alive(OLLAMA_URL),
-    reason="Requires live RAG server on :8001 and Ollama on :11434",
+    reason="Requires live RAG server on :9005 and Ollama on :11434",
 )
 
 

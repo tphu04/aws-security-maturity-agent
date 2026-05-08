@@ -54,9 +54,9 @@ export interface EndpointConfig {
 }
 
 const DEFAULT_ENDPOINTS: EndpointConfig = {
-  scanner: import.meta.env.VITE_SCANNER_API_URL ?? "http://127.0.0.1:8001",
-  rag:     import.meta.env.VITE_RAG_API_URL     ?? "http://localhost:8005",
-  chatbot: import.meta.env.VITE_CHATBOT_API_URL ?? "http://127.0.0.1:8002",
+  scanner: import.meta.env.VITE_SCANNER_API_URL ?? "http://127.0.0.1:9001",
+  rag:     import.meta.env.VITE_RAG_API_URL     ?? "http://localhost:9005",
+  chatbot: import.meta.env.VITE_CHATBOT_API_URL ?? "http://127.0.0.1:9002",
 };
 
 export function loadEndpoints(): EndpointConfig {
