@@ -5,7 +5,7 @@ import logging
 from langchain_core.runnables import RunnableConfig
 
 from pdca.agents.remediate_planner_agent import RemediationPlannerAgent
-from pdca.agents.shared.callbacks import get_callbacks
+from pdca.agents.shared.callbacks import extract_config_callbacks, get_callbacks
 from pdca.config import settings
 from pdca.graph._metrics import measure_time, update_metrics
 from pdca.graph._tracing_helpers import flush_at_node, node_span
@@ -17,12 +17,7 @@ logger = logging.getLogger(__name__)
 
 def remediation_node(state: PDCAState, config: RunnableConfig) -> dict:
     run_id = state.get("run_id", "")
-    extra_callbacks = (
-        config.get("callbacks")
-        or config.get("configurable", {}).get("callbacks", [])
-        or []
-    )
-    callbacks = get_callbacks(extra=list(extra_callbacks))
+    callbacks = get_callbacks(extra=extract_config_callbacks(config))
     metrics = state.get("performance_metrics", {})
     aws_ctx = state.get("aws_context", {}) or {}
 

@@ -51,4 +51,27 @@ def get_callbacks(extra: Optional[List[BaseCallbackHandler]] = None) -> List[Bas
     return [TimerCallback()] + ([handler] if handler else []) + list(extra or [])
 
 
-__all__ = ["TimerCallback", "get_callbacks"]
+def extract_config_callbacks(config: Optional[Dict[str, Any]]) -> List[BaseCallbackHandler]:
+    """Pull callback handlers out of a LangGraph RunnableConfig safely.
+
+    LangGraph may inject `config['callbacks']` as a `CallbackManager` (not a
+    plain list — `list(manager)` raises). We unwrap `.handlers` so downstream
+    nodes can extend it freely.
+    """
+    if not config:
+        return []
+    raw = config.get("callbacks")
+    if raw is None:
+        raw = (config.get("configurable") or {}).get("callbacks")
+    if raw is None:
+        return []
+    handlers = getattr(raw, "handlers", None)
+    if handlers is not None:
+        return list(handlers)
+    try:
+        return list(raw)
+    except TypeError:
+        return []
+
+
+__all__ = ["TimerCallback", "get_callbacks", "extract_config_callbacks"]

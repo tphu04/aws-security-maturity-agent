@@ -6,7 +6,7 @@ from langchain_core.runnables import RunnableConfig
 
 from pdca.agents.report_agent import ReportAgent
 from pdca.agents.report_module.data_builder import ReportDataBuilder
-from pdca.agents.shared.callbacks import get_callbacks
+from pdca.agents.shared.callbacks import extract_config_callbacks, get_callbacks
 from pdca.agents.shared.rag_client import RAGClient
 from pdca.config import settings
 from pdca.graph._metrics import (
@@ -37,12 +37,7 @@ def _outcome_tag(state: PDCAState) -> str:
 
 def report_node(state: PDCAState, config: RunnableConfig) -> dict:
     run_id = state.get("run_id", "")
-    extra_callbacks = (
-        config.get("callbacks")
-        or config.get("configurable", {}).get("callbacks", [])
-        or []
-    )
-    callbacks = get_callbacks(extra=list(extra_callbacks))
+    callbacks = get_callbacks(extra=extract_config_callbacks(config))
     metrics = state.get("performance_metrics", {})
     logger.info("report start", extra={"run_id": run_id})
 
@@ -112,11 +107,12 @@ def report_node(state: PDCAState, config: RunnableConfig) -> dict:
                 report_data["maturity_post"] = None
                 report_data["maturity_delta"] = None
 
+        report_dir = f"data/artifacts/{run_id}" if run_id else "data/artifacts"
         agent = ReportAgent(
             settings.ollama_model,
             settings.ollama_api_key,
             settings.ollama_base_url,
-            output_path="data/artifacts/final_report.md",
+            output_path=f"{report_dir}/final_report.md",
             callbacks=callbacks,
         )
 

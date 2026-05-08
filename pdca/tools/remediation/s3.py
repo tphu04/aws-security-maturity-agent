@@ -100,38 +100,52 @@ def s3_enable_versioning(resource_id: str, region: str = "us-east-1") -> dict:
 
 @tool
 def s3_enable_kms_encryption(
-    resource_id: str, region: str = "us-east-1", kms_key_id: Optional[str] = None
+    resource_id: str,
+    region: str = "us-east-1",
+    kms_key_id: Optional[str] = None,
+    algorithm: str = "aws:kms",
 ) -> dict:
     """[AUTO-FIX]
-    Mục đích: Bật mã hóa SSE-KMS.
-    Dùng khi: Bucket không có default encryption.
-    Tự động: Thêm rule SSE-KMS.
+    Mục đích: Bật default encryption cho bucket (SSE-S3 hoặc SSE-KMS).
+    Dùng khi:
+      - Finding `s3_bucket_default_encryption` → algorithm="AES256" (rẻ hơn).
+      - Finding `s3_bucket_kms_encryption` → algorithm="aws:kms" (mặc định).
+    Tự động: Put encryption rule.
     Giới hạn: Ghi đè cấu hình encryption cũ; không tạo KMS Key mới.
     """
+    if algorithm not in ("aws:kms", "AES256"):
+        return ToolResult.failed(
+            resource=resource_id,
+            error=f"algorithm phải là 'aws:kms' hoặc 'AES256', got {algorithm!r}",
+        )
+
     try:
         bucket = sanitize_s3_bucket_name(resource_id)
     except ValueError as e:
         return ToolResult.failed(resource=resource_id, error=str(e))
 
+    sse_default: dict = {"SSEAlgorithm": algorithm}
+    if algorithm == "aws:kms" and kms_key_id:
+        sse_default["KMSMasterKeyID"] = kms_key_id
+
     encryption_config = {
         "Rules": [
             {
-                "ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms"},
-                "BucketKeyEnabled": True,
+                "ApplyServerSideEncryptionByDefault": sse_default,
+                "BucketKeyEnabled": algorithm == "aws:kms",
             }
         ]
     }
-    if kms_key_id:
-        encryption_config["Rules"][0]["ApplyServerSideEncryptionByDefault"][
-            "KMSMasterKeyID"
-        ] = kms_key_id
 
     try:
         client = boto3.client("s3", region_name=region)
         client.put_bucket_encryption(
             Bucket=bucket, ServerSideEncryptionConfiguration=encryption_config
         )
-        return ToolResult.success(resource=bucket, action="Enable KMS Encryption")
+        return ToolResult.success(
+            resource=bucket,
+            action=f"Enable Default Encryption ({algorithm})",
+        )
     except (ClientError, BotoCoreError) as e:
         return ToolResult.failed(resource=bucket, error=str(e))
     except Exception as e:
@@ -467,6 +481,154 @@ def s3_enable_event_notifications(
         return ToolResult.failed(resource=bucket, error=f"unexpected: {e}")
 
 
+@tool
+def s3_access_point_block_public_access(
+    resource_id: str,
+    account_id: str,
+    region: str = "us-east-1",
+) -> dict:
+    """[AUTO-FIX] Khắc phục lỗi 's3_access_point_public_access_block'.
+    Mục đích: Bật Block Public Access cho S3 Access Point.
+    Dùng khi: Finding cảnh báo Access Point chưa có PAB.
+    Tự động: put_access_point_public_access_block với 4 cờ True.
+    Giới hạn: KHÔNG áp dụng cho Multi-Region Access Point (xem s3_mrap_*).
+    """
+    if not isinstance(account_id, str) or not account_id.strip():
+        return ToolResult.failed(
+            resource=str(resource_id),
+            error="account_id phải là string non-empty",
+        )
+    if not isinstance(resource_id, str) or not resource_id.strip():
+        return ToolResult.failed(
+            resource=str(resource_id),
+            error="resource_id (access point name) phải là string non-empty",
+        )
+
+    ap_name = resource_id.strip()
+    try:
+        client = boto3.client("s3control", region_name=region)
+        client.put_access_point_public_access_block(
+            AccountId=account_id,
+            Name=ap_name,
+            PublicAccessBlockConfiguration={
+                "BlockPublicAcls": True,
+                "IgnorePublicAcls": True,
+                "BlockPublicPolicy": True,
+                "RestrictPublicBuckets": True,
+            },
+        )
+        return ToolResult.success(
+            resource=ap_name,
+            action="Enabled Block Public Access on Access Point",
+        )
+    except (ClientError, BotoCoreError) as e:
+        return ToolResult.failed(resource=ap_name, error=str(e))
+    except Exception as e:
+        return ToolResult.failed(resource=ap_name, error=f"unexpected: {e}")
+
+
+@tool
+def s3_remove_public_write_policy(
+    resource_id: str, region: str = "us-east-1"
+) -> dict:
+    """[AUTO-FIX] Khắc phục lỗi 's3_bucket_policy_public_write_access'.
+    Mục đích: Xóa các statement Allow Principal=* với action ghi (Put/Delete/*).
+    Dùng khi: Bucket policy có statement cho phép public write.
+    Cơ chế: Load policy → filter statement public-write → put lại + verify.
+    Giới hạn: Chỉ filter Principal="*" hoặc {"AWS":"*"}; KHÔNG động vào
+              statement có Principal cụ thể (giữ nguyên cross-account hợp lệ).
+    """
+    try:
+        bucket = sanitize_s3_bucket_name(resource_id)
+    except ValueError as e:
+        return ToolResult.failed(resource=resource_id, error=str(e))
+
+    write_actions = ("s3:put", "s3:delete", "s3:replicate", "s3:restore", "s3:*", "*")
+
+    def _is_wildcard(principal) -> bool:
+        if principal == "*":
+            return True
+        if isinstance(principal, dict):
+            aws = principal.get("AWS")
+            if aws == "*" or aws == ["*"]:
+                return True
+        return False
+
+    def _has_write(action) -> bool:
+        actions = action if isinstance(action, list) else [action]
+        return any(
+            isinstance(a, str) and a.lower().startswith(write_actions)
+            for a in actions
+        )
+
+    try:
+        client = boto3.client("s3", region_name=region)
+        try:
+            current = client.get_bucket_policy(Bucket=bucket)
+            policy = json.loads(current["Policy"])
+        except ClientError as e:
+            code = e.response["Error"]["Code"]
+            if code == "NoSuchBucketPolicy":
+                return ToolResult.already_compliant(
+                    resource=bucket, message="Bucket has no policy."
+                )
+            if code == "NoSuchBucket":
+                return ToolResult.failed(
+                    resource=bucket, error=f"Bucket '{bucket}' not found."
+                )
+            raise
+
+        original = policy.get("Statement", [])
+        filtered = []
+        removed = 0
+        for stmt in original:
+            if (
+                stmt.get("Effect") == "Allow"
+                and _is_wildcard(stmt.get("Principal"))
+                and _has_write(stmt.get("Action", []))
+            ):
+                removed += 1
+                continue
+            filtered.append(stmt)
+
+        if removed == 0:
+            return ToolResult.already_compliant(
+                resource=bucket,
+                message="No public-write statements found.",
+            )
+
+        if not filtered:
+            client.delete_bucket_policy(Bucket=bucket)
+            verify_passed = True
+        else:
+            policy["Statement"] = filtered
+            client.put_bucket_policy(Bucket=bucket, Policy=json.dumps(policy))
+            time.sleep(2)
+            verify_resp = client.get_bucket_policy(Bucket=bucket)
+            verify_policy = json.loads(verify_resp["Policy"])
+            verify_passed = not any(
+                stmt.get("Effect") == "Allow"
+                and _is_wildcard(stmt.get("Principal"))
+                and _has_write(stmt.get("Action", []))
+                for stmt in verify_policy.get("Statement", [])
+            )
+
+        if verify_passed:
+            return ToolResult.success(
+                resource=bucket,
+                action=f"Removed {removed} public-write statement(s)",
+                statements_removed=removed,
+            )
+        return ToolResult.failed(
+            resource=bucket,
+            error="Policy update sent but verification still finds public-write.",
+        )
+    except (ClientError, BotoCoreError) as e:
+        return ToolResult.failed(resource=bucket, error=str(e))
+    except Exception as e:
+        return ToolResult.failed(resource=bucket, error=f"unexpected: {e}")
+
+
 # ============================================================
 # MANUAL-ONLY TOOLS
 # ============================================================
@@ -639,6 +801,58 @@ def s3_enable_intelligent_tiering(
     )
 
 
+@tool
+def s3_mrap_block_public_access(
+    resource_id: str,
+    account_id: Optional[str] = None,
+    region: str = "us-east-1",
+) -> dict:
+    """[MANUAL-ONLY] Khắc phục lỗi 's3_multi_region_access_point_public_access_block'.
+    Mục đích: Bật Block Public Access cho Multi-Region Access Point (MRAP).
+    Dùng khi: Finding cảnh báo MRAP chưa có PAB.
+    Tự động: Không thể — MRAP PAB chỉ set được lúc tạo, không sửa được sau đó.
+    Giới hạn: AWS không cung cấp UpdateMultiRegionAccessPoint cho PAB.
+    Lưu ý: Phải tạo lại MRAP với PAB enabled rồi migrate alias.
+    """
+    name = (resource_id or "").strip() or "<unknown>"
+    return ToolResult.manual_required(
+        resource=name,
+        remaining=[
+            "Create a new Multi-Region Access Point with all 4 PublicAccessBlock "
+            "flags = True, migrate alias usage, then delete the old MRAP.",
+        ],
+        reason="MRAP Public Access Block is immutable after creation.",
+    )
+
+
+@tool
+def s3_bucket_shadow_resource_check(
+    resource_id: str, region: str = "us-east-1"
+) -> dict:
+    """[MANUAL-ONLY] Khắc phục lỗi 's3_bucket_shadow_resource_vulnerability'.
+    Mục đích: Cảnh báo bucket name có thể bị "squat" ở region khác (cross-region
+              naming predictability — hay gặp với CloudTrail/ELB/Config log buckets).
+    Dùng khi: Finding flag bucket có pattern dễ đoán.
+    Tự động: Không thể — đổi tên bucket = recreate + migrate dữ liệu.
+    Giới hạn: AWS không hỗ trợ rename bucket.
+    Lưu ý: Phải tạo bucket mới với tên random/hash và migrate object.
+    """
+    try:
+        bucket = sanitize_s3_bucket_name(resource_id)
+    except ValueError as e:
+        return ToolResult.failed(resource=resource_id, error=str(e))
+
+    return ToolResult.manual_required(
+        resource=bucket,
+        remaining=[
+            "Create a new bucket with a non-predictable name (include account-id "
+            "or random suffix), migrate objects via S3 Batch Replication, update "
+            "all references, then delete the old bucket.",
+        ],
+        reason="Bucket names are immutable; shadow-resource fix requires recreate.",
+    )
+
+
 # ============================================================
 # REGISTRY — single source of truth (B14)
 # ============================================================
@@ -652,6 +866,8 @@ REGISTRY.register(s3_enable_lifecycle_configuration, category="remediation")
 REGISTRY.register(s3_disable_bucket_acls, category="remediation")
 REGISTRY.register(s3_enable_access_logging, category="remediation")
 REGISTRY.register(s3_enable_event_notifications, category="remediation")
+REGISTRY.register(s3_access_point_block_public_access, category="remediation")
+REGISTRY.register(s3_remove_public_write_policy, category="remediation")
 
 # Manual-only tools — flag được REGISTRY giữ (B14)
 REGISTRY.register(s3_prepare_replication, category="remediation", manual_only=True)
@@ -662,4 +878,8 @@ REGISTRY.register(
 )
 REGISTRY.register(
     s3_enable_intelligent_tiering, category="remediation", manual_only=True
+)
+REGISTRY.register(s3_mrap_block_public_access, category="remediation", manual_only=True)
+REGISTRY.register(
+    s3_bucket_shadow_resource_check, category="remediation", manual_only=True
 )

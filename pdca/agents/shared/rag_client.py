@@ -8,7 +8,7 @@ Tham chiếu: Integration_Implementation_Plan.md — SLICE-0.2
 
 Sử dụng:
     from pdca.agents.shared.rag_client import RAGClient
-    client = RAGClient(base_url="http://localhost:8001")
+    client = RAGClient(base_url="http://localhost:9005")
 
     if client.is_healthy():
         result = client.build_context(consumer="risk", check_ids=["s3_bucket_public_access"])
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class RAGClient:
     """
-    Shared HTTP client gọi RAG API (FastAPI, port 8001).
+    Shared HTTP client gọi RAG API (FastAPI, port 9005).
 
     - Retry tự động cho server errors (5xx) và timeout.
     - Không raise exception ra ngoài — return None khi fail.

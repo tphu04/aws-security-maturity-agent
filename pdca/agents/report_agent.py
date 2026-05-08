@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 from jinja2 import Template
 from pdca.agents.report_module.llm_writer import LLMWriter
 from pdca.observability.tracing import span as obs_span
-from pdca.agents.report_module.exporters import write_file, export_pdf
+from pdca.agents.report_module.exporters import write_file, export_pdf, html_to_markdown
 from pdca.agents.report_module.chart_util import (
     make_pass_fail_pie, make_severity_bar,
     make_domain_radar, make_stage_progress, make_maturity_delta_chart,
@@ -116,7 +116,7 @@ class ReportAgent:
         return ChatOllama(
             model=model or "gemma3:4b",
             base_url=base_url,
-            temperature=0.5,
+            temperature=0.0,
             callbacks=self.callbacks,
         )
 
@@ -1089,8 +1089,17 @@ class ReportAgent:
         html = Template(REPORT_TEMPLATE).render(**ctx)
         write_file(html_path, html)
 
-        # Markdown: giữ HTML cho Sprint 2, có thể dùng html2text sau
-        write_file(md_path, html)
+        # Convert rendered HTML to real Markdown for `final_report.md`.
+        # The HTML template is the single source of truth; the markdown file
+        # is derived so layout changes don't drift between formats. The FE
+        # expects md_path to be parseable Markdown — `_split_markdown_sections`
+        # splits on `#`/`##` headings to populate Report sections.
+        try:
+            markdown = html_to_markdown(html)
+        except Exception as e:
+            logger.warning("html_to_markdown failed; falling back to HTML body: %s", e)
+            markdown = html
+        write_file(md_path, markdown)
 
         # PDF export
         pdf_result = export_pdf(html, pdf_path)
