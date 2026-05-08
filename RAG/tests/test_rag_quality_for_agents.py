@@ -24,7 +24,7 @@ import requests
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-RAG_BASE_URL = os.getenv("RAG_BASE_URL", "http://localhost:8001")
+RAG_BASE_URL = os.getenv("RAG_BASE_URL", "http://localhost:9005")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "debug_outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -1022,7 +1022,7 @@ def main():
     print("Checking RAG service health...")
     if not _check_health():
         print(f"RAG service khong san sang tai {RAG_BASE_URL}")
-        print("Hay chay: cd RAG && uvicorn app.main:app --port 8001")
+        print("Hay chay: cd RAG && uvicorn app.main:app --port 9005")
         sys.exit(1)
     print(f"RAG service OK ({RAG_BASE_URL})")
 

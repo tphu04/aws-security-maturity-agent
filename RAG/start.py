@@ -2,7 +2,7 @@
 
 Usage (from DoAn/ root):
     python RAG/start.py
-    python RAG/start.py --port 8005
+    python RAG/start.py --port 9005
     python RAG/start.py --host 0.0.0.0
 """
 import argparse
@@ -20,7 +20,7 @@ if str(RAG_DIR) not in sys.path:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8005)
+    parser.add_argument("--port", type=int, default=9005)
     parser.add_argument("--no-reload", action="store_true")
     args = parser.parse_args()
 

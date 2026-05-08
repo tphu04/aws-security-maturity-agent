@@ -158,12 +158,12 @@ class TestDomainBackfill:
 
 
 # ---------------------------------------------------------------------------
-# Integration: live RAG service (requires RAG running on :8005)
+# Integration: live RAG service (requires RAG running on :9005)
 # ---------------------------------------------------------------------------
 
 @pytest.mark.integration
 class TestLiveEndpoints:
-    BASE = "http://localhost:8005"
+    BASE = "http://localhost:9005"
 
     def _get(self, path: str) -> dict:
         import requests

@@ -163,7 +163,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host="127.0.0.1",
-        port=8005,
+        port=9005,
         reload=True,
         reload_dirs=[str(_app_dir)],
     )
