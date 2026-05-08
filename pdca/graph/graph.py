@@ -15,6 +15,7 @@ from pdca.graph.nodes import (
     environment_node,
     execution_node,
     planning_node,
+    rag_enrich_node,
     remediation_node,
     report_node,
     reset_index_node,
@@ -46,6 +47,7 @@ def build_graph(checkpointer: Optional[Any] = None):
     wf.add_node("scan_poll", scan_poll_node)
     wf.add_node("scan_collect", scan_collect_node)
     wf.add_node("risk_evaluation", risk_eval_node)
+    wf.add_node("rag_enrich", rag_enrich_node)
     wf.add_node("operational_planning", remediation_node)
     wf.add_node("review_task", review_task_node)
     wf.add_node("reset_index", reset_index_node)
@@ -59,6 +61,7 @@ def build_graph(checkpointer: Optional[Any] = None):
     wf.add_edge("planning", "scan_submit")
     wf.add_edge("scan_submit", "scan_poll")
     wf.add_edge("scan_collect", "risk_evaluation")
+    wf.add_edge("rag_enrich", "operational_planning")
     wf.add_edge("operational_planning", "review_task")
     wf.add_edge("reset_index", "execution")
     wf.add_edge("execution", "verification")
@@ -74,7 +77,7 @@ def build_graph(checkpointer: Optional[Any] = None):
     wf.add_conditional_edges(
         "risk_evaluation",
         route_after_risk,
-        {"operational_planning": "operational_planning", "report": "report"},
+        {"operational_planning": "rag_enrich", "report": "report"},
     )
     wf.add_conditional_edges(
         "review_task",

@@ -7,6 +7,7 @@ update. No business logic.
 from pdca.graph.nodes.environment import environment_node
 from pdca.graph.nodes.execution import execution_node
 from pdca.graph.nodes.planning import planning_node
+from pdca.graph.nodes.rag_enrich import rag_enrich_node
 from pdca.graph.nodes.remediation import remediation_node
 from pdca.graph.nodes.report import report_node
 from pdca.graph.nodes.reset_index import reset_index_node
@@ -24,6 +25,7 @@ __all__ = [
     "scan_poll_node",
     "scan_collect_node",
     "risk_eval_node",
+    "rag_enrich_node",
     "remediation_node",
     "review_task_node",
     "reset_index_node",

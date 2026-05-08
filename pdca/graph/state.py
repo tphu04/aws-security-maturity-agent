@@ -66,6 +66,13 @@ class PDCAState(TypedDict):
     # --- RAG availability ---
     rag_available: bool
 
+    # --- RAG enrichment bundle (multi-query Q1+Q2+Q3 + control mappings) ---
+    # Set ONCE bởi rag_enrich_node sau risk_evaluation. Dùng cho:
+    # 1. operational_planning gắn ragSteps/ragEffort vào tasks
+    # 2. report_node truyền vào ReportDataBuilder
+    # 3. FE ToolTracePanel "Knowledge" tab
+    rag_bundle: NotRequired[Dict[str, Any]]
+
     # --- Plan ---
     assessment_plan: Optional[AssessmentPlan]
 
