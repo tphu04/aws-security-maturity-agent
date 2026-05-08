@@ -4,7 +4,7 @@ Thu thap RAG context snapshot cho moi test case.
 Usage:
     python benchmarks/llm_generation/collect_rag_snapshots.py
 
-Requires: RAG server running at localhost:8001
+Requires: RAG server running at localhost:9005
 
 Output: Cap nhat rag_context_snapshot trong benchmark_gen_cases.json
 voi du lieu thuc te tu RAG (official_severity, compliance_mappings, confidence).

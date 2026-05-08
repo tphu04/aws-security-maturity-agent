@@ -44,7 +44,7 @@ from app.evaluation.metrics import (
     compute_robustness_gap,
 )
 
-BASE_URL = os.environ.get("RAG_BASE_URL", "http://localhost:8001")
+BASE_URL = os.environ.get("RAG_BASE_URL", "http://localhost:9005")
 TOP_K = 5
 TIMEOUT = 30
 

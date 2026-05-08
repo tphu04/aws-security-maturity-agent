@@ -92,7 +92,7 @@ def run_inference(cases: List[Dict], rag_enabled: bool = True) -> List[Dict]:
     """Chay Planning Agent cho tat ca test cases.
 
     Requires:
-    - RAG server running (port 8001) neu rag_enabled=True
+    - RAG server running (port 9005) neu rag_enabled=True
     - Ollama running (port 11434) voi model configured
     """
     from pdca.agents.planning_agent import PlanningAgent
