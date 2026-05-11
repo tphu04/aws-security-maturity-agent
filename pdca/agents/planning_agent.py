@@ -1,18 +1,20 @@
 """
-PlanningAgent V2 — RAG-first, LLM-conditional
+PlanningAgent V3 — LLM-intent + RAG-retrieve
 ===============================================
 Architecture:
-  1. InputClassifier (pure logic) → FAST_TRACK | GROUP_SCAN | RETRIEVAL_PATH
-  2. RAG retrieval via build_context(consumer="planning")
-  3. DeterministicScorer (pure function) — weighted scoring without LLM
-  4. ConfidenceGate — only call LLM when RAG confidence is low
-  5. [conditional] LLM refinement — single call, only when needed
+  1. LLM Intent Classifier (single call, always) → {mode, services, check_ids, topics}
+  2. Validate (pure logic + RAG lexical lookup for explicit check_ids)
+  3. Route:
+       - group_scan + valid services → emit groups (no RAG)
+       - explicit valid check_ids → emit checks (no RAG semantic)
+       - specific_checks + topics → RAG retrieve per (service × topic)
+  4. Fallback: if LLM intent classifier fails → V2 regex pipeline (_run_legacy)
 
-Key improvements over V1:
-  - Eliminates mandatory LLM call #1 (intent translation)
-  - Replaces mandatory LLM call #2 (rerank) with deterministic scorer
-  - Fails explicit — never silently defaults to S3
-  - Clean output contract with both groups_to_scan and target_services
+Why this design:
+  - Single, predictable LLM call up front; no _llm_refine cascade.
+  - LLM only sees the request — does NOT pick check_ids from a candidate pool,
+    so it cannot fabricate IDs (RAG lexical validates / RAG semantic retrieves).
+  - Multi-service requests ("scan s3 và iam") work natively — no regex hack.
 """
 
 import json
@@ -158,7 +160,7 @@ _SECURITY_TOPIC_KEYWORDS -= ALLOWED_GROUPS
 # Keeps splitter LLM-conditional — only fires when user plausibly asks
 # about multiple topics in one breath.
 _CONJUNCTION_PATTERN = re.compile(
-    r"\b(?:và|and|plus|cùng)\b|[,&]", re.IGNORECASE
+    r"\b(?:và|and|plus|cùng)\b|&", re.IGNORECASE
 )
 
 # Per-sub-query candidate cap after gap filter (keeps merged pool bounded).
@@ -169,6 +171,141 @@ MAX_MERGED_CANDIDATES = 10
 # ---------------------------------------------------------------------------
 # LLM PROMPTS
 # ---------------------------------------------------------------------------
+
+INTENT_CLASSIFIER_PROMPT = """You are an AWS security request classifier. Extract structured intent from a user request written in Vietnamese or English.
+
+==================== HARD RULES (read first) ====================
+
+R1. EXTRACT, DO NOT INFER.
+    Only include AWS services that appear LITERALLY in the request — by name
+    (s3, iam, ec2, ...) or by an explicit keyword that maps to one service:
+        bucket / lưu trữ / storage           -> s3
+        user / role / policy / permission /
+        mfa / access key / password / tài khoản -> iam
+        instance / server / security group   -> ec2
+        database / aurora / db               -> rds
+        function / serverless / lambda       -> lambda
+        trail / audit log / cloudtrail       -> cloudtrail
+        cmk / customer master key /
+        encryption key / key rotation        -> kms
+        kubernetes / cluster / eks           -> eks
+        subnet / flow log / vpc              -> vpc
+    NEVER add a related service. Examples of FORBIDDEN inference:
+      - "encryption" alone -> do NOT add kms (unless user names kms/CMK)
+      - "logging" alone -> do NOT add cloudtrail (unless user names trail/audit/cloudtrail)
+      - "network" alone -> do NOT add vpc (unless user names vpc/subnet/flow log)
+
+R2. LIST ALL SERVICES MENTIONED, even when 3, 4, 5+ are listed without
+    conjunctions. "s3 iam ec2 rds" must yield 4 services, not 2.
+
+R3. VALID SERVICE CODES (use these only, lowercase):
+        s3, iam, ec2, rds, vpc, lambda, cloudtrail, kms, eks
+    Anything else (typos like "ecryption", names like "dynamodb" not in this
+    list) MUST be omitted from the services array.
+
+R4. mode = "group_scan" only if the user wants a broad scan and gives NO
+    specific security concern.
+    mode = "specific_checks" if the request mentions ANY topic such as:
+    encryption, mfa, public access, password policy, logging enabled,
+    key rotation, security group rules, expired credentials, root usage,
+    versioning, flow log, port exposure, etc.
+
+R5. check_ids = explicit Prowler IDs the user typed verbatim (format:
+    word_word_word with at least 3 underscored parts). Empty list otherwise.
+
+R6. ACTION VERBS ARE NOT TOPICS.
+    Words like "kiểm tra / check / scan / quét / đánh giá / audit / xem /
+    review / assess / verify" applied to a BARE service name with NO
+    security concern = group_scan. The verb itself is NEVER a topic.
+        "kiểm tra iam"        -> group_scan, topics=[]
+        "check rds và lambda" -> group_scan, topics=[]
+    Only add to topics if the request names an actual security CONCERN
+    (encryption, mfa, public, password, ...) — not the act of checking.
+
+R7. SERVICE KEYWORDS ARE NEVER TOPICS, AND DO NOT INFER EXTRA SERVICES.
+    Every word in the R1 mapping table (bucket, kubernetes, cluster,
+    security group, instance, function, trail, ...) is a SERVICE keyword.
+    It maps to ITS ONE service only. Do NOT also list it under "topics".
+    Do NOT add a related service:
+        "security group" -> ec2 ONLY (not vpc)
+        "kubernetes" / "cluster" -> eks ONLY (not ec2)
+        "bucket" -> s3 ONLY
+
+==================== REASONING STEPS ====================
+
+Work through these silently before producing the JSON:
+
+Step 1. Scan the request and list every service name OR keyword that maps
+        to exactly one VALID service (per R1).
+Step 2. Scan for security topic words. Translate Vietnamese to English.
+Step 3. If Step 2 found ANY topic word -> mode = "specific_checks".
+        Else -> mode = "group_scan".
+Step 4. Extract any literal Prowler check ID (≥3 underscored parts).
+Step 5. Build the JSON.
+
+==================== OUTPUT FORMAT ====================
+
+Return RAW JSON only — no markdown fences, no prose before or after:
+{{
+  "mode": "group_scan" | "specific_checks",
+  "services": ["s3", "iam"],
+  "check_ids": [],
+  "topics": []
+}}
+
+==================== EXAMPLES ====================
+
+Request: "scan toàn bộ s3"
+-> {{"mode":"group_scan","services":["s3"],"check_ids":[],"topics":[]}}
+
+Request: "kiểm tra s3 iam ec2 rds"   (no conjunction, list ALL four)
+-> {{"mode":"group_scan","services":["s3","iam","ec2","rds"],"check_ids":[],"topics":[]}}
+
+Request: "kiểm tra mã hoá trên s3"   (encryption mentioned, but ONLY s3 named)
+-> {{"mode":"specific_checks","services":["s3"],"check_ids":[],"topics":["encryption"]}}
+   WRONG would be: services=["s3","kms"]  -- kms was not named.
+
+Request: "user nào chưa bật MFA"   (iam keywords: user + mfa)
+-> {{"mode":"specific_checks","services":["iam"],"check_ids":[],"topics":["mfa"]}}
+
+Request: "kiểm tra dịch vụ lưu trữ"   ("lưu trữ" maps to s3, no topic)
+-> {{"mode":"group_scan","services":["s3"],"check_ids":[],"topics":[]}}
+
+Request: "scan everything"   (no service identifiable; do NOT default)
+-> {{"mode":"group_scan","services":[],"check_ids":[],"topics":[]}}
+
+Request: "run s3_bucket_public_access"   (literal check ID)
+-> {{"mode":"specific_checks","services":["s3"],"check_ids":["s3_bucket_public_access"],"topics":[]}}
+
+Request: "kiểm tra dịch vụ iam"   (verb + bare service, no concern -> group_scan)
+-> {{"mode":"group_scan","services":["iam"],"check_ids":[],"topics":[]}}
+   WRONG would be: mode="specific_checks" -- "kiểm tra" is just the verb.
+
+Request: "check rds với lambda"   (verb + 2 bare services -> group_scan)
+-> {{"mode":"group_scan","services":["rds","lambda"],"check_ids":[],"topics":[]}}
+
+Request: "kiểm tra cluster kubernetes"   (cluster+kubernetes are SERVICE keywords for eks)
+-> {{"mode":"group_scan","services":["eks"],"check_ids":[],"topics":[]}}
+   WRONG would be: topics=["kubernetes"] -- it's a service keyword, not a topic.
+
+Request: "có security group ec2 nào mở port 22"   (security group -> ec2 ONLY)
+-> {{"mode":"specific_checks","services":["ec2"],"check_ids":[],"topics":["security group","port"]}}
+   WRONG would be: services=["ec2","vpc"] -- security group is ec2 only.
+
+Request: "đánh giá toàn bộ s3 iam và cloudtrail"   (toàn bộ = "all" -> group_scan, no topic)
+-> {{"mode":"group_scan","services":["s3","iam","cloudtrail"],"check_ids":[],"topics":[]}}
+   WRONG would be: mode="specific_checks" -- "đánh giá toàn bộ" is just verb+all,
+   there is NO security concern named.
+
+Request: "audit toàn bộ rds và lambda"   (audit + toàn bộ + bare services -> group_scan)
+-> {{"mode":"group_scan","services":["rds","lambda"],"check_ids":[],"topics":[]}}
+
+==================== NOW CLASSIFY ====================
+
+USER REQUEST: "{request}"
+
+JSON:"""
+
 
 INTENT_SPLITTER_PROMPT = """Split this AWS security request into English sub-queries, one per distinct topic.
 
@@ -285,12 +422,155 @@ class PlanningAgent:
             return result
 
     def _run_impl(self, user_request: str) -> Dict[str, Any]:
+        """V3 entry: LLM intent classifier first, regex pipeline as fallback."""
         if not user_request or not isinstance(user_request, str) or not user_request.strip():
             return self._make_error_output("Empty or invalid user request.")
 
         request = user_request.strip()
-        logger.info("PlanningAgent V2: '%s'", request)
+        logger.info("PlanningAgent V3: '%s'", request)
 
+        intent = self._classify_intent_llm(request)
+        if intent is None:
+            logger.warning("LLM intent classifier failed — falling back to V2 regex pipeline")
+            return self._run_legacy(request)
+
+        try:
+            return self._route_from_intent(request, intent)
+        except Exception as e:
+            logger.error("Intent routing crashed: %s — falling back to legacy", e, exc_info=True)
+            return self._run_legacy(request)
+
+    # ------------------------------------------------------------------
+    # V3: LLM Intent Classifier (single mandatory call)
+    # ------------------------------------------------------------------
+
+    def _classify_intent_llm(self, request: str) -> Optional[Dict[str, Any]]:
+        """Single LLM call to extract structured intent.
+
+        Returns None on any failure — caller falls back to legacy regex path.
+        """
+        prompt = ChatPromptTemplate.from_template(INTENT_CLASSIFIER_PROMPT)
+        try:
+            raw = (prompt | self.llm | StrOutputParser()).invoke({"request": request})
+            data = parse_llm_json(raw)
+        except Exception as e:
+            logger.warning("Intent classifier LLM call failed: %s", e)
+            return None
+
+        if not isinstance(data, dict):
+            return None
+
+        mode = str(data.get("mode", "")).strip().lower()
+        if mode not in ("group_scan", "specific_checks"):
+            logger.warning("Intent classifier returned invalid mode: %r", mode)
+            return None
+
+        services = data.get("services", [])
+        check_ids = data.get("check_ids", [])
+        topics = data.get("topics", [])
+        if not isinstance(services, list) or not isinstance(check_ids, list) or not isinstance(topics, list):
+            logger.warning("Intent classifier returned non-list field(s)")
+            return None
+
+        norm = {
+            "mode": mode,
+            "services": [s.strip().lower() for s in services if isinstance(s, str) and s.strip()],
+            "check_ids": [sanitize_check_id(c) for c in check_ids if isinstance(c, str) and c.strip()],
+            "topics": [t.strip().lower() for t in topics if isinstance(t, str) and t.strip()],
+        }
+        norm["check_ids"] = [c for c in norm["check_ids"] if c and c != "<unknown>"]
+        logger.info(
+            "Intent: mode=%s services=%s check_ids=%s topics=%s",
+            norm["mode"], norm["services"], norm["check_ids"], norm["topics"],
+        )
+        return norm
+
+    # ------------------------------------------------------------------
+    # V3: Router — pure logic + RAG (no further LLM)
+    # ------------------------------------------------------------------
+
+    def _route_from_intent(self, request: str, intent: Dict[str, Any]) -> Dict[str, Any]:
+        mode = intent["mode"]
+        services = [s for s in intent["services"] if s in ALLOWED_GROUPS]
+        dropped = set(intent["services"]) - set(services)
+        if dropped:
+            logger.info("Dropping unsupported services from intent: %s", sorted(dropped))
+
+        check_ids = intent["check_ids"]
+        topics = intent["topics"]
+
+        # 1. Explicit check_ids → validate via RAG lexical
+        if check_ids:
+            valid_ids, invalid_ids = self._validate_check_ids(check_ids)
+            if valid_ids and not invalid_ids:
+                return self._make_output(
+                    checks=valid_ids,
+                    reasoning=f"LLM intent: explicit check IDs validated ({len(valid_ids)}).",
+                )
+            if valid_ids:
+                logger.info(
+                    "Partial valid IDs (%d valid, %d invalid) — using valid + topic retrieval",
+                    len(valid_ids), len(invalid_ids),
+                )
+                # fall through to retrieval, but seed topics with valid IDs as hints
+                topics = topics + valid_ids
+
+        # 2. Group scan
+        if mode == "group_scan":
+            if not services:
+                return self._make_error_output(
+                    "LLM identified group_scan intent but no valid AWS services. "
+                    "Please specify a service (s3, iam, ec2, ...)."
+                )
+            return self._make_output(
+                groups=services,
+                reasoning=f"LLM intent: group scan {services}.",
+            )
+
+        # 3. specific_checks → RAG retrieval per (service × topic)
+        if not services:
+            return self._make_error_output(
+                "LLM identified specific_checks intent but no valid AWS services."
+            )
+
+        all_checks: List[str] = []
+        seen: set = set()
+        # If no topics were extracted, use service name itself as the query.
+        topic_list = topics or [""]
+        for svc in services:
+            for topic in topic_list:
+                query = f"{svc} {topic}".strip()
+                retrieval = self._retrieve(query)
+                scored = self._score_candidates(retrieval, svc)
+                for c in scored[:TOP_K_PER_SUBQUERY]:
+                    cid = c["check_id"]
+                    if cid not in seen:
+                        seen.add(cid)
+                        all_checks.append(cid)
+                if len(all_checks) >= MAX_MERGED_CANDIDATES:
+                    break
+            if len(all_checks) >= MAX_MERGED_CANDIDATES:
+                break
+
+        if not all_checks:
+            return self._make_error_output(
+                f"LLM intent specific_checks for services={services} topics={topics} "
+                "but RAG returned no candidates."
+            )
+
+        return self._make_output(
+            checks=all_checks[:MAX_MERGED_CANDIDATES],
+            reasoning=(
+                f"LLM intent: {len(services)} service(s) × {len(topic_list)} topic(s) "
+                f"→ {len(all_checks)} checks via RAG retrieval."
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Legacy V2 pipeline (regex-first) — kept as fallback when LLM intent fails
+    # ------------------------------------------------------------------
+
+    def _run_legacy(self, request: str) -> Dict[str, Any]:
         try:
             # Step 1: Detect service + translate to English
             detected_service = self._detect_service(request)

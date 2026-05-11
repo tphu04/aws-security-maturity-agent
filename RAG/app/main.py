@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from contextlib import asynccontextmanager
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
 from pathlib import Path
 from typing import Any, Dict, Optional
 

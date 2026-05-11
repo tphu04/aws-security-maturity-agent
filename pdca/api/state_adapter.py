@@ -19,6 +19,7 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from pdca.observability.logger import get_logger
+from pdca.tools import REGISTRY
 
 logger = get_logger("pdca.api.state_adapter")
 
@@ -264,6 +265,7 @@ def _remediation_tasks(values: Dict[str, Any]) -> List[Dict[str, Any]]:
     for t in tasks:
         tid = t.get("task_id")
         fid = t.get("finding_id")
+        tool_name = t.get("tool_name") or ""
         finding = findings_by_id.get(fid) or {}
         decision_raw = plan.get(tid, "pending")
         decision = (
@@ -273,25 +275,39 @@ def _remediation_tasks(values: Dict[str, Any]) -> List[Dict[str, Any]]:
             else "pending"
         )
         guide = finding.get("remediation_guide") or {}
+
+        # guardChecks — computed from REGISTRY (single source of truth)
+        tool_meta = REGISTRY.meta(tool_name)
+        guard_checks = {
+            "registeredTool": tool_meta is not None,
+            "isRemediationCategory": tool_meta is not None and tool_meta.category == "remediation",
+            "notManualOnly": tool_meta is not None and not tool_meta.manual_only,
+        }
+
+        # ai_reasoning: planner stores it as "reasoning" key in task dict
+        ai_reasoning = t.get("ai_reasoning") or t.get("reasoning") or t.get("description") or ""
+        # expectedImpact — prefer explicit LLM-generated field, fallback to first sentence of reasoning
+        expected_impact = t.get("expected_impact") or ""
+        if not expected_impact and ai_reasoning:
+            first_sentence = ai_reasoning.split(".")[0].strip()
+            expected_impact = first_sentence + "." if first_sentence else ""
+
         out.append({
             "id": tid,
             "findingId": fid,
             "findingTitle": finding.get("title") or finding.get("description", "")[:80],
             "severity": str(finding.get("severity") or "info").lower(),
             "resource": str(finding.get("resource_id") or finding.get("resource") or ""),
-            "toolName": t.get("tool_name") or "",
+            "toolName": tool_name,
             "toolCategory": "remediation",
             "manualOnly": bool(t.get("manual_required", False)),
-            "proposedAction": t.get("ai_reasoning") or t.get("description") or "",
-            "expectedImpact": t.get("description") or "",
-            "requiredAwsPermission": "see tool docstring",
+            "proposedAction": ai_reasoning,
+            "expectedImpact": expected_impact,
+            "requiredAwsPermission": t.get("required_permission") or "",
+            "manualGuidance": t.get("manual_guidance") or "",
             "decision": decision,
             "toolParams": t.get("tool_params") or {},
-            "guardChecks": {
-                "registeredTool": True,
-                "isRemediationCategory": True,
-                "notManualOnly": not bool(t.get("manual_required", False)),
-            },
+            "guardChecks": guard_checks,
             "ragSteps": guide.get("steps") or [],
             "ragEffort": guide.get("effort") or "medium",
             "ragSideEffects": guide.get("side_effects") or [],

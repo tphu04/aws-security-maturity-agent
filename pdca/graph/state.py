@@ -30,13 +30,17 @@ class AssessmentPlan(TypedDict):
     reasoning: str
 
 
-class RemediationTask(TypedDict):
+class RemediationTask(TypedDict, total=False):
     task_id: str
     finding_id: str
     tool_name: str
     tool_params: Dict[str, Any]
     priority: int
     ai_reasoning: str
+    expected_impact: str
+    manual_guidance: str
+    manual_required: bool
+    description: str
 
 
 class ExecutionLog(TypedDict):

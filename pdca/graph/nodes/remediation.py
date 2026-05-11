@@ -56,6 +56,8 @@ def remediation_node(state: PDCAState, config: RunnableConfig) -> dict:
                         "description": plan.get("description", ""),
                         "priority": 1,
                         "ai_reasoning": plan.get("reasoning", ""),
+                        "expected_impact": plan.get("expected_impact", ""),
+                        "manual_guidance": plan.get("manual_guidance", ""),
                         "manual_required": plan.get("manual_required", False),
                     }
                 )

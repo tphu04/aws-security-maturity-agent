@@ -29,9 +29,13 @@ from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
+from pdca.agents.intent_classifier import ChatContext, IntentClassifier
+from pdca.agents.qa_agent import QAAgent
+from pdca.agents.shared.rag_client import RAGClient
+from pdca.storage.chat_history import get_chat_store
 from pdca.api.graph_runtime import (
     get_run_metadata,
     get_state_history,
@@ -77,6 +81,66 @@ class EnvironmentResponse(BaseModel):
 
 class ApprovalRequest(BaseModel):
     decision: str = Field(..., pattern="^(approved|rejected|skipped)$")
+
+
+# Unified chat ----------------------------------------------------------------
+class ChatTurn(BaseModel):
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str
+
+
+class ChatRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=2000)
+    thread_id: Optional[str] = None  # Phase 2: server-side persisted
+    run_id: Optional[str] = None
+    # Optional client-side history (rarely needed once thread_id is in use).
+    history: List[ChatTurn] = Field(default_factory=list)
+
+
+class ChatMessageOut(BaseModel):
+    type: str  # "qa_answer" | "suggest_action" | "run_started" | "text" | "error"
+    # Free-form payload per type — FE knows the shape.
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ChatResponse(BaseModel):
+    messages: List[ChatMessageOut]
+    intent: Dict[str, Any]  # {classified, confidence, reason, ...}
+    thread_id: str
+    run_id: Optional[str] = None  # set when a new run was started
+    # Follow-up prompts the FE can surface as quick-input chips.
+    suggestions: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class ThreadSummary(BaseModel):
+    thread_id: str
+    title: str
+    last_role: str
+    last_content: str
+    last_run_id: Optional[str] = None
+    message_count: int
+    created_at: float
+    updated_at: float
+
+
+class ThreadListResponse(BaseModel):
+    items: List[ThreadSummary]
+
+
+class ThreadMessageOut(BaseModel):
+    id: int
+    role: str
+    content: str
+    message_type: str
+    payload: Dict[str, Any] = Field(default_factory=dict)
+    intent_meta: Optional[Dict[str, Any]] = None
+    run_id: Optional[str] = None
+    created_at: float
+
+
+class ThreadMessagesResponse(BaseModel):
+    thread_id: str
+    messages: List[ThreadMessageOut]
 
 
 # ---------------------------------------------------------------------------
@@ -193,9 +257,116 @@ def _cached_environment() -> EnvironmentResponse:
 
 
 # ---------------------------------------------------------------------------
+# Unified chat — IntentClassifier + QAAgent singletons
+# ---------------------------------------------------------------------------
+_chat_agents: Dict[str, Any] = {"classifier": None, "qa": None, "rag_client": None}
+
+
+def _get_chat_agents() -> Dict[str, Any]:
+    if _chat_agents["classifier"] is None:
+        rag = RAGClient(base_url=settings.rag_api_url, timeout=settings.rag_timeout_s)
+        _chat_agents["rag_client"] = rag
+        _chat_agents["classifier"] = IntentClassifier(
+            model_name=settings.ollama_model,
+            base_url=settings.ollama_base_url,
+        )
+        _chat_agents["qa"] = QAAgent(
+            model_name=settings.ollama_model,
+            base_url=settings.ollama_base_url,
+            rag_client=rag,
+        )
+        logger.info("chat agents ready", extra={
+            "model": settings.ollama_model,
+            "rag_url": settings.rag_api_url,
+        })
+    return _chat_agents
+
+
+def _build_chat_context(req: ChatRequest, thread_id: str) -> ChatContext:
+    current_service: Optional[str] = None
+    findings_count = 0
+    if req.run_id:
+        snap = get_state_values(req.run_id)
+        if snap:
+            values = snap.get("values") or {}
+            findings_count = len(values.get("normalized_findings") or [])
+            groups = values.get("groups_to_scan") or []
+            if groups:
+                current_service = str(groups[0])
+
+    # Prefer server-side history (authoritative). Fall back to client-provided
+    # history only if no server messages exist yet for this thread.
+    server_turns = get_chat_store().get_recent_for_context(thread_id, limit=4)
+    if not server_turns and req.history:
+        server_turns = [{"role": t.role, "content": t.content} for t in req.history[-4:]]
+    return ChatContext(
+        run_id=req.run_id,
+        current_service=current_service,
+        findings_count=findings_count,
+        last_turns=server_turns,
+    )
+
+
+def _build_followup_suggestions(intent_kind: str, target_service: Optional[str], has_run: bool) -> List[Dict[str, Any]]:
+    """Context-aware quick-input suggestions shown after each response.
+
+    Returned as a list of `{label, kind, payload}` (kind = "qa" | "scan").
+    FE renders them as chips above the input.
+    """
+    svc = target_service
+    out: List[Dict[str, Any]] = []
+    if intent_kind == "qa":
+        if svc:
+            out.append({"label": f"Quét {svc.upper()} ngay", "kind": "scan", "payload": f"scan {svc}"})
+            out.append({"label": f"Best practices cho {svc.upper()}", "kind": "qa", "payload": f"What are best practices for {svc}?"})
+        out.append({"label": "Tôi nên ưu tiên rủi ro nào?", "kind": "qa", "payload": "Which AWS security risks should I prioritize?"})
+    elif intent_kind == "scan":
+        out.append({"label": "Giải thích kết quả khi xong", "kind": "qa", "payload": "Explain the findings once the scan completes"})
+        if svc:
+            out.append({"label": f"Best practices cho {svc.upper()}", "kind": "qa", "payload": f"What are best practices for {svc}?"})
+    else:  # mixed or fallback
+        out.append({"label": "Xem báo cáo gần nhất", "kind": "qa", "payload": "Show last report summary"})
+        if svc:
+            out.append({"label": f"Quét {svc.upper()}", "kind": "scan", "payload": f"scan {svc}"})
+    if has_run and intent_kind != "scan":
+        out.append({"label": "Trạng thái run hiện tại?", "kind": "qa", "payload": "What is the status of the current run?"})
+    return out[:4]
+
+
+def _build_suggestion_chips(prompt: str, target_service: Optional[str]) -> Dict[str, Any]:
+    """Same shape as Frontend SuggestActionCard."""
+    svc = target_service
+    if not svc:
+        # try last-resort detection so chips still make sense
+        from pdca.agents.intent_classifier import _detect_service as _ds
+        svc = _ds(prompt)
+
+    chips: List[Dict[str, Any]] = []
+    if svc:
+        chips = [
+            {"label": f"Giải thích rủi ro {svc.upper()}", "icon": "qa",   "intent": "qa",   "payload": f"What are common {svc} risks?"},
+            {"label": f"Quét {svc.upper()} trong account", "icon": "scan", "intent": "scan", "payload": f"scan {svc}"},
+            {"label": f"Xem findings {svc.upper()} gần nhất", "icon": "evidence", "intent": "qa", "payload": f"Show recent {svc} findings"},
+        ]
+    else:
+        chips = [
+            {"label": "Giải thích AWS security basics", "icon": "qa",   "intent": "qa",   "payload": "What are AWS security best practices?"},
+            {"label": "Quét S3 trong account",          "icon": "scan", "intent": "scan", "payload": "scan s3"},
+            {"label": "Xem báo cáo gần nhất",           "icon": "report","intent": "qa",   "payload": "Show last report summary"},
+        ]
+    return {"prompt": "Bạn muốn tôi:", "chips": chips}
+
+
+# ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
 router = APIRouter(prefix="/v1", tags=["chatbot"])
+
+
+@router.get("/ping")
+def ping() -> Dict[str, str]:
+    """Lightweight health probe — no AWS calls, responds in < 5 ms."""
+    return {"ok": "true"}
 
 
 @router.get("/environment", response_model=EnvironmentResponse)
@@ -212,6 +383,338 @@ def create_run(payload: CreateRunRequest) -> CreateRunResponse:
         extra={"run_id": res["run_id"], "thread_id": res["thread_id"], "scope": payload.scope, "group": group},
     )
     return CreateRunResponse(run_id=res["run_id"], thread_id=res["thread_id"])
+
+
+@router.post("/chat", response_model=ChatResponse)
+def chat(req: ChatRequest) -> ChatResponse:
+    """Unified chat: classify intent → route to QA / scan / mixed.
+
+    Phase 2: thread_id-based history persistence. If `thread_id` is null,
+    a new thread is created and returned in the response.
+    """
+    agents = _get_chat_agents()
+    classifier: IntentClassifier = agents["classifier"]
+    qa: QAAgent = agents["qa"]
+    store = get_chat_store()
+
+    is_new_thread = not req.thread_id
+    thread_id = store.ensure_thread(
+        req.thread_id,
+        title=_thread_title_from_prompt(req.prompt) if is_new_thread else "",
+    )
+
+    # Persist user turn first so it appears in history even on error paths.
+    store.append(thread_id, role="user", content=req.prompt, message_type="user_text", run_id=req.run_id)
+
+    ctx = _build_chat_context(req, thread_id)
+    intent = classifier.classify(req.prompt, ctx)
+    intent_meta = intent.to_dict()
+    logger.info("chat intent", extra={"thread_id": thread_id, "prompt_chars": len(req.prompt), **intent_meta})
+
+    messages: List[ChatMessageOut] = []
+    new_run_id: Optional[str] = None
+
+    # ── SCAN ────────────────────────────────────────────────────────────
+    if intent.intent == "scan":
+        svc = intent.target_service or infer_group(req.prompt, default="s3")
+        res = start_run(prompt=req.prompt, scope=f"{svc} scan", group=svc)
+        new_run_id = res["run_id"]
+        messages.append(ChatMessageOut(type="run_started", payload={
+            "run_id": new_run_id,
+            "thread_id": res["thread_id"],
+            "service": svc,
+            "text": (
+                f"Run **{new_run_id}** đã khởi chạy. Agent sẽ quét **{svc}**, "
+                "đánh giá rủi ro, đề xuất remediation và chờ duyệt."
+            ),
+        }))
+
+    # ── QA ──────────────────────────────────────────────────────────────
+    elif intent.intent == "qa":
+        run_ctx = {
+            "run_id": ctx.run_id,
+            "service": ctx.current_service,
+            "findings_count": ctx.findings_count,
+        }
+        ans = qa.answer(req.prompt, run_context=run_ctx, target_service=intent.target_service)
+        messages.append(ChatMessageOut(type="qa_answer", payload={
+            **ans.to_dict(),
+            "intentMeta": {
+                "classified": intent.intent,
+                "confidence": round(intent.confidence, 3),
+                "reason": intent.reason,
+            },
+        }))
+
+    # ── MIXED ───────────────────────────────────────────────────────────
+    else:
+        run_ctx = {
+            "run_id": ctx.run_id,
+            "service": ctx.current_service,
+            "findings_count": ctx.findings_count,
+        }
+        ans = qa.answer(req.prompt, run_context=run_ctx, target_service=intent.target_service)
+        messages.append(ChatMessageOut(type="qa_answer", payload={
+            **ans.to_dict(),
+            "intentMeta": {
+                "classified": intent.intent,
+                "confidence": round(intent.confidence, 3),
+                "reason": intent.reason,
+            },
+        }))
+        messages.append(ChatMessageOut(
+            type="suggest_action",
+            payload=_build_suggestion_chips(req.prompt, intent.target_service),
+        ))
+
+    # Persist assistant turns. `content` is the human-readable string we can
+    # surface in thread previews; full structured payload lives in payload_json.
+    for m in messages:
+        store.append(
+            thread_id,
+            role="assistant",
+            content=_extract_preview(m),
+            message_type=m.type,
+            payload=m.payload,
+            intent_meta=intent_meta,
+            run_id=new_run_id or req.run_id,
+        )
+
+    suggestions = _build_followup_suggestions(
+        intent_kind=intent.intent,
+        target_service=intent.target_service,
+        has_run=bool(new_run_id or req.run_id),
+    )
+
+    return ChatResponse(
+        messages=messages,
+        intent=intent_meta,
+        thread_id=thread_id,
+        run_id=new_run_id,
+        suggestions=suggestions,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Thread management endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/threads", response_model=ThreadListResponse)
+def list_threads(limit: int = 50, offset: int = 0) -> ThreadListResponse:
+    if limit < 1 or limit > 200:
+        raise HTTPException(status_code=400, detail="limit must be in [1, 200].")
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="offset must be >= 0.")
+    items = get_chat_store().list_threads(limit=limit, offset=offset)
+    return ThreadListResponse(items=[ThreadSummary(**i.to_dict()) for i in items])
+
+
+@router.get("/threads/{thread_id}/messages", response_model=ThreadMessagesResponse)
+def get_thread_messages(thread_id: str, limit: int = 200) -> ThreadMessagesResponse:
+    if limit < 1 or limit > 1000:
+        raise HTTPException(status_code=400, detail="limit must be in [1, 1000].")
+    rows = get_chat_store().get_history(thread_id, limit=limit, order="asc")
+    if not rows:
+        # 404 only when thread itself doesn't exist; empty thread returns [].
+        threads = get_chat_store().list_threads(limit=1, offset=0)
+        if not any(t.thread_id == thread_id for t in threads):
+            # Cheap existence check via list is racy but acceptable; do a direct
+            # query for accuracy.
+            with get_chat_store()._connect() as conn:  # type: ignore[attr-defined]
+                exists = conn.execute(
+                    "SELECT 1 FROM chat_threads WHERE thread_id = ?",
+                    (thread_id,),
+                ).fetchone()
+            if not exists:
+                raise HTTPException(status_code=404, detail="thread not found")
+    return ThreadMessagesResponse(
+        thread_id=thread_id,
+        messages=[
+            ThreadMessageOut(
+                id=r.id, role=r.role, content=r.content,
+                message_type=r.message_type,
+                payload=_safe_payload(r.payload_json),
+                intent_meta=_safe_payload(r.intent_meta_json) if r.intent_meta_json else None,
+                run_id=r.run_id, created_at=r.created_at,
+            )
+            for r in rows
+        ],
+    )
+
+
+@router.delete("/threads/{thread_id}")
+def delete_thread(thread_id: str) -> Dict[str, Any]:
+    ok = get_chat_store().delete_thread(thread_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="thread not found")
+    return {"ok": True, "thread_id": thread_id}
+
+
+# ---------------------------------------------------------------------------
+# Helpers (thread management)
+# ---------------------------------------------------------------------------
+
+
+def _thread_title_from_prompt(prompt: str) -> str:
+    p = (prompt or "").strip().replace("\n", " ")
+    return p[:80] or "New chat"
+
+
+def _extract_preview(m: ChatMessageOut) -> str:
+    """Human-readable single-line summary stored in `content` for previews."""
+    p = m.payload or {}
+    if m.type in ("text", "run_started", "error"):
+        return str(p.get("text") or "")[:500]
+    if m.type == "qa_answer":
+        md = str(p.get("markdown") or "")
+        return md.replace("\n", " ").strip()[:300]
+    if m.type == "suggest_action":
+        chips = p.get("chips") or []
+        labels = [str(c.get("label", "")) for c in chips if isinstance(c, dict)]
+        return "Suggestions: " + " · ".join(labels[:3])
+    return f"({m.type})"
+
+
+def _safe_payload(s: Optional[str]) -> Dict[str, Any]:
+    import json as _json
+    if not s:
+        return {}
+    try:
+        v = _json.loads(s)
+        return v if isinstance(v, dict) else {}
+    except Exception:
+        return {}
+
+
+@router.post("/chat/stream")
+def chat_stream(req: ChatRequest):
+    """SSE-streaming variant of /v1/chat.
+
+    Event types (SSE `event:` field):
+      - `meta`        — {thread_id, intent, run_id?}
+      - `sources`     — [QASource]   (QA only, before deltas)
+      - `delta`       — {"text": "..."}  (QA only, incremental markdown)
+      - `messages`    — final ChatMessageOut[] (all intents)
+      - `suggestions` — [{label, kind, payload}]
+      - `done`        — {}
+      - `error`       — {"message": "..."}
+
+    For scan/mixed (non-streamable), we emit `meta` + `messages` + `suggestions`
+    + `done` in one shot so the client logic stays uniform.
+    """
+    return StreamingResponse(_chat_stream_generator(req), media_type="text/event-stream")
+
+
+def _sse(event: str, data: Any) -> bytes:
+    import json as _json
+    payload = _json.dumps(data, ensure_ascii=False, default=lambda o: getattr(o, "to_dict", lambda: str(o))())
+    return f"event: {event}\ndata: {payload}\n\n".encode("utf-8")
+
+
+def _chat_stream_generator(req: ChatRequest):
+    """Generator producing SSE bytes. Persistence + intent routing identical
+    to /v1/chat. QA path streams LLM tokens; scan/mixed yield final payload."""
+    agents = _get_chat_agents()
+    classifier: IntentClassifier = agents["classifier"]
+    qa: QAAgent = agents["qa"]
+    store = get_chat_store()
+
+    try:
+        is_new_thread = not req.thread_id
+        thread_id = store.ensure_thread(
+            req.thread_id,
+            title=_thread_title_from_prompt(req.prompt) if is_new_thread else "",
+        )
+        store.append(thread_id, role="user", content=req.prompt, message_type="user_text", run_id=req.run_id)
+
+        ctx = _build_chat_context(req, thread_id)
+        intent = classifier.classify(req.prompt, ctx)
+        intent_meta = intent.to_dict()
+        logger.info("chat stream intent", extra={"thread_id": thread_id, **intent_meta})
+
+        new_run_id: Optional[str] = None
+
+        # ── SCAN ────────────────────────────────────────────────────────
+        if intent.intent == "scan":
+            svc = intent.target_service or infer_group(req.prompt, default="s3")
+            res = start_run(prompt=req.prompt, scope=f"{svc} scan", group=svc)
+            new_run_id = res["run_id"]
+            yield _sse("meta", {"thread_id": thread_id, "intent": intent_meta, "run_id": new_run_id})
+            messages = [{
+                "type": "run_started",
+                "payload": {
+                    "run_id": new_run_id, "thread_id": res["thread_id"], "service": svc,
+                    "text": f"Run **{new_run_id}** đã khởi chạy. Agent sẽ quét **{svc}**, đánh giá rủi ro, đề xuất remediation và chờ duyệt.",
+                },
+            }]
+            store.append(thread_id, role="assistant",
+                         content=messages[0]["payload"]["text"], message_type="run_started",
+                         payload=messages[0]["payload"], intent_meta=intent_meta, run_id=new_run_id)
+            yield _sse("messages", messages)
+
+        # ── QA / MIXED ──────────────────────────────────────────────────
+        else:
+            yield _sse("meta", {"thread_id": thread_id, "intent": intent_meta})
+            run_ctx = {
+                "run_id": ctx.run_id, "service": ctx.current_service,
+                "findings_count": ctx.findings_count,
+            }
+            # Stream QA answer.
+            buffer: List[str] = []
+            sources_payload: List[Dict[str, Any]] = []
+            final_answer = None
+            for event, data in qa.answer_stream(req.prompt, run_context=run_ctx, target_service=intent.target_service):
+                if event == "sources":
+                    sources_payload = [s.to_dict() for s in data]
+                    yield _sse("sources", sources_payload)
+                elif event == "delta":
+                    buffer.append(data)
+                    yield _sse("delta", {"text": data})
+                elif event == "final":
+                    final_answer = data
+                elif event == "error":
+                    yield _sse("error", {"message": str(data)})
+
+            if final_answer is None:
+                final_answer = type("X", (), {"to_dict": lambda self=None: {"markdown": "".join(buffer), "sources": sources_payload, "confidence": "low"}})()
+
+            qa_msg = {
+                "type": "qa_answer",
+                "payload": {**final_answer.to_dict(), "intentMeta": {
+                    "classified": intent.intent,
+                    "confidence": round(intent.confidence, 3),
+                    "reason": intent.reason,
+                }},
+            }
+            messages = [qa_msg]
+
+            if intent.intent == "mixed":
+                chips = _build_suggestion_chips(req.prompt, intent.target_service)
+                messages.append({"type": "suggest_action", "payload": chips})
+
+            # Persist assistant turns to DB.
+            for m in messages:
+                preview = m["payload"].get("markdown") if m["type"] == "qa_answer" else (
+                    "Suggestions: " + " · ".join(c.get("label", "") for c in m["payload"].get("chips", [])[:3])
+                )
+                store.append(thread_id, role="assistant",
+                             content=(preview or "")[:300], message_type=m["type"],
+                             payload=m["payload"], intent_meta=intent_meta, run_id=req.run_id)
+
+            yield _sse("messages", messages)
+
+        suggestions = _build_followup_suggestions(
+            intent_kind=intent.intent,
+            target_service=intent.target_service,
+            has_run=bool(new_run_id or req.run_id),
+        )
+        yield _sse("suggestions", suggestions)
+        yield _sse("done", {})
+    except Exception as e:
+        logger.error("chat stream failed", extra={"error": str(e)})
+        yield _sse("error", {"message": str(e)})
+        yield _sse("done", {})
 
 
 @router.get("/runs/{run_id}")

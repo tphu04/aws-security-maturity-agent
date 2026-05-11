@@ -1,7 +1,7 @@
 # Kill anything listening on the PDCA service ports.
 # Use when uvicorn leaves ghost listeners on Windows after Ctrl-C.
 
-$Ports = @(9001, 9002, 9005, 5173)
+$Ports = @(9001, 9002, 9005, 5173, 5174)
 
 foreach ($port in $Ports) {
     $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue

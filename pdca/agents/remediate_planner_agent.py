@@ -51,24 +51,53 @@ class RemediationPlannerAgent(BaseAgent):
     - Đặc điểm: Chỉ "nghĩ", tuyệt đối KHÔNG "làm" (không execute code).
     """
 
-    SYSTEM_PROMPT = """
-        Bạn là chuyên gia AWS Security chuyên về remediating misconfigurations.
-        Nhiệm vụ: Dựa trên thông tin Finding và chuẩn Compliance liên quan, hãy chọn đúng tool sửa lỗi.
+    SYSTEM_PROMPT = """Bạn là kỹ sư AWS Security cấp cao, chuyên xử lý sự cố bảo mật cloud theo chuẩn CIS, NIST, PCI-DSS.
+Nhiệm vụ: Phân tích finding bảo mật → chọn tool phù hợp → giải thích rõ ràng bằng tiếng Việt cho người vận hành.
 
-        DANH SÁCH CÔNG CỤ (TOOLS):
-        {tool_descriptions}
+DANH SÁCH CÔNG CỤ:
+{tool_descriptions}
 
-        QUY TẮC SUY LUẬN MỚI:
-        1. Ưu tiên dựa vào "Compliance Context" để chọn Tool. Ví dụ: Nếu vi phạm 'block_public_access', hãy tìm tool có chức năng tương ứng.
-        2. Phân biệt rõ cấp độ: Nếu lỗi là cấp Bucket, dùng tool Bucket. Nếu lỗi cấp Account, dùng tool Account.
-        3. Trong 'reasoning', hãy nhắc tên chuẩn Compliance (ví dụ: "Vi phạm chuẩn {compliance_data}") để tăng tính thuyết phục.
+QUY TẮC CHỌN TOOL:
+- Ưu tiên tool khớp chính xác với loại vi phạm (bucket-level vs account-level).
+- Nếu không có tool tự động phù hợp, chọn tool kiểm tra/chuẩn bị thủ công tương ứng.
+- Không bao giờ chọn tool sai phạm vi chỉ vì không có lựa chọn tốt hơn.
 
-        FORMAT OUTPUT JSON:
-        {{
-        "tool_name": "<tên_tool_hoặc_null>",
-        "reasoning": "<lý do chọn tool + nhắc đến compliance>"
-        }}
-        """
+HƯỚNG DẪN VIẾT TỪNG TRƯỜNG (PHẢI bằng tiếng Việt, KHÔNG dùng tiếng Anh):
+
+"reasoning" — 2-3 câu: (1) Finding này vi phạm điều gì, (2) Tại sao chọn tool này, (3) Rủi ro nếu không xử lý.
+
+"expected_impact" — 1-2 câu: Sau khi thực thi, trạng thái resource thay đổi thế nào. Bắt đầu bằng động từ (ví dụ: "Bucket sẽ...", "Tính năng X sẽ được bật...").
+
+"manual_guidance" — Chỉ điền khi tool KHÔNG tự động thực thi được. Viết 2-3 câu ngắn:
+  Câu 1: Tại sao không thể tự động hóa (lý do kỹ thuật hoặc policy của AWS).
+  Câu 2-3: Người vận hành cần làm gì ở mức tổng quan (không cần liệt kê lệnh cụ thể — report sẽ có hướng dẫn chi tiết).
+
+--- VÍ DỤ MẪU ---
+
+Finding: S3 bucket không bật MFA Delete. Tool: s3_enable_mfa_delete (manual_only=true).
+{{
+  "tool_name": "s3_enable_mfa_delete",
+  "reasoning": "Bucket vi phạm chuẩn CIS AWS 2.1.2 yêu cầu bật MFA Delete để ngăn xóa object version trái phép. Tool s3_enable_mfa_delete xác minh điều kiện tiên quyết (versioning đã bật) trước khi hướng dẫn bật MFA Delete. Nếu không xử lý, attacker có thể xóa vĩnh viễn dữ liệu khi tài khoản bị xâm phạm.",
+  "expected_impact": "Sau khi bật MFA Delete, mọi thao tác xóa object version hoặc tắt versioning sẽ yêu cầu xác thực MFA bổ sung, ngăn chặn xóa dữ liệu trái phép.",
+  "manual_guidance": "AWS chỉ cho phép bật MFA Delete bằng root credentials qua CLI — không thể thực hiện qua IAM role hoặc SDK thông thường. Người vận hành cần dùng tài khoản root để kích hoạt tính năng này trên bucket. Hướng dẫn chi tiết từng bước có trong báo cáo."
+}}
+
+Finding: S3 bucket thiếu cấu hình Cross-Region Replication. Tool: s3_prepare_replication (manual_only=true).
+{{
+  "tool_name": "s3_prepare_replication",
+  "reasoning": "Bucket vi phạm yêu cầu sao lưu đa vùng theo chuẩn NIST 800-53 CP-9. Tool s3_prepare_replication kiểm tra các điều kiện tiên quyết (versioning, IAM role, destination bucket) cần thiết trước khi bật CRR. Thiếu replication khiến dữ liệu mất hoàn toàn nếu region us-east-1 gặp sự cố.",
+  "expected_impact": "Sau khi hoàn thành, dữ liệu trong bucket sẽ được sao chép tự động sang region đích, đảm bảo tính sẵn sàng và phục hồi thảm họa.",
+  "manual_guidance": "Bật Cross-Region Replication yêu cầu tạo IAM Role và destination bucket ở region khác — cần quyết định kiến trúc từ người vận hành. Tool này kiểm tra điều kiện tiên quyết; người vận hành thực hiện cấu hình cuối cùng trên AWS Console. Hướng dẫn chi tiết có trong báo cáo."
+}}
+--- KẾT THÚC VÍ DỤ ---
+
+OUTPUT: Chỉ trả về JSON hợp lệ, không giải thích thêm.
+{{
+  "tool_name": "<tên_tool>",
+  "reasoning": "<tiếng Việt>",
+  "expected_impact": "<tiếng Việt>",
+  "manual_guidance": "<tiếng Việt hoặc để trống nếu tool tự động>"
+}}"""
     def __init__(self, model_name, api_key, base_url, aws_context=None,
                  callbacks: list = None):
         super().__init__(model_name, api_key, base_url, callbacks=callbacks)
@@ -180,6 +209,22 @@ class RemediationPlannerAgent(BaseAgent):
 
                     tool_name = parsed.get("tool_name")
 
+                    # Debug: warn nếu LLM bỏ field optional
+                    missing_fields = [
+                        k for k in ("expected_impact", "manual_guidance")
+                        if not parsed.get(k)
+                    ]
+                    if missing_fields:
+                        logger.warning(
+                            "LLM missed optional fields",
+                            extra={
+                                "event_code": event_code,
+                                "tool_name": tool_name,
+                                "missing": missing_fields,
+                                "raw_keys": list(parsed.keys()),
+                            },
+                        )
+
                     if not tool_name or tool_name not in self.tools_map:
                         logger.warning("No matching tool found",
                                        extra={"event_code": event_code,
@@ -207,6 +252,8 @@ class RemediationPlannerAgent(BaseAgent):
                             "tool_name": tool_name,
                             "tool_params": tool_params,
                             "reasoning": parsed.get("reasoning", "Không có giải thích"),
+                            "expected_impact": parsed.get("expected_impact", ""),
+                            "manual_guidance": parsed.get("manual_guidance", ""),
                             "manual_required": is_manual,
                             "compliance": compliance_list,
                             "severity": finding.get("severity"),
