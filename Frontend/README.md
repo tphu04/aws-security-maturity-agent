@@ -15,7 +15,7 @@ plus optional Ollama for LLM-enriched remediation reasoning.
                          │           │            │
               ┌──────────▼──┐  ┌─────▼──────┐  ┌──▼─────────┐
               │  Chatbot    │  │  Scanner   │  │   RAG       │
-              │  API 8002   │──│  API 8001  │  │  API 8005   │
+              │  API 9002   │──│  API 9001  │  │  API 9005   │
               │ orchestrator│  │  Prowler   │  │  Chroma+BM25│
               └─────┬───────┘  └────────────┘  └─────────────┘
                     │
@@ -41,13 +41,13 @@ plus optional Ollama for LLM-enriched remediation reasoning.
 
 ### Frontend
 ```bash
-cd Chatbot-Frontend
+cd Frontend
 npm install
 ```
 
 ### Backend
 ```bash
-cd ../aws-security-maturity-agent
+cd <repo-root>           # e.g. cd c:\Users\<you>\Desktop\DoAn
 
 # Main venv (Python 3.13)
 python -m venv venv
@@ -71,32 +71,32 @@ ollama pull llama3.2:latest
 The backend has 3 services + Ollama. Use 4 separate terminals so each log
 stays readable. All commands are PowerShell — adjust quoting for cmd/bash.
 
-### Terminal 1 — Scanner API (port 8001)
+### Terminal 1 — Scanner API (port 9001)
 ```powershell
-cd d:\DoAn\aws-security-maturity-agent
+cd <repo-root>
 $env:PROWLER_PYTHON = "$PWD\venv-prowler\Scripts\python.exe"
-venv\Scripts\python.exe -m uvicorn pdca.api_server:app --host 127.0.0.1 --port 8001
+venv\Scripts\python.exe -m uvicorn pdca.api_server:app --host 127.0.0.1 --port 9001
 ```
 
-### Terminal 2 — RAG API (port 8005)
+### Terminal 2 — RAG API (port 9005)
 ```powershell
-cd d:\DoAn\aws-security-maturity-agent
-venv\Scripts\python.exe RAG\start.py --port 8005
+cd <repo-root>
+venv\Scripts\python.exe RAG\start.py --port 9005
 ```
 *First boot takes ~30s — sentence-transformers + chromadb load.*
 
-### Terminal 3 — Chatbot orchestrator API (port 8002)
+### Terminal 3 — Chatbot orchestrator API (port 9002)
 ```powershell
-cd d:\DoAn\aws-security-maturity-agent
-$env:SCANNER_API_URL = "http://127.0.0.1:8001"
+cd <repo-root>
+$env:SCANNER_API_URL = "http://127.0.0.1:9001"
 $env:OLLAMA_MODEL    = "llama3.2:latest"
 $env:PDCA_LLM_ENRICH = "1"
-venv\Scripts\python.exe -m uvicorn pdca.api.chatbot:app --host 127.0.0.1 --port 8002
+venv\Scripts\python.exe -m uvicorn pdca.api.chatbot:app --host 127.0.0.1 --port 9002
 ```
 
 ### Terminal 4 — Frontend (port 5173)
 ```powershell
-cd d:\DoAn\Chatbot-Frontend
+cd <repo-root>\Frontend
 npm run dev
 ```
 
@@ -107,9 +107,9 @@ Open <http://localhost:5173>.
 ## First-run checklist (in the UI)
 
 1. **Settings** (top-right) — set the three URLs:
-   - Scanner API: `http://127.0.0.1:8001`
-   - RAG API: `http://localhost:8005`
-   - Chatbot API: `http://127.0.0.1:8002`
+   - Scanner API: `http://127.0.0.1:9001`
+   - RAG API: `http://localhost:9005`
+   - Chatbot API: `http://127.0.0.1:9002`
 2. **Save Endpoints** → **Test Connection** → all three badges green.
 3. **Workspace** → type `scan s3` → Enter.
 
@@ -150,25 +150,25 @@ Approve / Reject each task → ExecutionAgent runs → Verification → Report.
 
 | Method | URL | Purpose |
 |--------|-----|---------|
-| GET    | `:8001/v1/jobs?limit=1` | Scanner health probe |
-| POST   | `:8001/v1/scan/group`   | Direct scan (fallback when chatbot offline) |
-| GET    | `:8001/v1/job/{id}`     | Poll a Prowler job |
-| GET    | `:8002/v1/environment`  | AWS account + RAG ping (cached 30s) |
-| POST   | `:8002/v1/runs`         | Start a full PDCA run |
-| GET    | `:8002/v1/runs`         | List runs (for History view) |
-| GET    | `:8002/v1/runs/{id}`    | Full `RunSession` snapshot — polled every 3s |
-| POST   | `:8002/v1/runs/{id}/approvals/{task_id}` | Approve / reject HITL tasks |
-| GET    | `:8002/v1/runs/{id}/report?format=markdown` | Download the report |
-| GET    | `:8005/`                | RAG health probe |
+| GET    | `:9001/v1/jobs?limit=1` | Scanner health probe |
+| POST   | `:9001/v1/scan/group`   | Direct scan (fallback when chatbot offline) |
+| GET    | `:9001/v1/job/{id}`     | Poll a Prowler job |
+| GET    | `:9002/v1/environment`  | AWS account + RAG ping (cached 30s) |
+| POST   | `:9002/v1/runs`         | Start a full PDCA run |
+| GET    | `:9002/v1/runs`         | List runs (for History view) |
+| GET    | `:9002/v1/runs/{id}`    | Full `RunSession` snapshot — polled every 3s |
+| POST   | `:9002/v1/runs/{id}/approvals/{task_id}` | Approve / reject HITL tasks |
+| GET    | `:9002/v1/runs/{id}/report?format=markdown` | Download the report |
+| GET    | `:9005/`                | RAG health probe |
 
 ## Environment variables (FE)
 
 Override the default URLs at build time via `.env.local`:
 
 ```env
-VITE_SCANNER_API_URL=http://127.0.0.1:8001
-VITE_RAG_API_URL=http://localhost:8005
-VITE_CHATBOT_API_URL=http://127.0.0.1:8002
+VITE_SCANNER_API_URL=http://127.0.0.1:9001
+VITE_RAG_API_URL=http://localhost:9005
+VITE_CHATBOT_API_URL=http://127.0.0.1:9002
 ```
 
 If unset, sensible defaults are baked into `src/lib/api.ts`. URLs are also
@@ -197,7 +197,7 @@ The FE is therefore always usable, even if only some services are up.
 Windows leaves "ghost listeners" when a uvicorn process exits abnormally.
 Kill them and try again:
 ```powershell
-Get-NetTCPConnection -LocalPort 8002 -State Listen -ErrorAction SilentlyContinue |
+Get-NetTCPConnection -LocalPort 9002 -State Listen -ErrorAction SilentlyContinue |
   ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
@@ -217,7 +217,7 @@ The orchestrator waits for **every** task to have a non-pending decision.
 Open the Approvals view and click Approve / Reject on the remaining tasks,
 or POST decisions manually:
 ```bash
-curl -X POST http://127.0.0.1:8002/v1/runs/<run_id>/approvals/<task_id> \
+curl -X POST http://127.0.0.1:9002/v1/runs/<run_id>/approvals/<task_id> \
   -H "Content-Type: application/json" -d '{"decision":"rejected"}'
 ```
 

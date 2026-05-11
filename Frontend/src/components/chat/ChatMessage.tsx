@@ -1,14 +1,14 @@
 import { cn, formatTime } from "@/lib/utils";
-import { Bot, User } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import type {
   ChatMessage, RemediationTask, Finding, AssistantCard,
-  RemediationOfferCard as RemOffer,
+  RemediationOfferCard as RemOffer, SuggestionChip,
 } from "@/types/pdca";
 import {
   EnvironmentCheckCardView, PlanningCardView, ScanSubmittedCardView,
   PollingCardView, FindingsCollectedCardView, RiskEvaluationCardView,
   RemediationOfferCardView, RemediationExecutionCardView, VerificationCardView,
-  ReportReadyCardView,
+  ReportReadyCardView, QAAnswerCardView, SuggestActionCardView,
 } from "./ChatCards";
 
 interface Props {
@@ -19,6 +19,9 @@ interface Props {
   onRejectTask?: (id: string) => void;
   onShowTask?: (id: string) => void;
   onPreviewReport?: () => void;
+  onSuggestionChip?: (chip: SuggestionChip) => void;
+  onSourceClick?: (checkId?: string) => void;
+  isFirstInGroup?: boolean;
 }
 
 function renderCard(card: AssistantCard, idx: number, props: Props) {
@@ -48,48 +51,64 @@ function renderCard(card: AssistantCard, idx: number, props: Props) {
     case "report_ready":          return <ReportReadyCardView key={key} card={card} onPreview={props.onPreviewReport} />;
     case "text":
       return (
-        <div key={key} className="rounded-2xl border border-border/70 bg-card/60 px-4 py-2.5 text-sm leading-relaxed">
+        <p key={key} className="text-sm leading-relaxed text-text-secondary">
           {card.text}
-        </div>
+        </p>
       );
+    case "qa_answer":
+      return <QAAnswerCardView key={key} card={card} onSourceClick={props.onSourceClick} />;
+    case "suggest_action":
+      return <SuggestActionCardView key={key} card={card} onChipClick={props.onSuggestionChip} />;
   }
 }
 
 export function ChatMessageView(props: Props) {
-  const { message } = props;
+  const { message, isFirstInGroup = true } = props;
   const isUser = message.role === "user";
+  const hasCards = (message.cards?.length ?? 0) > 0;
 
-  return (
-    <div className={cn("flex w-full gap-3 px-4 py-3 md:px-6 animate-fade-in-up", isUser ? "justify-end" : "justify-start")}>
-      {!isUser && (
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
-          <Bot className="h-4 w-4 text-primary" />
-        </div>
-      )}
-      <div className={cn("flex max-w-[760px] flex-col gap-2", isUser && "items-end")}>
-        <div className="flex items-center gap-2 text-[11px] text-text-muted">
-          <span className="font-medium text-text-secondary">{isUser ? "You" : "PDCA Prowler Agent"}</span>
-          <span className="font-mono">{formatTime(message.timestamp)}</span>
-        </div>
-        {message.text && (
+  if (isUser) {
+    return (
+      <div className="flex justify-end px-4 py-1 md:px-6 animate-fade-in-up">
+        <div className="max-w-[70%]">
           <div
-            className={cn(
-              "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-              isUser
-                ? "bg-primary/10 text-text-primary border border-primary/30 rounded-br-sm"
-                : "bg-card/60 border border-border/70 rounded-bl-sm",
-            )}
+            className="rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-sm"
           >
             {message.text}
           </div>
-        )}
-        {message.cards?.map((c, i) => renderCard(c, i, props))}
+          <div className="mt-1 text-right text-[10px] text-text-muted">
+            {formatTime(message.timestamp)}
+          </div>
+        </div>
       </div>
-      {isUser && (
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-bg-elevated ring-1 ring-border">
-          <User className="h-4 w-4 text-text-secondary" />
+    );
+  }
+
+  // Agent messages
+  return (
+    <div className="px-4 py-1 md:px-6 animate-fade-in-up">
+      {/* Avatar + name only on first message in a group */}
+      {isFirstInGroup && (
+        <div className="mb-2 flex items-center gap-2">
+          <div className="grid h-6 w-6 place-items-center rounded-md bg-primary/15 ring-1 ring-primary/30">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <span className="text-[12px] font-semibold text-text-secondary">PDCA Prowler Agent</span>
+          <span className="text-[10px] text-text-muted">{formatTime(message.timestamp)}</span>
         </div>
       )}
+
+      {/* Content — left-indented to align with avatar */}
+      <div className={cn("space-y-2", isFirstInGroup ? "pl-8" : "pl-8")}>
+        {message.text && (
+          <p className="text-sm leading-relaxed text-text-secondary">{message.text}</p>
+        )}
+        {hasCards && (
+          <div className="space-y-2">
+            {message.cards?.map((c, i) => renderCard(c, i, props))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

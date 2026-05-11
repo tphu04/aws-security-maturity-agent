@@ -1,11 +1,41 @@
-import type { GraphNode, GraphNodeName } from "@/types/pdca";
+import type { GraphNode, GraphNodeName, NodeStatus } from "@/types/pdca";
 import { cn, formatTime } from "@/lib/utils";
-import { Code, NodeStatusPill } from "@/components/ui/status-pill";
+import { Code } from "@/components/ui/status-pill";
 import {
   CloudCog, ListChecks, Send, RefreshCw, Database, Gauge, Wrench,
   CheckCircle2, RotateCcw, PlayCircle, ShieldCheck, FileText, Workflow,
-  BookOpen, Circle,
+  BookOpen, Circle, Loader2,
 } from "lucide-react";
+
+// Compact status indicator — a colored dot replaces the chunky pill we used
+// previously to cut visual noise when most nodes share the same state.
+const STATUS_DOT: Record<NodeStatus, string> = {
+  completed: "bg-status-success",
+  running:   "bg-severity-info animate-pulse",
+  waiting:   "bg-status-warning animate-pulse",
+  failed:    "bg-status-error",
+  skipped:   "bg-text-muted/60",
+  queued:    "bg-text-muted/40",
+};
+
+function StatusIndicator({ status }: { status: NodeStatus }) {
+  if (status === "running") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] text-severity-info">
+        <Loader2 className="h-3 w-3 animate-spin" /> running
+      </span>
+    );
+  }
+  if (status === "failed") {
+    return <span className="text-[10px] font-medium text-status-error">failed</span>;
+  }
+  if (status === "waiting") {
+    return <span className="text-[10px] font-medium text-status-warning">waiting</span>;
+  }
+  return (
+    <span title={status} className={cn("h-2 w-2 rounded-full shadow-[0_0_4px_currentColor]", STATUS_DOT[status])} />
+  );
+}
 
 const NODE_ICON: Record<string, React.ElementType> = {
   environment: CloudCog,
@@ -65,24 +95,26 @@ export function GraphTimeline({
                 {!isLast && <div className="my-1 w-px flex-1 bg-border/60" />}
               </div>
 
-              <div className={cn("mb-2 flex-1 rounded-lg border border-border/60 bg-card/40 p-3 transition-colors", isCurrent && "border-primary/40 bg-primary/5")}>
+              <div className={cn("mb-2 flex-1 rounded-lg border border-border/60 bg-card/40 p-2.5 transition-colors", isCurrent && "border-primary/40 bg-primary/5")}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Code>{n.name}</Code>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Code className="truncate">{n.name}</Code>
                     {n.checkpointed && (
                       <span title="Checkpointed" className="text-[9px] uppercase tracking-wider text-text-muted">●</span>
                     )}
+                    {n.durationMs !== undefined && (
+                      <span className="font-mono text-[10px] text-text-muted">{fmtMs(n.durationMs)}</span>
+                    )}
                   </div>
-                  <NodeStatusPill status={n.status} />
+                  <StatusIndicator status={n.status} />
                 </div>
-                {!dense && (
-                  <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-text-secondary">
-                    {n.startedAt && <div>started <span className="font-mono text-text-primary">{formatTime(n.startedAt)}</span></div>}
-                    {n.durationMs !== undefined && <div>dur <span className="font-mono text-text-primary">{fmtMs(n.durationMs)}</span></div>}
+                {!dense && n.startedAt && (
+                  <div className="mt-0.5 text-[10px] text-text-muted">
+                    started <span className="font-mono">{formatTime(n.startedAt)}</span>
                   </div>
                 )}
                 {!dense && n.outputSummary && (
-                  <div className="mt-1.5 text-[11px] leading-relaxed text-text-secondary">
+                  <div className="mt-1 text-[11px] leading-relaxed text-text-secondary">
                     <span className="text-primary">←</span> {n.outputSummary}
                   </div>
                 )}

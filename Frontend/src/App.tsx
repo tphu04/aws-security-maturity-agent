@@ -18,18 +18,32 @@ function Router() {
   const { view } = useRouter();
   const { run, setRun, approveTask, rejectTask } = useRun();
 
-  switch (view) {
-    case "landing":      return <LandingView />;
-    case "workspace":    return <WorkspaceView run={run} setRun={setRun} />;
-    case "settings":     return <SettingsView run={run} />;
-    case "results":      return <ResultsView run={run} />;
-    case "report":       return <ReportView run={run} />;
-    case "history":      return <HistoryView run={run} />;
-    case "run_detail":   return <RunDetailView run={run} />;
-    case "verification": return <VerificationView run={run} />;
-    case "approvals":    return <ApprovalsView run={run} onApprove={approveTask} onReject={rejectTask} />;
-    default:             return <LandingView />;
-  }
+  // Mount the prefs effects on every view (mutation observer for VI
+  // translation must keep running) but hide its UI everywhere — Settings has
+  // its own inline copy.
+  const showFloating = false;
+
+  const content = (() => {
+    switch (view) {
+      case "landing":      return <LandingView />;
+      case "workspace":    return <WorkspaceView run={run} setRun={setRun} />;
+      case "settings":     return <SettingsView run={run} />;
+      case "results":      return <ResultsView run={run} />;
+      case "report":       return <ReportView run={run} />;
+      case "history":      return <HistoryView run={run} />;
+      case "run_detail":   return <RunDetailView run={run} />;
+      case "verification": return <VerificationView run={run} />;
+      case "approvals":    return <ApprovalsView run={run} onApprove={approveTask} onReject={rejectTask} />;
+      default:             return <LandingView />;
+    }
+  })();
+
+  return (
+    <>
+      {content}
+      <FloatingToggles visible={showFloating} />
+    </>
+  );
 }
 
 export default function App() {
@@ -39,7 +53,6 @@ export default function App() {
         <RunProvider>
           <RouterProvider initial="landing">
             <Router />
-            <FloatingToggles />
           </RouterProvider>
         </RunProvider>
       </SelectionProvider>

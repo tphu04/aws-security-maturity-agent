@@ -3,7 +3,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Code, Pill } from "@/components/ui/status-pill";
-import { ArrowLeft, Eye, Download, FileText, Copy, RefreshCw, Printer } from "lucide-react";
+import { ArrowLeft, Download, FileText } from "lucide-react";
 import type { RunSession } from "@/types/pdca";
 import { useRouter } from "@/state/router";
 import { useRun } from "@/state/run";
@@ -67,7 +67,6 @@ export function ReportView({ run }: { run: RunSession }) {
             <ArrowLeft className="h-4 w-4" /> Back to Results
           </Button>
           <Button size="sm" onClick={downloadReport}><Download className="h-4 w-4" /> Download Markdown</Button>
-          <Button variant="outline" size="sm" disabled><Printer className="h-4 w-4" /> Export PDF</Button>
         </>
       }
     >
@@ -93,11 +92,6 @@ export function ReportView({ run }: { run: RunSession }) {
               </li>
             ))}
           </ul>
-
-          <div className="mt-4 space-y-2 border-t border-border/60 px-2 pt-3">
-            <Button variant="ghost" size="sm" className="w-full justify-start"><Copy className="h-3.5 w-3.5" /> Copy executive summary</Button>
-            <Button variant="ghost" size="sm" className="w-full justify-start"><RefreshCw className="h-3.5 w-3.5" /> Regenerate report</Button>
-          </div>
         </Card>
 
         {/* Document */}
@@ -134,10 +128,7 @@ export function ReportView({ run }: { run: RunSession }) {
 
           {/* Quick preview of other sections */}
           <Card className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">All sections</div>
-              <Button variant="ghost" size="sm"><Eye className="h-3.5 w-3.5" /> Full preview</Button>
-            </div>
+            <div className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-text-muted">All sections</div>
             <div className="grid gap-2 sm:grid-cols-2">
               {sections.map((s) => (
                 <button

@@ -331,7 +331,33 @@ export type AssistantCardKind =
   | "remediation_execution"
   | "verification"
   | "report_ready"
-  | "text";
+  | "text"
+  | "qa_answer"
+  | "suggest_action";
+
+export type IntentKind = "qa" | "scan" | "mixed";
+
+export interface IntentMeta {
+  classified: IntentKind;
+  confidence: number;
+  reason?: string;
+}
+
+export interface QASource {
+  checkId?: string;
+  title: string;
+  url?: string;
+  snippet?: string;
+  score?: number;
+}
+
+export interface SuggestionChip {
+  label: string;
+  icon?: "scan" | "qa" | "report" | "evidence";
+  intent: IntentKind;
+  // Free-form payload sent back as the next user prompt when clicked.
+  payload: string;
+}
 
 export interface AssistantCardBase {
   kind: AssistantCardKind;
@@ -430,6 +456,21 @@ export interface TextCard extends AssistantCardBase {
   text: string;
 }
 
+export interface QAAnswerCard extends AssistantCardBase {
+  kind: "qa_answer";
+  // Markdown body. Supports GFM (tables, code blocks, lists).
+  markdown: string;
+  sources?: QASource[];
+  intentMeta?: IntentMeta;
+}
+
+export interface SuggestActionCard extends AssistantCardBase {
+  kind: "suggest_action";
+  // Optional lead text shown above the chips, e.g. "Bạn muốn tôi:".
+  prompt?: string;
+  chips: SuggestionChip[];
+}
+
 export type AssistantCard =
   | EnvironmentCheckCard
   | PlanningCard
@@ -441,7 +482,9 @@ export type AssistantCard =
   | RemediationExecutionCard
   | VerificationCard
   | ReportReadyCard
-  | TextCard;
+  | TextCard
+  | QAAnswerCard
+  | SuggestActionCard;
 
 export interface ChatMessage {
   id: string;

@@ -1,8 +1,14 @@
+import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Cloud, ListChecks, Send, RefreshCw, Filter, AlertTriangle, Wrench,
   PlayCircle, ShieldCheck, FileText, Download, Eye, ChevronRight,
+  BookOpen, Sparkles, Search, FileSearch, MessageCircleQuestion,
+  ChevronDown, ExternalLink,
 } from "lucide-react";
 import {
   Code, Pill, NodeStatusPill, SeverityPill, VerificationPill, DecisionPill,
@@ -11,7 +17,7 @@ import type {
   EnvironmentCheckCard, PlanningCard, ScanSubmittedCard, PollingCard,
   FindingsCollectedCard, RiskEvaluationCard, RemediationOfferCard,
   RemediationExecutionCard, VerificationCard, ReportReadyCard, RemediationTask,
-  Finding,
+  Finding, QAAnswerCard, SuggestActionCard, SuggestionChip,
 } from "@/types/pdca";
 import { cn } from "@/lib/utils";
 
@@ -34,14 +40,11 @@ function CardShell({
   };
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <div className="flex items-start gap-3 border-b border-border/50 px-4 py-3">
-        <div className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-1 ring-inset", accentBg[accent])}>
-          {icon}
+      <div className="flex items-center gap-2.5 border-b border-border/50 px-4 py-2.5">
+        <div className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-md ring-1 ring-inset", accentBg[accent])}>
+          <span className="[&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Assistant card</div>
-          <div className="text-sm font-semibold text-text-primary leading-snug">{title}</div>
-        </div>
+        <div className="text-sm font-semibold text-text-primary leading-snug">{title}</div>
       </div>
       <div className="p-4">{children}</div>
     </Card>
@@ -323,6 +326,141 @@ export function VerificationCardView({ card, finding }: { card: VerificationCard
         </div>
       </div>
     </CardShell>
+  );
+}
+
+// ───────────── QA answer ─────────────
+export function QAAnswerCardView({
+  card, onSourceClick,
+}: {
+  card: QAAnswerCard;
+  onSourceClick?: (checkId?: string) => void;
+}) {
+  const [sourcesOpen, setSourcesOpen] = useState(true);
+  const sources = card.sources ?? [];
+  const conf = card.intentMeta?.confidence;
+  return (
+    <CardShell
+      icon={<BookOpen className="h-4 w-4" />}
+      title="Knowledge answer"
+      accent="violet"
+    >
+      <div className="prose prose-sm prose-invert max-w-none
+                      prose-headings:text-text-primary prose-headings:font-semibold
+                      prose-p:text-text-secondary prose-p:leading-relaxed
+                      prose-strong:text-text-primary
+                      prose-code:text-primary prose-code:bg-bg-elevated/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
+                      prose-pre:bg-bg-elevated/40 prose-pre:border prose-pre:border-border/60 prose-pre:rounded-lg
+                      prose-a:text-primary hover:prose-a:text-primary/80
+                      prose-table:text-xs prose-th:text-text-primary prose-td:text-text-secondary
+                      prose-li:text-text-secondary
+                      prose-hr:border-border/60">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeHighlight]}
+        >
+          {card.markdown}
+        </ReactMarkdown>
+      </div>
+
+      {sources.length > 0 && (
+        <div className="mt-3 rounded-md border border-border/60 bg-bg-elevated/40">
+          <button
+            type="button"
+            onClick={() => setSourcesOpen((v) => !v)}
+            className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted hover:text-text-primary"
+          >
+            <span className="flex items-center gap-1.5">
+              <FileSearch className="h-3 w-3" /> Sources · {sources.length}
+            </span>
+            <ChevronDown className={cn("h-3 w-3 transition-transform", sourcesOpen && "rotate-180")} />
+          </button>
+          {sourcesOpen && (
+            <ul className="divide-y divide-border/40 border-t border-border/40">
+              {sources.map((s, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => onSourceClick?.(s.checkId)}
+                    className="flex w-full items-start gap-2 px-3 py-2 text-left text-[11px] hover:bg-bg-elevated/60"
+                  >
+                    <span className="mt-0.5 text-text-muted">{i + 1}.</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        {s.checkId && <Code>{s.checkId}</Code>}
+                        <span className="truncate text-text-primary">{s.title}</span>
+                      </div>
+                      {s.snippet && (
+                        <div className="mt-0.5 truncate text-text-muted">{s.snippet}</div>
+                      )}
+                    </div>
+                    {typeof s.score === "number" && (
+                      <span className="shrink-0 font-mono text-text-muted">{s.score.toFixed(2)}</span>
+                    )}
+                    {s.url && <ExternalLink className="h-3 w-3 shrink-0 text-text-muted" />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {typeof conf === "number" && (
+        <div className="mt-2 flex items-center justify-end gap-1.5 text-[10px] text-text-muted">
+          <Sparkles className="h-3 w-3" />
+          <span>intent: <span className="font-mono">{card.intentMeta?.classified}</span> · confidence <span className="font-mono">{conf.toFixed(2)}</span></span>
+        </div>
+      )}
+    </CardShell>
+  );
+}
+
+// ───────────── Suggestion chips ─────────────
+const CHIP_ICON: Record<NonNullable<SuggestionChip["icon"]>, React.ReactNode> = {
+  scan: <Search className="h-3.5 w-3.5" />,
+  qa: <MessageCircleQuestion className="h-3.5 w-3.5" />,
+  report: <FileText className="h-3.5 w-3.5" />,
+  evidence: <FileSearch className="h-3.5 w-3.5" />,
+};
+
+const CHIP_TONE: Record<SuggestionChip["intent"], string> = {
+  qa: "border-brand-violet/40 hover:bg-brand-violet/10 hover:text-brand-violet",
+  scan: "border-primary/40 hover:bg-primary/10 hover:text-primary",
+  mixed: "border-border hover:bg-bg-elevated/60",
+};
+
+export function SuggestActionCardView({
+  card, onChipClick,
+}: {
+  card: SuggestActionCard;
+  onChipClick?: (chip: SuggestionChip) => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card/40 px-4 py-3">
+      {card.prompt && (
+        <div className="mb-2 text-xs text-text-secondary">{card.prompt}</div>
+      )}
+      <div className="flex flex-wrap gap-1.5">
+        {card.chips.map((chip, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onChipClick?.(chip)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border bg-bg-elevated/40 px-3 py-1.5 text-[11.5px] text-text-secondary transition-colors",
+              CHIP_TONE[chip.intent],
+            )}
+          >
+            {chip.icon && CHIP_ICON[chip.icon]}
+            <span>{chip.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 text-[10px] text-text-muted">
+        Câu hỏi của bạn hơi mơ hồ — chọn 1 hành động hoặc gõ rõ hơn.
+      </div>
+    </div>
   );
 }
 

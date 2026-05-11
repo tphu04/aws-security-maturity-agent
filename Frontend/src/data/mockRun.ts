@@ -151,6 +151,45 @@ export const mockRun: RunSession = {
   },
 };
 
+// Empty run used as initial state when the backend is online.
+// All arrays are empty so the UI starts clean; awsEnvironment gets
+// overwritten by refreshEnvironment() once the chatbot probe succeeds.
+export const emptyRun: RunSession = {
+  id: "",
+  threadId: "",
+  status: "idle",
+  startedAt: new Date().toISOString(),
+  durationMs: 0,
+  currentNode: "environment",
+  checkpointer: "sqlite",
+  lastCheckpointAt: new Date().toISOString(),
+  awsEnvironment: {
+    status: "not_connected",
+    accountMask: "————",
+    region: "—",
+    credentialType: "—",
+    lastValidatedAt: new Date().toISOString(),
+    bucketsDiscovered: 0,
+    ragAvailable: false,
+  },
+  graphNodes: [],
+  scanJobs: [],
+  toolCalls: [],
+  evidence: [],
+  findings: [],
+  remediationTasks: [],
+  executionLogs: [],
+  verifications: [],
+  messages: [],
+  report: {
+    filename: "",
+    status: "pending",
+    runId: "",
+    version: "—",
+    sections: [],
+  },
+};
+
 export const mockHistory: RunHistoryRow[] = [
   { id: "run_2026_0427_s3_001", target: "AWS S3",     awsAccountMask: "1234••••••90", startedAt: t(0),         durationMs: 134_000, status: "completed",            findingsTotal: 5,  remediated: 1, reportStatus: "ready" },
   { id: "run_2026_0426_iam_002", target: "AWS IAM",    awsAccountMask: "1234••••••90", startedAt: "2026-04-26T03:14:00Z", durationMs: 218_000, status: "completed",            findingsTotal: 11, remediated: 4, reportStatus: "ready" },

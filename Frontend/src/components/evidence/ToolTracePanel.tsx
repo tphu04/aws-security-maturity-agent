@@ -1,53 +1,63 @@
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { RunSession } from "@/types/pdca";
-import { Telescope, FlaskConical, Activity, CircleDot, BookOpen, ExternalLink } from "lucide-react";
+import { Telescope, FlaskConical, Activity, CircleDot, BookOpen, ExternalLink, ChevronDown } from "lucide-react";
 import { Code } from "@/components/ui/status-pill";
 import { ToolCallCard } from "./ToolCallCard";
 import { EvidenceCard } from "./EvidenceCard";
 import { GraphTimeline } from "@/components/graph/GraphTimeline";
+import { cn } from "@/lib/utils";
 
 export function ToolTracePanel({ run }: { run: RunSession }) {
   const calls = [...run.toolCalls].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
   const isLive = run.status !== "completed" && run.status !== "failed" && run.status !== "idle";
+  const [statsOpen, setStatsOpen] = useState(false);
+
+  const pendingJobs   = run.scanJobs.filter(j => j.status === "pending" || j.status === "running").length;
+  const completedJobs = run.scanJobs.filter(j => j.status === "completed").length;
+  const failedFnd     = run.findings.filter(f => f.status === "FAIL").length;
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border/60 px-4 pb-3 pt-4">
-        <div className="flex items-center gap-2">
-          <Telescope className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold tracking-tight">Tool & Evidence Trace</h2>
-        </div>
-        <p className="mt-0.5 text-[11px] text-text-muted">
-          Live transparency: nodes, tools, and evidence the agent collected.
-        </p>
-      </div>
-
-      {/* Live banner: current node */}
-      <div className={"border-b border-border/60 px-4 py-2.5 " + (isLive ? "bg-primary/10" : "bg-bg-elevated/30")}>
-        <div className="flex items-center gap-2 text-[11px]">
-          <CircleDot className={"h-3.5 w-3.5 " + (isLive ? "text-primary animate-pulse" : "text-text-muted")} />
-          <span className="text-text-muted uppercase tracking-wider">{isLive ? "running" : "idle"}</span>
-          <Code>{run.currentNode}</Code>
-          <span className="ml-auto text-text-muted">{run.status}</span>
+      {/* Compact single-row header */}
+      <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2.5">
+        <Telescope className="h-4 w-4 text-primary shrink-0" />
+        <h2 className="text-sm font-semibold tracking-tight">Trace</h2>
+        <Code className="ml-1 truncate">{run.id}</Code>
+        <div className="ml-auto inline-flex items-center gap-1.5 text-[11px]">
+          <CircleDot className={cn("h-3 w-3", isLive ? "text-primary animate-pulse" : "text-text-muted")} />
+          <span className="text-text-muted uppercase tracking-wider">{isLive ? "live" : "idle"}</span>
+          <Code className="ml-1">{run.currentNode}</Code>
         </div>
       </div>
 
-      {/* Run state strip */}
-      <div className="border-b border-border/60 bg-bg-elevated/30 px-4 py-3">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-          <Stat k="run_id"               v={<Code>{run.id}</Code>} />
-          <Stat k="pending_jobs"         v={run.scanJobs.filter(j => j.status === "pending" || j.status === "running").length} />
-          <Stat k="completed_jobs"       v={run.scanJobs.filter(j => j.status === "completed").length} />
-          <Stat k="findings"             v={run.findings.length} />
-          <Stat k="failed_findings"      v={run.findings.filter(f => f.status === "FAIL").length} />
-          <Stat k="remediation_tasks"    v={run.remediationTasks.length} />
-          <Stat k="execution_logs"       v={run.executionLogs.length} />
-          <Stat k="verifications"        v={run.verifications.length} />
-          <Stat k="evidence"             v={run.evidence.length} />
-          <Stat k="report"               v={<span className="capitalize">{run.report.status}</span>} />
+      {/* Inline stats — single line by default, expand for full grid */}
+      <button
+        type="button"
+        onClick={() => setStatsOpen((v) => !v)}
+        className="flex w-full items-center justify-between border-b border-border/60 bg-bg-elevated/20 px-4 py-1.5 text-left text-[11px] text-text-secondary hover:bg-bg-elevated/40"
+      >
+        <span className="font-mono">
+          {completedJobs}/{completedJobs + pendingJobs} jobs · {run.findings.length} findings ({failedFnd} fail) · {run.remediationTasks.length} tasks · {run.evidence.length} evidence
+        </span>
+        <ChevronDown className={cn("h-3 w-3 transition-transform text-text-muted", statsOpen && "rotate-180")} />
+      </button>
+      {statsOpen && (
+        <div className="border-b border-border/60 bg-bg-elevated/30 px-4 py-3">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+            <Stat k="pending_jobs"      v={pendingJobs} />
+            <Stat k="completed_jobs"    v={completedJobs} />
+            <Stat k="findings"          v={run.findings.length} />
+            <Stat k="failed_findings"   v={failedFnd} />
+            <Stat k="remediation_tasks" v={run.remediationTasks.length} />
+            <Stat k="execution_logs"    v={run.executionLogs.length} />
+            <Stat k="verifications"     v={run.verifications.length} />
+            <Stat k="evidence"          v={run.evidence.length} />
+            <Stat k="report"            v={<span className="capitalize">{run.report.status}</span>} />
+          </div>
         </div>
-      </div>
+      )}
 
       <Tabs defaultValue="graph" className="flex min-h-0 flex-1 flex-col">
         <div className="px-4 pt-3">

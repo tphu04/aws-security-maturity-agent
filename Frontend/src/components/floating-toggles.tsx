@@ -380,7 +380,12 @@ function ensureLightStyle() {
 type Lang = "en" | "vi";
 type Theme = "dark" | "light";
 
-export function FloatingToggles() {
+interface FloatingTogglesProps {
+  visible?: boolean;
+  variant?: "floating" | "inline";
+}
+
+export function FloatingToggles({ visible = true, variant = "floating" }: FloatingTogglesProps = {}) {
   const [lang, setLang] = useState<Lang>(
     () => (localStorage.getItem("ui.lang") as Lang) || "en"
   );
@@ -429,10 +434,19 @@ export function FloatingToggles() {
     return () => observer.disconnect();
   }, [lang, reapply]);
 
+  // `visible` lets callers hide the UI while keeping state + side-effects
+  // (mutation observer for VI translation must stay mounted to keep working
+  // when new DOM nodes appear in other views).
+  if (!visible) return null;
+
   return (
     <div
       data-floating-toggle="true"
-      className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full border border-border/70 bg-card/90 px-2 py-1.5 shadow-lg backdrop-blur-md"
+      className={
+        variant === "inline"
+          ? "inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/60 px-2 py-1.5"
+          : "fixed bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full border border-border/70 bg-card/90 px-2 py-1.5 shadow-lg backdrop-blur-md"
+      }
       style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
     >
       {/* Language toggle */}
@@ -456,6 +470,7 @@ export function FloatingToggles() {
         onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
         title={theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}
         className="grid h-7 w-7 place-items-center rounded-full text-text-primary hover:bg-bg-elevated/60 transition-colors"
+        aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
       >
         {theme === "dark" ? (
           <Sun className="h-4 w-4 text-status-warning" />

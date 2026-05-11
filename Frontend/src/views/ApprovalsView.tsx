@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Code, SeverityPill, DecisionPill, ToolCategoryPill, Pill,
 } from "@/components/ui/status-pill";
-import { Eye, ShieldCheck, X, ClipboardCheck, Hand, FileText, AlertTriangle } from "lucide-react";
+import { Eye, ShieldCheck, X, ClipboardCheck, Hand, AlertTriangle } from "lucide-react";
 import type { RunSession, RemediationTask } from "@/types/pdca";
 
 export function ApprovalsView({
@@ -52,14 +52,9 @@ export function ApprovalsView({
             </div>
             <div className="flex flex-wrap gap-2 border-t border-border/60 bg-bg-elevated/30 px-4 py-3">
               {t.manualOnly ? (
-                <>
-                  <Button variant="outline" size="sm" disabled>
-                    <ShieldCheck className="h-3.5 w-3.5" /> Approve (blocked)
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <FileText className="h-3.5 w-3.5" /> Add to report
-                  </Button>
-                </>
+                <Button variant="outline" size="sm" disabled>
+                  <ShieldCheck className="h-3.5 w-3.5" /> Approve (blocked)
+                </Button>
               ) : (
                 <>
                   <Button size="sm" onClick={() => onApprove(t.id)} disabled={t.decision === "approved"}>
@@ -148,10 +143,7 @@ function DetailDrawer({ task, run, onClose }: { task: RemediationTask; run: RunS
               <div className="flex items-center gap-1.5 text-brand-violet">
                 <Hand className="h-3 w-3" /> Manual required
               </div>
-              <p className="mt-1">This tool requires manual action. Suggested steps will be added to the report.</p>
-              <Button variant="outline" size="sm" className="mt-2 h-7 text-xs">
-                <FileText className="h-3.5 w-3.5" /> Add to report
-              </Button>
+              <p className="mt-1">This tool requires manual action. The agent will document the suggested steps in the final report.</p>
             </div>
           </Section>
         )}

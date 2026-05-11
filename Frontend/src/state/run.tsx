@@ -2,7 +2,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from "react";
 import type { ChatMessage, RunHistoryRow, RunSession, ScanJob } from "@/types/pdca";
-import { mockRun } from "@/data/mockRun";
+import { emptyRun } from "@/data/mockRun";
 import { chatbotApi, scannerApi, ApiError } from "@/lib/api";
 import {
   environmentFromBackend,
@@ -30,6 +30,8 @@ interface RunContextValue {
   approveTask: (taskId: string) => void;
   rejectTask: (taskId: string) => void;
   appendMessage: (msg: ChatMessage) => void;
+  upsertMessage: (msg: ChatMessage) => void;
+  clearMessages: () => void;
   // Chatbot API helpers (Sprint 2+):
   listHistory: () => Promise<RunHistoryRow[]>;
   createRun: (prompt: string, scope?: string) => Promise<{ runId: string } | { error: string }>;
@@ -43,7 +45,7 @@ const RunContext = createContext<RunContextValue | null>(null);
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 8)}`;
 
 export function RunProvider({ children }: { children: React.ReactNode }) {
-  const [run, setRun] = useState<RunSession>(mockRun);
+  const [run, setRun] = useState<RunSession>(emptyRun);
   const [scannerOnline, setScannerOnline] = useState<boolean | null>(null);
   const [chatbotOnline, setChatbotOnline] = useState<boolean | null>(null);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
@@ -70,10 +72,24 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void refreshScannerHealth();
     void refreshEnvironment();
+
+    // Auto-retry probes every 3s until both services are confirmed online.
+    // Stops once both are up so it doesn't poll forever.
+    const retryId = window.setInterval(() => {
+      if (chatbotOnline && scannerOnline) {
+        window.clearInterval(retryId);
+        return;
+      }
+      if (!chatbotOnline) void refreshEnvironment();
+      if (!scannerOnline) void refreshScannerHealth();
+    }, 3_000);
+
     return () => {
+      window.clearInterval(retryId);
       pollers.current.forEach((id) => window.clearInterval(id));
       pollers.current.clear();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshScannerHealth, refreshEnvironment]);
 
   const mode: ApiMode =
@@ -201,6 +217,21 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     setRun((r) => ({ ...r, messages: [...r.messages, msg] }));
   }, []);
 
+  // Upsert: replace existing message with same id, or append if not found.
+  const upsertMessage = useCallback((msg: ChatMessage) => {
+    setRun((r) => {
+      const idx = r.messages.findIndex((m) => m.id === msg.id);
+      if (idx === -1) return { ...r, messages: [...r.messages, msg] };
+      const msgs = [...r.messages];
+      msgs[idx] = msg;
+      return { ...r, messages: msgs };
+    });
+  }, []);
+
+  const clearMessages = useCallback(() => {
+    setRun((r) => ({ ...r, messages: [] }));
+  }, []);
+
   const listHistory = useCallback(async (): Promise<RunHistoryRow[]> => {
     if (!chatbotApi.isConfigured()) return [];
     try {
@@ -234,7 +265,8 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
         remediationTasks:  snap.remediationTasks  ?? prev.remediationTasks  ?? [],
         executionLogs:     snap.executionLogs     ?? prev.executionLogs     ?? [],
         verifications:     snap.verifications     ?? prev.verifications     ?? [],
-        messages:          snap.messages          ?? prev.messages          ?? [],
+        // Keep FE chat messages — backend messages shape differs.
+        messages:          prev.messages,
         report:            snap.report            ?? prev.report,
         awsEnvironment:    (snap.awsEnvironment && Object.keys(snap.awsEnvironment).length > 0)
                               ? snap.awsEnvironment
@@ -281,7 +313,7 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
       scannerOnline, chatbotOnline, activeRunId,
       refreshScannerHealth, refreshEnvironment,
       submitGroupScan, submitChecksScan,
-      approveTask, rejectTask, appendMessage,
+      approveTask, rejectTask, appendMessage, upsertMessage, clearMessages,
       listHistory, createRun, loadRun,
     }),
     // setRun/submit*/startPolling are stable via closures over refs.
