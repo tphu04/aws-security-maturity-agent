@@ -5,12 +5,12 @@ import { ToolTracePanel } from "@/components/evidence/ToolTracePanel";
 import { TopBar } from "@/components/layout/TopBar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppShell } from "@/components/layout/AppShell";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "@/state/router";
 import { useRun, newId } from "@/state/run";
-import type { RunSession, SuggestionChip, AssistantCard, QASource, IntentMeta, IntentKind } from "@/types/pdca";
+import type { RunSession, SuggestionChip, AssistantCard, QASource, IntentMeta } from "@/types/pdca";
 import { mockClassify, mockAnswerQA, mockSuggestChips } from "@/data/mockQA";
-import { chatbotApi, type BackendChatMessage, type BackendSuggestion } from "@/lib/api";
+import { chatbotApi, type BackendSuggestion } from "@/lib/api";
+import { backendMessageToCards } from "@/lib/chatAdapters";
 import { useSelection } from "@/state/selection";
 import type { PromptChip } from "@/components/chat/ChatInput";
 
@@ -32,51 +32,22 @@ function suggestionToPromptChip(s: BackendSuggestion): PromptChip {
   return { label: s.label, kind: s.kind, payload: s.payload };
 }
 
-// Map a single backend ChatMessage → one or more AssistantCards.
-function backendMessageToCards(m: BackendChatMessage): AssistantCard[] {
-  const p = m.payload || {};
-  switch (m.type) {
-    case "qa_answer": {
-      const intentMeta = p.intentMeta as { classified?: IntentKind; confidence?: number; reason?: string } | undefined;
-      return [{
-        kind: "qa_answer",
-        markdown: String(p.markdown ?? ""),
-        sources: (p.sources as QASource[] | undefined) ?? [],
-        intentMeta: intentMeta && intentMeta.classified && typeof intentMeta.confidence === "number"
-          ? { classified: intentMeta.classified, confidence: intentMeta.confidence, reason: intentMeta.reason } satisfies IntentMeta
-          : undefined,
-      }];
-    }
-    case "suggest_action": {
-      return [{
-        kind: "suggest_action",
-        prompt: typeof p.prompt === "string" ? p.prompt : undefined,
-        chips: (p.chips as SuggestionChip[] | undefined) ?? [],
-      }];
-    }
-    case "run_started": {
-      return [{ kind: "text", text: String(p.text ?? `Run ${p.run_id ?? ""} started.`) }];
-    }
-    case "text":
-    case "error":
-    default:
-      return [{ kind: "text", text: String(p.text ?? "(empty message)") }];
-  }
-}
-
 const THREAD_KEY = "pdca.chat.thread_id";
 
 export function WorkspaceView(_: Props) {
   const {
     run, setRun, appendMessage, upsertMessage, submitGroupScan, createRun, loadRun,
-    mode, chatbotOnline, approveTask, rejectTask,
+    mode, chatbotOnline, activeRunId, activeThreadId, activateThread, loadThread,
+    refreshThreads, approveTask, rejectTask, skipTask, cancelActiveRun,
   } = useRun();
   const [pending, setPending] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [traceOpen, setTraceOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<PromptChip[]>([]);
   // Track which pipeline stages have already been announced in chat so we
   // don't duplicate cards across polling ticks.
   const announcedRef = useRef<Set<string>>(new Set());
+  const streamAbortRef = useRef<AbortController | null>(null);
   const threadIdRef = useRef<string | undefined>(typeof window !== "undefined" ? localStorage.getItem(THREAD_KEY) || undefined : undefined);
   const [hydrated, setHydrated] = useState(false);
   const { go } = useRouter();
@@ -109,30 +80,13 @@ export function WorkspaceView(_: Props) {
   useEffect(() => {
     if (hydrated) return;
     if (!chatbotOnline) { setHydrated(true); return; }
-    const tid = threadIdRef.current;
+    const tid = activeThreadId || threadIdRef.current;
     if (!tid) { setHydrated(true); return; }
     (async () => {
-      try {
-        const res = await chatbotApi.getThreadMessages(tid);
-        for (const m of res.messages) {
-          if (m.role === "user") {
-            appendMessage({ id: `srv-${m.id}`, role: "user", timestamp: new Date(m.created_at * 1000).toISOString(), text: m.content });
-          } else {
-            const cards = backendMessageToCards({ type: m.message_type === "user_text" ? "text" : m.message_type, payload: m.payload });
-            appendMessage({ id: `srv-${m.id}`, role: "assistant", timestamp: new Date(m.created_at * 1000).toISOString(), cards });
-          }
-        }
-      } catch (e) {
-        // Thread missing on server (db reset?) → drop it.
-        if (e instanceof Error && /404/.test(e.message)) {
-          localStorage.removeItem(THREAD_KEY);
-          threadIdRef.current = undefined;
-        }
-      } finally {
-        setHydrated(true);
-      }
+      await loadThread(tid);
+      setHydrated(true);
     })();
-  }, [chatbotOnline, hydrated, appendMessage]);
+  }, [chatbotOnline, hydrated, activeThreadId, loadThread]);
 
   const sendAssistant = (cards: AssistantCard[]) => {
     appendMessage({
@@ -193,6 +147,13 @@ export function WorkspaceView(_: Props) {
       let sources: QASource[] = [];
       let finalReplaced = false;
       let intentMeta: IntentMeta | undefined;
+      let settled = false;
+
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
 
       const ensureStreamingCard = () => {
         if (createdStreaming) return;
@@ -215,12 +176,15 @@ export function WorkspaceView(_: Props) {
         }));
       };
 
-      chatbotApi.chatStream(text, (ev) => {
+      const ctrl = chatbotApi.chatStream(text, (ev) => {
         switch (ev.type) {
           case "meta":
             if (ev.data.thread_id && ev.data.thread_id !== threadIdRef.current) {
               threadIdRef.current = ev.data.thread_id;
-              try { localStorage.setItem(THREAD_KEY, ev.data.thread_id); } catch { /* ignore */ }
+              activateThread(ev.data.thread_id);
+            }
+            if (ev.data.run_id) {
+              void loadRun(String(ev.data.run_id));
             }
             const i = ev.data.intent;
             intentMeta = { classified: i.intent, confidence: i.confidence, reason: i.reason };
@@ -258,15 +222,18 @@ export function WorkspaceView(_: Props) {
             if (!finalReplaced) {
               sendAssistant([{ kind: "text", text: `Stream error: ${ev.data.message}` }]);
             }
+            finish();
             break;
           case "done":
-            resolve();
+            void refreshThreads();
+            finish();
             break;
         }
       }, {
-        threadId: threadIdRef.current,
-        runId: run.id?.startsWith("R-") ? run.id : undefined,
+        threadId: activeThreadId ?? threadIdRef.current,
+        runId: activeRunId ?? (run.id ? run.id : undefined),
       });
+      streamAbortRef.current = ctrl;
     });
 
   const handleSend = async (text: string) => {
@@ -280,6 +247,20 @@ export function WorkspaceView(_: Props) {
       }
     } finally {
       setPending(false);
+      streamAbortRef.current = null;
+    }
+  };
+
+  const handleStop = async () => {
+    if (stopping) return;
+    setStopping(true);
+    try {
+      streamAbortRef.current?.abort();
+      streamAbortRef.current = null;
+      setPending(false);
+      await cancelActiveRun();
+    } finally {
+      setStopping(false);
     }
   };
 
@@ -401,7 +382,7 @@ export function WorkspaceView(_: Props) {
     // ── remediation_offer (one per pending task) ───────────────────
     for (const task of r.remediationTasks) {
       const offerKey = key(`offer:${task.id}`);
-      if (!announced.has(offerKey) && task.decision === "pending") {
+      if (!announced.has(offerKey) && (task.decision === "pending" || task.decision === "manual_required")) {
         announced.add(offerKey);
         emit([{ kind: "remediation_offer", taskId: task.id }]);
       }
@@ -410,7 +391,7 @@ export function WorkspaceView(_: Props) {
     // ── remediation_execution (after decision made) ────────────────
     for (const task of r.remediationTasks) {
       const execKey = key(`exec:${task.id}`);
-      if (!announced.has(execKey) && task.decision !== "pending") {
+      if (!announced.has(execKey) && task.decision === "approved") {
         announced.add(execKey);
         const log = r.executionLogs.find((l) => l.taskId === task.id);
         emit([{
@@ -424,18 +405,30 @@ export function WorkspaceView(_: Props) {
       }
     }
 
-    // ── verification (one per result) ──────────────────────────────
-    for (const v of r.verifications) {
-      const vKey = key(`verify:${v.id}`);
-      if (!announced.has(vKey)) {
-        announced.add(vKey);
-        emit([{
-          kind: "verification",
-          findingId: v.findingId,
-          beforeState: v.beforeState,
-          afterState: v.afterState,
-          verificationStatus: v.result,
-        }]);
+    // ── verification (single upserted summary card) ────────────────
+    if (r.verifications.length) {
+      const verifyMsg = {
+        id: key("verify_summary_msg"),
+        role: "assistant" as const,
+        timestamp: new Date().toISOString(),
+        cards: [{
+          kind: "verification_summary" as const,
+          items: r.verifications.map((v) => ({
+            id: v.id,
+            findingId: v.findingId,
+            resource: v.resource,
+            toolName: v.toolName,
+            beforeState: v.beforeState,
+            afterState: v.afterState,
+            verificationStatus: v.result,
+          })),
+        }],
+      };
+      if (!announced.has(key("verify_summary_msg"))) {
+        announced.add(key("verify_summary_msg"));
+        appendMessage(verifyMsg);
+      } else {
+        upsertMessage(verifyMsg);
       }
     }
 
@@ -450,12 +443,16 @@ export function WorkspaceView(_: Props) {
   useEffect(() => {
     if (run.id) injectStageCards(run);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run.graphNodes, run.findings, run.remediationTasks, run.scanJobs]);
+  }, [run.graphNodes, run.findings, run.remediationTasks, run.scanJobs, run.verifications, run.report]);
 
   // Reset announced set when starting a new chat / new run.
   useEffect(() => {
     if (run.messages.length === 0) announcedRef.current = new Set();
   }, [run.messages.length]);
+
+  useEffect(() => {
+    announcedRef.current = new Set();
+  }, [activeRunId]);
 
   // QA source click → locate corresponding evidence/finding in the right panel.
   const handleSourceClick = (checkId?: string) => {
@@ -474,11 +471,41 @@ export function WorkspaceView(_: Props) {
     }
   };
 
+  const downloadReport = () => {
+    const runId = activeRunId ?? run.id;
+    if (!runId) return;
+    window.open(chatbotApi.reportUrl(runId, "pdf", true), "_blank");
+  };
+
+  const stoppableStatuses = new Set([
+    "validating_environment",
+    "planning",
+    "submitting_scan",
+    "polling",
+    "collecting_findings",
+    "evaluating_risk",
+    "executing_remediation",
+    "verifying",
+    "generating_report",
+  ]);
+  const canStop = pending
+    || run.scanJobs.some((j) => j.status === "pending" || j.status === "running")
+    || (Boolean(activeRunId || run.id) && stoppableStatuses.has(run.status));
+
   return (
     <AppShell
       sidebar={<Sidebar awsStatus={run.awsEnvironment.status} awsAccountMask={run.awsEnvironment.accountMask} />}
       topBar={<TopBar run={run} onOpenTrace={() => setTraceOpen((v) => !v)} traceOpen={traceOpen} />}
-      inputBar={<ChatInput onSend={handleSend} pending={pending} suggestions={suggestions} />}
+      inputBar={
+        <ChatInput
+          onSend={handleSend}
+          onStop={handleStop}
+          pending={pending}
+          canStop={canStop}
+          stopping={stopping}
+          suggestions={suggestions}
+        />
+      }
     >
       <div className="relative flex h-full min-h-0">
         {/* Main chat */}
@@ -488,34 +515,32 @@ export function WorkspaceView(_: Props) {
             findings={run.findings}
             tasks={run.remediationTasks}
             onApproveTask={(id) => {
-              const task = run.remediationTasks.find((t) => t.id === id);
-              appendMessage({ id: newId("m"), role: "user", timestamp: new Date().toISOString(),
-                text: `✅ Approved: ${task?.findingTitle ?? id}` });
               approveTask(id);
             }}
             onRejectTask={(id) => {
-              const task = run.remediationTasks.find((t) => t.id === id);
-              appendMessage({ id: newId("m"), role: "user", timestamp: new Date().toISOString(),
-                text: `❌ Rejected: ${task?.findingTitle ?? id}` });
               rejectTask(id);
+            }}
+            onSkipTask={(id) => {
+              skipTask(id);
             }}
             onShowTask={() => go("approvals")}
             onPreviewReport={() => go("report")}
+            onDownloadReport={downloadReport}
             onSuggestionChip={handleChip}
             onSourceClick={handleSourceClick}
           />
         </div>
 
-        {/* Trace panel — slide-in from right, overlay on mobile, side-by-side on xl */}
+        {/* Trace panel — compact floating inspector in the right corner */}
         {traceOpen && (
           <aside className="
-            absolute inset-y-0 right-0 z-20 flex w-full flex-col
-            border-l border-border/60 bg-bg-surface/95 backdrop-blur-md
-            shadow-2xl transition-all
-            sm:w-[400px]
-            xl:relative xl:shadow-none xl:w-[380px]
+            absolute bottom-3 right-3 top-3 z-20 flex w-[calc(100%-1.5rem)] flex-col
+            overflow-hidden rounded-lg border border-border/70 bg-bg-surface/95
+            shadow-2xl backdrop-blur-md transition-all
+            sm:bottom-4 sm:right-4 sm:top-4 sm:w-[420px]
+            xl:w-[440px]
           ">
-            <ToolTracePanel run={run} />
+            <ToolTracePanel run={run} onClose={() => setTraceOpen(false)} />
           </aside>
         )}
 

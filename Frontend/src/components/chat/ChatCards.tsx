@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Cloud, ListChecks, Send, RefreshCw, Filter, AlertTriangle, Wrench,
-  PlayCircle, ShieldCheck, FileText, Download, Eye, ChevronRight,
+  PlayCircle, ShieldCheck, FileText, Download, Eye,
   BookOpen, Sparkles, Search, FileSearch, MessageCircleQuestion,
   ChevronDown, ExternalLink,
 } from "lucide-react";
@@ -17,7 +17,7 @@ import type {
   EnvironmentCheckCard, PlanningCard, ScanSubmittedCard, PollingCard,
   FindingsCollectedCard, RiskEvaluationCard, RemediationOfferCard,
   RemediationExecutionCard, VerificationCard, ReportReadyCard, RemediationTask,
-  Finding, QAAnswerCard, SuggestActionCard, SuggestionChip,
+  VerificationSummaryCard, VerificationSummaryItem, Finding, QAAnswerCard, SuggestActionCard, SuggestionChip,
 } from "@/types/pdca";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +51,15 @@ function CardShell({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, multiline = false }: { label: string; children: React.ReactNode; multiline?: boolean }) {
+  if (multiline) {
+    return (
+      <div className="py-1 text-xs">
+        <div className="text-text-muted">{label}</div>
+        <div className="mt-1 whitespace-pre-wrap break-words text-left leading-relaxed text-text-primary">{children}</div>
+      </div>
+    );
+  }
   return (
     <div className="flex items-baseline justify-between gap-3 py-1 text-xs">
       <div className="shrink-0 text-text-muted">{label}</div>
@@ -199,20 +207,24 @@ export function RiskEvaluationCardView({ card }: { card: RiskEvaluationCard }) {
 
 // ───────────── Remediation offer ─────────────
 export function RemediationOfferCardView({
-  card, task, onApprove, onReject, onShowDetails,
+  card, task, onApprove, onReject, onSkip,
 }: {
   card: RemediationOfferCard;
   task: RemediationTask;
   onApprove?: () => void;
   onReject?: () => void;
-  onShowDetails?: () => void;
+  onSkip?: () => void;
 }) {
-  const isManual = task.manualOnly;
+  const isManual = task.manualOnly || task.decision === "manual_required";
+  const pending = task.decision === "pending" || task.decision === "manual_required";
+  const title = isManual ? "Manual remediation required" : "Remediation tool found";
   return (
-    <CardShell icon={<Wrench className="h-4 w-4" />} title="Remediation tool found" accent="warning">
+    <CardShell icon={<Wrench className="h-4 w-4" />} title={title} accent="warning">
       <p className="mb-3 text-xs leading-relaxed text-text-secondary">
-        I found a remediation tool for the <SeverityPill severity={task.severity} className="mx-1" /> finding{" "}
-        <span className="font-medium text-text-primary">"{task.findingTitle}"</span>. Do you want me to remediate it?
+        {isManual ? "This finding needs manual handling:" : "I found a remediation tool for the"}{" "}
+        <SeverityPill severity={task.severity} className="mx-1" /> finding{" "}
+        <span className="font-medium text-text-primary">"{task.findingTitle}"</span>
+        {!isManual && ". Do you want me to remediate it?"}
       </p>
       <div className="divide-y divide-border/40">
         <Field label="Finding">{task.findingTitle}</Field>
@@ -237,7 +249,7 @@ export function RemediationOfferCardView({
             </div>
           </Field>
         )}
-        <Field label="LLM rationale">{task.proposedAction}</Field>
+        <Field label="LLM rationale" multiline>{task.proposedAction}</Field>
       </div>
 
       {task.ragSteps && task.ragSteps.length > 0 && (
@@ -267,17 +279,26 @@ export function RemediationOfferCardView({
         </div>
       )}
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button size="sm" disabled={isManual} onClick={onApprove}>
-          <ShieldCheck className="h-4 w-4" /> Yes, remediate
-        </Button>
-        <Button variant="outline" size="sm" onClick={onReject}>No, keep as finding</Button>
-        <Button variant="ghost" size="sm" onClick={onShowDetails}>
-          Show details <ChevronRight className="h-4 w-4" />
-        </Button>
+        {pending ? (
+          isManual ? (
+            <Button size="sm" onClick={onSkip}>
+              <ShieldCheck className="h-4 w-4" /> Confirm manual handling
+            </Button>
+          ) : (
+            <Button size="sm" onClick={onApprove}>
+              <ShieldCheck className="h-4 w-4" /> Yes, remediate
+            </Button>
+          )
+        ) : (
+          <Pill tone={task.decision === "approved" ? "success" : task.decision === "rejected" ? "danger" : "violet"}>
+            {task.decision === "approved" ? "remediation approved" : task.decision === "rejected" ? "kept as finding" : "manual confirmed"}
+          </Pill>
+        )}
+        <Button variant="outline" size="sm" onClick={onReject} disabled={!pending}>No, keep as finding</Button>
       </div>
       {isManual && (
         <p className="mt-2 text-[11px] text-text-muted">
-          This tool is <span className="text-brand-violet">manual_only</span> — execution refused by guard checks. Approve via the Approvals queue with manual confirmation.
+          This item requires manual handling. Complete the guided action, then confirm so the backend can continue the HITL flow.
         </p>
       )}
     </CardShell>
@@ -329,6 +350,128 @@ export function VerificationCardView({ card, finding }: { card: VerificationCard
   );
 }
 
+export function VerificationSummaryCardView({
+  card, findingsById,
+}: {
+  card: VerificationSummaryCard;
+  findingsById: Record<string, Finding>;
+}) {
+  const visibleItems = card.items.filter((v) => hasVerificationIdentity(v, findingsById));
+  const passed = visibleItems.filter((v) => v.verificationStatus === "passed").length;
+  const failed = visibleItems.filter((v) => v.verificationStatus === "failed").length;
+  const partial = visibleItems.filter((v) => v.verificationStatus === "partial").length;
+  const manual = visibleItems.filter((v) => v.verificationStatus === "manual_required").length;
+  const hiddenCount = card.items.length - visibleItems.length;
+  const resourceAlias = buildResourceAliases(visibleItems.map((v) => v.resource));
+
+  return (
+    <CardShell icon={<ShieldCheck className="h-4 w-4" />} title="Remediation verification" accent="success">
+      <div className="grid grid-cols-4 gap-2 text-center">
+        {[
+          { label: "passed", v: passed, tone: "text-status-success" },
+          { label: "failed", v: failed, tone: "text-status-error" },
+          { label: "partial", v: partial, tone: "text-status-warning" },
+          { label: "manual", v: manual, tone: "text-brand-violet" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-md border border-border/60 bg-bg-elevated/40 p-2">
+            <div className={cn("font-mono text-lg font-semibold", s.tone)}>{s.v}</div>
+            <div className="text-[10px] uppercase tracking-wider text-text-muted">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 divide-y divide-border/40 rounded-md border border-border/60 bg-bg-elevated/30">
+        {visibleItems.map((v) => {
+          const finding = findingsById[v.findingId];
+          const maskedResource = resourceAlias.get(v.resource) ?? redactResource(v.resource);
+          const checkLabel = finding?.prowlerCheckId || v.toolName;
+          const title = finding?.title || humanizeCheckId(checkLabel);
+          const resultText = verificationResultText(v.verificationStatus, v.afterState);
+          return (
+            <div key={v.id} className="grid gap-3 px-3 py-3 text-[11px] md:grid-cols-[1fr_auto]">
+              <div className="min-w-0">
+                <div className="font-medium leading-snug text-text-primary">{title}</div>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-text-muted">
+                  {checkLabel && (
+                    <>
+                      <span>Check</span>
+                      <Code>{checkLabel}</Code>
+                    </>
+                  )}
+                  {v.toolName && v.toolName !== checkLabel && <Code>{v.toolName}</Code>}
+                  <span>Resource</span>
+                  <Code>{maskedResource}</Code>
+                </div>
+                <div className="mt-2 grid gap-1.5 sm:grid-cols-[1fr_1fr_auto]">
+                  <span className="rounded border border-status-error/25 bg-status-error/5 px-2 py-1.5">
+                    <span className="font-semibold uppercase text-status-error">Before scan</span>{" "}
+                    <span className="font-mono text-text-primary">{v.beforeState || "unknown"}</span>
+                  </span>
+                  <span className="rounded border border-status-success/25 bg-status-success/5 px-2 py-1.5">
+                    <span className="font-semibold uppercase text-status-success">After re-scan</span>{" "}
+                    <span className="font-mono text-text-primary">{v.afterState || "unknown"}</span>
+                  </span>
+                  <span className="rounded border border-border/60 bg-bg-base/40 px-2 py-1.5 text-text-secondary">
+                    {resultText}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-start justify-end">
+                <VerificationPill status={v.verificationStatus} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {hiddenCount > 0 && (
+        <div className="mt-2 text-[10px] text-text-muted">
+          Hidden {hiddenCount} generic verification row{hiddenCount === 1 ? "" : "s"} without check/resource context.
+        </div>
+      )}
+    </CardShell>
+  );
+}
+
+function hasVerificationIdentity(item: VerificationSummaryItem, findingsById: Record<string, Finding>): boolean {
+  if (findingsById[item.findingId]?.prowlerCheckId) return true;
+  if ((item.toolName || "").trim()) return true;
+  const resource = (item.resource || "").trim();
+  return Boolean(resource && resource.toLowerCase() !== "unknown");
+}
+
+function buildResourceAliases(resources: string[]): Map<string, string> {
+  const out = new Map<string, string>();
+  let i = 1;
+  for (const raw of resources) {
+    const r = (raw || "").trim();
+    if (!r || out.has(r)) continue;
+    out.set(r, `resource-${String(i).padStart(2, "0")}`);
+    i += 1;
+  }
+  return out;
+}
+
+function redactResource(resource: string): string {
+  const raw = (resource || "").trim();
+  if (!raw) return "resource-redacted";
+  return raw
+    .replace(/\b\d{12}\b/g, (m) => `${m.slice(0, 4)}••••••${m.slice(-2)}`)
+    .replace(/[a-f0-9]{8,}/gi, (m) => `${m.slice(0, 4)}…${m.slice(-4)}`);
+}
+
+function humanizeCheckId(value: string): string {
+  return (value || "Verification")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function verificationResultText(status: VerificationSummaryItem["verificationStatus"], afterState: string): string {
+  if (status === "passed") return `Verified: after re-scan is ${afterState || "PASS"}.`;
+  if (status === "failed") return `Still failing: after re-scan is ${afterState || "FAIL"}.`;
+  if (status === "manual_required") return "Manual confirmation required.";
+  return "Partial change: review before/after values.";
+}
+
 // ───────────── QA answer ─────────────
 export function QAAnswerCardView({
   card, onSourceClick,
@@ -345,15 +488,15 @@ export function QAAnswerCardView({
       title="Knowledge answer"
       accent="violet"
     >
-      <div className="prose prose-sm prose-invert max-w-none
-                      prose-headings:text-text-primary prose-headings:font-semibold
-                      prose-p:text-text-secondary prose-p:leading-relaxed
-                      prose-strong:text-text-primary
+      <div className="prose prose-sm max-w-none text-slate-950
+                      prose-headings:text-slate-950 prose-headings:font-semibold
+                      prose-p:text-slate-900 prose-p:leading-relaxed
+                      prose-strong:text-slate-950
                       prose-code:text-primary prose-code:bg-bg-elevated/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
                       prose-pre:bg-bg-elevated/40 prose-pre:border prose-pre:border-border/60 prose-pre:rounded-lg
                       prose-a:text-primary hover:prose-a:text-primary/80
-                      prose-table:text-xs prose-th:text-text-primary prose-td:text-text-secondary
-                      prose-li:text-text-secondary
+                      prose-table:text-xs prose-th:text-slate-950 prose-td:text-slate-900
+                      prose-li:text-slate-900 prose-ul:text-slate-900 prose-ol:text-slate-900 prose-marker:text-slate-900
                       prose-hr:border-border/60">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -368,7 +511,7 @@ export function QAAnswerCardView({
           <button
             type="button"
             onClick={() => setSourcesOpen((v) => !v)}
-            className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted hover:text-text-primary"
+            className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-950"
           >
             <span className="flex items-center gap-1.5">
               <FileSearch className="h-3 w-3" /> Sources · {sources.length}
@@ -384,20 +527,20 @@ export function QAAnswerCardView({
                     onClick={() => onSourceClick?.(s.checkId)}
                     className="flex w-full items-start gap-2 px-3 py-2 text-left text-[11px] hover:bg-bg-elevated/60"
                   >
-                    <span className="mt-0.5 text-text-muted">{i + 1}.</span>
+                    <span className="mt-0.5 text-slate-600">{i + 1}.</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         {s.checkId && <Code>{s.checkId}</Code>}
-                        <span className="truncate text-text-primary">{s.title}</span>
+                        <span className="truncate text-slate-950">{s.title}</span>
                       </div>
                       {s.snippet && (
-                        <div className="mt-0.5 truncate text-text-muted">{s.snippet}</div>
+                        <div className="mt-0.5 truncate text-slate-700">{s.snippet}</div>
                       )}
                     </div>
                     {typeof s.score === "number" && (
-                      <span className="shrink-0 font-mono text-text-muted">{s.score.toFixed(2)}</span>
+                      <span className="shrink-0 font-mono text-slate-700">{s.score.toFixed(2)}</span>
                     )}
-                    {s.url && <ExternalLink className="h-3 w-3 shrink-0 text-text-muted" />}
+                    {s.url && <ExternalLink className="h-3 w-3 shrink-0 text-slate-700" />}
                   </button>
                 </li>
               ))}
@@ -469,7 +612,7 @@ export function ReportReadyCardView({ card, onPreview, onDownload }: {
   card: ReportReadyCard; onPreview?: () => void; onDownload?: () => void;
 }) {
   return (
-    <CardShell icon={<FileText className="h-4 w-4" />} title="DOCX report ready" accent="primary">
+    <CardShell icon={<FileText className="h-4 w-4" />} title="PDF report ready" accent="primary">
       <div className="divide-y divide-border/40">
         <Field label="Node"><Code>report</Code></Field>
         <Field label="Filename"><Code>{card.filename}</Code></Field>
@@ -484,7 +627,7 @@ export function ReportReadyCardView({ card, onPreview, onDownload }: {
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" onClick={onPreview}><Eye className="h-4 w-4" /> Preview Report</Button>
-        <Button variant="outline" size="sm" onClick={onDownload}><Download className="h-4 w-4" /> Download DOCX</Button>
+        <Button variant="outline" size="sm" onClick={onDownload}><Download className="h-4 w-4" /> Download PDF</Button>
       </div>
     </CardShell>
   );

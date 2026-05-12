@@ -98,20 +98,16 @@ class ReportContextService:
         t0 = time.perf_counter()
 
         q1_task = asyncio.create_task(self._run_q1(req))
-        q2_task = asyncio.create_task(self._run_q2(req)) if req.include_q2 else None
         q3_task = asyncio.create_task(self._run_q3(req)) if req.include_q3 else None
 
         tasks = [q1_task]
-        if q2_task:
-            tasks.append(q2_task)
         if q3_task:
             tasks.append(q3_task)
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         q1_result = results[0]
-        q2_result = results[1] if q2_task else []
-        q3_result = results[2] if (q2_task and q3_task) else (results[1] if q3_task else [])
+        q3_result = results[1] if q3_task else []
 
         if isinstance(q1_result, Exception):
             logger.error("Q1 failed: %s", q1_result)
@@ -121,15 +117,16 @@ class ReportContextService:
             q1_bundle = q1_result
             confidence = "high"
 
-        if isinstance(q2_result, Exception):
-            logger.warning("Q2 failed (degraded): %s", q2_result)
-            q2_result = []
-            confidence = "medium" if confidence == "high" else confidence
-
         if isinstance(q3_result, Exception):
             logger.warning("Q3 failed (degraded): %s", q3_result)
             q3_result = []
             confidence = "medium" if confidence == "high" else confidence
+
+        q2_result = (
+            self._themes_from_capability_details(q1_bundle, req.domains)
+            if req.include_q2
+            else []
+        )
 
         total_ms = round((time.perf_counter() - t0) * 1000, 1)
         bundle = ReportContextBundle(
@@ -144,6 +141,7 @@ class ReportContextService:
             diagnostics={
                 "total_latency_ms": total_ms,
                 "cache_hit": False,
+                "q2_source": "resolved_capability_details",
             },
         )
         self._set_cached(cache_key, bundle)
@@ -204,6 +202,75 @@ class ReportContextService:
                 themes.append(theme)
 
         return themes
+
+    def _themes_from_capability_details(
+        self,
+        q1_bundle: Dict[str, Any],
+        requested_domains: List[str],
+    ) -> List[CapabilityTheme]:
+        """Build Q2 themes only from capabilities resolved by check mappings.
+
+        The previous implementation queried broad domain strings such as
+        "s3" and then concatenated maturity corpus fields. That made the
+        trace noisy and could pull unrelated Macie/GuardDuty/CloudTrail text
+        into an S3 run. This path only uses Q1 capability_details, which are
+        already tied to the actual check IDs selected for the report.
+        """
+        details = q1_bundle.get("capability_details") or []
+        if not details:
+            return []
+
+        requested = {str(d).strip().lower() for d in requested_domains if str(d).strip()}
+        themes: List[CapabilityTheme] = []
+        seen: set[str] = set()
+
+        for d in details:
+            if not isinstance(d, dict):
+                continue
+            cap_id = str(d.get("capability_id") or "").strip()
+            name = str(d.get("capability_name") or cap_id or "").strip()
+            domain = str(d.get("domain") or "").strip().lower()
+            if requested and domain and domain not in requested:
+                continue
+            key = cap_id or name
+            if not key or key in seen:
+                continue
+            seen.add(key)
+
+            summary = self._trim_sentence(d.get("summary"), 220)
+            risk = self._trim_sentence(d.get("risk_explanation"), 220)
+            recommendation = self._trim_sentence(d.get("recommendation"), 180)
+            narrative_parts = [p for p in (summary, risk, recommendation) if p]
+            if not narrative_parts:
+                continue
+
+            url = str(d.get("url") or "").strip()
+            if not url:
+                continue
+            citations = [Citation(source=name, url=url)]
+            themes.append(
+                CapabilityTheme(
+                    domain=domain or (next(iter(requested), "general") if requested else "general"),
+                    narrative=" ".join(narrative_parts[:2]),
+                    common_pitfalls=[],
+                    baselines=[],
+                    citations=citations,
+                )
+            )
+            if len(themes) >= 5:
+                break
+
+        return themes
+
+    @staticmethod
+    def _trim_sentence(value: Any, max_len: int) -> str:
+        text = " ".join(str(value or "").split())
+        if len(text) <= max_len:
+            return text
+        cut = text.rfind(". ", 0, max_len)
+        if cut < max_len - 80:
+            cut = text.rfind(" ", 0, max_len)
+        return (text[:cut].rstrip() if cut > 0 else text[:max_len].rstrip()) + "…"
 
     def _build_capability_theme(
         self, domain: str, results: List[Dict[str, Any]]

@@ -20,6 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
   verifying: "verifying",
   generating_report: "generating report",
   completed: "completed",
+  cancelled: "cancelled",
   failed: "failed",
 };
 
@@ -46,6 +47,7 @@ const STATUS_DOT: Record<string, string> = {
   verifying:                "bg-severity-info animate-pulse",
   generating_report:        "bg-severity-info animate-pulse",
   completed:                "bg-status-success",
+  cancelled:                "bg-text-muted",
   failed:                   "bg-status-error",
 };
 

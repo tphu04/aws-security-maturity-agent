@@ -16,7 +16,7 @@ import { FloatingToggles } from "@/components/floating-toggles";
 
 function Router() {
   const { view } = useRouter();
-  const { run, setRun, approveTask, rejectTask } = useRun();
+  const { run, setRun, approveTask, rejectTask, skipTask } = useRun();
 
   // Mount the prefs effects on every view (mutation observer for VI
   // translation must keep running) but hide its UI everywhere — Settings has
@@ -33,7 +33,7 @@ function Router() {
       case "history":      return <HistoryView run={run} />;
       case "run_detail":   return <RunDetailView run={run} />;
       case "verification": return <VerificationView run={run} />;
-      case "approvals":    return <ApprovalsView run={run} onApprove={approveTask} onReject={rejectTask} />;
+      case "approvals":    return <ApprovalsView run={run} onApprove={approveTask} onReject={rejectTask} onSkip={skipTask} />;
       default:             return <LandingView />;
     }
   })();

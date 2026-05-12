@@ -19,6 +19,7 @@ from __future__ import annotations
 import os
 import re
 import sqlite3
+import textwrap
 import time
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
@@ -29,7 +30,7 @@ from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse, StreamingResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from pdca.agents.intent_classifier import ChatContext, IntentClassifier
@@ -37,6 +38,7 @@ from pdca.agents.qa_agent import QAAgent
 from pdca.agents.shared.rag_client import RAGClient
 from pdca.storage.chat_history import get_chat_store
 from pdca.api.graph_runtime import (
+    cancel_run,
     get_run_metadata,
     get_state_history,
     get_state_values,
@@ -125,6 +127,21 @@ class ThreadSummary(BaseModel):
 
 class ThreadListResponse(BaseModel):
     items: List[ThreadSummary]
+
+
+class CreateThreadRequest(BaseModel):
+    title: Optional[str] = None
+
+
+class CreateThreadResponse(BaseModel):
+    thread_id: str
+    title: str
+    created_at: float
+    updated_at: float
+    message_count: int = 0
+    last_role: str = ""
+    last_content: str = ""
+    last_run_id: Optional[str] = None
 
 
 class ThreadMessageOut(BaseModel):
@@ -510,6 +527,26 @@ def list_threads(limit: int = 50, offset: int = 0) -> ThreadListResponse:
     return ThreadListResponse(items=[ThreadSummary(**i.to_dict()) for i in items])
 
 
+@router.post("/threads", response_model=CreateThreadResponse)
+def create_thread(payload: CreateThreadRequest = CreateThreadRequest()) -> CreateThreadResponse:
+    title = (payload.title or "New chat").strip()[:120] or "New chat"
+    store = get_chat_store()
+    thread_id = store.ensure_thread(title=title)
+    # Return the exact row shape used by the sidebar so clients can insert it
+    # without waiting for the next list refresh.
+    with store._connect() as conn:  # type: ignore[attr-defined]
+        row = conn.execute(
+            "SELECT thread_id, title, created_at, updated_at FROM chat_threads WHERE thread_id = ?",
+            (thread_id,),
+        ).fetchone()
+    return CreateThreadResponse(
+        thread_id=thread_id,
+        title=row["title"] if row else title,
+        created_at=row["created_at"] if row else time.time(),
+        updated_at=row["updated_at"] if row else time.time(),
+    )
+
+
 @router.get("/threads/{thread_id}/messages", response_model=ThreadMessagesResponse)
 def get_thread_messages(thread_id: str, limit: int = 200) -> ThreadMessagesResponse:
     if limit < 1 or limit > 1000:
@@ -749,10 +786,25 @@ def post_approval(run_id: str, task_id: str, payload: ApprovalRequest) -> Dict[s
     return {"ok": True, "decision": payload.decision}
 
 
+@router.post("/runs/{run_id}/cancel")
+def post_cancel_run(run_id: str) -> Dict[str, Any]:
+    snapshot = get_state_values(run_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="run not found")
+    ok = cancel_run(run_id)
+    if not ok:
+        raise HTTPException(status_code=409, detail="run could not be cancelled")
+    return {"ok": True, "run_id": run_id, "status": "cancelled"}
+
+
 @router.get("/runs/{run_id}/report")
-def get_report(run_id: str, format: str = "markdown") -> Any:
-    """Return the run's report. format=markdown (default) → text/markdown
-    download; format=json → structured sections list."""
+def get_report(run_id: str, format: str = "pdf", download: bool = False) -> Any:
+    """Return the run's report.
+
+    format=pdf (default) streams the PDF for browser preview, download=1
+    forces attachment; format=markdown keeps the legacy .md export; format=json
+    returns structured sections.
+    """
     snapshot = get_state_values(run_id)
     if not snapshot:
         raise HTTPException(status_code=404, detail="run not found")
@@ -760,17 +812,50 @@ def get_report(run_id: str, format: str = "markdown") -> Any:
     final_report = values.get("final_report")
     # ReportAgent.run() returns {"markdown": path, "html": ..., "pdf": ..., "validation_report": ...}
     # Older code paths may store a bare path string — handle both.
-    if isinstance(final_report, dict):
-        report_path = final_report.get("markdown")
-    else:
-        report_path = final_report
-    if not report_path or not isinstance(report_path, str) or not os.path.exists(report_path):
-        raise HTTPException(status_code=409, detail="report not ready")
-
     if format == "json":
         # Reuse adapter — it produces the same `sections[]` shape.
         rs = to_run_session(run_id, snapshot, get_state_history(run_id, limit=10))
         return rs.get("report") or {}
+
+    if format not in {"pdf", "markdown"}:
+        raise HTTPException(status_code=400, detail="format must be pdf, markdown, or json")
+
+    if isinstance(final_report, dict):
+        report_path = final_report.get(format)
+        if format == "pdf":
+            html_path = final_report.get("html")
+            if isinstance(html_path, str) and os.path.exists(html_path):
+                inferred = os.path.join(os.path.dirname(html_path), "final_report.pdf")
+                report_path = _html_to_pdf(html_path, inferred) or report_path
+        if format == "pdf" and not report_path:
+            markdown_path = final_report.get("markdown")
+            if isinstance(markdown_path, str):
+                inferred = os.path.join(os.path.dirname(markdown_path), "final_report.pdf")
+                if os.path.exists(inferred):
+                    report_path = inferred
+                elif os.path.exists(markdown_path):
+                    report_path = _markdown_to_pdf(markdown_path, inferred)
+    else:
+        report_path = final_report
+        if format == "pdf" and isinstance(report_path, str):
+            inferred = os.path.splitext(report_path)[0] + ".pdf"
+            if os.path.exists(inferred):
+                report_path = inferred
+            elif os.path.exists(report_path):
+                report_path = _markdown_to_pdf(report_path, inferred)
+
+    if not report_path or not isinstance(report_path, str) or not os.path.exists(report_path):
+        raise HTTPException(status_code=409, detail=f"{format} report not ready")
+
+    if format == "pdf":
+        disposition = "attachment" if download else "inline"
+        filename = f"pdca-report-{run_id}.pdf"
+        return FileResponse(
+            report_path,
+            media_type="application/pdf",
+            filename=filename,
+            headers={"Content-Disposition": f'{disposition}; filename="{filename}"'},
+        )
 
     try:
         with open(report_path, "r", encoding="utf-8") as f:
@@ -783,6 +868,92 @@ def get_report(run_id: str, format: str = "markdown") -> Any:
         media_type="text/markdown",
         headers={"Content-Disposition": f"attachment; filename=pdca-report-{run_id}.md"},
     )
+
+
+def _markdown_to_pdf(markdown_path: str, pdf_path: str) -> Optional[str]:
+    try:
+        from pdca.agents.report_module.exporters import _write_plain_pdf
+
+        with open(markdown_path, "r", encoding="utf-8") as f:
+            md = f.read()
+        lines: List[str] = []
+        for raw in md.splitlines():
+            if not raw.strip():
+                lines.append("")
+            else:
+                lines.extend(textwrap.wrap(raw.strip(), width=96) or [""])
+        _write_plain_pdf(lines or ["Report generated with no text content."], pdf_path)
+        return pdf_path if os.path.exists(pdf_path) else None
+    except Exception as e:
+        logger.warning("markdown to PDF fallback failed", extra={"path": markdown_path, "error": str(e)})
+        return None
+
+
+def _html_to_pdf(html_path: str, pdf_path: str) -> Optional[str]:
+    try:
+        edge_result = _html_to_pdf_browser(html_path, pdf_path)
+        if edge_result:
+            return edge_result
+
+        from pdca.agents.report_module.exporters import export_pdf
+
+        with open(html_path, "r", encoding="utf-8") as f:
+            html = f.read()
+        result = export_pdf(html, pdf_path)
+        return result if result and os.path.exists(result) else None
+    except Exception as e:
+        logger.warning("HTML to PDF export failed", extra={"path": html_path, "error": str(e)})
+        return None
+
+
+def _html_to_pdf_browser(html_path: str, pdf_path: str) -> Optional[str]:
+    """Render the rich HTML report with a local Chromium browser when present.
+
+    This preserves the same layout/charts users see in the HTML artifact. It is
+    intentionally best-effort; if Edge/Chrome is unavailable we fall back to the
+    Python exporters.
+    """
+    import shutil
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    candidates = [
+        os.getenv("PDCA_CHROMIUM_PATH") or "",
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        shutil.which("msedge") or "",
+        shutil.which("chrome") or "",
+        shutil.which("chromium") or "",
+    ]
+    browser = next((p for p in candidates if p and os.path.exists(p)), None)
+    if not browser:
+        return None
+
+    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+    file_url = Path(html_path).resolve().as_uri()
+    with tempfile.TemporaryDirectory(prefix="pdca-chromium-") as user_data_dir:
+        cmd = [
+            browser,
+            "--headless=new",
+            "--disable-gpu",
+            "--no-first-run",
+            "--disable-extensions",
+            "--allow-file-access-from-files",
+            f"--user-data-dir={user_data_dir}",
+            f"--print-to-pdf={os.path.abspath(pdf_path)}",
+            file_url,
+        ]
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=75)
+    if proc.returncode == 0 and os.path.exists(pdf_path):
+        return pdf_path
+    logger.warning(
+        "browser PDF export failed",
+        extra={"path": html_path, "returncode": proc.returncode, "stderr": (proc.stderr or "")[-500:]},
+    )
+    return None
 
 
 @router.get("/runs")

@@ -9,6 +9,7 @@ export type GraphNodeName =
   | "scan_poll"
   | "scan_collect"
   | "risk_evaluation"
+  | "rag_enrich"
   | "operational_planning"
   | "review_task"
   | "reset_index"
@@ -37,6 +38,7 @@ export type RunStatus =
   | "verifying"
   | "generating_report"
   | "completed"
+  | "cancelled"
   | "failed";
 
 export type ToolCategory = "scanner" | "knowledge" | "remediation";
@@ -93,7 +95,7 @@ export interface ScanJob {
   httpMethod: "GET" | "POST";
   taskType: "group" | "checks" | "custom";
   taskValue: string;
-  status: "pending" | "running" | "completed" | "failed" | "timeout";
+  status: "pending" | "running" | "completed" | "failed" | "timeout" | "cancelled";
   submittedAt: string;
   finishedAt?: string;
   resultCount?: number;
@@ -230,6 +232,11 @@ export interface RagBundle {
   controlMappings: Record<string, unknown>;
   confidence: string;
   diagnostics?: Record<string, unknown>;
+  trace?: {
+    report_context_request?: Record<string, unknown>;
+    resolve_mapping_requests?: Array<Record<string, unknown>>;
+    response_counts?: Record<string, number>;
+  };
 }
 
 export interface RemediationTask {
@@ -330,6 +337,7 @@ export type AssistantCardKind =
   | "remediation_offer"
   | "remediation_execution"
   | "verification"
+  | "verification_summary"
   | "report_ready"
   | "text"
   | "qa_answer"
@@ -445,6 +453,21 @@ export interface VerificationCard extends AssistantCardBase {
   verificationStatus: VerificationStatus;
 }
 
+export interface VerificationSummaryItem {
+  id: string;
+  findingId: string;
+  resource: string;
+  toolName: string;
+  beforeState: string;
+  afterState: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface VerificationSummaryCard extends AssistantCardBase {
+  kind: "verification_summary";
+  items: VerificationSummaryItem[];
+}
+
 export interface ReportReadyCard extends AssistantCardBase {
   kind: "report_ready";
   filename: string;
@@ -481,6 +504,7 @@ export type AssistantCard =
   | RemediationOfferCard
   | RemediationExecutionCard
   | VerificationCard
+  | VerificationSummaryCard
   | ReportReadyCard
   | TextCard
   | QAAnswerCard

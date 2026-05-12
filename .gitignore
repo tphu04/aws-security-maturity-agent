@@ -59,10 +59,10 @@ RAG/data/raw/maturity_mapping_candidates.json
 # Frontend (Node / Vite / TypeScript build artifacts)
 # ---------------------------------------------------------------------------
 node_modules/
+Frontend/node_modules/
 Frontend/dist/
 Chatbot-Frontend/dist/
 *.tsbuildinfo
-# Compiled JS/TS declaration files emitted next to .ts sources
 Frontend/vite.config.js
 Frontend/vite.config.d.ts
 
@@ -72,7 +72,17 @@ Frontend/vite.config.d.ts
 data/jobs/*.db
 data/jobs/*.db-shm
 data/jobs/*.db-wal
+data/checkpoints/*.db
+data/checkpoints/*.db-shm
+data/checkpoints/*.db-wal
+data/chat/*.db
+data/chat/*.db-shm
+data/chat/*.db-wal
 data/runs/*.db
 data/runs/*.db-shm
 data/runs/*.db-wal
 data/runs/run_state.json
+data/runs/charts/
+data/runs/report-*.md
+data/runs/report-*.html
+data/runs/report-*.pdf

@@ -50,6 +50,8 @@ def _derive_status(values: Dict[str, Any], next_nodes: List[str]) -> Tuple[str, 
     - If `next_nodes` non-empty: about-to-run node drives the status.
     - If `next_nodes` empty: graph reached END → check errors → completed/failed.
     """
+    if values.get("cancelled"):
+        return ("cancelled", "scan_poll")
     errors = values.get("errors") or []
     if not next_nodes:
         if errors:
@@ -244,7 +246,7 @@ def _scan_jobs(values: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def _scan_job_status(s: Optional[str]) -> str:
     s = (s or "pending").lower()
-    if s in ("pending", "running", "completed", "failed", "timeout"):
+    if s in ("pending", "running", "completed", "failed", "timeout", "cancelled"):
         return s
     if s == "max_iterations":
         return "timeout"
@@ -270,7 +272,8 @@ def _remediation_tasks(values: Dict[str, Any]) -> List[Dict[str, Any]]:
         decision_raw = plan.get(tid, "pending")
         decision = (
             "approved" if decision_raw == "approve"
-            else "rejected" if decision_raw in ("skip", "reject", "rejected")
+            else "rejected" if decision_raw in ("reject", "rejected")
+            else "skipped" if decision_raw in ("skip", "skipped")
             else "manual_required" if t.get("manual_required")
             else "pending"
         )
@@ -455,6 +458,31 @@ def _tool_calls(values: Dict[str, Any]) -> List[Dict[str, Any]]:
             "returnType": "dict",
             "timestamp": _epoch_to_iso(values.get("scan_started_at")) or "",
             "relatedGraphNode": "scan_submit",
+        })
+    # RAG enrichment (one knowledge call for the multi-query report_context
+    # request, plus mapping sub-queries summarized inside ragBundle.trace).
+    rag_bundle = values.get("rag_bundle") or {}
+    if rag_bundle:
+        trace = rag_bundle.get("trace") or {}
+        request_payload = trace.get("report_context_request") or {}
+        counts = trace.get("response_counts") or {}
+        out.append({
+            "id": "tc_rag_report_context",
+            "name": "build_report_context",
+            "category": "knowledge",
+            "manualOnly": False,
+            "status": "success" if rag_bundle.get("confidence") != "unavailable" else "failed",
+            "inputPayload": request_payload,
+            "outputSummary": (
+                f"{counts.get('check_findings', 0)} checks, "
+                f"{counts.get('capability_themes', 0)} themes, "
+                f"{counts.get('remediation_guides', 0)} guides, "
+                f"{counts.get('control_mappings', 0)} mappings"
+            ),
+            "returnType": "dict",
+            "timestamp": "",
+            "durationMs": int(((rag_bundle.get("diagnostics") or {}).get("total_latency_ms") or 0)),
+            "relatedGraphNode": "rag_enrich",
         })
     # Remediation tools (one per execution_log).
     # FE `ToolStatus = queued|running|success|failed` (no manual_required) —
@@ -749,8 +777,10 @@ def _report(values: Dict[str, Any], run_id: str) -> Dict[str, Any]:
     # ReportAgent emits {"markdown": ..., "html": ..., "pdf": ..., "validation_report": ...}
     if isinstance(final_report, dict):
         path = final_report.get("markdown")
+        pdf_path = final_report.get("pdf")
     else:
         path = final_report
+        pdf_path = None
     sections: List[Dict[str, Any]] = []
     if path and isinstance(path, str) and os.path.exists(path):
         try:
@@ -762,9 +792,10 @@ def _report(values: Dict[str, Any], run_id: str) -> Dict[str, Any]:
                 extra={"run_id": run_id, "path": path, "error": str(e)},
             )
 
-    status = "ready" if sections else "pending"
+    has_pdf = bool(pdf_path and isinstance(pdf_path, str) and os.path.exists(pdf_path))
+    status = "ready" if sections or has_pdf else "pending"
     return {
-        "filename": f"pdca-report-{run_id}.md",
+        "filename": f"pdca-report-{run_id}.pdf" if has_pdf else f"pdca-report-{run_id}.md",
         "status": status,
         "runId": run_id,
         "version": "0.1.0",
@@ -794,6 +825,32 @@ def _strip_private(d: Any) -> Any:
     if isinstance(d, list):
         return [_strip_private(x) for x in d]
     return d
+
+
+def _rag_capability_themes(themes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Expose only concise, document-backed RAG context to the FE trace."""
+    out: List[Dict[str, Any]] = []
+    for t in themes:
+        if not isinstance(t, dict):
+            continue
+        citations = t.get("citations") or []
+        if not citations or not any((c or {}).get("url") for c in citations if isinstance(c, dict)):
+            continue
+        narrative = " ".join(str(t.get("narrative") or "").split())
+        if not narrative:
+            continue
+        if len(narrative) > 360:
+            narrative = narrative[:357].rstrip() + "..."
+        out.append({
+            "domain": t.get("domain") or "general",
+            "narrative": narrative,
+            "common_pitfalls": [],
+            "baselines": [],
+            "citations": citations[:3],
+        })
+        if len(out) >= 5:
+            break
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -850,10 +907,12 @@ def to_run_session(
         "messages": [],   # FE-only; client generates from status transitions
         "report": _report(values, run_id),
         "ragBundle": {
-            "capabilityThemes": rag_bundle.get("capability_themes") or [],
+            "capabilityThemes": _rag_capability_themes(rag_bundle.get("capability_themes") or []),
             "remediationGuides": rag_bundle.get("remediation_guides") or [],
             "controlMappings": rag_bundle.get("control_mappings") or {},
             "confidence": rag_bundle.get("confidence") or "unknown",
+            "diagnostics": rag_bundle.get("diagnostics") or {},
+            "trace": rag_bundle.get("trace") or {},
         } if rag_bundle else None,
     }
     return _strip_private(out)

@@ -21,6 +21,8 @@ const STATUS_MAP: Record<string, ScanJob["status"]> = {
   running: "running",
   completed: "completed",
   failed: "failed",
+  timeout: "timeout",
+  cancelled: "cancelled",
 };
 
 const TASK_TYPE_MAP: Record<string, ScanJob["taskType"]> = {
@@ -157,6 +159,7 @@ const RUN_STATUS_FALLBACK: Record<string, RunStatus> = {
   pending: "submitting_scan",
   running: "polling",
   completed: "completed",
+  cancelled: "cancelled",
   failed: "failed",
 };
 

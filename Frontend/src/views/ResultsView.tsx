@@ -6,7 +6,7 @@ import {
   Code, SeverityPill, FindingStatusPill, RemediationStatusPill,
 } from "@/components/ui/status-pill";
 import type { Finding, RunSession, Severity } from "@/types/pdca";
-import { Eye, Wrench, BookOpen, Filter, ExternalLink } from "lucide-react";
+import { Eye, BookOpen, Filter, ExternalLink } from "lucide-react";
 import { useRouter } from "@/state/router";
 import { cn } from "@/lib/utils";
 
@@ -35,14 +35,9 @@ export function ResultsView({ run }: { run: RunSession }) {
       title="Results dashboard"
       subtitle="Normalized and prioritized findings after scan_collect and risk_evaluation."
       actions={
-        <>
-          <Button variant="outline" size="sm" onClick={() => go("approvals")}>
-            <Wrench className="h-4 w-4" /> Approvals queue
-          </Button>
-          <Button size="sm" onClick={() => go("report")}>
-            <ExternalLink className="h-4 w-4" /> Open Report
-          </Button>
-        </>
+        <Button size="sm" onClick={() => go("report")}>
+          <ExternalLink className="h-4 w-4" /> Open Report
+        </Button>
       }
     >
       {/* Summary cards */}
@@ -114,11 +109,6 @@ export function ResultsView({ run }: { run: RunSession }) {
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setActive(f)}>
                         <Eye className="h-3.5 w-3.5" /> View
                       </Button>
-                      {f.remediationStatus === "open" && (
-                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => go("approvals")}>
-                          <Wrench className="h-3.5 w-3.5" /> Remediate
-                        </Button>
-                      )}
                     </div>
                   </td>
                 </tr>

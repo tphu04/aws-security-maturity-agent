@@ -65,6 +65,17 @@ def rag_enrich_node(state: PDCAState, config: RunnableConfig) -> dict:
     with node_span("rag_enrich", run_id) as sp:
         client = RAGClient(base_url=settings.rag_api_url)
 
+        rag_request: Dict[str, Any] = {
+            "endpoint": "/v1/retrieve/report_context",
+            "check_ids": unique_check_ids,
+            "domains": domains,
+            "severity_map": sev_map,
+            "include_q2": True,
+            "include_q3": True,
+            "top_k_check": 10,
+            "top_k_capability": 5,
+            "top_k_remediation": 3,
+        }
         bundle: Dict[str, Any] = {}
         try:
             bundle = client.build_report_context(
@@ -84,6 +95,7 @@ def rag_enrich_node(state: PDCAState, config: RunnableConfig) -> dict:
             )
 
         mappings: Dict[str, Any] = {}
+        mapping_trace: List[Dict[str, Any]] = []
         for cid in unique_check_ids:
             try:
                 f0 = next((x for x in fails if _check_id(x) == cid), {})
@@ -93,7 +105,23 @@ def rag_enrich_node(state: PDCAState, config: RunnableConfig) -> dict:
                 ) or {}
                 if m:
                     mappings[cid] = m.get("data") or m
+                    selected = mappings[cid]
+                    mapping_trace.append({
+                        "endpoint": "/v1/resolve/mapping",
+                        "check_id": cid,
+                        "service": f0.get("service") or None,
+                        "selected_capability_id": (
+                            selected.get("capability_id")
+                            or (selected.get("mapping") or {}).get("capability_id")
+                        ) if isinstance(selected, dict) else None,
+                        "status": "success",
+                    })
             except Exception:
+                mapping_trace.append({
+                    "endpoint": "/v1/resolve/mapping",
+                    "check_id": cid,
+                    "status": "failed",
+                })
                 pass
 
         # Index for per-finding enrichment.
@@ -135,7 +163,7 @@ def rag_enrich_node(state: PDCAState, config: RunnableConfig) -> dict:
                     f2["control_mappings"] = m
             enriched_findings.append(f2)
 
-        themes = bundle.get("capability_themes") or []
+        themes = _document_backed_themes(bundle.get("capability_themes") or [])
         guides = list(rem_index.values())
         confidence = bundle.get("confidence") or "unknown"
 
@@ -169,6 +197,16 @@ def rag_enrich_node(state: PDCAState, config: RunnableConfig) -> dict:
             "control_mappings": mappings,
             "confidence": confidence,
             "diagnostics": bundle.get("diagnostics") or {},
+            "trace": {
+                "report_context_request": rag_request,
+                "resolve_mapping_requests": mapping_trace,
+                "response_counts": {
+                    "check_findings": len(bundle.get("check_findings") or []),
+                    "capability_themes": len(themes),
+                    "remediation_guides": len(guides),
+                    "control_mappings": len(mappings),
+                },
+            },
         },
         "prioritized_findings": enriched_findings,
     }
@@ -182,3 +220,31 @@ def _check_id(f: Dict[str, Any]) -> str:
         or (f.get("metadata") or {}).get("event_code")
         or ""
     )
+
+
+def _document_backed_themes(themes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Keep only concise capability context with explicit citations.
+
+    This protects the UI/report from older RAG service versions that returned
+    broad domain snippets and long common_pitfalls for queries like "s3".
+    """
+    out: List[Dict[str, Any]] = []
+    for t in themes:
+        if not isinstance(t, dict):
+            continue
+        citations = t.get("citations") or []
+        if not citations or not any((c or {}).get("url") for c in citations if isinstance(c, dict)):
+            continue
+        narrative = " ".join(str(t.get("narrative") or "").split())
+        if not narrative:
+            continue
+        if len(narrative) > 360:
+            narrative = narrative[:357].rstrip() + "..."
+        out.append({
+            "domain": t.get("domain") or "general",
+            "narrative": narrative,
+            "common_pitfalls": [],
+            "baselines": [],
+            "citations": citations[:3],
+        })
+    return out[:5]

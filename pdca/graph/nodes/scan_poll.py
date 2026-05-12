@@ -85,14 +85,15 @@ def scan_poll_node(state: PDCAState, config: RunnableConfig) -> dict:
                     logger.info(
                         "job completed", extra={"run_id": run_id, "job_id": job_id}
                     )
-                elif status == "failed":
+                elif status in ("failed", "cancelled"):
                     completed_meta_delta[job_id] = {
                         **meta,
-                        "status": "failed",
+                        "status": status,
                         "completed_at": time.time(),
                     }
                     logger.warning(
-                        "job failed", extra={"run_id": run_id, "job_id": job_id}
+                        "job finished non-successfully",
+                        extra={"run_id": run_id, "job_id": job_id, "status": status},
                     )
                 else:
                     still_pending[job_id] = meta

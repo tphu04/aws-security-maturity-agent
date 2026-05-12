@@ -8,7 +8,7 @@ import {
   EnvironmentCheckCardView, PlanningCardView, ScanSubmittedCardView,
   PollingCardView, FindingsCollectedCardView, RiskEvaluationCardView,
   RemediationOfferCardView, RemediationExecutionCardView, VerificationCardView,
-  ReportReadyCardView, QAAnswerCardView, SuggestActionCardView,
+  VerificationSummaryCardView, ReportReadyCardView, QAAnswerCardView, SuggestActionCardView,
 } from "./ChatCards";
 
 interface Props {
@@ -17,8 +17,10 @@ interface Props {
   findingsById: Record<string, Finding>;
   onApproveTask?: (id: string) => void;
   onRejectTask?: (id: string) => void;
+  onSkipTask?: (id: string) => void;
   onShowTask?: (id: string) => void;
   onPreviewReport?: () => void;
+  onDownloadReport?: () => void;
   onSuggestionChip?: (chip: SuggestionChip) => void;
   onSourceClick?: (checkId?: string) => void;
   isFirstInGroup?: boolean;
@@ -42,13 +44,14 @@ function renderCard(card: AssistantCard, idx: number, props: Props) {
           key={key} card={offer} task={task}
           onApprove={() => props.onApproveTask?.(offer.taskId)}
           onReject={() => props.onRejectTask?.(offer.taskId)}
-          onShowDetails={() => props.onShowTask?.(offer.taskId)}
+          onSkip={() => props.onSkipTask?.(offer.taskId)}
         />
       );
     }
     case "remediation_execution": return <RemediationExecutionCardView key={key} card={card} />;
     case "verification":          return <VerificationCardView key={key} card={card} finding={props.findingsById[card.findingId]} />;
-    case "report_ready":          return <ReportReadyCardView key={key} card={card} onPreview={props.onPreviewReport} />;
+    case "verification_summary":  return <VerificationSummaryCardView key={key} card={card} findingsById={props.findingsById} />;
+    case "report_ready":          return <ReportReadyCardView key={key} card={card} onPreview={props.onPreviewReport} onDownload={props.onDownloadReport} />;
     case "text":
       return (
         <p key={key} className="text-sm leading-relaxed text-text-secondary">

@@ -25,7 +25,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       "/api/rag": {
-        target: "http://127.0.0.1:9005",
+        target: "http://127.0.0.1:9006",
         rewrite: (p) => p.replace(/^\/api\/rag/, ""),
         changeOrigin: true,
       },

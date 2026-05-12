@@ -16,6 +16,7 @@ import re
 import sqlite3
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from contextlib import contextmanager
@@ -35,6 +36,9 @@ logger = get_logger("pdca.api_server")
 CHECKS_DIR = "custom_checks"
 JOB_OUTPUT_DIR = "job_outputs"
 JOB_DB_PATH = "data/jobs/scanner_jobs.db"
+
+RUNNING_PROCESSES: Dict[str, subprocess.Popen[str]] = {}
+RUNNING_PROCESSES_LOCK = threading.Lock()
 
 ALLOWED_GROUPS = {
     "accessanalyzer", "account", "acm", "apigateway", "apigatewayv2", "appstream",
@@ -133,6 +137,16 @@ def _get_job(job_id: str) -> Optional[Dict[str, Any]]:
     with _job_db() as conn:
         row = conn.execute("SELECT * FROM jobs WHERE job_id = ?", (job_id,)).fetchone()
     return _row_to_job(row) if row else None
+
+
+def _job_status(job_id: str) -> Optional[str]:
+    with _job_db() as conn:
+        row = conn.execute("SELECT status FROM jobs WHERE job_id = ?", (job_id,)).fetchone()
+    return str(row["status"]) if row else None
+
+
+def _is_cancelled(job_id: str) -> bool:
+    return _job_status(job_id) == "cancelled"
 
 
 def _list_jobs(limit: int, offset: int) -> List[Dict[str, Any]]:
@@ -254,6 +268,9 @@ def _run_prowler_command_worker(job_id: str) -> None:
     if not job_info:
         logger.error("worker: job not found", extra={"job_id": job_id})
         return
+    if job_info.get("status") == "cancelled":
+        logger.info("worker: job already cancelled", extra={"job_id": job_id})
+        return
 
     started_at = time.time()
     _update_job(job_id, status="running", started_at=started_at)
@@ -339,17 +356,31 @@ def _run_prowler_command_worker(job_id: str) -> None:
 
     try:
         logger.info("prowler start", extra={"job_id": job_id, "argv": argv})
-        result = subprocess.run(
+        proc = subprocess.Popen(
             argv,
             shell=False,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            check=True,
-            timeout=1800,
             encoding="utf-8",
             errors="replace",
             env=env,
         )
+        with RUNNING_PROCESSES_LOCK:
+            RUNNING_PROCESSES[job_id] = proc
+        try:
+            stdout, stderr = proc.communicate(timeout=1800)
+        finally:
+            with RUNNING_PROCESSES_LOCK:
+                RUNNING_PROCESSES.pop(job_id, None)
+
+        if _is_cancelled(job_id):
+            logger.info("prowler cancelled", extra={"job_id": job_id, "rc": proc.returncode})
+            return
+        if proc.returncode != 0:
+            raise subprocess.CalledProcessError(proc.returncode, argv, output=stdout, stderr=stderr)
+
+        result = subprocess.CompletedProcess(argv, proc.returncode, stdout, stderr)
         text_summary = strip_ansi_codes(result.stdout)
         findings_data: List[Any] = []
 
@@ -382,6 +413,9 @@ def _run_prowler_command_worker(job_id: str) -> None:
             )
 
         ended_at = time.time()
+        if _is_cancelled(job_id):
+            logger.info("prowler completed after cancel request", extra={"job_id": job_id})
+            return
         _update_job(
             job_id,
             status="completed",
@@ -393,6 +427,14 @@ def _run_prowler_command_worker(job_id: str) -> None:
 
     except subprocess.TimeoutExpired:
         logger.error("prowler timeout", extra={"job_id": job_id})
+        with RUNNING_PROCESSES_LOCK:
+            proc = RUNNING_PROCESSES.pop(job_id, None)
+        if proc and proc.poll() is None:
+            try:
+                proc.kill()
+                proc.communicate(timeout=5)
+            except Exception:
+                pass
         _update_job(
             job_id,
             status="failed",
@@ -422,6 +464,8 @@ def _run_prowler_command_worker(job_id: str) -> None:
             error_json=json.dumps({"error": "Lỗi không xác định", "details": str(e)}),
         )
     finally:
+        with RUNNING_PROCESSES_LOCK:
+            RUNNING_PROCESSES.pop(job_id, None)
         if settings.cleanup_scan_output and os.path.exists(full_output_path):
             try:
                 os.remove(full_output_path)
@@ -526,6 +570,45 @@ def get_job_status(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail="Không tìm thấy Job ID")
     return job
+
+
+@app.post("/v1/job/{job_id}/cancel")
+def cancel_job(job_id: str):
+    job = _get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Không tìm thấy Job ID")
+
+    status = str(job.get("status") or "")
+    if status in {"completed", "failed", "cancelled", "timeout"}:
+        return {"ok": True, "job_id": job_id, "status": status, "already_terminal": True}
+
+    now = time.time()
+    started_at = job.get("start_time") or job.get("submitted_time") or now
+    _update_job(
+        job_id,
+        status="cancelled",
+        ended_at=now,
+        duration_s=max(0, now - float(started_at)),
+        error_json=json.dumps({"error": "Scan cancelled by user"}),
+    )
+
+    with RUNNING_PROCESSES_LOCK:
+        proc = RUNNING_PROCESSES.pop(job_id, None)
+    if proc and proc.poll() is None:
+        try:
+            proc.terminate()
+            proc.wait(timeout=8)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            try:
+                proc.wait(timeout=5)
+            except Exception:
+                pass
+        except Exception as e:
+            logger.warning("cancel terminate failed", extra={"job_id": job_id, "error": str(e)})
+
+    logger.info("job cancelled", extra={"job_id": job_id, "previous_status": status})
+    return {"ok": True, "job_id": job_id, "status": "cancelled"}
 
 
 @app.get("/v1/jobs")

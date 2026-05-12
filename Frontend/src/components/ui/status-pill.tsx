@@ -145,6 +145,7 @@ const runMap: Record<RunStatus, { tone: Parameters<typeof Pill>[0]["tone"]; labe
   verifying:              { tone: "info",    label: "verifying" },
   generating_report:      { tone: "info",    label: "generating report" },
   completed:              { tone: "success", label: "completed" },
+  cancelled:              { tone: "neutral", label: "cancelled" },
   failed:                 { tone: "danger",  label: "failed" },
 };
 export function RunStatusPill({ status, className }: { status: RunStatus; className?: string }) {

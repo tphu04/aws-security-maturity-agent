@@ -2,17 +2,22 @@ import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { RunSession } from "@/types/pdca";
-import { Telescope, FlaskConical, Activity, CircleDot, BookOpen, ExternalLink, ChevronDown } from "lucide-react";
+import { Telescope, Activity, CircleDot, BookOpen, ExternalLink, ChevronDown, X, Route } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Code } from "@/components/ui/status-pill";
 import { ToolCallCard } from "./ToolCallCard";
-import { EvidenceCard } from "./EvidenceCard";
 import { GraphTimeline } from "@/components/graph/GraphTimeline";
 import { cn } from "@/lib/utils";
 
-export function ToolTracePanel({ run }: { run: RunSession }) {
+export function ToolTracePanel({ run, onClose }: { run: RunSession; onClose?: () => void }) {
   const calls = [...run.toolCalls].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-  const isLive = run.status !== "completed" && run.status !== "failed" && run.status !== "idle";
+  const isLive = run.status !== "completed" && run.status !== "failed" && run.status !== "cancelled" && run.status !== "idle";
   const [statsOpen, setStatsOpen] = useState(false);
+  const ragTrace = run.ragBundle?.trace ?? {};
+  const ragRequest = ragTrace.report_context_request ?? {};
+  const mappingRequests = ragTrace.resolve_mapping_requests ?? [];
+  const responseCounts = ragTrace.response_counts ?? {};
+  const ragTraceCount = (Object.keys(ragRequest).length ? 1 : 0) + mappingRequests.length;
 
   const pendingJobs   = run.scanJobs.filter(j => j.status === "pending" || j.status === "running").length;
   const completedJobs = run.scanJobs.filter(j => j.status === "completed").length;
@@ -30,6 +35,11 @@ export function ToolTracePanel({ run }: { run: RunSession }) {
           <span className="text-text-muted uppercase tracking-wider">{isLive ? "live" : "idle"}</span>
           <Code className="ml-1">{run.currentNode}</Code>
         </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" className="ml-1 h-7 w-7 shrink-0" onClick={onClose} aria-label="Close trace panel">
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
       </div>
 
       {/* Inline stats — single line by default, expand for full grid */}
@@ -63,8 +73,7 @@ export function ToolTracePanel({ run }: { run: RunSession }) {
         <div className="px-4 pt-3">
           <TabsList className="w-full">
             <TabsTrigger value="tools"     className="flex-1">Tools <Cnt n={calls.length} /></TabsTrigger>
-            <TabsTrigger value="knowledge" className="flex-1">RAG <Cnt n={(run.ragBundle?.capabilityThemes?.length ?? 0) + (run.ragBundle?.remediationGuides?.length ?? 0)} /></TabsTrigger>
-            <TabsTrigger value="evidence"  className="flex-1">Evidence <Cnt n={run.evidence.length} /></TabsTrigger>
+            <TabsTrigger value="knowledge" className="flex-1">RAG <Cnt n={ragTraceCount || ((run.ragBundle?.capabilityThemes?.length ?? 0) + (run.ragBundle?.remediationGuides?.length ?? 0))} /></TabsTrigger>
             <TabsTrigger value="graph"     className="flex-1">Graph</TabsTrigger>
           </TabsList>
         </div>
@@ -107,7 +116,7 @@ export function ToolTracePanel({ run }: { run: RunSession }) {
             <div className="space-y-4 p-4">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
                 <BookOpen className="h-3.5 w-3.5 text-primary" />
-                RAG knowledge bundle
+                RAG queries and responses
                 {run.ragBundle?.confidence && (
                   <Code>confidence={run.ragBundle.confidence}</Code>
                 )}
@@ -119,25 +128,68 @@ export function ToolTracePanel({ run }: { run: RunSession }) {
                 </div>
               )}
 
+              {run.ragBundle && (
+                <div className="rounded-md border border-border/60 bg-bg-elevated/30 p-3">
+                  <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    <Route className="h-3.5 w-3.5 text-primary" />
+                    Called RAG endpoint
+                  </div>
+                  <TraceRow k="endpoint" v={String(ragRequest.endpoint ?? "/v1/retrieve/report_context")} />
+                  <TraceRow k="check_ids" v={<InlineList items={asStringList(ragRequest.check_ids)} />} />
+                  <TraceRow k="domains" v={<InlineList items={asStringList(ragRequest.domains)} />} />
+                  <TraceRow k="top_k" v={`${ragRequest.top_k_check ?? "?"}/${ragRequest.top_k_capability ?? "?"}/${ragRequest.top_k_remediation ?? "?"}`} />
+                  <div className="mt-2 grid grid-cols-2 gap-1">
+                    <MiniMetric k="checks" v={responseCounts.check_findings ?? run.findings.length} />
+                    <MiniMetric k="themes" v={responseCounts.capability_themes ?? run.ragBundle.capabilityThemes.length} />
+                    <MiniMetric k="guides" v={responseCounts.remediation_guides ?? run.ragBundle.remediationGuides.length} />
+                    <MiniMetric k="mappings" v={responseCounts.control_mappings ?? Object.keys(run.ragBundle.controlMappings || {}).length} />
+                  </div>
+                  {Object.keys(run.ragBundle.diagnostics || {}).length > 0 && (
+                    <pre className="mt-2 max-h-28 overflow-auto rounded border border-border/50 bg-bg-base/50 p-2 font-mono text-[10px] text-text-secondary scrollbar-thin">
+                      {JSON.stringify(run.ragBundle.diagnostics, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              )}
+
+              {mappingRequests.length > 0 && (
+                <div className="rounded-md border border-border/60 bg-bg-elevated/30 p-3">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Mapping sub-queries
+                  </div>
+                  <div className="space-y-1.5">
+                    {mappingRequests.slice(0, 12).map((m, i) => (
+                      <div key={`${m.check_id ?? i}`} className="rounded border border-border/40 bg-bg-base/40 px-2 py-1.5 text-[11px]">
+                        <div className="flex items-center justify-between gap-2">
+                          <Code>{String(m.check_id ?? "unknown")}</Code>
+                          <span className={cn("font-mono text-[10px]", m.status === "success" ? "text-status-success" : "text-status-error")}>
+                            {String(m.status ?? "unknown")}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-1 text-text-muted">
+                          <span>{String(m.endpoint ?? "/v1/resolve/mapping")}</span>
+                          {m.selected_capability_id != null && <Code>{String(m.selected_capability_id)}</Code>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {run.ragBundle?.capabilityThemes?.map((t, i) => (
                 <div key={`th-${i}`} className="rounded-md border border-border/60 bg-bg-elevated/30 p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wider text-text-muted">Capability theme</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-text-muted">Knowledge document</span>
                     <Code>{t.domain}</Code>
+                    {t.citations?.[0]?.source && <Code>{t.citations[0].source}</Code>}
                   </div>
                   <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">{t.narrative}</p>
-                  {t.common_pitfalls && t.common_pitfalls.length > 0 && (
-                    <div className="mt-2">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Common pitfalls</div>
-                      <ul className="ml-4 list-disc text-[11px] text-text-secondary">
-                        {t.common_pitfalls.slice(0, 4).map((p, j) => <li key={j}>{p}</li>)}
-                      </ul>
-                    </div>
-                  )}
-                  {t.baselines && t.baselines.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {t.baselines.slice(0, 6).map((b, j) => (
-                        <span key={j} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">{b}</span>
+                  {t.citations && t.citations.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-text-muted">
+                      {t.citations.slice(0, 3).map((c, j) => (
+                        <a key={j} href={c.url || undefined} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-primary">
+                          <ExternalLink className="h-3 w-3" /> {c.source}
+                        </a>
                       ))}
                     </div>
                   )}
@@ -194,18 +246,6 @@ export function ToolTracePanel({ run }: { run: RunSession }) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="evidence" className="m-0 min-h-0 flex-1">
-          <ScrollArea className="h-full scrollbar-thin">
-            <div className="space-y-2 p-4">
-              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-                <FlaskConical className="h-3.5 w-3.5 text-primary" />
-                Evidence collected
-              </div>
-              {run.evidence.map((e) => <EvidenceCard key={e.id} evidence={e} />)}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
         <TabsContent value="graph" className="m-0 min-h-0 flex-1">
           <ScrollArea className="h-full scrollbar-thin">
             <div className="p-4">
@@ -228,4 +268,36 @@ function Stat({ k, v }: { k: string; v: React.ReactNode }) {
 }
 function Cnt({ n }: { n: number }) {
   return <span className="ml-1.5 rounded bg-bg-elevated/80 px-1 font-mono text-[10px] text-text-muted">{n}</span>;
+}
+
+function TraceRow({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-2 py-0.5 text-[11px]">
+      <span className="shrink-0 font-mono text-text-muted">{k}</span>
+      <span className="min-w-0 text-right font-mono text-text-primary">{v}</span>
+    </div>
+  );
+}
+
+function MiniMetric({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div className="rounded border border-border/40 bg-bg-base/40 px-2 py-1">
+      <div className="font-mono text-[10px] text-text-muted">{k}</div>
+      <div className="font-mono text-sm text-text-primary">{v}</div>
+    </div>
+  );
+}
+
+function InlineList({ items }: { items: string[] }) {
+  if (!items.length) return <span className="text-text-muted">none</span>;
+  return (
+    <span className="flex max-w-[220px] flex-wrap justify-end gap-1">
+      {items.slice(0, 6).map((item) => <Code key={item}>{item}</Code>)}
+      {items.length > 6 && <span className="text-text-muted">+{items.length - 6}</span>}
+    </span>
+  );
+}
+
+function asStringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map((v) => String(v)).filter(Boolean) : [];
 }

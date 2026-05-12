@@ -90,6 +90,7 @@ class PDCAState(TypedDict):
     completed_jobs: Dict[str, ScanJobMeta]
     scan_started_at: float        # time.time() Unix epoch — survives restart
     scan_poll_count: int
+    cancelled: NotRequired[bool]
 
     # --- Risk & Evaluation ---
     prioritized_findings: List[Dict]

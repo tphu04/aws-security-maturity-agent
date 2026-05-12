@@ -9,11 +9,12 @@ import { Eye, ShieldCheck, X, ClipboardCheck, Hand, AlertTriangle } from "lucide
 import type { RunSession, RemediationTask } from "@/types/pdca";
 
 export function ApprovalsView({
-  run, onApprove, onReject,
+  run, onApprove, onReject, onSkip,
 }: {
   run: RunSession;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
+  onSkip: (id: string) => void;
 }) {
   const [active, setActive] = useState<RemediationTask | null>(null);
 
@@ -27,7 +28,7 @@ export function ApprovalsView({
       run={run}
       title="Approval queue"
       subtitle="Human-in-the-loop: every remediation pauses here until you approve, reject, or mark as manual."
-      actions={<Pill tone="warning"><ClipboardCheck className="h-3 w-3" /> {tasks.filter(t => t.decision === "pending").length} pending</Pill>}
+      actions={<Pill tone="warning"><ClipboardCheck className="h-3 w-3" /> {tasks.filter(t => t.decision === "pending" || t.decision === "manual_required").length} pending</Pill>}
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {tasks.map((t) => (
@@ -51,9 +52,9 @@ export function ApprovalsView({
               <Row k="Required permission" v={<Code>{t.requiredAwsPermission}</Code>} />
             </div>
             <div className="flex flex-wrap gap-2 border-t border-border/60 bg-bg-elevated/30 px-4 py-3">
-              {t.manualOnly ? (
-                <Button variant="outline" size="sm" disabled>
-                  <ShieldCheck className="h-3.5 w-3.5" /> Approve (blocked)
+              {t.manualOnly || t.decision === "manual_required" ? (
+                <Button variant="outline" size="sm" onClick={() => onSkip(t.id)} disabled={t.decision === "skipped"}>
+                  <ShieldCheck className="h-3.5 w-3.5" /> Confirm manual
                 </Button>
               ) : (
                 <>

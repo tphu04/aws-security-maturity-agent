@@ -3,7 +3,8 @@ import {
 } from "react";
 import type { ChatMessage, RunHistoryRow, RunSession, ScanJob } from "@/types/pdca";
 import { emptyRun } from "@/data/mockRun";
-import { chatbotApi, scannerApi, ApiError } from "@/lib/api";
+import { chatbotApi, scannerApi, ApiError, type BackendThreadSummary } from "@/lib/api";
+import { findLastRunId, threadMessagesToChatMessages } from "@/lib/chatAdapters";
 import {
   environmentFromBackend,
   findingsFromJob,
@@ -15,6 +16,8 @@ import {
 
 export type ApiMode = "mock" | "live" | "degraded";
 
+const THREAD_KEY = "pdca.chat.thread_id";
+
 interface RunContextValue {
   run: RunSession;
   setRun: React.Dispatch<React.SetStateAction<RunSession>>;
@@ -22,16 +25,27 @@ interface RunContextValue {
   scannerOnline: boolean | null;
   chatbotOnline: boolean | null;
   activeRunId: string | null;
+  activeThreadId: string | null;
+  threads: BackendThreadSummary[];
+  threadsLoading: boolean;
   refreshScannerHealth: () => Promise<void>;
   refreshEnvironment: () => Promise<void>;
+  refreshThreads: () => Promise<void>;
   // Legacy scanner-only path (still used as fallback when chatbot offline):
   submitGroupScan: (group: string) => Promise<{ jobId: string } | { error: string }>;
   submitChecksScan: (checkIds: string) => Promise<{ jobId: string } | { error: string }>;
   approveTask: (taskId: string) => void;
   rejectTask: (taskId: string) => void;
+  skipTask: (taskId: string) => void;
   appendMessage: (msg: ChatMessage) => void;
   upsertMessage: (msg: ChatMessage) => void;
   clearMessages: () => void;
+  resetConversation: () => void;
+  createConversation: () => Promise<void>;
+  activateThread: (threadId: string) => void;
+  loadThread: (threadId: string) => Promise<void>;
+  deleteThread: (threadId: string) => Promise<void>;
+  cancelActiveRun: () => Promise<void>;
   // Chatbot API helpers (Sprint 2+):
   listHistory: () => Promise<RunHistoryRow[]>;
   createRun: (prompt: string, scope?: string) => Promise<{ runId: string } | { error: string }>;
@@ -49,8 +63,20 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
   const [scannerOnline, setScannerOnline] = useState<boolean | null>(null);
   const [chatbotOnline, setChatbotOnline] = useState<boolean | null>(null);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(() => {
+    try { return localStorage.getItem(THREAD_KEY); } catch { return null; }
+  });
+  const [threads, setThreads] = useState<BackendThreadSummary[]>([]);
+  const [threadsLoading, setThreadsLoading] = useState(false);
   const pollers = useRef<Map<string, number>>(new Map());
   const runPoller = useRef<number | null>(null);
+
+  const stopRunPolling = () => {
+    if (runPoller.current !== null) {
+      window.clearInterval(runPoller.current);
+      runPoller.current = null;
+    }
+  };
 
   const refreshScannerHealth = useCallback(async () => {
     const r = await scannerApi.ping();
@@ -69,9 +95,23 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshThreads = useCallback(async () => {
+    if (!chatbotApi.isConfigured()) return;
+    setThreadsLoading(true);
+    try {
+      const list = await chatbotApi.listThreads(80, 0);
+      setThreads(list.items);
+    } catch {
+      // Sidebar can stay usable even if history fetch fails.
+    } finally {
+      setThreadsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void refreshScannerHealth();
     void refreshEnvironment();
+    void refreshThreads();
 
     // Auto-retry probes every 3s until both services are confirmed online.
     // Stops once both are up so it doesn't poll forever.
@@ -90,7 +130,7 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
       pollers.current.clear();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshScannerHealth, refreshEnvironment]);
+  }, [refreshScannerHealth, refreshEnvironment, refreshThreads]);
 
   const mode: ApiMode =
     scannerOnline === null ? "mock" :
@@ -124,7 +164,10 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
             return { ...r, findings: merged, status: "completed", currentNode: "scan_collect" };
           });
           stopPolling(jobId);
-        } else if (job.status === "failed") {
+        } else if (job.status === "cancelled") {
+          setRun((r) => ({ ...r, status: "cancelled" }));
+          stopPolling(jobId);
+        } else if (job.status === "failed" || job.status === "timeout") {
           setRun((r) => ({ ...r, status: "failed" }));
           stopPolling(jobId);
         }
@@ -191,7 +234,7 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const decideTask = (decision: "approved" | "rejected") => async (taskId: string) => {
+  const decideTask = (decision: "approved" | "rejected" | "skipped") => async (taskId: string) => {
     // Optimistic UI update
     setRun((r) => ({
       ...r,
@@ -212,6 +255,36 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
   };
   const approveTask = useCallback(decideTask("approved"), [activeRunId]);
   const rejectTask  = useCallback(decideTask("rejected"), [activeRunId]);
+  const skipTask    = useCallback(decideTask("skipped"), [activeRunId]);
+
+  const cancelActiveRun = useCallback(async () => {
+    const pendingJobs = run.scanJobs.filter((j) =>
+      j.status === "pending" || j.status === "running",
+    );
+    if (!activeRunId && pendingJobs.length === 0) return;
+
+    try {
+      if (activeRunId && chatbotApi.isConfigured()) {
+        await chatbotApi.cancelRun(activeRunId);
+        stopRunPolling();
+        void fetchRunSnapshot(activeRunId);
+      } else {
+        await Promise.allSettled(pendingJobs.map((j) => scannerApi.cancelJob(j.id)));
+      }
+    } finally {
+      pendingJobs.forEach((j) => stopPolling(j.id));
+      setRun((r) => ({
+        ...r,
+        status: "cancelled",
+        scanJobs: r.scanJobs.map((j) =>
+          pendingJobs.some((p) => p.id === j.id)
+            ? { ...j, status: "cancelled", finishedAt: new Date().toISOString() }
+            : j,
+        ),
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRunId, run.scanJobs]);
 
   const appendMessage = useCallback((msg: ChatMessage) => {
     setRun((r) => ({ ...r, messages: [...r.messages, msg] }));
@@ -242,12 +315,90 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const stopRunPolling = () => {
-    if (runPoller.current !== null) {
-      window.clearInterval(runPoller.current);
-      runPoller.current = null;
+  const resetConversation = useCallback(() => {
+    stopRunPolling();
+    pollers.current.forEach((id) => window.clearInterval(id));
+    pollers.current.clear();
+    setActiveRunId(null);
+    setActiveThreadId(null);
+    try { localStorage.removeItem(THREAD_KEY); } catch { /* ignore */ }
+    setRun((prev) => ({
+      ...emptyRun,
+      startedAt: new Date().toISOString(),
+      lastCheckpointAt: new Date().toISOString(),
+      awsEnvironment: prev.awsEnvironment,
+      graphNodes: [],
+      scanJobs: [],
+      toolCalls: [],
+      evidence: [],
+      findings: [],
+      remediationTasks: [],
+      executionLogs: [],
+      verifications: [],
+      messages: [],
+      ragBundle: undefined,
+      report: {
+        ...emptyRun.report,
+        runId: "",
+        sections: [],
+      },
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const activateThread = useCallback((threadId: string) => {
+    setActiveThreadId(threadId);
+    try { localStorage.setItem(THREAD_KEY, threadId); } catch { /* ignore */ }
+  }, []);
+
+  const createConversation = useCallback(async () => {
+    stopRunPolling();
+    pollers.current.forEach((id) => window.clearInterval(id));
+    pollers.current.clear();
+    setActiveRunId(null);
+
+    const resetRun = (prev: RunSession): RunSession => ({
+      ...emptyRun,
+      startedAt: new Date().toISOString(),
+      lastCheckpointAt: new Date().toISOString(),
+      awsEnvironment: prev.awsEnvironment,
+      graphNodes: [],
+      scanJobs: [],
+      toolCalls: [],
+      evidence: [],
+      findings: [],
+      remediationTasks: [],
+      executionLogs: [],
+      verifications: [],
+      messages: [],
+      ragBundle: undefined,
+      report: {
+        ...emptyRun.report,
+        runId: "",
+        sections: [],
+      },
+    });
+
+    if (!chatbotApi.isConfigured()) {
+      setActiveThreadId(null);
+      try { localStorage.removeItem(THREAD_KEY); } catch { /* ignore */ }
+      setRun(resetRun);
+      return;
     }
-  };
+
+    try {
+      const thread = await chatbotApi.createThread("New chat");
+      setActiveThreadId(thread.thread_id);
+      try { localStorage.setItem(THREAD_KEY, thread.thread_id); } catch { /* ignore */ }
+      setThreads((items) => [thread, ...items.filter((t) => t.thread_id !== thread.thread_id)]);
+      setRun(resetRun);
+    } catch {
+      setActiveThreadId(null);
+      try { localStorage.removeItem(THREAD_KEY); } catch { /* ignore */ }
+      setRun(resetRun);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchRunSnapshot = async (runId: string) => {
     try {
@@ -268,12 +419,13 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
         // Keep FE chat messages — backend messages shape differs.
         messages:          prev.messages,
         report:            snap.report            ?? prev.report,
+        ragBundle:         snap.ragBundle         ?? prev.ragBundle,
         awsEnvironment:    (snap.awsEnvironment && Object.keys(snap.awsEnvironment).length > 0)
                               ? snap.awsEnvironment
                               : prev.awsEnvironment,
       } as RunSession));
       // Stop polling once the run is terminal.
-      if (snap.status === "completed" || snap.status === "failed") {
+      if (snap.status === "completed" || snap.status === "failed" || snap.status === "cancelled") {
         stopRunPolling();
       }
     } catch {
@@ -293,6 +445,38 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const loadThread = useCallback(async (threadId: string) => {
+    if (!chatbotApi.isConfigured()) return;
+    try {
+      const res = await chatbotApi.getThreadMessages(threadId);
+      const messages = threadMessagesToChatMessages(res.messages);
+      const lastRunId = findLastRunId(res.messages);
+      stopRunPolling();
+      pollers.current.forEach((id) => window.clearInterval(id));
+      pollers.current.clear();
+      setActiveThreadId(threadId);
+      setActiveRunId(lastRunId);
+      try { localStorage.setItem(THREAD_KEY, threadId); } catch { /* ignore */ }
+      setRun((prev) => ({
+        ...emptyRun,
+        startedAt: new Date().toISOString(),
+        lastCheckpointAt: new Date().toISOString(),
+        awsEnvironment: prev.awsEnvironment,
+        messages,
+      }));
+      if (lastRunId) startRunPolling(lastRunId);
+    } catch {
+      await refreshThreads();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshThreads]);
+
+  const deleteThread = useCallback(async (threadId: string) => {
+    await chatbotApi.deleteThread(threadId);
+    if (threadId === activeThreadId) resetConversation();
+    await refreshThreads();
+  }, [activeThreadId, refreshThreads, resetConversation]);
+
   const createRun: RunContextValue["createRun"] = async (prompt, scope) => {
     if (!chatbotApi.isConfigured()) {
       return { error: "Chatbot API not configured" };
@@ -310,15 +494,17 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<RunContextValue>(
     () => ({
       run, setRun, mode,
-      scannerOnline, chatbotOnline, activeRunId,
-      refreshScannerHealth, refreshEnvironment,
+      scannerOnline, chatbotOnline, activeRunId, activeThreadId, threads, threadsLoading,
+      refreshScannerHealth, refreshEnvironment, refreshThreads,
       submitGroupScan, submitChecksScan,
-      approveTask, rejectTask, appendMessage, upsertMessage, clearMessages,
+      approveTask, rejectTask, skipTask, appendMessage, upsertMessage, clearMessages, resetConversation,
+      createConversation, activateThread, loadThread, deleteThread,
+      cancelActiveRun,
       listHistory, createRun, loadRun,
     }),
     // setRun/submit*/startPolling are stable via closures over refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [run, mode, scannerOnline, chatbotOnline, activeRunId],
+    [run, mode, scannerOnline, chatbotOnline, activeRunId, activeThreadId, threads, threadsLoading],
   );
 
   return <RunContext.Provider value={value}>{children}</RunContext.Provider>;

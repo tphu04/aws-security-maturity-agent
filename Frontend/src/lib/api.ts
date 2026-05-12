@@ -3,7 +3,7 @@
 
 export interface BackendJob {
   job_id: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "running" | "completed" | "failed" | "timeout" | "cancelled";
   task_type: "group" | "custom_file" | string;
   task_value: string;
   command_details: string;
@@ -134,6 +134,12 @@ export const scannerApi = {
     return request(loadEndpoints().scanner, `/v1/job/${encodeURIComponent(jobId)}`);
   },
 
+  cancelJob(jobId: string): Promise<{ ok: boolean; job_id: string; status: BackendJob["status"] }> {
+    return request(loadEndpoints().scanner, `/v1/job/${encodeURIComponent(jobId)}/cancel`, {
+      method: "POST",
+    });
+  },
+
   listJobs(limit = 50, offset = 0): Promise<BackendJobList> {
     return request(
       loadEndpoints().scanner,
@@ -243,6 +249,12 @@ export const chatbotApi = {
     });
   },
 
+  cancelRun(runId: string): Promise<{ ok: boolean; run_id: string; status: string }> {
+    return request(chatbotBase()!, `/v1/runs/${encodeURIComponent(runId)}/cancel`, {
+      method: "POST",
+    }, 15_000);
+  },
+
   // Unified chat — Phase 1. Backend classifies intent and routes:
   //  - qa     → { messages: [qa_answer] }
   //  - scan   → { messages: [run_started], run_id }
@@ -264,12 +276,27 @@ export const chatbotApi = {
     return request(chatbotBase()!, `/v1/threads?limit=${limit}&offset=${offset}`);
   },
 
+  createThread(title = "New chat"): Promise<BackendThreadSummary> {
+    return request(chatbotBase()!, "/v1/threads", {
+      method: "POST",
+      body: JSON.stringify({ title }),
+    });
+  },
+
   getThreadMessages(threadId: string, limit = 200): Promise<BackendThreadMessages> {
     return request(chatbotBase()!, `/v1/threads/${encodeURIComponent(threadId)}/messages?limit=${limit}`);
   },
 
   deleteThread(threadId: string): Promise<{ ok: boolean; thread_id: string }> {
     return request(chatbotBase()!, `/v1/threads/${encodeURIComponent(threadId)}`, { method: "DELETE" });
+  },
+
+  reportUrl(runId: string, format: "pdf" | "markdown" | "json" = "pdf", download = false): string {
+    const base = chatbotBase();
+    if (!base) return "#";
+    const params = new URLSearchParams({ format });
+    if (download) params.set("download", "1");
+    return joinUrl(base, `/v1/runs/${encodeURIComponent(runId)}/report?${params.toString()}`);
   },
 
   /**

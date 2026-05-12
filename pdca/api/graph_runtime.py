@@ -26,6 +26,9 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional
 
+import requests
+
+from pdca.config import settings
 from pdca.graph.graph import build_graph
 from pdca.observability.context import set_run_id
 from pdca.observability.logger import get_logger
@@ -285,8 +288,15 @@ def resume_after_decision(run_id: str, task_id: str, decision: str) -> bool:
             extra={"run_id": run_id, "task_id": task_id, "decision": decision},
         )
         return False
-    # Normalize FE shorthand → graph contract ("approve" / "skip").
-    decision_norm = "approve" if decision in ("approve", "approved") else "skip"
+    # Normalize FE shorthand. Execution only runs "approve"; both "reject"
+    # and "skip" are non-executing decisions, but keeping them distinct lets
+    # the API adapter preserve the user's choice after refresh.
+    if decision in ("approve", "approved"):
+        decision_norm = "approve"
+    elif decision in ("reject", "rejected"):
+        decision_norm = "reject"
+    else:
+        decision_norm = "skip"
 
     app = get_app()
     config = _config_for(run_id)
@@ -299,6 +309,20 @@ def resume_after_decision(run_id: str, task_id: str, decision: str) -> bool:
             return False
         next_nodes = list(snapshot.next or ())
         if "review_task" not in next_nodes:
+            state = snapshot.values
+            matching_task = next(
+                (t for t in state.get("remediation_tasks", []) if t.get("task_id") == task_id),
+                None,
+            )
+            if matching_task and (matching_task.get("manual_required") or decision_norm in ("skip", "reject")):
+                plan = dict(state.get("task_execution_plan") or {})
+                plan[task_id] = decision_norm
+                app.update_state(config, {"task_execution_plan": plan})
+                logger.info(
+                    "decision recorded without resume",
+                    extra={"run_id": run_id, "task_id": task_id, "decision": decision_norm, "next": next_nodes},
+                )
+                return True
             logger.warning(
                 "resume refused — not waiting at review_task",
                 extra={"run_id": run_id, "next": next_nodes},
@@ -315,7 +339,7 @@ def resume_after_decision(run_id: str, task_id: str, decision: str) -> bool:
         # record the plan entry so the audit trail is honest.
         if not tasks:
             plan = dict(state.get("task_execution_plan") or {})
-            plan[task_id] = "skip" if decision in ("skip", "skipped", "reject", "rejected") else "approve"
+            plan[task_id] = decision_norm
             app.update_state(config, {"task_execution_plan": plan})
             _spawn(run_id, None)
             logger.info(
@@ -366,4 +390,52 @@ def resume_after_decision(run_id: str, task_id: str, decision: str) -> bool:
             "new_idx": new_idx,
         },
     )
+    return True
+
+
+def cancel_run(run_id: str) -> bool:
+    """Cooperatively cancel a run and any scanner jobs it is waiting on."""
+    app = get_app()
+    config = _config_for(run_id)
+
+    lock = _run_lock(run_id)
+    with lock:
+        snapshot = app.get_state(config)
+        if not snapshot or not snapshot.values:
+            logger.warning("cancel refused — no snapshot", extra={"run_id": run_id})
+            return False
+
+        state = snapshot.values
+        pending = dict(state.get("pending_jobs") or {})
+        completed = dict(state.get("completed_jobs") or {})
+        now_ts = time.time()
+
+        for job_id, meta in pending.items():
+            try:
+                requests.post(
+                    f"{settings.scanner_api_url.rstrip('/')}/v1/job/{job_id}/cancel",
+                    timeout=8,
+                )
+            except Exception as e:
+                logger.warning(
+                    "scanner cancel failed",
+                    extra={"run_id": run_id, "job_id": job_id, "error": str(e)},
+                )
+            completed[job_id] = {
+                **meta,
+                "status": "cancelled",
+                "completed_at": now_ts,
+            }
+
+        app.update_state(
+            config,
+            {
+                "cancelled": True,
+                "pending_jobs": {},
+                "completed_jobs": completed,
+                "errors": [{"type": "cancelled", "message": "Run cancelled by user"}],
+            },
+        )
+
+    logger.info("run cancelled", extra={"run_id": run_id, "cancelled_jobs": len(pending)})
     return True

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2, ArrowUp, RefreshCw } from "lucide-react";
+import { Loader2, ArrowUp, RefreshCw, Square } from "lucide-react";
 import { useRun } from "@/state/run";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +20,14 @@ export interface PromptChip {
 
 interface Props {
   onSend: (text: string) => void;
+  onStop?: () => void;
   pending?: boolean;
+  canStop?: boolean;
+  stopping?: boolean;
   suggestions?: PromptChip[];
 }
 
-export function ChatInput({ onSend, pending, suggestions }: Props) {
+export function ChatInput({ onSend, onStop, pending, canStop, stopping, suggestions }: Props) {
   const prompts = suggestions && suggestions.length ? suggestions : DEFAULT_PROMPTS;
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -39,9 +42,17 @@ export function ChatInput({ onSend, pending, suggestions }: Props) {
 
   const submit = () => {
     const v = value.trim();
-    if (!v || pending) return;
+    if (!v || pending || canStop) return;
     onSend(v);
     setValue("");
+  };
+
+  const handleAction = () => {
+    if (canStop) {
+      onStop?.();
+      return;
+    }
+    submit();
   };
 
   return (
@@ -54,7 +65,7 @@ export function ChatInput({ onSend, pending, suggestions }: Props) {
               key={p.label}
               type="button"
               onClick={() => onSend(p.payload)}
-              disabled={pending}
+              disabled={pending || canStop}
               className={cn(
                 "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[11.5px] transition-colors disabled:opacity-40",
                 "border bg-transparent",
@@ -87,13 +98,19 @@ export function ChatInput({ onSend, pending, suggestions }: Props) {
             disabled={pending}
           />
           <Button
-            onClick={submit}
-            disabled={pending || !value.trim()}
+            onClick={handleAction}
+            disabled={canStop ? stopping : pending || !value.trim()}
             size="icon"
-            aria-label="Send message"
-            className="absolute bottom-2.5 right-2.5 h-8 w-8 rounded-xl disabled:opacity-30"
+            aria-label={canStop ? "Stop current scan" : "Send message"}
+            title={canStop ? "Stop current scan" : "Send message"}
+            className={cn(
+              "absolute bottom-2.5 right-2.5 h-8 w-8 rounded-xl disabled:opacity-30",
+              canStop && "bg-status-error text-white hover:bg-status-error/90",
+            )}
           >
-            {pending
+            {canStop
+              ? (stopping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-3.5 w-3.5 fill-current" />)
+              : pending
               ? <Loader2 className="h-4 w-4 animate-spin" />
               : <ArrowUp className="h-4 w-4" />}
           </Button>

@@ -5,6 +5,7 @@
 
 import os
 import tempfile
+import textwrap
 
 from pdca.observability.logger import get_logger
 
@@ -166,7 +167,7 @@ def export_pdf(html: str, path: str) -> str | None:
     HTML → PDF. Fallback chain:
     1. weasyprint (pure Python, preferred)
     2. wkhtmltopdf (fallback)
-    3. None (skip PDF)
+    3. matplotlib text PDF fallback
     """
     # Try weasyprint first
     try:
@@ -180,7 +181,11 @@ def export_pdf(html: str, path: str) -> str | None:
         logger.warning("weasyprint export failed", extra={"error": str(e)})
 
     # Fallback: wkhtmltopdf
-    return _export_pdf_wkhtmltopdf(html, path)
+    pdf_path = _export_pdf_wkhtmltopdf(html, path)
+    if pdf_path:
+        return pdf_path
+
+    return _export_pdf_text_fallback(html, path)
 
 
 def _export_pdf_wkhtmltopdf(html: str, path: str) -> str | None:
@@ -230,3 +235,105 @@ def _export_pdf_wkhtmltopdf(html: str, path: str) -> str | None:
         # Always cleanup temp file
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
+
+
+def _export_pdf_text_fallback(html: str, path: str) -> str | None:
+    """Last-resort PDF export using only the Python stdlib.
+
+    This keeps the web app's PDF preview/download path available even on
+    machines without WeasyPrint or the wkhtmltopdf binary. It is intentionally
+    plain-text, while the primary exporters preserve the designed HTML layout.
+    """
+    try:
+        import html as _html
+        import re as _re
+        text = _re.sub(r"(?i)<\s*br\s*/?\s*>", "\n", html)
+        text = _re.sub(r"(?i)</\s*(p|div|section|article|h[1-6]|li|tr)\s*>", "\n", text)
+        text = _re.sub(r"<[^>]+>", " ", text)
+        text = _html.unescape(text)
+        text = _re.sub(r"[ \t]{2,}", " ", text)
+        lines: list[str] = []
+        for raw in text.splitlines():
+            raw = raw.strip()
+            if not raw:
+                lines.append("")
+                continue
+            lines.extend(textwrap.wrap(raw, width=96) or [""])
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        _write_plain_pdf(lines or ["Report generated with no text content."], path)
+        logger.info("PDF exported", extra={"backend": "plain_text", "path": path})
+        return path
+    except Exception as e:
+        logger.warning("text PDF fallback failed", extra={"error": str(e)})
+        return None
+
+
+def _pdf_text_literal(value: str) -> bytes:
+    safe = (
+        value.encode("latin-1", "replace")
+        .replace(b"\\", b"\\\\")
+        .replace(b"(", b"\\(")
+        .replace(b")", b"\\)")
+    )
+    return b"(" + safe + b")"
+
+
+def _write_plain_pdf(lines: list[str], path: str) -> None:
+    """Write a minimal multi-page PDF with standard Helvetica text."""
+    page_chunks = [lines[i:i + 48] for i in range(0, len(lines), 48)] or [[""]]
+    objects: list[bytes] = []
+
+    def add(obj: bytes) -> int:
+        objects.append(obj)
+        return len(objects)
+
+    catalog_id = add(b"<< /Type /Catalog /Pages 2 0 R >>")
+    pages_id = add(b"")  # filled after page objects are known
+    font_id = add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    page_ids: list[int] = []
+
+    for chunk in page_chunks:
+        commands = [b"BT /F1 9 Tf 50 790 Td 12 TL"]
+        for line in chunk:
+            commands.append(_pdf_text_literal(line) + b" Tj T*")
+        commands.append(b"ET")
+        stream = b"\n".join(commands)
+        content_id = add(
+            b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\n"
+            b"stream\n" + stream + b"\nendstream"
+        )
+        page_id = add(
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+            b"/Resources << /Font << /F1 " + str(font_id).encode("ascii") + b" 0 R >> >> "
+            b"/Contents " + str(content_id).encode("ascii") + b" 0 R >>"
+        )
+        page_ids.append(page_id)
+
+    kids = b" ".join(str(i).encode("ascii") + b" 0 R" for i in page_ids)
+    objects[pages_id - 1] = (
+        b"<< /Type /Pages /Kids [" + kids + b"] /Count "
+        + str(len(page_ids)).encode("ascii") + b" >>"
+    )
+
+    del catalog_id  # documents object numbering; object 1 is the catalog
+    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for idx, obj in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{idx} 0 obj\n".encode("ascii"))
+        output.extend(obj)
+        output.extend(b"\nendobj\n")
+
+    xref_at = len(output)
+    output.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    output.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    output.extend(
+        b"trailer\n<< /Size " + str(len(objects) + 1).encode("ascii")
+        + b" /Root 1 0 R >>\nstartxref\n"
+        + str(xref_at).encode("ascii") + b"\n%%EOF\n"
+    )
+    with open(path, "wb") as f:
+        f.write(output)
