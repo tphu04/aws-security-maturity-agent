@@ -39,6 +39,9 @@ function renderCard(card: AssistantCard, idx: number, props: Props) {
       const offer = card as RemOffer;
       const task = props.tasksById[offer.taskId];
       if (!task) return null;
+      if ((task.manualOnly || task.decision === "manual_required" || task.decision === "skipped") && task.decision === "skipped") {
+        return null;
+      }
       return (
         <RemediationOfferCardView
           key={key} card={offer} task={task}
@@ -69,6 +72,9 @@ export function ChatMessageView(props: Props) {
   const { message, isFirstInGroup = true } = props;
   const isUser = message.role === "user";
   const hasCards = (message.cards?.length ?? 0) > 0;
+  const renderedCards = hasCards
+    ? message.cards?.map((c, i) => renderCard(c, i, props)).filter(Boolean)
+    : [];
 
   if (isUser) {
     return (
@@ -85,6 +91,10 @@ export function ChatMessageView(props: Props) {
         </div>
       </div>
     );
+  }
+
+  if (!message.text && (!renderedCards || renderedCards.length === 0)) {
+    return null;
   }
 
   // Agent messages
@@ -106,9 +116,9 @@ export function ChatMessageView(props: Props) {
         {message.text && (
           <p className="text-sm leading-relaxed text-text-secondary">{message.text}</p>
         )}
-        {hasCards && (
+        {renderedCards && renderedCards.length > 0 && (
           <div className="space-y-2">
-            {message.cards?.map((c, i) => renderCard(c, i, props))}
+            {renderedCards}
           </div>
         )}
       </div>

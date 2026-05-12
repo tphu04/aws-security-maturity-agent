@@ -17,6 +17,53 @@ import {
 export type ApiMode = "mock" | "live" | "degraded";
 
 const THREAD_KEY = "pdca.chat.thread_id";
+const MANUAL_CONFIRMED_KEY = "pdca.manual_remediation_confirmed.v1";
+
+function normalizeTaskPart(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function manualTaskKeys(runId: string | null | undefined, task: { id?: string; findingId?: string; findingTitle?: string; resource?: string; toolName?: string }): string[] {
+  const scope = runId || "unknown-run";
+  const keys = new Set<string>();
+  if (task.id) keys.add(`${scope}:task:${task.id}`);
+  if (task.findingId) keys.add(`${scope}:finding:${task.findingId}`);
+  const fingerprint = [
+    normalizeTaskPart(task.findingTitle),
+    normalizeTaskPart(task.resource),
+    normalizeTaskPart(task.toolName),
+  ].join("|");
+  if (fingerprint.replace(/\|/g, "")) keys.add(`${scope}:fp:${fingerprint}`);
+  return [...keys];
+}
+
+function readManualConfirmed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(MANUAL_CONFIRMED_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function rememberManualConfirmation(runId: string | null | undefined, task: { id?: string; findingId?: string; findingTitle?: string; resource?: string; toolName?: string }) {
+  try {
+    const confirmed = readManualConfirmed();
+    for (const key of manualTaskKeys(runId, task)) confirmed.add(key);
+    localStorage.setItem(MANUAL_CONFIRMED_KEY, JSON.stringify([...confirmed].slice(-800)));
+  } catch {
+    // localStorage is best-effort; the backend decision still receives the click.
+  }
+}
+
+function wasManualConfirmed(runId: string | null | undefined, task: { id?: string; findingId?: string; findingTitle?: string; resource?: string; toolName?: string }): boolean {
+  const confirmed = readManualConfirmed();
+  return manualTaskKeys(runId, task).some((key) => confirmed.has(key));
+}
 
 interface RunContextValue {
   run: RunSession;
@@ -239,7 +286,14 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     setRun((r) => ({
       ...r,
       remediationTasks: r.remediationTasks.map((t) =>
-        t.id === taskId ? { ...t, decision } : t,
+        t.id === taskId
+          ? (() => {
+              if (decision === "skipped" && (t.manualOnly || t.decision === "manual_required")) {
+                rememberManualConfirmation(activeRunId || r.id, t);
+              }
+              return { ...t, decision };
+            })()
+          : t,
       ),
     }));
     if (activeRunId && chatbotApi.isConfigured()) {
@@ -403,6 +457,12 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
   const fetchRunSnapshot = async (runId: string) => {
     try {
       const snap = (await chatbotApi.getRun(runId)) as Partial<RunSession>;
+      const remediationTasks = (snap.remediationTasks ?? [])?.map((task) => {
+        if ((task.manualOnly || task.decision === "manual_required") && wasManualConfirmed(runId, task)) {
+          return { ...task, decision: "skipped" as const };
+        }
+        return task;
+      });
       // Merge — preserve existing client-only fields (e.g. checkpointer).
       setRun((prev) => ({
         ...prev,
@@ -413,7 +473,7 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
         toolCalls:         snap.toolCalls         ?? prev.toolCalls         ?? [],
         evidence:          snap.evidence          ?? prev.evidence          ?? [],
         findings:          snap.findings          ?? prev.findings          ?? [],
-        remediationTasks:  snap.remediationTasks  ?? prev.remediationTasks  ?? [],
+        remediationTasks:  snap.remediationTasks  ? remediationTasks : prev.remediationTasks ?? [],
         executionLogs:     snap.executionLogs     ?? prev.executionLogs     ?? [],
         verifications:     snap.verifications     ?? prev.verifications     ?? [],
         // Keep FE chat messages — backend messages shape differs.
