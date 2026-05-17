@@ -59,47 +59,57 @@ _RAG_BATCH_CHUNK_SIZE = 20
 # ---------------------------------------------------------------------------
 
 # --- Pass 1: Đánh giá dựa trên finding ONLY (không RAG) ---
-# Giữ rubric giống hệt prompt gốc (đạt 76.7% baseline), chỉ bỏ phần RAG instructions
+# Evidence-driven scoring: dựa trên description + remediation_text là chính,
+# "original_severity" của Prowler chỉ là nhãn tham khảo (weak prior), KHÔNG copy nguyên.
 SYSTEM_PROMPT_PASS1 = """
-Bạn là Chuyên gia An ninh mạng AWS (Senior AWS Security Analyst).
-Nhiệm vụ: Đánh giá rủi ro dựa trên thông tin lỗ hổng bảo mật.
+Bạn là Senior AWS Security Analyst. Nhiệm vụ: chấm severity cho 1 lỗ hổng dựa trên BẰNG CHỨNG kỹ thuật trong finding.
 
-HƯỚNG DẪN CHẤM ĐIỂM (SCORING RUBRIC):
-1. CRITICAL (Score 9-10): Public Access vào dữ liệu nhạy cảm, chiếm quyền Admin, mất dữ liệu.
-2. HIGH (Score 7-8): Cấu hình sai nghiêm trọng, thiếu mã hóa, dịch vụ phơi bày ra internet.
-3. MEDIUM (Score 4-6): Thiếu Logging/Monitoring, thiếu MFA, vi phạm Compliance không nguy hiểm tức thì.
-4. LOW (Score 1-3): Lỗi thông tin, thiếu Tagging.
+QUY TRÌNH BẮT BUỘC (suy luận trước, kết luận sau):
+1. Đọc "description" và "remediation_text" — đây là bằng chứng chính. Xác định: (a) tài sản bị ảnh hưởng, (b) vector tấn công khả dĩ, (c) hệ quả nếu bị khai thác.
+2. Đọc "service" + "resource_id" + "region" để đánh giá phạm vi (resource public-facing? production region?).
+3. "original_severity" là nhãn tham khảo của Prowler — CHỈ dùng làm sanity check, KHÔNG copy nguyên. Nếu bằng chứng cho thấy mức khác, hãy theo bằng chứng.
+4. Áp rubric (severity và score PHẢI khớp dải, không output cặp mâu thuẫn):
+   - CRITICAL (score 9-10): Truy cập công khai vào dữ liệu nhạy cảm, leo thang Admin, mất/lộ dữ liệu trên diện rộng, RCE.
+   - HIGH (score 7-8): Cấu hình sai nghiêm trọng — thiếu mã hóa, dịch vụ phơi ra internet không cần thiết, IAM quá rộng.
+   - MEDIUM (score 4-6): Thiếu Logging/Monitoring/MFA, vi phạm compliance không có vector khai thác trực tiếp.
+   - LOW (score 1-3): Thiếu tagging, hardening optional, lỗi mang tính informational.
+5. Reasoning BẮT BUỘC dẫn bằng chứng cụ thể: trích cụm từ từ description hoặc remediation_text, không nói chung chung kiểu "rủi ro cao".
 
-YÊU CẦU OUTPUT JSON:
+YÊU CẦU OUTPUT JSON (CHỈ 3 field này, không thêm field khác):
 {
     "ai_severity": "Critical" | "High" | "Medium" | "Low",
-    "ai_risk_score": <int 0-10>,
-    "ai_reasoning": "<Giải thích ngắn gọn 1-2 câu>"
+    "ai_risk_score": <int 0-10 khớp dải rubric>,
+    "ai_reasoning": "<1-2 câu, BẮT BUỘC trích bằng chứng cụ thể từ finding>"
 }
 """
 
 # --- Pass 2: Điều chỉnh dựa trên RAG context ---
+# Asymmetric design: escalate dễ, de-escalate khó (false-negative trong security nguy hiểm hơn false-positive).
 SYSTEM_PROMPT_PASS2 = """
-Bạn là Chuyên gia An ninh mạng AWS (Senior AWS Security Analyst).
+Bạn là Senior AWS Security Analyst. Bạn đã có 1 đánh giá nháp ("draft_severity", "draft_score", "draft_reasoning") từ bằng chứng trong finding.
+Giờ đối chiếu với nhãn chính thức từ Prowler Knowledge Base:
+- "rag_official_severity": severity chuẩn của AWS/Prowler cho loại check này.
+- "rag_check_title": tên chính thức của check.
 
-Bạn vừa đánh giá sơ bộ một lỗ hổng với kết quả "draft_severity", "draft_score", "draft_reasoning".
-Bây giờ hãy đối chiếu với thông tin chính thức từ Prowler Knowledge Base:
-- "rag_official_severity": Mức severity chính thức từ AWS/Prowler.
-- "rag_check_title": Tên chính thức của security check.
+NGUYÊN TẮC CỐT LÕI: bằng chứng trong "description" của draft luôn THẮNG nhãn rag khi xung đột. Rag là weak prior, không phải ground truth.
 
-QUY TẮC ĐIỀU CHỈNH:
-1. Nếu draft_severity TRÙNG với rag_official_severity → giữ nguyên.
-2. Nếu draft_severity CAO HƠN rag_official_severity → hạ xuống theo rag nếu mô tả
-   lỗ hổng không cho thấy mức nguy hiểm vượt mức official.
-3. Nếu draft_severity THẤP HƠN rag_official_severity → tăng lên theo rag nếu mô tả
-   lỗ hổng phù hợp với mức official.
-4. Luôn ưu tiên bằng chứng từ mô tả lỗ hổng hơn là chỉ dựa vào nhãn severity.
+QUY TẮC ĐIỀU CHỈNH (xét theo thứ tự, áp dụng quy tắc đầu tiên khớp):
+1. Nếu draft_severity TRÙNG rag_official_severity → giữ nguyên draft (không cần đổi).
+2. Nếu draft_severity THẤP HƠN rag_official_severity (rag escalate-ward):
+   → ESCALATE theo rag, TRỪ KHI draft_reasoning có bằng chứng rõ ràng cho thấy mức thấp hơn là đúng cho ca này (vd: resource không phải public, không chứa dữ liệu nhạy cảm). Khi nghi ngờ → ưu tiên escalate (giảm false-negative).
+3. Nếu draft_severity CAO HƠN rag_official_severity (rag de-escalate-ward):
+   → CHỈ hạ xuống khi draft_reasoning KHÔNG nêu được bằng chứng cụ thể cho mức cao. Nếu draft có dẫn cụm từ kỹ thuật rõ ràng (vd: "publicly accessible", "no encryption", "admin privileges") → GIỮ draft, không hạ.
+4. Asymmetry: escalate cần ít bằng chứng hơn de-escalate. Trong security, miss-detect (false-negative) tốn kém hơn over-detect.
 
-YÊU CẦU OUTPUT JSON:
+VỀ "ai_reasoning":
+- Nếu giữ nguyên severity → có thể trả lại draft_reasoning gần như nguyên văn.
+- Nếu đổi severity → bắt đầu bằng kết luận mới, sau đó GHI NGẮN lý do điều chỉnh so với draft và rag, vẫn giữ ít nhất 1 cụm bằng chứng từ draft.
+
+YÊU CẦU OUTPUT JSON (CHỈ 3 field này, severity và score PHẢI khớp dải rubric: Critical 9-10, High 7-8, Medium 4-6, Low 1-3):
 {
     "ai_severity": "Critical" | "High" | "Medium" | "Low",
-    "ai_risk_score": <int 0-10>,
-    "ai_reasoning": "<Dựa trên draft_reasoning, giữ lại mô tả lỗ hổng và bằng chứng kỹ thuật. Thêm ghi chú nếu có điều chỉnh severity so với draft.>"
+    "ai_risk_score": <int 0-10 khớp dải>,
+    "ai_reasoning": "<1-2 câu, dẫn bằng chứng cụ thể>"
 }
 """
 
@@ -245,24 +255,6 @@ class RiskEvaluationAgent(BaseAgent):
     # ------------------------------------------------------------------
     # Sub-method 3: Score single finding (LLM call + validate)
     # ------------------------------------------------------------------
-
-    def _build_rag_context_view(self, rag_data: Dict) -> Dict[str, Any]:
-        """Build rag_context dict for LLM view, with confidence hint (SLICE-2.2)."""
-        view: Dict[str, Any] = {
-            "official_severity": rag_data.get("severity", "Unknown"),
-            "compliance_mappings": rag_data.get("mappings", []),
-            "check_title": rag_data.get("title", ""),
-        }
-        if self._rag_confidence != "unknown":
-            view["rag_confidence"] = self._rag_confidence
-            view["confidence_note"] = (
-                "High confidence: trust compliance data."
-                if self._rag_confidence == "high"
-                else "Low confidence: compliance data may be incomplete, rely more on finding details."
-                if self._rag_confidence == "low"
-                else "Medium confidence: use compliance data as supporting evidence."
-            )
-        return view
 
     def _build_human_msg(self, payload: Dict) -> str:
         """Tạo human message content, thêm /no_think cho qwen3 models."""

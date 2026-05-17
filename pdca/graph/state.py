@@ -23,11 +23,16 @@ class AWSEnvironment(TypedDict):
     _degraded: NotRequired[bool]
 
 
-class AssessmentPlan(TypedDict):
+class AssessmentPlan(TypedDict, total=False):
     groups_to_scan: List[str]
     target_services: List[str]
     checks_to_scan: List[str]
     reasoning: str
+    # Populated when PlanningAgent asks the user to clarify their request.
+    # When `status == "needs_clarification"`, the graph halts at planning
+    # and the FE reads `clarification_question` from this dict.
+    status: str
+    clarification_question: str
 
 
 class RemediationTask(TypedDict, total=False):
@@ -66,6 +71,9 @@ class PDCAState(TypedDict):
     user_request: str
     aws_context: Optional[AWSEnvironment]
     cycle_iteration: int
+    # True when the orchestrator is replaying user_request after a previous
+    # planning turn returned needs_clarification. Suppresses a second ask.
+    clarification_attempt: NotRequired[bool]
 
     # --- RAG availability ---
     rag_available: bool

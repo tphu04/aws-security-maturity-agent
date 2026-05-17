@@ -54,9 +54,15 @@ CONFIDENCE_SKIP_LLM = {"high", "medium"}
 MIN_TOP_SCORE_FOR_SKIP = 0.35
 
 # Score gap filter: drop candidates whose score falls below
-# (top_score * DROP_RATIO_THRESHOLD). Prevents returning irrelevant
-# candidates that happen to be in TOP_K.
-DROP_RATIO_THRESHOLD = 0.85  # keep candidates within 85% of top score
+# (top_score * ratio). Two separate ratios:
+#   - per-sub-query (looser): keep more candidates within each topic to
+#     boost recall on focused queries
+#   - global post-merge (stricter): prevents one weak topic from diluting
+#     the merged pool
+DROP_RATIO_PER_TOPIC = 0.85
+DROP_RATIO_GLOBAL = 0.85
+# Backward-compat alias used by legacy code paths.
+DROP_RATIO_THRESHOLD = DROP_RATIO_GLOBAL
 
 # ---------------------------------------------------------------------------
 # INPUT CLASSIFICATION CONSTANTS
@@ -87,6 +93,14 @@ _GENERIC_TOKENS = {
 
 ALLOWED_GROUPS = {
     "s3", "iam", "ec2", "rds", "cloudtrail", "eks", "vpc", "lambda", "kms",
+}
+
+# Map service code (used in intent) -> RAG search prefix that matches the
+# actual Prowler check_id family. Most services share the same prefix as
+# the code, but Prowler uses "awslambda_" for Lambda checks while users
+# (and our intent classifier) say "lambda".
+_SERVICE_RAG_PREFIX = {
+    "lambda": "awslambda",
 }
 
 # Extended service list (superset of ALLOWED_GROUPS, for detection only)
@@ -222,6 +236,27 @@ R6. ACTION VERBS ARE NOT TOPICS.
     Only add to topics if the request names an actual security CONCERN
     (encryption, mfa, public, password, ...) — not the act of checking.
 
+    BREADTH MODIFIERS ARE NOT TOPICS EITHER. The following phrases just mean
+    "scope=everything" — they yield group_scan ONLY when there is NO specific
+    security concern named in the request:
+        toàn diện / toàn bộ / tất cả / mọi thứ / mọi vấn đề /
+        full / complete / comprehensive / overall / everything /
+        full security assessment / security assessment / vấn đề /
+        bảo mật / security / audit / review / kiểm tra bảo mật /
+        đánh giá bảo mật / security check
+        "kiểm tra toàn diện iam"             -> group_scan
+        "I want a full security assessment of kms" -> group_scan
+        "kiểm tra tất cả mọi thứ về cloudtrail"    -> group_scan
+        "kiểm tra hết tất cả các vấn đề liên quan đến rds" -> group_scan
+    IMPORTANT: if the request ALSO names a security concern (encryption,
+    public, mfa, etc.), mode stays specific_checks. "Hết" / "all" attached
+    DIRECTLY to a topic word (e.g. "mã hoá hết chưa", "all encrypted")
+    means "completely" — it modifies the topic, NOT the scope:
+        "ổ đĩa EBS có được mã hoá hết chưa?" -> specific_checks, topics=["encryption"]
+        "all S3 buckets encrypted?"          -> specific_checks, topics=["encryption"]
+    Word "hết" alone is NEVER a breadth signal; require the compound
+    "hết tất cả / hết mọi" pattern.
+
 R7. SERVICE KEYWORDS ARE NEVER TOPICS, AND DO NOT INFER EXTRA SERVICES.
     Every word in the R1 mapping table (bucket, kubernetes, cluster,
     security group, instance, function, trail, ...) is a SERVICE keyword.
@@ -230,6 +265,27 @@ R7. SERVICE KEYWORDS ARE NEVER TOPICS, AND DO NOT INFER EXTRA SERVICES.
         "security group" -> ec2 ONLY (not vpc)
         "kubernetes" / "cluster" -> eks ONLY (not ec2)
         "bucket" -> s3 ONLY
+
+R8. UNCLEAR / OUT-OF-SCOPE REQUESTS -> EMPTY SERVICES.
+    If the request has NO recognizable service keyword AND NO recognizable
+    security concern (greetings, weather, totally vague "audit hệ thống",
+    out-of-scope services like cloudwatch / secrets manager / dynamodb),
+    return mode=group_scan with services=[] AND set needs_clarification=true
+    (the router will ask the user to specify a service).
+    Do NOT guess a service from generic words like "hệ thống", "cloud",
+    "tài nguyên". Empty is ALWAYS better than wrong.
+
+R9. CLARIFICATION FIELD (computed after R1-R8).
+    After deciding services / check_ids / topics, set:
+      - needs_clarification = true  IFF  services=[] AND check_ids=[]
+      - clarification_question = a short Vietnamese question (≤2 sentences)
+        listing 2-4 plausible options from the supported services:
+        s3, iam, ec2, rds, vpc, lambda, cloudtrail, kms, eks.
+        Tailor wording to the user's request when possible.
+        Empty string "" when needs_clarification=false.
+    If the request mentions an out-of-scope service (cloudwatch, dynamodb,
+    secrets manager, etc.), the question MUST state that service is not
+    supported and offer alternatives from the list above.
 
 ==================== REASONING STEPS ====================
 
@@ -250,8 +306,14 @@ Return RAW JSON only — no markdown fences, no prose before or after:
   "mode": "group_scan" | "specific_checks",
   "services": ["s3", "iam"],
   "check_ids": [],
-  "topics": []
+  "topics": [],
+  "needs_clarification": false,
+  "clarification_question": ""
 }}
+
+In examples below, when needs_clarification / clarification_question are
+omitted they default to false / "". When the request triggers R9, the two
+fields MUST be explicitly populated.
 
 ==================== EXAMPLES ====================
 
@@ -277,6 +339,24 @@ Request: "scan everything"   (no service identifiable; do NOT default)
 Request: "run s3_bucket_public_access"   (literal check ID)
 -> {{"mode":"specific_checks","services":["s3"],"check_ids":["s3_bucket_public_access"],"topics":[]}}
 
+Request: "Check giùm cái rds_instance_no_public_access, rds_instance_storage_encrypted, rds_instance_transport_encrypted, rds_instance_backup_enabled"
+-> {{"mode":"specific_checks","services":["rds"],"check_ids":["rds_instance_no_public_access","rds_instance_storage_encrypted","rds_instance_transport_encrypted","rds_instance_backup_enabled"],"topics":[]}}
+   Notes: ALL comma-separated tokens with ≥3 underscores ARE check IDs (R5).
+   Extract every one of them verbatim. Do NOT treat them as topics, do NOT
+   drop any. topics MUST be empty when check_ids are present.
+
+Request: "kiểm tra toàn diện IAM"   (breadth modifier + bare service)
+-> {{"mode":"group_scan","services":["iam"],"check_ids":[],"topics":[]}}
+
+Request: "I want a full security assessment of KMS"   (full security assessment = breadth)
+-> {{"mode":"group_scan","services":["kms"],"check_ids":[],"topics":[]}}
+
+Request: "kiểm tra hết tất cả các vấn đề liên quan đến RDS"   (hết tất cả các vấn đề = breadth)
+-> {{"mode":"group_scan","services":["rds"],"check_ids":[],"topics":[]}}
+
+Request: "kiểm tra tất cả mọi thứ về CloudTrail"   (tất cả mọi thứ = breadth)
+-> {{"mode":"group_scan","services":["cloudtrail"],"check_ids":[],"topics":[]}}
+
 Request: "kiểm tra dịch vụ iam"   (verb + bare service, no concern -> group_scan)
 -> {{"mode":"group_scan","services":["iam"],"check_ids":[],"topics":[]}}
    WRONG would be: mode="specific_checks" -- "kiểm tra" is just the verb.
@@ -299,6 +379,30 @@ Request: "đánh giá toàn bộ s3 iam và cloudtrail"   (toàn bộ = "all" ->
 
 Request: "audit toàn bộ rds và lambda"   (audit + toàn bộ + bare services -> group_scan)
 -> {{"mode":"group_scan","services":["rds","lambda"],"check_ids":[],"topics":[]}}
+
+Request: "mã hóa trên S3, RDS và EBS đều đã bật chưa?"   (3 services + 1 topic encryption; "EBS" maps to ec2)
+-> {{"mode":"specific_checks","services":["s3","rds","ec2"],"check_ids":[],"topics":["encryption"]}}
+   WRONG would be: services=["s3","rds"] — must include ec2 for EBS.
+
+Request: "có resource nào đang bị public access không? S3, RDS, Lambda đều check giúp"
+-> {{"mode":"specific_checks","services":["s3","rds","lambda"],"check_ids":[],"topics":["public access"]}}
+
+Request: "logging và monitoring toàn hệ thống có đầy đủ không?"   (vague cross-service; no specific service named)
+-> {{"mode":"group_scan","services":["cloudtrail"],"check_ids":[],"topics":[]}}
+   Notes: "logging và monitoring" implies cloudtrail (the AWS audit/logging service). When the request is vague
+   AND mentions a logging/audit concern without naming a service, default to cloudtrail group_scan.
+
+Request: "Lambda function nào đang bị public truy cập?"   (lambda + public access)
+-> {{"mode":"specific_checks","services":["lambda"],"check_ids":[],"topics":["public access"]}}
+
+Request: "quản lý khoá có vấn đề gì không?"   (Vietnamese for key management -> kms; vague)
+-> {{"mode":"group_scan","services":["kms"],"check_ids":[],"topics":[]}}
+
+Request: "kiểm tra giúp mình hệ thống đi"   (R8 fires; R9 fills clarification)
+-> {{"mode":"group_scan","services":[],"check_ids":[],"topics":[],"needs_clarification":true,"clarification_question":"Bạn muốn kiểm tra service AWS nào? Hệ thống hỗ trợ: S3 (lưu trữ), IAM (user/quyền), EC2 (máy chủ), RDS (database), Lambda, CloudTrail, KMS, EKS, VPC."}}
+
+Request: "quét hết cloudwatch đi"   (out-of-scope; R8+R9; suggest supported services)
+-> {{"mode":"group_scan","services":[],"check_ids":[],"topics":[],"needs_clarification":true,"clarification_question":"CloudWatch hiện chưa được hỗ trợ. Bạn có muốn chuyển sang: CloudTrail (audit log), IAM, S3, hay EC2?"}}
 
 ==================== NOW CLASSIFY ====================
 
@@ -359,10 +463,13 @@ Rules:
 
 class PlanningAgent:
     """
-    RAG-first, LLM-conditional planning agent.
+    Intent-first planning agent.
 
-    Flow: classify → retrieve → score → gate → [optional LLM] → output
-    LLM is called in ≤20% of requests (only low-confidence cases).
+    Flow: LLM intent classify (single mandatory call) → deterministic router
+          → {lexical validate / group emit / RAG fan-out per (svc × topic)}
+          → score → output.
+    Legacy V2 regex pipeline (_run_legacy) is invoked only as fallback when
+    the LLM intent classifier fails to return valid JSON.
     """
 
     def __init__(
@@ -375,6 +482,10 @@ class PlanningAgent:
     ):
         self.rag_client = rag_client
         self.callbacks = list(callbacks or [])
+        # Tracks whether the orchestrator is sending a follow-up turn after
+        # we already asked the user to clarify. Used to suppress a second
+        # clarification (avoid ask-loop).
+        self._clarification_used = False
         # Langfuse hook (B5.5): planning_agent không có local TimerCallback
         # — chỉ propagate external callbacks (Langfuse handler).
         self.llm = ChatOllama(
@@ -394,19 +505,22 @@ class PlanningAgent:
     # MAIN ENTRY POINT
     # ------------------------------------------------------------------
 
-    def run(self, user_request: str) -> Dict[str, Any]:
+    def run(
+        self,
+        user_request: str,
+        clarification_attempt: bool = False,
+    ) -> Dict[str, Any]:
         """Entry point: phân tích user request → trả về assessment plan.
 
-        Flow (Hybrid Validated FAST_TRACK):
-          1. Detect service + build enhanced (English) query
-          2. Extract candidate check IDs from request
-          3. Validate each ID against RAG via lexical lookup (check_id param)
-             - Valid IDs (found in RAG corpus)   → FAST_TRACK candidates
-             - Invalid IDs (not in RAG corpus)   → used as query hints only
-          4a. All IDs valid → FAST_TRACK (return immediately, no full retrieval)
-          4b. Some/no valid IDs → enrich query with valid hints → RETRIEVAL_PATH
-          5. Classify: GROUP_SCAN vs RETRIEVAL_PATH → retrieve → score → gate
+        Args:
+            user_request: original user request, optionally merged with
+                clarification answer by the orchestrator.
+            clarification_attempt: True when the orchestrator is replaying
+                the request after asking the user to clarify. Suppresses a
+                second clarification turn — if intent is still ambiguous we
+                fall through to an explicit error.
         """
+        self._clarification_used = bool(clarification_attempt)
         with obs_span(
             "agent:PlanningAgent",
             input={"request_chars": len(user_request) if isinstance(user_request, str) else 0},
@@ -432,13 +546,17 @@ class PlanningAgent:
         intent = self._classify_intent_llm(request)
         if intent is None:
             logger.warning("LLM intent classifier failed — falling back to V2 regex pipeline")
-            return self._run_legacy(request)
+            result = self._run_legacy(request)
+            result["_used_legacy_fallback"] = True
+            return result
 
         try:
             return self._route_from_intent(request, intent)
         except Exception as e:
             logger.error("Intent routing crashed: %s — falling back to legacy", e, exc_info=True)
-            return self._run_legacy(request)
+            result = self._run_legacy(request)
+            result["_used_legacy_fallback"] = True
+            return result
 
     # ------------------------------------------------------------------
     # V3: LLM Intent Classifier (single mandatory call)
@@ -472,16 +590,24 @@ class PlanningAgent:
             logger.warning("Intent classifier returned non-list field(s)")
             return None
 
+        needs_clarification = bool(data.get("needs_clarification", False))
+        clarification_q = data.get("clarification_question", "")
+        if not isinstance(clarification_q, str):
+            clarification_q = ""
+
         norm = {
             "mode": mode,
             "services": [s.strip().lower() for s in services if isinstance(s, str) and s.strip()],
             "check_ids": [sanitize_check_id(c) for c in check_ids if isinstance(c, str) and c.strip()],
             "topics": [t.strip().lower() for t in topics if isinstance(t, str) and t.strip()],
+            "needs_clarification": needs_clarification,
+            "clarification_question": clarification_q.strip(),
         }
         norm["check_ids"] = [c for c in norm["check_ids"] if c and c != "<unknown>"]
         logger.info(
-            "Intent: mode=%s services=%s check_ids=%s topics=%s",
+            "Intent: mode=%s services=%s check_ids=%s topics=%s clarify=%s",
             norm["mode"], norm["services"], norm["check_ids"], norm["topics"],
+            norm["needs_clarification"],
         )
         return norm
 
@@ -498,6 +624,26 @@ class PlanningAgent:
 
         check_ids = intent["check_ids"]
         topics = intent["topics"]
+
+        # Clarification gate: LLM signalled ambiguity (R9). Trigger only when
+        # nothing actionable was extracted AND we haven't already asked once.
+        if (
+            intent.get("needs_clarification")
+            and not services
+            and not check_ids
+            and not self._clarification_used
+        ):
+            question = intent.get("clarification_question", "").strip()
+            if question:
+                logger.info("Clarification requested by intent classifier: %s", question)
+                return {
+                    "groups_to_scan": [],
+                    "target_services": [],
+                    "checks_to_scan": [],
+                    "reasoning": "",
+                    "status": "needs_clarification",
+                    "clarification_question": question,
+                }
 
         # 1. Explicit check_ids → validate via RAG lexical
         if check_ids:
@@ -533,30 +679,101 @@ class PlanningAgent:
                 "LLM identified specific_checks intent but no valid AWS services."
             )
 
-        all_checks: List[str] = []
-        seen: set = set()
+        # Merged pool: dict[check_id -> scored_candidate] keeping highest
+        # final_score across sub-queries (cross-topic dedup with priority).
+        merged: Dict[str, Dict[str, Any]] = {}
         # If no topics were extracted, use service name itself as the query.
         topic_list = topics or [""]
+        # Adaptive TOP_K: focused queries (few sub-queries) get a larger
+        # per-sub-query budget to boost recall; wide fan-outs get a smaller
+        # budget to limit noise. Total merged candidates stay bounded by
+        # MAX_MERGED_CANDIDATES and the global post-merge filter below.
+        n_subqueries = max(1, len(services) * len(topic_list))
+        if n_subqueries == 1:
+            top_k = 5
+        elif n_subqueries <= 3:
+            top_k = 4
+        elif n_subqueries <= 6:
+            top_k = TOP_K_PER_SUBQUERY  # 3
+        else:
+            top_k = 2
+        logger.debug(
+            "Fan-out: %d sub-queries -> top_k=%d per sub-query",
+            n_subqueries, top_k,
+        )
         for svc in services:
             for topic in topic_list:
-                query = f"{svc} {topic}".strip()
+                search_prefix = _SERVICE_RAG_PREFIX.get(svc, svc)
+                query = f"{search_prefix} {topic}".strip()
                 retrieval = self._retrieve(query)
+                # RAG confidence signal: skip sub-queries where the
+                # retriever itself reports low confidence (would otherwise
+                # pollute merged pool with weakly-relevant picks).
+                sub_conf = retrieval.get("confidence", "low")
+                if sub_conf == "low":
+                    logger.info(
+                        "Sub-query '%s' RAG confidence=low — skipping",
+                        query,
+                    )
+                    continue
                 scored = self._score_candidates(retrieval, svc)
-                for c in scored[:TOP_K_PER_SUBQUERY]:
+                if not scored:
+                    continue
+                top_score = scored[0]["final_score"]
+                # Absolute floor: if even the top candidate is too weak,
+                # skip this sub-query entirely.
+                if top_score < MIN_TOP_SCORE_FOR_SKIP:
+                    logger.info(
+                        "Sub-query '%s' top_score=%.3f below floor %.2f — skipping",
+                        query, top_score, MIN_TOP_SCORE_FOR_SKIP,
+                    )
+                    continue
+                # Score gap filter (per sub-query): drop candidates within
+                # this topic whose score is far from the topic's top.
+                cutoff = top_score * DROP_RATIO_PER_TOPIC
+                kept = 0
+                for c in scored:
+                    if kept >= top_k:
+                        break
+                    if c["final_score"] < cutoff:
+                        break
                     cid = c["check_id"]
-                    if cid not in seen:
-                        seen.add(cid)
-                        all_checks.append(cid)
-                if len(all_checks) >= MAX_MERGED_CANDIDATES:
+                    prev = merged.get(cid)
+                    if prev is None or c["final_score"] > prev["final_score"]:
+                        merged[cid] = c
+                    kept += 1
+                if len(merged) >= MAX_MERGED_CANDIDATES:
                     break
-            if len(all_checks) >= MAX_MERGED_CANDIDATES:
+            if len(merged) >= MAX_MERGED_CANDIDATES:
                 break
 
-        if not all_checks:
-            return self._make_error_output(
-                f"LLM intent specific_checks for services={services} topics={topics} "
-                "but RAG returned no candidates."
+        if not merged:
+            # RAG returned nothing for the (service × topic) combinations.
+            # User input is unambiguous (services known) — degrade to a
+            # group scan instead of asking again or erroring out.
+            logger.info(
+                "RAG empty for services=%s topics=%s — degrading to group scan",
+                services, topics,
             )
+            return self._make_output(
+                groups=services,
+                reasoning=(
+                    f"RAG returned no candidates for topics={topics}; "
+                    f"falling back to group scan on {services}."
+                ),
+            )
+
+        # Global post-merge filter: rank all merged candidates by
+        # final_score and drop those below DROP_RATIO * global_top_score.
+        # Prevents a weak topic's picks from diluting a strong topic's
+        # cluster after merge.
+        merged_sorted = sorted(
+            merged.values(), key=lambda x: x["final_score"], reverse=True,
+        )
+        global_top = merged_sorted[0]["final_score"]
+        global_cutoff = global_top * DROP_RATIO_GLOBAL
+        filtered = [c for c in merged_sorted if c["final_score"] >= global_cutoff]
+        all_checks = [c["check_id"] for c in filtered[:MAX_MERGED_CANDIDATES]]
 
         return self._make_output(
             checks=all_checks[:MAX_MERGED_CANDIDATES],
@@ -1002,11 +1219,14 @@ class PlanningAgent:
         Returns top TOP_K_RESULTS candidates sorted by final_score desc.
         """
         scored = []
+        expected_svc = _SERVICE_RAG_PREFIX.get(
+            detected_service, detected_service
+        ) if detected_service else None
         for c in retrieval.get("candidates", []):
             rag_score = c.get("score", 0.0)
             sev_weight = SEVERITY_WEIGHTS.get(c.get("severity", ""), 0.3)
             svc_match = 1.0 if (
-                detected_service and c.get("service") == detected_service
+                expected_svc and c.get("service") == expected_svc
             ) else 0.0
 
             final = (

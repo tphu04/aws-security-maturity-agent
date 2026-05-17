@@ -9,8 +9,21 @@ from __future__ import annotations
 import time
 from typing import Literal
 
+from langgraph.graph import END
+
 from pdca.config import settings
 from pdca.graph.state import PDCAState
+
+
+def route_after_planning(state: PDCAState):
+    """Halt the workflow at planning if the agent asked the user a clarifying
+    question. The clarification is surfaced via assessment_plan and the FE
+    reads it from the run snapshot — no scanning/reporting needed.
+    """
+    plan = state.get("assessment_plan") or {}
+    if plan.get("status") == "needs_clarification":
+        return END
+    return "scan_submit"
 
 
 def route_after_risk(state: PDCAState) -> Literal["operational_planning", "report"]:

@@ -299,6 +299,26 @@ def _get_chat_agents() -> Dict[str, Any]:
     return _chat_agents
 
 
+def _pending_clarification(run_id: Optional[str]) -> Optional[Dict[str, Any]]:
+    """If the referenced run halted on a clarification, return its payload.
+
+    Shape: {"original_request": str, "question": str}. None otherwise.
+    """
+    if not run_id:
+        return None
+    snap = get_state_values(run_id)
+    if not snap:
+        return None
+    values = snap.get("values") or {}
+    plan = values.get("assessment_plan") or {}
+    if plan.get("status") != "needs_clarification":
+        return None
+    return {
+        "original_request": values.get("user_request", ""),
+        "question": plan.get("clarification_question", ""),
+    }
+
+
 def _build_chat_context(req: ChatRequest, thread_id: str) -> ChatContext:
     current_service: Optional[str] = None
     findings_count = 0
@@ -422,6 +442,43 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     # Persist user turn first so it appears in history even on error paths.
     store.append(thread_id, role="user", content=req.prompt, message_type="user_text", run_id=req.run_id)
+
+    # ── CLARIFICATION FOLLOW-UP ─────────────────────────────────────────
+    # If the referenced run halted on a clarifying question, treat this
+    # message as the user's answer: merge it with the original request and
+    # start a new run with `clarification_attempt=True` to suppress a second
+    # ask. Skip intent classification — the user is answering a question.
+    pending = _pending_clarification(req.run_id)
+    if pending:
+        merged = f"{pending['original_request']} — {req.prompt}".strip(" —")
+        svc = infer_group(merged, default="s3")
+        res = start_run(
+            prompt=merged, scope=f"{svc} scan", group=svc,
+            clarification_attempt=True,
+        )
+        new_run_id = res["run_id"]
+        msg = ChatMessageOut(type="run_started", payload={
+            "run_id": new_run_id,
+            "thread_id": res["thread_id"],
+            "service": svc,
+            "text": (
+                f"Đã ghi nhận. Khởi chạy run **{new_run_id}** với yêu cầu "
+                f"đầy đủ: \"{merged}\"."
+            ),
+        })
+        store.append(
+            thread_id, role="assistant",
+            content=msg.payload["text"], message_type=msg.type,
+            payload=msg.payload, run_id=new_run_id,
+        )
+        return ChatResponse(
+            messages=[msg],
+            intent={"classified": "scan", "confidence": 1.0,
+                    "reason": "clarification follow-up"},
+            thread_id=thread_id,
+            run_id=new_run_id,
+            suggestions=[],
+        )
 
     ctx = _build_chat_context(req, thread_id)
     intent = classifier.classify(req.prompt, ctx)

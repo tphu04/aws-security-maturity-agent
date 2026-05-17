@@ -26,7 +26,12 @@ from pdca.graph.nodes import (
     scan_submit_node,
     verification_node,
 )
-from pdca.graph.routing import route_after_risk, route_review_task, route_scan_poll
+from pdca.graph.routing import (
+    route_after_planning,
+    route_after_risk,
+    route_review_task,
+    route_scan_poll,
+)
 from pdca.graph.state import PDCAState
 
 
@@ -58,7 +63,6 @@ def build_graph(checkpointer: Optional[Any] = None):
     # --- Linear edges ---
     wf.add_edge(START, "environment")
     wf.add_edge("environment", "planning")
-    wf.add_edge("planning", "scan_submit")
     wf.add_edge("scan_submit", "scan_poll")
     wf.add_edge("scan_collect", "risk_evaluation")
     wf.add_edge("rag_enrich", "operational_planning")
@@ -69,6 +73,11 @@ def build_graph(checkpointer: Optional[Any] = None):
     wf.add_edge("report", END)
 
     # --- Conditional edges ---
+    wf.add_conditional_edges(
+        "planning",
+        route_after_planning,
+        {"scan_submit": "scan_submit", END: END},
+    )
     wf.add_conditional_edges(
         "scan_poll",
         route_scan_poll,

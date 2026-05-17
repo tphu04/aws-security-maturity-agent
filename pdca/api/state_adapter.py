@@ -887,6 +887,17 @@ def to_run_session(
 
     rag_bundle = values.get("rag_bundle") or {}
 
+    plan = values.get("assessment_plan") or {}
+    clarification: Optional[Dict[str, Any]] = None
+    if plan.get("status") == "needs_clarification":
+        clarification = {
+            "question": plan.get("clarification_question", ""),
+            "originalRequest": values.get("user_request", ""),
+        }
+        # Override the derived status so the FE knows to surface a question
+        # instead of treating an empty run as a successful completion.
+        status = "needs_clarification"
+
     out: Dict[str, Any] = {
         "id": run_id,
         "threadId": run_id,
@@ -915,4 +926,6 @@ def to_run_session(
             "trace": rag_bundle.get("trace") or {},
         } if rag_bundle else None,
     }
+    if clarification is not None:
+        out["clarification"] = clarification
     return _strip_private(out)

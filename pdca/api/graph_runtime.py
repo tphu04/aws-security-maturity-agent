@@ -110,7 +110,12 @@ def get_run_metadata(run_id: str) -> Optional[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Initial state builder
 # ---------------------------------------------------------------------------
-def _initial_state(run_id: str, prompt: str, group: str) -> Dict[str, Any]:
+def _initial_state(
+    run_id: str,
+    prompt: str,
+    group: str,
+    clarification_attempt: bool = False,
+) -> Dict[str, Any]:
     """PDCAState seed for a fresh run.
 
     Notes:
@@ -118,11 +123,14 @@ def _initial_state(run_id: str, prompt: str, group: str) -> Dict[str, Any]:
       use it (PlanningAgent reads NL but the group nudge increases hit rate).
     - `cycle_iteration=0` matches the CLI seed (see orchestrator.py:152).
     - We do NOT pre-seed `assessment_plan` — planning_node owns it.
+    - `clarification_attempt=True` is set when the orchestrator is replaying
+      a request after asking the user to clarify; planning_node forwards it
+      to PlanningAgent to suppress a second clarification turn.
     """
     request_text = prompt.strip()
     if group and group.lower() not in request_text.lower():
         request_text = f"{request_text} (focus: {group})"
-    return {
+    state: Dict[str, Any] = {
         "run_id": run_id,
         "user_request": request_text,
         "cycle_iteration": 0,
@@ -132,6 +140,9 @@ def _initial_state(run_id: str, prompt: str, group: str) -> Dict[str, Any]:
             "system_info": {"start_time": time.time()},
         },
     }
+    if clarification_attempt:
+        state["clarification_attempt"] = True
+    return state
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +203,12 @@ def _spawn(thread_id: str, payload) -> None:
 # ---------------------------------------------------------------------------
 # Public driver API
 # ---------------------------------------------------------------------------
-def start_run(prompt: str, scope: Optional[str], group: str) -> Dict[str, str]:
+def start_run(
+    prompt: str,
+    scope: Optional[str],
+    group: str,
+    clarification_attempt: bool = False,
+) -> Dict[str, str]:
     """Start a new PDCA run end-to-end.
 
     Returns:
@@ -204,7 +220,7 @@ def start_run(prompt: str, scope: Optional[str], group: str) -> Dict[str, str]:
     thread_id = run_id  # 1:1 mapping — simplifies adapter + lookups
     _register_run(run_id, thread_id, prompt, scope, group)
 
-    initial = _initial_state(run_id, prompt, group)
+    initial = _initial_state(run_id, prompt, group, clarification_attempt)
 
     lock = _run_lock(thread_id)
     with lock:

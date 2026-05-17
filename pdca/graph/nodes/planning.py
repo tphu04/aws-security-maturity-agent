@@ -44,8 +44,12 @@ def planning_node(state: PDCAState, config: RunnableConfig) -> dict:
             callbacks=callbacks,
         )
 
+        clarification_attempt = bool(state.get("clarification_attempt", False))
         with measure_time() as timer:
-            plan_result = agent.run(user_request)
+            plan_result = agent.run(
+                user_request,
+                clarification_attempt=clarification_attempt,
+            )
 
         save_scan_configuration(plan_result)
 
@@ -54,13 +58,23 @@ def planning_node(state: PDCAState, config: RunnableConfig) -> dict:
         groups = plan_result.get("groups_to_scan", []) or []
         top_score = plan_result.get("top_score")
         confidence = plan_result.get("confidence")
+        needs_clarification = plan_result.get("status") == "needs_clarification"
         update_trace_metadata(
             **{
                 "pdca.plan.checks_count": len(checks),
                 "pdca.plan.groups": groups,
                 "pdca.plan.fast_track": bool(plan_result.get("fast_track")),
+                "pdca.plan.needs_clarification": needs_clarification,
             }
         )
+        if needs_clarification:
+            logger.info(
+                "planning_node: clarification requested, halting workflow",
+                extra={
+                    "run_id": run_id,
+                    "question": plan_result.get("clarification_question", "")[:200],
+                },
+            )
         sp.update(
             output={
                 "checks_count": len(checks),
