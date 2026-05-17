@@ -1,0 +1,34 @@
+{
+  "summary": {
+    "total_checks": 577,
+    "proposers": [
+      "lexical@v1",
+      "tfidf_embedding@v1"
+    ],
+    "top_k_per_proposer": 5,
+    "checks_with_zero_proposals": 0
+  },
+  "coverage_per_proposer": {
+    "lexical@v1": {
+      "checks_with_at_least_one": 577,
+      "coverage_pct": 100.0,
+      "top_score_buckets": {
+        "0.15-0.33": 534,
+        "0.33-0.50": 35,
+        "0.50-0.70": 6,
+        "<0.15": 2
+      }
+    },
+    "tfidf_embedding@v1": {
+      "checks_with_at_least_one": 577,
+      "coverage_pct": 100.0,
+      "top_score_buckets": {
+        "0.15-0.33": 334,
+        "<0.15": 156,
+        "0.33-0.50": 78,
+        "0.50-0.70": 9
+      }
+    }
+  },
+  "zero_proposal_sample": []
+}

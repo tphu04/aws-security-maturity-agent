@@ -1,0 +1,78 @@
+{
+  "summary": {
+    "total_checks": 577,
+    "with_evidence_ref": 280,
+    "with_evidence_ref_pct": 48.53,
+    "with_security_domain": 486,
+    "with_security_domain_pct": 84.23,
+    "with_both": 240,
+    "with_both_pct": 41.59,
+    "no_upstream_signal": 91
+  },
+  "evidence_refs_by_source": {
+    "aws_security_best_practices": 169,
+    "prowler_hub": 115,
+    "cis_aws": 77,
+    "aws_fsbp": 72,
+    "aws_security_hub": 62,
+    "trend_micro_cloud_conformity": 53,
+    "nist_800_53": 32,
+    "pci_dss": 6,
+    "iso_27001": 3,
+    "nist_csf": 2,
+    "hipaa": 2
+  },
+  "security_domain_distribution": {
+    "network": 119,
+    "data_protection": 96,
+    "__none__": 91,
+    "identity_access": 79,
+    "logging_monitoring": 78,
+    "resilience": 65,
+    "vulnerability_management": 22,
+    "threat_detection": 14,
+    "gen_ai": 11,
+    "container_security": 2
+  },
+  "domain_inference_source": {
+    "category": 332,
+    "checkid": 127,
+    "__none__": 91,
+    "checktype": 27
+  },
+  "checks_by_service_top10": {
+    "ec2": 70,
+    "iam": 43,
+    "rds": 34,
+    "cloudwatch": 22,
+    "s3": 21,
+    "cognito": 16,
+    "cloudtrail": 14,
+    "cloudfront": 13,
+    "opensearch": 12,
+    "glue": 12
+  },
+  "checks_missing_all_signals_sample": [
+    "organizations_tags_policies_enabled_and_attached",
+    "fsx_file_system_copy_tags_to_volumes_enabled",
+    "networkfirewall_in_all_vpc",
+    "opensearch_service_domains_access_control_enabled",
+    "vpc_subnet_separate_private_public",
+    "vpc_different_regions",
+    "vpc_endpoint_for_ec2_enabled",
+    "cognito_user_pool_blocks_potential_malicious_sign_in_attempts",
+    "cognito_user_pool_advanced_security_enabled",
+    "cognito_user_pool_client_prevent_user_existence_errors",
+    "cognito_user_pool_self_registration_disabled",
+    "cognito_user_pool_client_token_revocation_enabled",
+    "cognito_user_pool_waf_acl_attached",
+    "cognito_identity_pool_guest_access_disabled",
+    "elbv2_cross_zone_load_balancing_enabled",
+    "elbv2_waf_acl_attached",
+    "redshift_cluster_automatic_upgrades",
+    "drs_job_exist",
+    "kafka_cluster_unrestricted_access_disabled",
+    "kafka_cluster_enhanced_monitoring_enabled"
+  ],
+  "checks_missing_all_signals_count": 51
+}

@@ -50,26 +50,58 @@ from app.indexing.vector_index import VectorIndex
 
 
 def _generate_maturity_mappings() -> None:
-    script_path = Path(__file__).resolve().parent / "gen_maturity_mapping.py"
-    if not script_path.exists():
-        raise FileNotFoundError(f"missing mapping generator: {script_path}")
+    """Run the 4-tier consensus mapping pipeline.
 
-    print("[build_all] Generating maturity mappings...")
-    result = subprocess.run(
-        [sys.executable, str(script_path)],
-        cwd=str(script_path.parent.parent),
-        text=True,
-        capture_output=True,
-        check=False,
+    The legacy single-step generator (gen_maturity_mapping.py) is now used
+    only as one voter inside Tier 2 (LexicalProposer). The canonical
+    pipeline lives at RAG/pipeline/mapping/ and writes its final artifact
+    directly to NORMALIZED_PATHS[CORPUS_MATURITY_MAPPINGS].
+    """
+    project_root = Path(__file__).resolve().parents[2]
+    rebuilt_artifact = (
+        project_root / "RAG" / "data" / "normalized" / "maturity_mappings.json"
     )
-    if result.stdout:
-        print(result.stdout.strip())
-    if result.stderr:
-        print(result.stderr.strip())
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"maturity mapping generation failed with exit code {result.returncode}"
+
+    # If a recent 4-tier artifact already exists (carries the `consensus`
+    # field), skip regeneration — it is the source of truth.
+    if rebuilt_artifact.exists():
+        try:
+            with rebuilt_artifact.open("r", encoding="utf-8") as f:
+                payload = json.load(f)
+            if payload and isinstance(payload, list) and "consensus" in payload[0]:
+                print(
+                    "[build_all] 4-tier mapping artifact already present "
+                    f"({len(payload)} docs); skipping regeneration."
+                )
+                return
+        except Exception:
+            pass
+
+    print("[build_all] Running 4-tier mapping pipeline...")
+    pipeline_steps = [
+        "RAG.pipeline.mapping.tier1_upstream_import",
+        "RAG.pipeline.mapping.tier2_run",
+        "RAG.pipeline.mapping.tier3_consensus",
+        "RAG.pipeline.mapping.tier4_build_artifact",
+    ]
+    for module in pipeline_steps:
+        print(f"[build_all]   $ python -m {module}")
+        result = subprocess.run(
+            [sys.executable, "-m", module],
+            cwd=str(project_root),
+            text=True,
+            capture_output=True,
+            check=False,
         )
+        if result.returncode != 0:
+            if result.stdout:
+                print(result.stdout.strip())
+            if result.stderr:
+                print(result.stderr.strip())
+            raise RuntimeError(
+                f"4-tier mapping step {module} failed with exit code "
+                f"{result.returncode}"
+            )
 
 
 def _ensure_dir(path: Path) -> None:
@@ -272,27 +304,22 @@ def _normalize_all() -> (
 ):
     prowler_raw = load_prowler_raw()
     maturity_raw = load_maturity_raw()
-    mapping_raw = load_mappings_raw()
-
-    # Load curated mappings (if any)
-    curated_raw = _load_curated_mappings()
-
-    # Merge curated + generated: curated takes priority
-    merged_mapping_raw = _merge_mappings(mapping_raw, curated_raw)
 
     # Normalize capabilities first -> this corpus is the source of truth
     # for canonical capability_id values.
     prowler_normalized = [normalize_prowler_doc(r).model_dump() for r in prowler_raw]
 
     maturity_docs = [normalize_maturity_doc(r) for r in maturity_raw]
-    capability_lookup = build_capability_name_to_id_lookup(maturity_docs)
     maturity_normalized = [doc.model_dump() for doc in maturity_docs]
 
-    # Normalize mappings second, using canonical capability ids from capabilities.
-    mapping_normalized = [
-        normalize_mapping_doc(r, capability_lookup=capability_lookup).model_dump()
-        for r in merged_mapping_raw
-    ]
+    # Mappings: read the pre-normalized artifact produced by the 4-tier
+    # pipeline (`RAG/pipeline/mapping/tier4_build_artifact.py`). The artifact
+    # already carries every legacy field plus the new `status`,
+    # `evidence_refs`, `consensus`, `provenance` and `lifecycle` blocks, so
+    # we treat it as the source of truth and skip re-normalization.
+    mapping_normalized_path = NORMALIZED_PATHS[CORPUS_MATURITY_MAPPINGS]
+    with mapping_normalized_path.open("r", encoding="utf-8") as f:
+        mapping_normalized = json.load(f)
 
     return prowler_normalized, maturity_normalized, mapping_normalized
 

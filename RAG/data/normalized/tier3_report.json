@@ -1,0 +1,50 @@
+{
+  "summary": {
+    "total_checks": 577,
+    "top_k": 3,
+    "proposer_ids": [
+      "lexical@v1",
+      "tfidf_embedding@v1"
+    ],
+    "status_distribution": {
+      "weak": {
+        "count": 262,
+        "pct": 45.41
+      },
+      "consensus": {
+        "count": 231,
+        "pct": 40.03
+      },
+      "disputed": {
+        "count": 84,
+        "pct": 14.56
+      }
+    },
+    "promotable_to_active_pct": 40.03
+  },
+  "system_pairwise_cohen_kappa": {
+    "lexical@v1__vs__tfidf_embedding@v1": 0.3801
+  },
+  "disputed_sample": [
+    "cloudfront_distributions_default_root_object",
+    "cloudfront_distributions_geo_restrictions_enabled",
+    "apigateway_restapi_public_with_authorizer",
+    "apigateway_restapi_authorizers_enabled",
+    "fsx_file_system_copy_tags_to_backups_enabled",
+    "eventbridge_schema_registry_cross_account_access",
+    "emr_cluster_master_nodes_no_public_ip",
+    "emr_cluster_publicly_accesible",
+    "elasticache_cluster_uses_public_subnet",
+    "elasticache_redis_replication_group_auth_enabled",
+    "workspaces_vpc_2private_1public_subnets_nat",
+    "s3_bucket_event_notifications_enabled",
+    "s3_bucket_lifecycle_enabled",
+    "s3_access_point_public_access_block",
+    "networkfirewall_policy_rule_group_associated",
+    "networkfirewall_deletion_protection",
+    "opensearch_service_domains_fault_tolerant_data_nodes",
+    "dynamodb_table_autoscaling_enabled",
+    "account_security_questions_are_registered_in_the_aws_account",
+    "eks_cluster_network_policy_enabled"
+  ]
+}

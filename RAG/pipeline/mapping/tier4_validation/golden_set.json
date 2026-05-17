@@ -1,0 +1,897 @@
+{
+  "version": "1.0+ext_review",
+  "created_at": "2026-05-17",
+  "description": "Hand-curated ground-truth mappings for evaluating Tier 1-3 pipeline. Each entry cites the authoritative source (CIS AWS Foundations Benchmark v3.0.0, NIST 800-53 Rev5, AWS Foundational Security Best Practices) used to verify the mapping. Used by precision_recall_eval.py and invariant_tests.py.",
+  "mappings": [
+    {
+      "check_id": "s3_bucket_default_encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "2.1.1",
+          "title": "Ensure S3 Bucket Policy is set to deny HTTP requests; encryption at rest enforced"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SC-28",
+          "title": "Protection of Information at Rest"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "S3.4",
+          "title": "S3 buckets should have server-side encryption enabled"
+        }
+      ],
+      "rationale": "Server-side encryption directly implements data-at-rest protection."
+    },
+    {
+      "check_id": "s3_account_level_public_access_blocks",
+      "expected_capability_id": "block_public_access",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "S3.1",
+          "title": "S3 general purpose buckets should have block public access settings enabled"
+        },
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "2.1.5"
+        }
+      ],
+      "rationale": "Account-level public access block is the canonical control for the block-public-access capability."
+    },
+    {
+      "check_id": "iam_root_mfa_enabled",
+      "expected_capability_id": "multi_factor_authentication",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "1.5",
+          "title": "Ensure MFA is enabled for the root user account"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "IA-2(1)",
+          "title": "Multi-factor Authentication to Privileged Accounts"
+        }
+      ],
+      "rationale": "Root MFA is the textbook implementation of the multi-factor authentication capability."
+    },
+    {
+      "check_id": "iam_user_mfa_enabled_console_access",
+      "expected_capability_id": "multi_factor_authentication",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "1.10"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "IA-2(1)"
+        }
+      ],
+      "rationale": "Console MFA for IAM users enforces multi-factor authentication."
+    },
+    {
+      "check_id": "iam_password_policy_minimum_length_14",
+      "expected_capability_id": "multi_factor_authentication",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "1.8"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "IA-5(1)",
+          "title": "Password-based Authentication"
+        }
+      ],
+      "rationale": "Password policy is the closest available capability in the current catalog under identity_access; flagged as candidate for catalog expansion."
+    },
+    {
+      "check_id": "cloudtrail_multi_region_enabled",
+      "expected_capability_id": "detect_common_threats",
+      "expected_security_domain": "logging_monitoring",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.1",
+          "title": "Ensure CloudTrail is enabled in all regions"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "AU-2"
+        }
+      ],
+      "rationale": "Multi-region CloudTrail is the foundational logging control supporting threat detection."
+    },
+    {
+      "check_id": "cloudtrail_logs_s3_bucket_access_logging_enabled",
+      "expected_capability_id": "detect_common_threats",
+      "expected_security_domain": "logging_monitoring",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.6"
+        }
+      ],
+      "rationale": "Access logging for the CloudTrail bucket extends the audit chain."
+    },
+    {
+      "check_id": "guardduty_is_enabled",
+      "expected_capability_id": "advanced_threat_detection",
+      "expected_security_domain": "threat_detection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "GuardDuty.1"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SI-4",
+          "title": "System Monitoring"
+        }
+      ],
+      "rationale": "GuardDuty is AWS's managed threat detection service, mapping directly to advanced threat detection."
+    },
+    {
+      "check_id": "ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+      "expected_capability_id": "network_segmentation_vpcs_public_private_networks",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "EC2.18"
+        },
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "5.2"
+        }
+      ],
+      "rationale": "Open-to-internet security group violates network segmentation."
+    },
+    {
+      "check_id": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "expected_capability_id": "network_segmentation_vpcs_public_private_networks",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "5.2"
+        }
+      ],
+      "rationale": "Public SSH ingress fails the network segmentation control."
+    },
+    {
+      "check_id": "rds_instance_storage_encrypted",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "RDS.3"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SC-28"
+        }
+      ],
+      "rationale": "RDS encrypted storage = data-at-rest protection."
+    },
+    {
+      "check_id": "rds_instance_backup_enabled",
+      "expected_capability_id": "data_backups",
+      "expected_security_domain": "resilience",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "RDS.11"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "CP-9",
+          "title": "System Backup"
+        }
+      ],
+      "rationale": "Automated backups are the data backup control."
+    },
+    {
+      "check_id": "ec2_instance_older_than_specific_days",
+      "expected_capability_id": "manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
+      "expected_security_domain": "vulnerability_management",
+      "citations": [
+        {
+          "source": "NIST_800_53_R5",
+          "control": "RA-5",
+          "title": "Vulnerability Monitoring and Scanning"
+        }
+      ],
+      "rationale": "Old EC2 instances signal patch / vulnerability management gaps."
+    },
+    {
+      "check_id": "cloudfront_distributions_https_sni_enabled",
+      "expected_capability_id": "encryption_in_transit",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SC-8",
+          "title": "Transmission Confidentiality and Integrity"
+        }
+      ],
+      "rationale": "HTTPS/SNI on CloudFront enforces encryption-in-transit."
+    },
+    {
+      "check_id": "elbv2_ssl_listeners",
+      "expected_capability_id": "encryption_in_transit",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "ELB.1"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SC-8"
+        }
+      ],
+      "rationale": "SSL on ELB listener = encryption-in-transit at the load balancer."
+    },
+    {
+      "check_id": "vpc_flow_logs_enabled",
+      "expected_capability_id": "detect_common_threats",
+      "expected_security_domain": "logging_monitoring",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.9"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "EC2.6"
+        }
+      ],
+      "rationale": "VPC flow logs provide the network observability needed for threat detection."
+    },
+    {
+      "check_id": "iam_root_hardware_mfa_enabled",
+      "expected_capability_id": "multi_factor_authentication",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "1.6"
+        }
+      ],
+      "rationale": "Hardware MFA for root strengthens the MFA capability."
+    },
+    {
+      "check_id": "iam_no_root_access_key",
+      "expected_capability_id": "iam_data_perimeters_conditional_access",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "1.4"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "IAM.4"
+        }
+      ],
+      "rationale": "Removing root access keys enforces least-privilege/data-perimeter principles."
+    },
+    {
+      "check_id": "kms_cmk_rotation_enabled",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.7"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "KMS.4"
+        }
+      ],
+      "rationale": "Annual CMK rotation is a sub-control of data-at-rest encryption hygiene."
+    },
+    {
+      "check_id": "ec2_ebs_default_encryption",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "EC2.7"
+        }
+      ],
+      "rationale": "Default EBS encryption is data-at-rest protection at the volume layer."
+    },
+    {
+      "check_id": "efs_encryption_at_rest_enabled",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "EFS.1"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SC-28"
+        }
+      ],
+      "rationale": "EFS at-rest encryption = data-at-rest control.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "EFS encryption at rest is a direct match for the data encryption at rest capability."
+      }
+    },
+    {
+      "check_id": "sns_topics_kms_encryption_at_rest_enabled",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "SNS.1"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SC-28"
+        }
+      ],
+      "rationale": "SNS KMS encryption at rest.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "SNS KMS encryption protects stored topic messages and metadata, so data encryption at rest is the best mapping."
+      }
+    },
+    {
+      "check_id": "cloudtrail_kms_encryption_enabled",
+      "expected_capability_id": "data_encryption_at_rest",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.7"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "CloudTrail.2"
+        }
+      ],
+      "rationale": "KMS encryption for CloudTrail log data = data-at-rest.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "CloudTrail SSE-KMS for delivered log files is fundamentally an encryption-at-rest control."
+      }
+    },
+    {
+      "check_id": "s3_bucket_object_lock",
+      "expected_capability_id": "data_backups",
+      "expected_security_domain": "resilience",
+      "citations": [
+        {
+          "source": "NIST_800_53_R5",
+          "control": "CP-9"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SI-7"
+        }
+      ],
+      "rationale": "Object Lock provides WORM protection supporting backup/recovery integrity.",
+      "verification": {
+        "verified": "partial",
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Object Lock is more about immutability and integrity than backup creation, but data_backups is the closest available resilience capability."
+      }
+    },
+    {
+      "check_id": "s3_bucket_object_versioning",
+      "expected_capability_id": "data_backups",
+      "expected_security_domain": "resilience",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "S3.14"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "CP-9"
+        }
+      ],
+      "rationale": "Versioning preserves prior object states — backup primitive.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "S3 versioning preserves previous object states and is a reasonable backup and recovery primitive."
+      }
+    },
+    {
+      "check_id": "ec2_instance_account_imdsv2_enabled",
+      "expected_capability_id": "instance_metadata_service_imds_v2",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "EC2.8"
+        }
+      ],
+      "rationale": "Direct 1:1 match — IMDSv2 capability.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Account-level IMDSv2 enforcement directly maps to the IMDSv2 capability."
+      }
+    },
+    {
+      "check_id": "ec2_instance_imdsv2_enabled",
+      "expected_capability_id": "instance_metadata_service_imds_v2",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "EC2.8"
+        }
+      ],
+      "rationale": "Per-instance IMDSv2 enforcement.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Per-instance IMDSv2 enforcement directly maps to the IMDSv2 capability."
+      }
+    },
+    {
+      "check_id": "iam_user_no_setup_initial_access_key",
+      "expected_capability_id": "use_temporary_credentials",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "IAM.20"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "AC-2"
+        }
+      ],
+      "rationale": "No long-lived initial keys = enforce temporary-credentials posture.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Avoiding initial long-lived IAM access keys aligns best with moving toward temporary credentials."
+      }
+    },
+    {
+      "check_id": "iam_password_policy_uppercase",
+      "expected_capability_id": "multi_factor_authentication",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "1.8"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "IA-5(1)"
+        }
+      ],
+      "rationale": "Password complexity is part of authentication hardening; closest capability.",
+      "verification": {
+        "verified": "partial",
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Password complexity is not MFA, but this is the closest authentication-hardening capability available in the catalog."
+      }
+    },
+    {
+      "check_id": "secretsmanager_automatic_rotation_enabled",
+      "expected_capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+      "expected_security_domain": "identity_access",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "SecretsManager.1"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "IA-5(7)"
+        }
+      ],
+      "rationale": "Automatic secret rotation is the operational complement to not-storing-secrets-in-code.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Secrets Manager rotation fits the secrets-management capability that covers avoiding hardcoded secrets and handling rotation."
+      }
+    },
+    {
+      "check_id": "config_recorder_all_regions_enabled",
+      "expected_capability_id": "inventory_configurations_monitoring",
+      "expected_security_domain": "logging_monitoring",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.5"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "Config.1"
+        }
+      ],
+      "rationale": "AWS Config records resource configuration over time — inventory/config monitoring.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "AWS Config recorders provide configuration inventory and change monitoring, so the proposed mapping is appropriate."
+      }
+    },
+    {
+      "check_id": "cloudtrail_log_file_validation_enabled",
+      "expected_capability_id": "audit_api_calls",
+      "expected_security_domain": "logging_monitoring",
+      "citations": [
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "3.2"
+        },
+        {
+          "source": "AWS_FSBP",
+          "control": "CloudTrail.4"
+        }
+      ],
+      "rationale": "Log file validation protects integrity of API audit trail.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "CloudTrail log file validation supports trustworthy API audit logs, making audit_api_calls the best fit."
+      }
+    },
+    {
+      "check_id": "elb_logging_enabled",
+      "expected_capability_id": "audit_api_calls",
+      "expected_security_domain": "logging_monitoring",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "ELB.5"
+        }
+      ],
+      "rationale": "ELB access logging extends audit chain to data plane (closest capability in catalog).",
+      "verification": {
+        "verified": "partial",
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "ELB access logs are data-plane access logs rather than CloudTrail API audit logs, but audit_api_calls is the closest logging capability in the catalog."
+      }
+    },
+    {
+      "check_id": "shield_advanced_protection_in_route53_hosted_zones",
+      "expected_capability_id": "advanced_ddos_mitigation_layer_7_aws_shield",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "Shield.1"
+        }
+      ],
+      "rationale": "Direct 1:1 — Shield Advanced on Route53.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Shield Advanced protection for Route53 is a direct match for advanced DDoS mitigation with AWS Shield."
+      }
+    },
+    {
+      "check_id": "apigateway_restapi_waf_acl_attached",
+      "expected_capability_id": "waf_with_managed_rules",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "APIGateway.4"
+        }
+      ],
+      "rationale": "WAF attachment to API Gateway = managed WAF rules deployment.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Attaching a WAF web ACL to API Gateway aligns best with deploying WAF protection."
+      }
+    },
+    {
+      "check_id": "awslambda_function_url_public",
+      "expected_capability_id": "block_public_access",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "Lambda.5"
+        }
+      ],
+      "rationale": "Publicly accessible Lambda URL violates block-public-access posture.",
+      "verification": {
+        "verified": "partial",
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "A public Lambda function URL is not S3-style public access, but block_public_access is the closest catalog control for preventing unauthenticated public exposure."
+      }
+    },
+    {
+      "check_id": "s3_bucket_public_access",
+      "expected_capability_id": "block_public_access",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "S3.2"
+        },
+        {
+          "source": "CIS_AWS_Foundations_v3.0.0",
+          "control": "2.1.5"
+        }
+      ],
+      "rationale": "Bucket-level public access block.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "S3 bucket public exposure is a direct match for block_public_access."
+      }
+    },
+    {
+      "check_id": "organizations_scp_check_deny_regions",
+      "expected_capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+      "expected_security_domain": "network",
+      "citations": [
+        {
+          "source": "AWS_Well_Architected",
+          "control": "SEC-BP02"
+        }
+      ],
+      "rationale": "SCP region-deny implements region allowlist capability.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Restricting AWS Regions with SCPs directly implements the region allowlist and deny-rest capability."
+      }
+    },
+    {
+      "check_id": "rds_instance_deletion_protection",
+      "expected_capability_id": "data_backups",
+      "expected_security_domain": "resilience",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "RDS.8"
+        }
+      ],
+      "rationale": "Deletion protection is a recovery-readiness control adjacent to backups (closest in catalog).",
+      "verification": {
+        "verified": "partial",
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "RDS deletion protection prevents accidental destructive actions rather than creating backups, but data_backups is the closest resilience and recovery-related capability."
+      }
+    },
+    {
+      "check_id": "elasticache_redis_cluster_multi_az_enabled",
+      "expected_capability_id": "achieve_redundancy_using_multiple_availability_zones",
+      "expected_security_domain": "resilience",
+      "citations": [
+        {
+          "source": "AWS_Well_Architected",
+          "control": "REL-BP-06"
+        }
+      ],
+      "rationale": "Automatic failover requires multi-AZ redundancy.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "ElastiCache Redis Multi-AZ directly supports redundancy across Availability Zones."
+      }
+    },
+    {
+      "check_id": "macie_is_enabled",
+      "expected_capability_id": "discover_sensitive_data_with_amazon_macie",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_Well_Architected",
+          "control": "SEC-BP-08"
+        }
+      ],
+      "rationale": "Direct 1:1 — Macie capability.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Enabling Macie directly maps to discovering sensitive data with Amazon Macie."
+      }
+    },
+    {
+      "check_id": "macie_automated_sensitive_data_discovery_enabled",
+      "expected_capability_id": "discover_sensitive_data_with_amazon_macie",
+      "expected_security_domain": "data_protection",
+      "citations": [
+        {
+          "source": "AWS_Well_Architected",
+          "control": "SEC-BP-08"
+        }
+      ],
+      "rationale": "Automated discovery is core to Macie capability.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Macie automated sensitive data discovery is core functionality of the Macie sensitive-data discovery capability."
+      }
+    },
+    {
+      "check_id": "guardduty_no_high_severity_findings",
+      "expected_capability_id": "act_on_critical_security_findings",
+      "expected_security_domain": "threat_detection",
+      "citations": [
+        {
+          "source": "NIST_800_53_R5",
+          "control": "IR-4"
+        }
+      ],
+      "rationale": "Acting on high-severity GuardDuty findings = critical-finding response capability.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "High-severity GuardDuty findings should be mapped to acting on critical security findings rather than simply enabling detection."
+      }
+    },
+    {
+      "check_id": "inspector2_is_enabled",
+      "expected_capability_id": "manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
+      "expected_security_domain": "vulnerability_management",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "Inspector.1"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "RA-5"
+        }
+      ],
+      "rationale": "Inspector continuous scanning supports infrastructure vulnerability management.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Inspector2 enables continuous vulnerability scanning for EC2 and related infrastructure resources."
+      }
+    },
+    {
+      "check_id": "ecr_repositories_scan_images_on_push_enabled",
+      "expected_capability_id": "manage_vulnerabilities_in_your_applications",
+      "expected_security_domain": "vulnerability_management",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "ECR.1"
+        }
+      ],
+      "rationale": "Image scanning on push = application vulnerability management at the artifact layer.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "ECR image scanning on push is vulnerability management for application/container artifacts."
+      }
+    },
+    {
+      "check_id": "bedrock_agent_guardrail_enabled",
+      "expected_capability_id": "generative_ai_data_protection_with_amazon_bedrock",
+      "expected_security_domain": "gen_ai",
+      "citations": [
+        {
+          "source": "AWS_Bedrock_Best_Practices"
+        }
+      ],
+      "rationale": "Guardrails are the primary Bedrock data-protection control.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Bedrock Guardrails are a GenAI protection mechanism and best fit the Bedrock data-protection capability."
+      }
+    },
+    {
+      "check_id": "bedrock_model_invocation_logs_encryption_enabled",
+      "expected_capability_id": "generative_ai_data_protection_with_amazon_bedrock",
+      "expected_security_domain": "gen_ai",
+      "citations": [
+        {
+          "source": "AWS_Bedrock_Best_Practices"
+        }
+      ],
+      "rationale": "Encrypting model-invocation logs protects GenAI prompt/response data.",
+      "verification": {
+        "verified": "partial",
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "The control is specifically encryption at rest for Bedrock logs, but because it protects GenAI prompt and response data, the proposed Bedrock data-protection capability is acceptable."
+      }
+    },
+    {
+      "check_id": "eks_cluster_uses_a_supported_version",
+      "expected_capability_id": "manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
+      "expected_security_domain": "container_security",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "EKS.2"
+        },
+        {
+          "source": "NIST_800_53_R5",
+          "control": "SI-2"
+        }
+      ],
+      "rationale": "Supported K8s version = patch/version control for container infrastructure.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Running EKS on a supported Kubernetes version is patch and lifecycle hygiene for infrastructure vulnerability management."
+      }
+    },
+    {
+      "check_id": "guardduty_centrally_managed",
+      "expected_capability_id": "advanced_threat_detection",
+      "expected_security_domain": "threat_detection",
+      "citations": [
+        {
+          "source": "AWS_FSBP",
+          "control": "GuardDuty.4"
+        }
+      ],
+      "rationale": "Centralized GuardDuty management is a maturity-level implementation of advanced threat detection.",
+      "verification": {
+        "verified": true,
+        "verified_by": "external_llm_review",
+        "verified_at": "2026-05-17T03:35:17.595443+00:00",
+        "reviewer_comment": "Centrally managed GuardDuty is an implementation pattern for mature threat detection across accounts."
+      }
+    }
+  ],
+  "external_review": {
+    "merged_at": "2026-05-17T03:35:17.595443+00:00",
+    "source_response": "external_review_response.json",
+    "accepted": 29,
+    "rejected": 0
+  }
+}

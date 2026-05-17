@@ -1,6 +1,6 @@
 {
   "index_version": "rag-v5-2026-04-07",
-  "built_at": "2026-04-19T15:30:45+00:00",
+  "built_at": "2026-05-17T10:57:55+00:00",
   "embedding_model": "BAAI/bge-base-en-v1.5",
   "storage_layout": "multi_corpus",
   "corpora": {
@@ -22,15 +22,15 @@
       "normalized_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\normalized\\maturity_mappings.json",
       "bm25_path": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\indexes\\bm25\\bm25_maturity_mappings.pkl",
       "chroma_collection": "maturity_mappings",
-      "doc_count": 502,
+      "doc_count": 493,
       "doc_type": "maturity_mapping"
     }
   },
   "counts": {
     "prowler_checks": 577,
     "maturity_capabilities": 78,
-    "maturity_mappings": 502,
-    "total": 1157
+    "maturity_mappings": 493,
+    "total": 1148
   },
   "vector": {
     "persist_dir": "C:\\Users\\trung\\desktop\\DoAn\\RAG\\data\\indexes\\chroma",

@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "input_total": 577,
+    "emitted_total": 493,
+    "excluded_total": 84,
+    "by_bucket": {
+      "input.weak": 262,
+      "emitted.proposed": 262,
+      "input.consensus": 231,
+      "emitted.active": 231,
+      "input.disputed": 84,
+      "excluded.disputed": 84
+    }
+  },
+  "policy": {
+    "pipeline_version": "rebuild-pipeline@v2.0",
+    "lifecycle_review_window_days": 180,
+    "promotion_rules": {
+      "consensus": "status=active, review_status=auto_high, confidence=high",
+      "majority": "status=active_majority, review_status=review_required, confidence=medium",
+      "weak": "status=proposed, review_status=review_required, confidence=low",
+      "disputed": "EXCLUDED — disclosed in tier4_excluded_disputed.json"
+    }
+  },
+  "artifact_paths": {
+    "mappings": "RAG\\data\\normalized\\maturity_mappings.v2.json",
+    "excluded": "RAG\\data\\normalized\\tier4_excluded_disputed.json"
+  }
+}

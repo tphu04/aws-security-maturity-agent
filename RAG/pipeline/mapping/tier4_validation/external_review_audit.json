@@ -1,0 +1,192 @@
+{
+  "summary": {
+    "verdicts_in_response": 30,
+    "accepted": 29,
+    "rejected": 0,
+    "skipped": 1
+  },
+  "accepted_check_ids": [
+    "efs_encryption_at_rest_enabled",
+    "sns_topics_kms_encryption_at_rest_enabled",
+    "cloudtrail_kms_encryption_enabled",
+    "s3_bucket_object_lock",
+    "s3_bucket_object_versioning",
+    "ec2_instance_account_imdsv2_enabled",
+    "ec2_instance_imdsv2_enabled",
+    "iam_user_no_setup_initial_access_key",
+    "iam_password_policy_uppercase",
+    "secretsmanager_automatic_rotation_enabled",
+    "config_recorder_all_regions_enabled",
+    "cloudtrail_log_file_validation_enabled",
+    "elb_logging_enabled",
+    "shield_advanced_protection_in_route53_hosted_zones",
+    "apigateway_restapi_waf_acl_attached",
+    "awslambda_function_url_public",
+    "s3_bucket_public_access",
+    "organizations_scp_check_deny_regions",
+    "rds_instance_deletion_protection",
+    "elasticache_redis_cluster_multi_az_enabled",
+    "macie_is_enabled",
+    "macie_automated_sensitive_data_discovery_enabled",
+    "guardduty_no_high_severity_findings",
+    "inspector2_is_enabled",
+    "ecr_repositories_scan_images_on_push_enabled",
+    "bedrock_agent_guardrail_enabled",
+    "bedrock_model_invocation_logs_encryption_enabled",
+    "eks_cluster_uses_a_supported_version",
+    "guardduty_centrally_managed"
+  ],
+  "rejected_entries": [],
+  "decisions": [
+    {
+      "id": 1,
+      "check_id": "efs_encryption_at_rest_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 2,
+      "check_id": "sns_topics_kms_encryption_at_rest_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 3,
+      "check_id": "cloudtrail_kms_encryption_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 4,
+      "check_id": "s3_bucket_object_lock",
+      "outcome": "accepted_partial"
+    },
+    {
+      "id": 5,
+      "check_id": "s3_bucket_object_versioning",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 6,
+      "check_id": "ec2_instance_account_imdsv2_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 7,
+      "check_id": "ec2_instance_imdsv2_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 8,
+      "check_id": "iam_user_no_setup_initial_access_key",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 9,
+      "check_id": "iam_password_policy_uppercase",
+      "outcome": "accepted_partial"
+    },
+    {
+      "id": 10,
+      "check_id": "secretsmanager_automatic_rotation_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 11,
+      "check_id": "config_recorder_all_regions_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 12,
+      "check_id": "cloudtrail_log_file_validation_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 13,
+      "check_id": "vpc_flow_logs_enabled",
+      "outcome": "skipped_already_in_golden"
+    },
+    {
+      "id": 14,
+      "check_id": "elb_logging_enabled",
+      "outcome": "accepted_partial"
+    },
+    {
+      "id": 15,
+      "check_id": "shield_advanced_protection_in_route53_hosted_zones",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 16,
+      "check_id": "apigateway_restapi_waf_acl_attached",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 17,
+      "check_id": "awslambda_function_url_public",
+      "outcome": "accepted_partial"
+    },
+    {
+      "id": 18,
+      "check_id": "s3_bucket_public_access",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 19,
+      "check_id": "organizations_scp_check_deny_regions",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 20,
+      "check_id": "rds_instance_deletion_protection",
+      "outcome": "accepted_partial"
+    },
+    {
+      "id": 21,
+      "check_id": "elasticache_redis_cluster_multi_az_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 22,
+      "check_id": "macie_is_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 23,
+      "check_id": "macie_automated_sensitive_data_discovery_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 24,
+      "check_id": "guardduty_no_high_severity_findings",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 25,
+      "check_id": "inspector2_is_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 26,
+      "check_id": "ecr_repositories_scan_images_on_push_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 27,
+      "check_id": "bedrock_agent_guardrail_enabled",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 28,
+      "check_id": "bedrock_model_invocation_logs_encryption_enabled",
+      "outcome": "accepted_partial"
+    },
+    {
+      "id": 29,
+      "check_id": "eks_cluster_uses_a_supported_version",
+      "outcome": "accepted_agree"
+    },
+    {
+      "id": 30,
+      "check_id": "guardduty_centrally_managed",
+      "outcome": "accepted_agree"
+    }
+  ]
+}

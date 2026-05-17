@@ -1,0 +1,114 @@
+{
+  "tier2": {
+    "golden_size": 49,
+    "missing_in_proposals": [],
+    "per_proposer": {
+      "lexical@v1": {
+        "evaluated": 49,
+        "recall@1": 0.3878,
+        "recall@3": 0.4286,
+        "recall@5": 0.4694,
+        "mrr": 0.4173
+      },
+      "tfidf_embedding@v1": {
+        "evaluated": 49,
+        "recall@1": 0.4898,
+        "recall@3": 0.5102,
+        "recall@5": 0.551,
+        "mrr": 0.5092
+      }
+    },
+    "combined_top_k_union": {
+      "evaluated": 49,
+      "recall@1": 0.3878,
+      "recall@3": 0.4286,
+      "recall@5": 0.4694,
+      "mrr": 0.4324
+    }
+  },
+  "tier3": {
+    "golden_size": 49,
+    "evaluated": 49,
+    "missing": 0,
+    "top1_accuracy": 0.3878,
+    "accuracy_by_status": {
+      "consensus": {
+        "total": 27,
+        "correct": 17,
+        "accuracy": 0.6296
+      },
+      "weak": {
+        "total": 16,
+        "correct": 2,
+        "accuracy": 0.125
+      },
+      "disputed": {
+        "total": 6,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    },
+    "wrong_examples_sample": [
+      {
+        "check_id": "s3_account_level_public_access_blocks",
+        "expected": "block_public_access",
+        "chosen": "analyze_data_security_posture",
+        "status": "consensus"
+      },
+      {
+        "check_id": "iam_user_mfa_enabled_console_access",
+        "expected": "multi_factor_authentication",
+        "chosen": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "status": "weak"
+      },
+      {
+        "check_id": "iam_password_policy_minimum_length_14",
+        "expected": "multi_factor_authentication",
+        "chosen": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "status": "weak"
+      },
+      {
+        "check_id": "cloudtrail_multi_region_enabled",
+        "expected": "detect_common_threats",
+        "chosen": "audit_api_calls",
+        "status": "consensus"
+      },
+      {
+        "check_id": "cloudtrail_logs_s3_bucket_access_logging_enabled",
+        "expected": "detect_common_threats",
+        "chosen": "audit_api_calls",
+        "status": "weak"
+      },
+      {
+        "check_id": "guardduty_is_enabled",
+        "expected": "advanced_threat_detection",
+        "chosen": null,
+        "status": "disputed"
+      },
+      {
+        "check_id": "ec2_securitygroup_allow_ingress_from_internet_to_any_port",
+        "expected": "network_segmentation_vpcs_public_private_networks",
+        "chosen": "cleanup_risky_open_admin_ports_in_security_groups",
+        "status": "consensus"
+      },
+      {
+        "check_id": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+        "expected": "network_segmentation_vpcs_public_private_networks",
+        "chosen": "cleanup_risky_open_admin_ports_in_security_groups",
+        "status": "consensus"
+      },
+      {
+        "check_id": "rds_instance_storage_encrypted",
+        "expected": "data_encryption_at_rest",
+        "chosen": "data_backups",
+        "status": "weak"
+      },
+      {
+        "check_id": "rds_instance_backup_enabled",
+        "expected": "data_backups",
+        "chosen": null,
+        "status": "disputed"
+      }
+    ]
+  }
+}

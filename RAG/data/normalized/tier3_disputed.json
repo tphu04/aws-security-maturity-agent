@@ -1,0 +1,3698 @@
+[
+  {
+    "check_id": "cloudfront_distributions_default_root_object",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "multi_factor_authentication"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "identify_security_and_regulatory_requirements",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "multi_factor_authentication",
+          "discover_sensitive_data_with_amazon_macie",
+          "run_tabletop_exercises_simulations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "multi_factor_authentication",
+          "points": 3.0
+        },
+        {
+          "capability_id": "identify_security_and_regulatory_requirements",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cloudfront_distributions_geo_restrictions_enabled",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "iam_data_perimeters_conditional_access",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "iam_data_perimeters_conditional_access",
+          "inventory_configurations_monitoring",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "block_public_access",
+          "waf_with_managed_rules",
+          "identify_security_and_regulatory_requirements"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "apigateway_restapi_public_with_authorizer",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "keep_your_security_contact_details_up_to_date",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "identity_federation_centralized_user_repository"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "apigateway_restapi_authorizers_enabled",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "zero_trust_access_risk_based_access_control",
+          "multi_factor_authentication"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "fsx_file_system_copy_tags_to_backups_enabled",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+        "tagging_strategy"
+      ],
+      "top_k_per_proposer": [
+        [
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "achieve_redundancy_using_multiple_availability_zones"
+        ],
+        [
+          "tagging_strategy",
+          "sharing_security_tasks_and_responsibility_raci_matrix",
+          "design_your_secure_architecture"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 3.0
+        },
+        {
+          "capability_id": "tagging_strategy",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "eventbridge_schema_registry_cross_account_access",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "block_public_access",
+        "use_temporary_credentials"
+      ],
+      "top_k_per_proposer": [
+        [
+          "block_public_access",
+          "zero_trust_access_risk_based_access_control",
+          "cleanup_risky_open_admin_ports_in_security_groups"
+        ],
+        [
+          "use_temporary_credentials",
+          "network_segmentation_vpcs_public_private_networks",
+          "keep_your_security_contact_details_up_to_date"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "use_temporary_credentials",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "emr_cluster_master_nodes_no_public_ip",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "keep_your_security_contact_details_up_to_date",
+          "use_temporary_credentials"
+        ],
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "define_incident_response_playbooks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "emr_cluster_publicly_accesible",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "block_public_access",
+        "waf_with_managed_rules"
+      ],
+      "top_k_per_proposer": [
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "waf_with_managed_rules",
+          "manage_vulnerabilities_in_your_applications",
+          "devsecops_security_in_the_pipeline"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "waf_with_managed_rules",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "elasticache_cluster_uses_public_subnet",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "don_t_store_secrets_in_code_remove_secrets_from_code",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "discover_sensitive_data_with_amazon_macie",
+          "use_temporary_credentials"
+        ],
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "keep_your_security_contact_details_up_to_date"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "elasticache_redis_replication_group_auth_enabled",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "evaluate_cloud_security_posture_aws_security_hub",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "identify_security_and_regulatory_requirements",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "building_a_red_team_attacker_point_of_view",
+          "evaluate_resilience_posture_aws_resilience_hub"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "identify_security_and_regulatory_requirements",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "workspaces_vpc_2private_1public_subnets_nat",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "vpc_flow_logs_analysis",
+        "network_segmentation_vpcs_public_private_networks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "vpc_flow_logs_analysis",
+          "zero_trust_access_risk_based_access_control",
+          "inventory_configurations_monitoring"
+        ],
+        [
+          "network_segmentation_vpcs_public_private_networks",
+          "block_public_access",
+          "2_foundational"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "vpc_flow_logs_analysis",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "s3_bucket_event_notifications_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "data_encryption_at_rest",
+          "advanced_security_automations"
+        ],
+        [
+          "block_public_access",
+          "act_on_critical_security_findings",
+          "analyze_data_security_posture"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "data_encryption_at_rest",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "s3_bucket_lifecycle_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "use_infrastructure_as_code",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "use_infrastructure_as_code",
+          "set_up_multi_account_management_with_aws_control_tower",
+          "audit_api_calls"
+        ],
+        [
+          "block_public_access",
+          "analyze_data_security_posture",
+          "iam_data_perimeters_conditional_access"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "use_infrastructure_as_code",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "set_up_multi_account_management_with_aws_control_tower",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "s3_access_point_public_access_block",
+    "security_domain": "data_protection",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "analyze_data_security_posture"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "use_infrastructure_as_code",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "analyze_data_security_posture",
+          "discover_sensitive_data_with_amazon_macie",
+          "identify_security_and_regulatory_requirements"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "analyze_data_security_posture",
+          "points": 3.0
+        },
+        {
+          "capability_id": "use_infrastructure_as_code",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "networkfirewall_policy_rule_group_associated",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "iam_policy_generation_pipeline"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "zero_trust_access_risk_based_access_control",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "iam_policy_generation_pipeline",
+          "permission_guardrails_organizational_policies_with_scps_and_rcps",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "iam_policy_generation_pipeline",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "networkfirewall_deletion_protection",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "building_a_red_team_attacker_point_of_view"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "building_a_red_team_attacker_point_of_view",
+          "sharing_security_tasks_and_responsibility_raci_matrix",
+          "evaluate_resilience_posture_aws_resilience_hub"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "building_a_red_team_attacker_point_of_view",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "opensearch_service_domains_fault_tolerant_data_nodes",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "zero_trust_access_risk_based_access_control"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "forming_a_chaos_engineering_team",
+          "achieve_redundancy_using_multiple_availability_zones"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "dynamodb_table_autoscaling_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "design_your_secure_architecture"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "automate_deviation_correction_in_configurations"
+        ],
+        [
+          "design_your_secure_architecture",
+          "data_encryption_at_rest",
+          "form_a_vulnerability_management_team"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "design_your_secure_architecture",
+          "points": 3.0
+        },
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "account_security_questions_are_registered_in_the_aws_account",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "root_account_protection"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "root_account_protection",
+          "set_up_multi_account_management_with_aws_control_tower",
+          "disaster_recovery_plan"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "root_account_protection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "eks_cluster_network_policy_enabled",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "iam_data_perimeters_conditional_access",
+        "outbound_traffic_control"
+      ],
+      "top_k_per_proposer": [
+        [
+          "iam_data_perimeters_conditional_access",
+          "vpc_flow_logs_analysis",
+          "zero_trust_access_risk_based_access_control"
+        ],
+        [
+          "outbound_traffic_control",
+          "manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting",
+          "limit_network_access_using_security_groups"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "outbound_traffic_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "vpc_flow_logs_analysis",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "eks_cluster_private_nodes_enabled",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "iam_data_perimeters_conditional_access",
+        "network_segmentation_vpcs_public_private_networks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "iam_data_perimeters_conditional_access",
+          "advanced_threat_detection",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "network_segmentation_vpcs_public_private_networks",
+          "block_public_access",
+          "outbound_traffic_control"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "advanced_threat_detection",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "vpc_subnet_separate_private_public",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "vpc_flow_logs_analysis",
+        "network_segmentation_vpcs_public_private_networks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "vpc_flow_logs_analysis",
+          "keep_your_security_contact_details_up_to_date",
+          "encryption_in_transit"
+        ],
+        [
+          "network_segmentation_vpcs_public_private_networks",
+          "block_public_access",
+          "outbound_traffic_control"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "vpc_flow_logs_analysis",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "vpc_subnet_no_public_ip_by_default",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "vpc_flow_logs_analysis",
+        "network_segmentation_vpcs_public_private_networks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "vpc_flow_logs_analysis",
+          "keep_your_security_contact_details_up_to_date",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "network_segmentation_vpcs_public_private_networks",
+          "block_public_access",
+          "outbound_traffic_control"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "vpc_flow_logs_analysis",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "directoryservice_directory_monitor_notifications",
+    "security_domain": "logging_monitoring",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_critical_and_the_most_frequently_executed_playbooks",
+        "root_account_protection"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "root_account_protection",
+          "set_up_multi_account_management_with_aws_control_tower",
+          "advanced_security_automations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "root_account_protection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "iam_support_role_created",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "iam_policy_generation_pipeline"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "identify_security_and_regulatory_requirements",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "iam_policy_generation_pipeline",
+          "run_tabletop_exercises_simulations",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "iam_policy_generation_pipeline",
+          "points": 3.0
+        },
+        {
+          "capability_id": "identify_security_and_regulatory_requirements",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "iam_root_hardware_mfa_enabled",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "multi_factor_authentication"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "multi_factor_authentication",
+          "iam_policy_generation_pipeline",
+          "run_tabletop_exercises_simulations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 3.0
+        },
+        {
+          "capability_id": "multi_factor_authentication",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "iam_securityaudit_role_created",
+    "security_domain": "logging_monitoring",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "identify_security_and_regulatory_requirements",
+        "evaluate_cloud_security_posture_aws_security_hub"
+      ],
+      "top_k_per_proposer": [
+        [
+          "identify_security_and_regulatory_requirements",
+          "audit_api_calls",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "automate_evidence_gathering_for_compliance_audit_reports",
+          "build_a_security_champions_program"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "identify_security_and_regulatory_requirements",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 3.0
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cognito_user_pool_blocks_potential_malicious_sign_in_attempts",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "customer_iam_security_of_your_customers"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "evaluate_resilience_posture_aws_resilience_hub",
+          "iam_data_perimeters_conditional_access"
+        ],
+        [
+          "customer_iam_security_of_your_customers",
+          "multi_factor_authentication",
+          "advanced_threat_detection"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "customer_iam_security_of_your_customers",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_resilience_posture_aws_resilience_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cognito_user_pool_advanced_security_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "keep_your_security_contact_details_up_to_date",
+        "customer_iam_security_of_your_customers"
+      ],
+      "top_k_per_proposer": [
+        [
+          "keep_your_security_contact_details_up_to_date",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "cleanup_risky_open_admin_ports_in_security_groups"
+        ],
+        [
+          "customer_iam_security_of_your_customers",
+          "advanced_ddos_mitigation_layer_7_aws_shield",
+          "multi_factor_authentication"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 3.0
+        },
+        {
+          "capability_id": "customer_iam_security_of_your_customers",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cognito_user_pool_client_prevent_user_existence_errors",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "encryption_in_transit",
+        "root_account_protection"
+      ],
+      "top_k_per_proposer": [
+        [
+          "encryption_in_transit",
+          "keep_your_security_contact_details_up_to_date",
+          "zero_trust_access_risk_based_access_control"
+        ],
+        [
+          "root_account_protection",
+          "identity_federation_centralized_user_repository",
+          "multi_factor_authentication"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "encryption_in_transit",
+          "points": 3.0
+        },
+        {
+          "capability_id": "root_account_protection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cognito_user_pool_self_registration_disabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "root_account_protection"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "audit_api_calls",
+          "encryption_in_transit"
+        ],
+        [
+          "root_account_protection",
+          "multi_factor_authentication",
+          "sharing_security_tasks_and_responsibility_raci_matrix"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 3.0
+        },
+        {
+          "capability_id": "root_account_protection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cognito_user_pool_client_token_revocation_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "temporary_elevated_access_management",
+        "multi_factor_authentication"
+      ],
+      "top_k_per_proposer": [
+        [
+          "temporary_elevated_access_management",
+          "inventory_configurations_monitoring",
+          "audit_api_calls"
+        ],
+        [
+          "multi_factor_authentication",
+          "analyze_data_security_posture",
+          "identity_federation_centralized_user_repository"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "temporary_elevated_access_management",
+          "points": 3.0
+        },
+        {
+          "capability_id": "multi_factor_authentication",
+          "points": 3.0
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cognito_user_pool_password_policy_uppercase",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "iam_policy_generation_pipeline"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "identify_security_and_regulatory_requirements"
+        ],
+        [
+          "iam_policy_generation_pipeline",
+          "multi_factor_authentication",
+          "cloud_security_training_plan"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "iam_policy_generation_pipeline",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ecr_registry_scan_images_on_push_enabled",
+    "security_domain": "vulnerability_management",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "construction_of_a_continuous_pipeline_for_golden_image_generation"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "form_a_vulnerability_management_team"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ecr_repositories_scan_vulnerabilities_in_latest_image",
+    "security_domain": "vulnerability_management",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "construction_of_a_continuous_pipeline_for_golden_image_generation"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "identify_security_and_regulatory_requirements"
+        ],
+        [
+          "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "form_a_vulnerability_management_team",
+          "design_your_secure_architecture"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ecr_repositories_scan_images_on_push_enabled",
+    "security_domain": "vulnerability_management",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "construction_of_a_continuous_pipeline_for_golden_image_generation"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "identify_security_and_regulatory_requirements"
+        ],
+        [
+          "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "form_a_vulnerability_management_team"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "elbv2_waf_acl_attached",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "limit_network_access_using_security_groups",
+        "waf_with_managed_rules"
+      ],
+      "top_k_per_proposer": [
+        [
+          "limit_network_access_using_security_groups",
+          "zero_trust_access_risk_based_access_control",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ],
+        [
+          "waf_with_managed_rules",
+          "advanced_waf_protection_with_custom_rules",
+          "customer_iam_security_of_your_customers"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "limit_network_access_using_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "waf_with_managed_rules",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "elbv2_internet_facing",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "block_public_access",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "block_public_access",
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "customer_iam_security_of_your_customers"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "waf_with_managed_rules",
+          "network_segmentation_vpcs_public_private_networks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "redshift_cluster_automated_snapshot",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "evaluate_resilience_posture_aws_resilience_hub",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "evaluate_resilience_posture_aws_resilience_hub",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "sharing_security_tasks_and_responsibility_raci_matrix"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "evaluate_resilience_posture_aws_resilience_hub",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "redshift_cluster_non_default_database_name",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "limit_network_access_using_security_groups"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "automate_deviation_correction_in_configurations",
+          "least_privilege_review_set_up_right_size_permissions_in_roles"
+        ],
+        [
+          "limit_network_access_using_security_groups",
+          "iam_policy_generation_pipeline",
+          "anti_malware_edr_runtime_protection"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "limit_network_access_using_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "memorydb_cluster_auto_minor_version_upgrades",
+    "security_domain": "vulnerability_management",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_critical_and_the_most_frequently_executed_playbooks",
+        "form_a_vulnerability_management_team"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "zero_trust_access_risk_based_access_control",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "form_a_vulnerability_management_team",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "build_a_security_champions_program"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "form_a_vulnerability_management_team",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "inspector2_active_findings_exist",
+    "security_domain": "threat_detection",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "act_on_critical_security_findings"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "billing_alarms_for_anomaly_detection",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "act_on_critical_security_findings",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "identify_security_and_regulatory_requirements"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "act_on_critical_security_findings",
+          "points": 3.0
+        },
+        {
+          "capability_id": "billing_alarms_for_anomaly_detection",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "appstream_fleet_session_idle_disconnect_timeout",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "multi_factor_authentication"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "zero_trust_access_risk_based_access_control"
+        ],
+        [
+          "multi_factor_authentication",
+          "discover_sensitive_data_with_amazon_macie",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "multi_factor_authentication",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "appstream_fleet_session_disconnect_timeout",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "least_privilege_review_set_up_right_size_permissions_in_roles",
+        "secure_ec2_instances_management"
+      ],
+      "top_k_per_proposer": [
+        [
+          "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "iam_data_perimeters_conditional_access",
+          "inventory_configurations_monitoring"
+        ],
+        [
+          "secure_ec2_instances_management",
+          "advanced_waf_protection_with_custom_rules",
+          "temporary_elevated_access_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "points": 3.0
+        },
+        {
+          "capability_id": "secure_ec2_instances_management",
+          "points": 3.0
+        },
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "appstream_fleet_maximum_session_duration",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "iam_data_perimeters_conditional_access",
+        "secure_ec2_instances_management"
+      ],
+      "top_k_per_proposer": [
+        [
+          "iam_data_perimeters_conditional_access",
+          "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "automate_deviation_correction_in_configurations"
+        ],
+        [
+          "secure_ec2_instances_management",
+          "permission_guardrails_organizational_policies_with_scps_and_rcps",
+          "temporary_elevated_access_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "secure_ec2_instances_management",
+          "points": 3.0
+        },
+        {
+          "capability_id": "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "awslambda_function_no_secrets_in_variables",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "automate_critical_and_the_most_frequently_executed_playbooks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "discover_sensitive_data_with_amazon_macie"
+        ],
+        [
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "run_tabletop_exercises_simulations",
+          "iam_policy_generation_pipeline"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ssmincidents_enabled_with_plans",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "formation_of_a_blue_team_incident_response_team"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "automate_deviation_correction_in_configurations",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "formation_of_a_blue_team_incident_response_team",
+          "run_tabletop_exercises_simulations",
+          "advanced_security_automations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "formation_of_a_blue_team_incident_response_team",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cloudwatch_log_group_not_publicly_accessible",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "block_public_access",
+        "limit_network_access_using_security_groups"
+      ],
+      "top_k_per_proposer": [
+        [
+          "block_public_access",
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "iam_data_perimeters_conditional_access"
+        ],
+        [
+          "limit_network_access_using_security_groups",
+          "discover_sensitive_data_with_amazon_macie",
+          "waf_with_managed_rules"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "limit_network_access_using_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "cloudwatch_cross_account_sharing_disabled",
+    "security_domain": "logging_monitoring",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "least_privilege_review_set_up_right_size_permissions_in_roles",
+        "set_up_multi_account_management_with_aws_control_tower"
+      ],
+      "top_k_per_proposer": [
+        [
+          "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "zero_trust_access_risk_based_access_control",
+          "temporary_elevated_access_management"
+        ],
+        [
+          "set_up_multi_account_management_with_aws_control_tower",
+          "advanced_security_automations",
+          "root_account_protection"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "points": 3.0
+        },
+        {
+          "capability_id": "set_up_multi_account_management_with_aws_control_tower",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ecs_task_definitions_host_networking_mode_users",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "advanced_threat_detection"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "inventory_configurations_monitoring",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "advanced_threat_detection",
+          "use_temporary_credentials",
+          "detect_common_threats"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "advanced_threat_detection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "wellarchitected_workload_no_high_or_medium_risks",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "evaluate_resilience_posture_aws_resilience_hub",
+        "design_your_secure_architecture"
+      ],
+      "top_k_per_proposer": [
+        [
+          "evaluate_resilience_posture_aws_resilience_hub",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "don_t_store_secrets_in_code_remove_secrets_from_code"
+        ],
+        [
+          "design_your_secure_architecture",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "forming_a_chaos_engineering_team"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "evaluate_resilience_posture_aws_resilience_hub",
+          "points": 3.0
+        },
+        {
+          "capability_id": "design_your_secure_architecture",
+          "points": 3.0
+        },
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "bedrock_api_key_no_long_term_credentials",
+    "security_domain": "gen_ai",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "identify_security_and_regulatory_requirements",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "identify_security_and_regulatory_requirements",
+          "zero_trust_access_risk_based_access_control",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "build_a_security_champions_program"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "identify_security_and_regulatory_requirements",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "backup_reportplans_exist",
+    "security_domain": "logging_monitoring",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "least_privilege_review_set_up_right_size_permissions_in_roles",
+        "create_your_compliance_reports"
+      ],
+      "top_k_per_proposer": [
+        [
+          "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "set_up_multi_account_management_with_aws_control_tower",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "create_your_compliance_reports",
+          "automate_evidence_gathering_for_compliance_audit_reports",
+          "identify_security_and_regulatory_requirements"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "points": 3.0
+        },
+        {
+          "capability_id": "create_your_compliance_reports",
+          "points": 3.0
+        },
+        {
+          "capability_id": "set_up_multi_account_management_with_aws_control_tower",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_paravirtual_type",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "instance_metadata_service_imds_v2"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "billing_alarms_for_anomaly_detection",
+          "vpc_flow_logs_analysis"
+        ],
+        [
+          "instance_metadata_service_imds_v2",
+          "secure_ec2_instances_management",
+          "define_incident_response_playbooks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "instance_metadata_service_imds_v2",
+          "points": 3.0
+        },
+        {
+          "capability_id": "billing_alarms_for_anomaly_detection",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_networkacl_unused",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "network_segmentation_vpcs_public_private_networks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "iam_data_perimeters_conditional_access",
+          "cleanup_risky_open_admin_ports_in_security_groups"
+        ],
+        [
+          "network_segmentation_vpcs_public_private_networks",
+          "outbound_traffic_control",
+          "limit_network_access_using_security_groups"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_uses_single_eni",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "advanced_threat_detection"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "advanced_threat_detection",
+          "network_segmentation_vpcs_public_private_networks",
+          "secure_ec2_instances_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "advanced_threat_detection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_port_mysql_exposed_to_internet",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_risky_open_admin_ports_in_security_groups",
+        "secure_ec2_instances_management"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "zero_trust_access_risk_based_access_control",
+          "use_temporary_credentials"
+        ],
+        [
+          "secure_ec2_instances_management",
+          "limit_network_access_using_security_groups",
+          "network_segmentation_vpcs_public_private_networks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "secure_ec2_instances_management",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_secrets_user_data",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_deviation_correction_in_configurations",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_deviation_correction_in_configurations",
+          "zero_trust_access_risk_based_access_control",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "instance_metadata_service_imds_v2",
+          "multi_factor_authentication"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_account_imdsv2_enabled",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_risky_open_admin_ports_in_security_groups",
+        "secure_ec2_instances_management"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "inventory_configurations_monitoring",
+          "don_t_store_secrets_in_code_remove_secrets_from_code"
+        ],
+        [
+          "secure_ec2_instances_management",
+          "2_foundational",
+          "manage_vulnerabilities_in_your_infrastructure_and_perform_pentesting"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "secure_ec2_instances_management",
+          "points": 3.0
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_public_ip",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "limit_network_access_using_security_groups",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "limit_network_access_using_security_groups",
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "use_temporary_credentials"
+        ],
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "define_incident_response_playbooks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "limit_network_access_using_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_port_kafka_exposed_to_internet",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_risky_open_admin_ports_in_security_groups",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "use_temporary_credentials",
+          "don_t_store_secrets_in_code_remove_secrets_from_code"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "iam_data_perimeters_conditional_access",
+          "secure_ec2_instances_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "use_temporary_credentials",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_elastic_ip_unassigned",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_risky_open_admin_ports_in_security_groups",
+        "threat_intelligence"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "billing_alarms_for_anomaly_detection",
+          "identify_security_and_regulatory_requirements"
+        ],
+        [
+          "threat_intelligence",
+          "multi_region_disaster_recovery_automation",
+          "define_incident_response_playbooks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "threat_intelligence",
+          "points": 3.0
+        },
+        {
+          "capability_id": "billing_alarms_for_anomaly_detection",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_with_outdated_ami",
+    "security_domain": "vulnerability_management",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "zero_trust_access_risk_based_access_control",
+        "construction_of_a_continuous_pipeline_for_golden_image_generation"
+      ],
+      "top_k_per_proposer": [
+        [
+          "zero_trust_access_risk_based_access_control",
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "identify_security_and_regulatory_requirements"
+        ],
+        [
+          "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "form_a_vulnerability_management_team"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 3.0
+        },
+        {
+          "capability_id": "construction_of_a_continuous_pipeline_for_golden_image_generation",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_instance_older_than_specific_days",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "achieve_redundancy_using_multiple_availability_zones",
+        "audit_api_calls"
+      ],
+      "top_k_per_proposer": [
+        [
+          "achieve_redundancy_using_multiple_availability_zones",
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "billing_alarms_for_anomaly_detection"
+        ],
+        [
+          "audit_api_calls",
+          "instance_metadata_service_imds_v2",
+          "secure_ec2_instances_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "achieve_redundancy_using_multiple_availability_zones",
+          "points": 3.0
+        },
+        {
+          "capability_id": "audit_api_calls",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "ec2_elastic_ip_shodan",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_risky_open_admin_ports_in_security_groups",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "keep_your_security_contact_details_up_to_date",
+          "don_t_store_secrets_in_code_remove_secrets_from_code"
+        ],
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "secure_ec2_instances_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "keep_your_security_contact_details_up_to_date",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "elb_desync_mitigation_mode",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "advanced_ddos_mitigation_layer_7_aws_shield"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "zero_trust_access_risk_based_access_control"
+        ],
+        [
+          "advanced_ddos_mitigation_layer_7_aws_shield",
+          "advanced_waf_protection_with_custom_rules",
+          "sharing_security_tasks_and_responsibility_raci_matrix"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "advanced_ddos_mitigation_layer_7_aws_shield",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "elb_connection_draining_enabled",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "secure_ec2_instances_management"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "zero_trust_access_risk_based_access_control",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "secure_ec2_instances_management",
+          "limit_network_access_using_security_groups",
+          "define_incident_response_playbooks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "secure_ec2_instances_management",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_instance_event_subscription_parameter_groups",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "don_t_store_secrets_in_code_remove_secrets_from_code",
+        "limit_network_access_using_security_groups"
+      ],
+      "top_k_per_proposer": [
+        [
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "data_encryption_at_rest"
+        ],
+        [
+          "limit_network_access_using_security_groups",
+          "advanced_security_automations",
+          "run_tabletop_exercises_simulations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 3.0
+        },
+        {
+          "capability_id": "limit_network_access_using_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_instance_backup_enabled",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "evaluate_resilience_posture_aws_resilience_hub",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "evaluate_resilience_posture_aws_resilience_hub",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "identify_security_and_regulatory_requirements"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "sharing_security_tasks_and_responsibility_raci_matrix",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "evaluate_resilience_posture_aws_resilience_hub",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_instance_event_subscription_security_groups",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_risky_open_admin_ports_in_security_groups",
+        "limit_network_access_using_security_groups"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "data_encryption_at_rest"
+        ],
+        [
+          "limit_network_access_using_security_groups",
+          "act_on_critical_security_findings",
+          "run_tabletop_exercises_simulations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "limit_network_access_using_security_groups",
+          "points": 3.0
+        },
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_instance_minor_version_upgrade_enabled",
+    "security_domain": "vulnerability_management",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_critical_and_the_most_frequently_executed_playbooks",
+        "form_a_vulnerability_management_team"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_critical_and_the_most_frequently_executed_playbooks",
+          "zero_trust_access_risk_based_access_control",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "form_a_vulnerability_management_team",
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "build_a_security_champions_program"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_critical_and_the_most_frequently_executed_playbooks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "form_a_vulnerability_management_team",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_cluster_iam_authentication_enabled",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "multi_factor_authentication"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "automate_deviation_correction_in_configurations",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "multi_factor_authentication",
+          "iam_policy_generation_pipeline",
+          "zero_trust_access_risk_based_access_control"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 3.0
+        },
+        {
+          "capability_id": "multi_factor_authentication",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_instance_critical_event_subscription",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "act_on_critical_security_findings"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "automate_deviation_correction_in_configurations"
+        ],
+        [
+          "act_on_critical_security_findings",
+          "advanced_security_automations",
+          "run_tabletop_exercises_simulations"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "act_on_critical_security_findings",
+          "points": 3.0
+        },
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "rds_instance_iam_authentication_enabled",
+    "security_domain": "identity_access",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+        "multi_factor_authentication"
+      ],
+      "top_k_per_proposer": [
+        [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "automate_deviation_correction_in_configurations",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "multi_factor_authentication",
+          "iam_policy_generation_pipeline",
+          "zero_trust_access_risk_based_access_control"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 3.0
+        },
+        {
+          "capability_id": "multi_factor_authentication",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "route53_dangling_ip_subdomain_takeover",
+    "security_domain": "logging_monitoring",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+        "advanced_security_automations"
+      ],
+      "top_k_per_proposer": [
+        [
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "zero_trust_access_risk_based_access_control",
+          "automate_critical_and_the_most_frequently_executed_playbooks"
+        ],
+        [
+          "advanced_security_automations",
+          "design_your_secure_architecture",
+          "set_up_multi_account_management_with_aws_control_tower"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 3.0
+        },
+        {
+          "capability_id": "advanced_security_automations",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "route53_domains_transferlock_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "inventory_configurations_monitoring",
+        "advanced_ddos_mitigation_layer_7_aws_shield"
+      ],
+      "top_k_per_proposer": [
+        [
+          "inventory_configurations_monitoring",
+          "automate_deviation_correction_in_configurations",
+          "use_infrastructure_as_code"
+        ],
+        [
+          "advanced_ddos_mitigation_layer_7_aws_shield",
+          "outbound_traffic_control",
+          "block_public_access"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 3.0
+        },
+        {
+          "capability_id": "advanced_ddos_mitigation_layer_7_aws_shield",
+          "points": 3.0
+        },
+        {
+          "capability_id": "automate_deviation_correction_in_configurations",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "route53_domains_privacy_protection_enabled",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "encryption_in_transit",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "encryption_in_transit",
+          "inventory_configurations_monitoring",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest"
+        ],
+        [
+          "block_public_access",
+          "advanced_waf_protection_with_custom_rules",
+          "advanced_ddos_mitigation_layer_7_aws_shield"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "encryption_in_transit",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "inventory_configurations_monitoring",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "lightsail_static_ip_unused",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "instance_metadata_service_imds_v2",
+        "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+      ],
+      "top_k_per_proposer": [
+        [
+          "instance_metadata_service_imds_v2",
+          "billing_alarms_for_anomaly_detection",
+          "network_segmentation_vpcs_public_private_networks"
+        ],
+        [
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "manage_vulnerabilities_in_your_applications",
+          "threat_intelligence"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "instance_metadata_service_imds_v2",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions",
+          "points": 3.0
+        },
+        {
+          "capability_id": "billing_alarms_for_anomaly_detection",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "lightsail_instance_public",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "block_public_access",
+        "network_segmentation_vpcs_public_private_networks"
+      ],
+      "top_k_per_proposer": [
+        [
+          "block_public_access",
+          "identity_federation_centralized_user_repository",
+          "keep_your_security_contact_details_up_to_date"
+        ],
+        [
+          "network_segmentation_vpcs_public_private_networks",
+          "waf_with_managed_rules",
+          "secure_ec2_instances_management"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "network_segmentation_vpcs_public_private_networks",
+          "points": 3.0
+        },
+        {
+          "capability_id": "identity_federation_centralized_user_repository",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "lightsail_instance_automated_snapshots",
+    "security_domain": "resilience",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+        "sharing_security_tasks_and_responsibility_raci_matrix"
+      ],
+      "top_k_per_proposer": [
+        [
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "evaluate_resilience_posture_aws_resilience_hub",
+          "achieve_redundancy_using_multiple_availability_zones"
+        ],
+        [
+          "sharing_security_tasks_and_responsibility_raci_matrix",
+          "discover_sensitive_data_with_amazon_macie",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 3.0
+        },
+        {
+          "capability_id": "sharing_security_tasks_and_responsibility_raci_matrix",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_resilience_posture_aws_resilience_hub",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "guardduty_ec2_malware_protection_enabled",
+    "security_domain": "threat_detection",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "billing_alarms_for_anomaly_detection",
+        "discover_sensitive_data_with_amazon_macie"
+      ],
+      "top_k_per_proposer": [
+        [
+          "billing_alarms_for_anomaly_detection",
+          "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "discover_sensitive_data_with_amazon_macie",
+          "act_on_critical_security_findings",
+          "zero_trust_access_risk_based_access_control"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "billing_alarms_for_anomaly_detection",
+          "points": 3.0
+        },
+        {
+          "capability_id": "discover_sensitive_data_with_amazon_macie",
+          "points": 3.0
+        },
+        {
+          "capability_id": "select_the_region_s_where_you_want_to_operate_and_block_the_rest",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "guardduty_is_enabled",
+    "security_domain": "logging_monitoring",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "automate_evidence_gathering_for_compliance_audit_reports",
+        "evaluate_cloud_security_posture_aws_security_hub"
+      ],
+      "top_k_per_proposer": [
+        [
+          "automate_evidence_gathering_for_compliance_audit_reports",
+          "zero_trust_access_risk_based_access_control",
+          "automate_critical_and_the_most_frequently_executed_playbooks"
+        ],
+        [
+          "evaluate_cloud_security_posture_aws_security_hub",
+          "advanced_security_automations",
+          "formation_of_a_blue_team_incident_response_team"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "automate_evidence_gathering_for_compliance_audit_reports",
+          "points": 3.0
+        },
+        {
+          "capability_id": "evaluate_cloud_security_posture_aws_security_hub",
+          "points": 3.0
+        },
+        {
+          "capability_id": "zero_trust_access_risk_based_access_control",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "codebuild_project_uses_allowed_github_organizations",
+    "security_domain": null,
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "don_t_store_secrets_in_code_remove_secrets_from_code",
+        "use_temporary_credentials"
+      ],
+      "top_k_per_proposer": [
+        [
+          "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "temporary_elevated_access_management",
+          "set_up_multi_account_management_with_aws_control_tower"
+        ],
+        [
+          "use_temporary_credentials",
+          "least_privilege_review_set_up_right_size_permissions_in_roles",
+          "cleanup_unused_and_unintended_external_access_using_iam_access_analyzer_or_ciem_solutions"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "don_t_store_secrets_in_code_remove_secrets_from_code",
+          "points": 3.0
+        },
+        {
+          "capability_id": "use_temporary_credentials",
+          "points": 3.0
+        },
+        {
+          "capability_id": "temporary_elevated_access_management",
+          "points": 2.0
+        }
+      ]
+    }
+  },
+  {
+    "check_id": "autoscaling_group_launch_configuration_no_public_ip",
+    "security_domain": "network",
+    "consensus_status": "disputed",
+    "consensus_capability_id": null,
+    "signals": {
+      "proposer_ids": [
+        "lexical@v1",
+        "tfidf_embedding@v1"
+      ],
+      "rank1_per_proposer": [
+        "iam_data_perimeters_conditional_access",
+        "block_public_access"
+      ],
+      "top_k_per_proposer": [
+        [
+          "iam_data_perimeters_conditional_access",
+          "cleanup_risky_open_admin_ports_in_security_groups",
+          "evaluate_cloud_security_posture_aws_security_hub"
+        ],
+        [
+          "block_public_access",
+          "network_segmentation_vpcs_public_private_networks",
+          "define_incident_response_playbooks"
+        ]
+      ],
+      "top_k_intersection": [],
+      "pairwise_top1_agreement_rate": 0.0,
+      "borda_ranking_top3": [
+        {
+          "capability_id": "iam_data_perimeters_conditional_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "block_public_access",
+          "points": 3.0
+        },
+        {
+          "capability_id": "cleanup_risky_open_admin_ports_in_security_groups",
+          "points": 2.0
+        }
+      ]
+    }
+  }
+]
